@@ -38,3 +38,55 @@
   color: #999;
   font-size: 12px;
 }
+
+.content {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.leftContent {
+  flex: 1;
+}
+
+.rightContent {
+  margin-left: 24px;
+  align-self: center;
+}
+
+.addButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #3b82f6;
+  color: white;
+  padding: 12px 24px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 14px;
+  transition: background-color 0.2s;
+  white-space: nowrap;
+}
+
+.addButton:hover {
+  background: #2563eb;
+}
+
+/* 반응형 */
+@media (max-width: 768px) {
+  .content {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .rightContent {
+    margin-left: 0;
+    align-self: stretch;
+  }
+
+  .addButton {
+    width: 100%;
+    justify-content: center;
+  }
+}

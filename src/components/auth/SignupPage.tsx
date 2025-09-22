@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { User, Mail, Lock, Building } from 'lucide-react'
+import { signupUser } from '@/lib/auth'
 import styles from './SignupPage.module.css'
 
 export default function SignupPage() {
@@ -31,30 +32,40 @@ export default function SignupPage() {
     setError('')
     setIsLoading(true)
 
-    // 비밀번호 확인
-    if (formData.password !== formData.confirmPassword) {
-      setError('비밀번호가 일치하지 않습니다.')
-      setIsLoading(false)
-      return
-    }
+    const validationError =
+      formData.password !== formData.confirmPassword ? '비밀번호가 일치하지 않습니다.' :
+      formData.password.length < 6 ? '비밀번호는 6자 이상이어야 합니다.' :
+      null
 
-    // 비밀번호 길이 확인
-    if (formData.password.length < 6) {
-      setError('비밀번호는 6자 이상이어야 합니다.')
+    if (validationError) {
+      setError(validationError)
       setIsLoading(false)
       return
     }
 
     try {
-      // TODO: API 호출로 회원가입 처리
-      console.log('회원가입 데이터:', formData)
+      console.log('Calling signupUser...')
+      const result = await signupUser({
+        email: formData.email,
+        password: formData.password,
+        name: formData.name,
+        companyName: formData.companyName || undefined,
+        phone: formData.phone || undefined
+      })
 
-      // 임시로 성공 처리
-      alert('회원가입이 완료되었습니다!')
-      router.push('/login')
-    } catch {
+      console.log('signupUser result:', result)
+
+      if (result.success) {
+        alert('회원가입이 완료되었습니다!')
+        router.push('/login')
+      } else {
+        setError(result.error || '회원가입 중 오류가 발생했습니다.')
+      }
+    } catch (error) {
+      console.error('Caught error:', error)
       setError('회원가입 중 오류가 발생했습니다.')
     } finally {
+      console.log('Setting loading to false')
       setIsLoading(false)
     }
   }

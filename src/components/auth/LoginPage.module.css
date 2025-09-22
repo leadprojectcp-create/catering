@@ -93,7 +93,12 @@
   border-radius: 0.5rem;
   font-size: 0.875rem;
   background-color: white;
+  color: #1f2937;
   transition: all 0.2s;
+}
+
+.input::placeholder {
+  color: #6b7280;
 }
 
 .input:focus {

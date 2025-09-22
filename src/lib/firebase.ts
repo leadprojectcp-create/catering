@@ -18,7 +18,13 @@ const app = initializeApp(firebaseConfig)
 
 // Initialize Firebase services
 export const auth = getAuth(app)
-export const db = getFirestore(app)
+export const db = getFirestore(app, 'catering')  // Use 'catering' database
 export const storage = getStorage(app)
+
+// For development, connect to Firestore emulator if available
+if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+  // You can uncomment the line below if you want to use Firestore emulator
+  // connectFirestoreEmulator(db, 'localhost', 8080);
+}
 
 export default app

@@ -11,10 +11,6 @@ runConfig:
 env:
   # Configure environment variables.
   # See https://firebase.google.com/docs/app-hosting/configure#user-defined-environment
-  - variable: MONGODB_URI
-    value: mongodb://catering:Tn489SaNSeJUwsr0cMQD40mZHJR_A5PoyZbQNeYgpNs97v9u@8f5204e8-8ec5-4dd2-a95d-b8bb3c008d93.asia-northeast3.firestore.goog:443/catering?loadBalanced=true&tls=true&authMechanism=SCRAM-SHA-256&retryWrites=false
-    availability:
-      - RUNTIME
 
   # Firebase Configuration (Next.js needs NEXT_PUBLIC_ prefix for client-side)
   - variable: NEXT_PUBLIC_FIREBASE_API_KEY
