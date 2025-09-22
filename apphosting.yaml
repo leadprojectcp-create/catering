@@ -1,0 +1,59 @@
+# Settings for Backend (on Cloud Run).
+# See https://firebase.google.com/docs/app-hosting/configure#cloud-run
+runConfig:
+  minInstances: 0
+  # maxInstances: 100
+  # concurrency: 80
+  # cpu: 1
+  # memoryMiB: 512
+
+# Environment variables and secrets.
+env:
+  # Configure environment variables.
+  # See https://firebase.google.com/docs/app-hosting/configure#user-defined-environment
+  - variable: MONGODB_URI
+    value: mongodb://catering:Tn489SaNSeJUwsr0cMQD40mZHJR_A5PoyZbQNeYgpNs97v9u@8f5204e8-8ec5-4dd2-a95d-b8bb3c008d93.asia-northeast3.firestore.goog:443/catering?loadBalanced=true&tls=true&authMechanism=SCRAM-SHA-256&retryWrites=false
+    availability:
+      - RUNTIME
+
+  # Firebase Configuration (Next.js needs NEXT_PUBLIC_ prefix for client-side)
+  - variable: NEXT_PUBLIC_FIREBASE_API_KEY
+    value: AIzaSyBmI3Sos-rgkCw1YcEKKBWUQo05a-jyb3Y
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+    value: catering-26952.firebaseapp.com
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
+    value: catering-26952
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+    value: catering-26952.firebasestorage.app
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+    value: "700559767375"
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: NEXT_PUBLIC_FIREBASE_APP_ID
+    value: 1:700559767375:web:fb972eec1c74adddbe373a
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
+    value: G-8K85YXQB9R
+    availability:
+      - BUILD
+      - RUNTIME
+
+  # Grant access to secrets in Cloud Secret Manager.
+  # See https://firebase.google.com/docs/app-hosting/configure#secret-parameters
+  # - variable: MY_SECRET
+  #   secret: mySecretRef
