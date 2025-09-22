@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 1, "column": 0}, "map": {"version":3,"sources":["turbopack:///[project]/src/components/MainPage.module.css"],"sourcesContent":["/* MainPage.module.css - 메인 페이지 커스텀 스타일 */\n\n.container {\n  min-height: 100vh;\n  background-color: #f9fafb;\n}\n\n.content {\n  padding: 24px 0;\n}\n\n.wrapper {\n  max-width: 1280px;\n  margin: 0 auto;\n  padding: 0 16px;\n}\n\n@media (min-width: 640px) {\n  .wrapper {\n    padding: 0 24px;\n  }\n}\n\n@media (min-width: 1024px) {\n  .wrapper {\n    padding: 0 32px;\n  }\n}"],"names":[],"mappings":"AAEA;;;;;AAKA;;;;AAIA;;;;;;AAMA;EACE;;;;;AAKF;EACE"}}]
+}

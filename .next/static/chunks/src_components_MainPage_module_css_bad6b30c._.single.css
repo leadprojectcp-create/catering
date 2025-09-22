@@ -1,0 +1,29 @@
+/* [project]/src/components/MainPage.module.css [app-client] (css) */
+.MainPage-module__c0bsrq__container {
+  background-color: #f9fafb;
+  min-height: 100vh;
+}
+
+.MainPage-module__c0bsrq__content {
+  padding: 24px 0;
+}
+
+.MainPage-module__c0bsrq__wrapper {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+@media (min-width: 640px) {
+  .MainPage-module__c0bsrq__wrapper {
+    padding: 0 24px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .MainPage-module__c0bsrq__wrapper {
+    padding: 0 32px;
+  }
+}
+
+/*# sourceMappingURL=src_components_MainPage_module_css_bad6b30c._.single.css.map*/

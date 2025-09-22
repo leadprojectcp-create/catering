@@ -1,0 +1,128 @@
+/* [project]/src/components/home/RestaurantList.module.css [app-client] (css) */
+.RestaurantList-module__hRhHda__container {
+  margin: 0;
+}
+
+.RestaurantList-module__hRhHda__header {
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  display: flex;
+}
+
+.RestaurantList-module__hRhHda__title {
+  color: #1f2937;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.RestaurantList-module__hRhHda__filterButtons {
+  gap: 8px;
+  display: flex;
+}
+
+.RestaurantList-module__hRhHda__filterButton {
+  color: #374151;
+  background-color: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 9999px;
+  padding: 4px 12px;
+  font-size: 14px;
+  transition: background-color .2s;
+}
+
+.RestaurantList-module__hRhHda__filterButton:hover {
+  background-color: #f9fafb;
+}
+
+.RestaurantList-module__hRhHda__grid {
+  grid-template-columns: 1fr;
+  gap: 24px;
+  display: grid;
+}
+
+@media (min-width: 768px) {
+  .RestaurantList-module__hRhHda__grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .RestaurantList-module__hRhHda__grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.RestaurantList-module__hRhHda__restaurantCard {
+  background-color: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  transition: box-shadow .2s;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .1);
+}
+
+.RestaurantList-module__hRhHda__restaurantCard:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, .1);
+}
+
+.RestaurantList-module__hRhHda__cardContent {
+  padding: 24px;
+}
+
+.RestaurantList-module__hRhHda__restaurantHeader {
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  display: flex;
+}
+
+.RestaurantList-module__hRhHda__restaurantImage {
+  font-size: 30px;
+}
+
+.RestaurantList-module__hRhHda__restaurantInfo h3 {
+  color: #1f2937;
+  font-weight: 600;
+}
+
+.RestaurantList-module__hRhHda__restaurantInfo p {
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.RestaurantList-module__hRhHda__restaurantMeta {
+  color: #6b7280;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+  font-size: 14px;
+  display: flex;
+}
+
+.RestaurantList-module__hRhHda__restaurantDetails {
+  color: #6b7280;
+  margin-bottom: 16px;
+  font-size: 14px;
+}
+
+.RestaurantList-module__hRhHda__restaurantDetails p {
+  margin: 0;
+}
+
+.RestaurantList-module__hRhHda__orderButton {
+  color: #fff;
+  cursor: pointer;
+  background-color: #2563eb;
+  border: none;
+  border-radius: 8px;
+  width: 100%;
+  padding: 8px;
+  font-weight: 500;
+  transition: background-color .2s;
+}
+
+.RestaurantList-module__hRhHda__orderButton:hover {
+  background-color: #1d4ed8;
+}
+
+/*# sourceMappingURL=src_components_home_RestaurantList_module_css_bad6b30c._.single.css.map*/

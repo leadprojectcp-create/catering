@@ -4,6 +4,8 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Mail, Lock } from 'lucide-react'
+import { signInWithEmailAndPassword } from 'firebase/auth'
+import { auth } from '@/lib/firebase'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -27,10 +29,7 @@ export default function LoginPage() {
     setIsLoading(true)
 
     try {
-      // TODO: API 호출로 로그인 처리
-      console.log('로그인 데이터:', formData)
-
-      // 임시로 성공 처리
+      await signInWithEmailAndPassword(auth, formData.email, formData.password)
       alert('로그인 성공!')
       router.push('/')
     } catch {
