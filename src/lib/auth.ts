@@ -39,7 +39,7 @@ export async function signupUser(userData: SignupData) {
 
     console.log('User data saved to Firestore successfully')
     return { success: true, user: firebaseUser }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Signup error:', error)
 
     // Firebase 에러 메시지를 한국어로 변환
@@ -49,7 +49,7 @@ export async function signupUser(userData: SignupData) {
       'auth/invalid-email': '유효하지 않은 이메일 주소입니다.'
     }
 
-    const errorMessage = errorMessages[error.code as keyof typeof errorMessages] || '회원가입 중 오류가 발생했습니다.'
+    const errorMessage = errorMessages[(error as { code?: string }).code as keyof typeof errorMessages] || '회원가입 중 오류가 발생했습니다.'
 
     return { success: false, error: errorMessage }
   }

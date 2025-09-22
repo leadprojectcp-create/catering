@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { doc, setDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import styles from './AddRestaurantPage.module.css'
@@ -237,7 +238,7 @@ export default function AddRestaurantPage() {
             </div>
             {imagePreview && (
               <div className={styles.imagePreview}>
-                <img src={imagePreview} alt="미리보기" className={styles.previewImage} />
+                <Image src={imagePreview} alt="미리보기" className={styles.previewImage} width={200} height={200} />
               </div>
             )}
           </div>
