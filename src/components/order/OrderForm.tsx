@@ -3,15 +3,28 @@
 import { useState } from 'react'
 import { Calendar, MapPin, Users } from 'lucide-react'
 
+interface FormData {
+  companyName: string
+  contactName: string
+  contactPhone: string
+  email: string
+  deliveryAddress: string
+  deliveryDate: string
+  deliveryTime: string
+  quantity: string
+  specialRequests: string
+  budget: string
+}
+
 interface OrderFormProps {
   restaurant: {
     name: string
   }
-  onSubmit: (formData: any) => void
+  onSubmit: (formData: FormData) => void
   onCancel: () => void
 }
 
-export default function OrderForm({ restaurant, onSubmit, onCancel }: OrderFormProps) {
+export default function OrderForm({ onSubmit, onCancel }: OrderFormProps) {
   const [formData, setFormData] = useState({
     companyName: '',
     contactName: '',

@@ -33,7 +33,7 @@ export default function LoginPage() {
       // 임시로 성공 처리
       alert('로그인 성공!')
       router.push('/')
-    } catch (err) {
+    } catch {
       setError('이메일 또는 비밀번호가 올바르지 않습니다.')
     } finally {
       setIsLoading(false)

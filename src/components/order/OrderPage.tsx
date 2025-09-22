@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import OrderHeader from './OrderHeader'
 import OrderForm from './OrderForm'
@@ -10,10 +10,21 @@ export default function OrderPage() {
   const router = useRouter()
   const restaurantId = searchParams.get('restaurant')
 
-  const [restaurant, setRestaurant] = useState<any>(null)
+  interface Restaurant {
+    id: number
+    name: string
+    category: string
+    rating: number
+    deliveryTime: string
+    deliveryFee: number
+    minOrder: number
+    image: string
+  }
+
+  const [restaurant, setRestaurant] = useState<Restaurant | null>(null)
 
   // 레스토랑 데이터 (실제로는 API에서 가져올 것)
-  const restaurants = [
+  const restaurants = useMemo(() => [
     {
       id: 1,
       name: '맘스터치 강남점',
@@ -54,16 +65,29 @@ export default function OrderPage() {
       minOrder: 25000,
       image: '🍕'
     }
-  ]
+  ], [])
 
   useEffect(() => {
     if (restaurantId) {
       const foundRestaurant = restaurants.find(r => r.id === parseInt(restaurantId))
-      setRestaurant(foundRestaurant)
+      setRestaurant(foundRestaurant || null)
     }
-  }, [restaurantId])
+  }, [restaurantId, restaurants])
 
-  const handleSubmit = (formData: any) => {
+  interface FormData {
+    companyName: string
+    contactName: string
+    contactPhone: string
+    email: string
+    deliveryAddress: string
+    deliveryDate: string
+    deliveryTime: string
+    quantity: string
+    specialRequests: string
+    budget: string
+  }
+
+  const handleSubmit = (formData: FormData) => {
     console.log('주문 신청:', formData)
     alert('단체주문 신청이 완료되었습니다!')
     router.push('/')

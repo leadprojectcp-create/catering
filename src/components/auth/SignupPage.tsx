@@ -51,7 +51,7 @@ export default function SignupPage() {
       // 임시로 성공 처리
       alert('회원가입이 완료되었습니다!')
       router.push('/login')
-    } catch (err) {
+    } catch {
       setError('회원가입 중 오류가 발생했습니다.')
     } finally {
       setIsLoading(false)
