@@ -23,20 +23,20 @@ export default function AdminLogsPage() {
   const { user, userData } = useAuth()
 
   useEffect(() => {
-    // Check if user is authenticated and has admin level (level 10)
-    if (!user || !userData) {
-      setIsLoading(false)
-      return
-    }
-
-    // Check if user has admin level (level 10)
-    if (userData.level !== 10) {
-      setIsLoading(false)
-      return
-    }
-
     const fetchLogs = async () => {
       try {
+        // Check if user is authenticated and has admin level (level 10)
+        if (!user || !userData) {
+          setIsLoading(false)
+          return
+        }
+
+        // Check if user has admin level (level 10)
+        if (userData.level !== 10) {
+          setIsLoading(false)
+          return
+        }
+
         const q = query(collection(db, 'activity_logs'), orderBy('timestamp', 'desc'))
         const querySnapshot = await getDocs(q)
         const logData = querySnapshot.docs.map(doc => ({
