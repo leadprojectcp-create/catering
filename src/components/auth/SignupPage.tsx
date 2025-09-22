@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { User, Mail, Lock, Building } from 'lucide-react'
+import styles from './SignupPage.module.css'
 
 export default function SignupPage() {
   const router = useRouter()
@@ -59,29 +60,29 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center py-12 px-4">
-      <div className="max-w-md w-full bg-white rounded-2xl p-10 shadow-lg">
-        <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold text-gray-800 mb-2">
+    <div className={styles.container}>
+      <div className={styles.formCard}>
+        <div className={styles.header}>
+          <h2 className={styles.title}>
             회원가입
           </h2>
-          <p className="text-gray-600 text-sm">
+          <p className={styles.subtitle}>
             이미 계정이 있으신가요?{' '}
-            <Link href="/login" className="text-blue-600 hover:text-blue-800 font-medium">
+            <Link href="/login" className={styles.loginLink}>
               로그인하기
             </Link>
           </p>
         </div>
 
-        <form className="space-y-6" onSubmit={handleSubmit}>
-          <div className="space-y-5">
+        <form className={styles.form} onSubmit={handleSubmit}>
+          <div>
             {/* 이름 */}
-            <div className="mb-5">
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+            <div className={styles.inputGroup}>
+              <label htmlFor="name" className={styles.label}>
                 이름 *
               </label>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <div className={styles.inputWrapper}>
+                <User className={styles.inputIcon} />
                 <input
                   id="name"
                   name="name"
@@ -89,19 +90,19 @@ export default function SignupPage() {
                   required
                   value={formData.name}
                   onChange={handleChange}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg text-sm bg-white transition-all focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                  className={styles.input}
                   placeholder="홍길동"
                 />
               </div>
             </div>
 
             {/* 이메일 */}
-            <div className="mb-5">
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+            <div className={styles.inputGroup}>
+              <label htmlFor="email" className={styles.label}>
                 이메일 *
               </label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <div className={styles.inputWrapper}>
+                <Mail className={styles.inputIcon} />
                 <input
                   id="email"
                   name="email"
@@ -109,34 +110,34 @@ export default function SignupPage() {
                   required
                   value={formData.email}
                   onChange={handleChange}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg text-sm bg-white transition-all focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                  className={styles.input}
                   placeholder="example@company.com"
                 />
               </div>
             </div>
 
             {/* 회사명 */}
-            <div className="mb-5">
-              <label htmlFor="companyName" className="block text-sm font-medium text-gray-700 mb-2">
+            <div className={styles.inputGroup}>
+              <label htmlFor="companyName" className={styles.label}>
                 회사/단체명
               </label>
-              <div className="relative">
-                <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <div className={styles.inputWrapper}>
+                <Building className={styles.inputIcon} />
                 <input
                   id="companyName"
                   name="companyName"
                   type="text"
                   value={formData.companyName}
                   onChange={handleChange}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg text-sm bg-white transition-all focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                  className={styles.input}
                   placeholder="회사명 (선택사항)"
                 />
               </div>
             </div>
 
             {/* 전화번호 */}
-            <div className="mb-5">
-              <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
+            <div className={styles.inputGroup}>
+              <label htmlFor="phone" className={styles.label}>
                 전화번호
               </label>
               <input
@@ -145,18 +146,18 @@ export default function SignupPage() {
                 type="tel"
                 value={formData.phone}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm bg-white transition-all focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                className={styles.inputNoIcon}
                 placeholder="010-1234-5678"
               />
             </div>
 
             {/* 비밀번호 */}
-            <div className="mb-5">
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+            <div className={styles.inputGroup}>
+              <label htmlFor="password" className={styles.label}>
                 비밀번호 *
               </label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <div className={styles.inputWrapper}>
+                <Lock className={styles.inputIcon} />
                 <input
                   id="password"
                   name="password"
@@ -164,19 +165,19 @@ export default function SignupPage() {
                   required
                   value={formData.password}
                   onChange={handleChange}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg text-sm bg-white transition-all focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                  className={styles.input}
                   placeholder="6자 이상 입력해주세요"
                 />
               </div>
             </div>
 
             {/* 비밀번호 확인 */}
-            <div className="mb-5">
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
+            <div className={styles.inputGroup}>
+              <label htmlFor="confirmPassword" className={styles.label}>
                 비밀번호 확인 *
               </label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <div className={styles.inputWrapper}>
+                <Lock className={styles.inputIcon} />
                 <input
                   id="confirmPassword"
                   name="confirmPassword"
@@ -184,7 +185,7 @@ export default function SignupPage() {
                   required
                   value={formData.confirmPassword}
                   onChange={handleChange}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg text-sm bg-white transition-all focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                  className={styles.input}
                   placeholder="비밀번호를 다시 입력해주세요"
                 />
               </div>
@@ -192,7 +193,7 @@ export default function SignupPage() {
           </div>
 
           {error && (
-            <div className="text-red-600 text-sm text-center my-4">
+            <div className={styles.error}>
               {error}
             </div>
           )}
@@ -201,14 +202,14 @@ export default function SignupPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-blue-600 text-white py-3.5 px-4 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors mb-6"
+              className={styles.submitButton}
             >
               {isLoading ? '가입 중...' : '회원가입'}
             </button>
           </div>
 
-          <div className="text-center">
-            <Link href="/" className="text-gray-600 hover:text-gray-800 text-sm">
+          <div className={styles.homeLink}>
+            <Link href="/" className={styles.homeLinkText}>
               홈으로 돌아가기
             </Link>
           </div>
