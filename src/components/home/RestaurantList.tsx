@@ -18,20 +18,9 @@ interface Restaurant {
   website?: string
   imageUrl?: string
   businessHours?: string
-  createdAt?: any
-  updatedAt?: any
+  createdAt?: { toDate?: () => Date } | Date | string
+  updatedAt?: { toDate?: () => Date } | Date | string
 }
-
-const categories = [
-  '전체',
-  '케이터링 박스 / 플래터',
-  '샌드위치 / 베이커리',
-  '디저트 박스',
-  '김밥 / 한식 도시락',
-  '샐러드 / 과일 도시락',
-  '음료 / 커피 / 차',
-  '떡 / 전통한과 / 견과류'
-]
 
 interface RestaurantListProps {
   selectedCategory: string

@@ -5,7 +5,7 @@ interface LogActivityParams {
   restaurantId: string
   restaurantName: string
   actionType: 'phone_call' | 'website_visit'
-  additionalData?: Record<string, any>
+  additionalData?: Record<string, unknown>
 }
 
 export const logActivity = async ({

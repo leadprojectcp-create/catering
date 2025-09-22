@@ -10,7 +10,7 @@ interface LogEntry {
   restaurantId: string
   restaurantName: string
   actionType: 'phone_call' | 'website_visit'
-  timestamp: any
+  timestamp: { toDate?: () => Date } | Date | string
   userAgent?: string
   ipAddress?: string
 }
@@ -44,9 +44,18 @@ export default function AdminLogsPage() {
     ? logs
     : logs.filter(log => log.actionType === filter)
 
-  const formatTimestamp = (timestamp: any) => {
+  const formatTimestamp = (timestamp: { toDate?: () => Date } | Date | string) => {
     if (!timestamp) return '-'
-    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp)
+    let date: Date
+    if (typeof timestamp === 'object' && 'toDate' in timestamp && timestamp.toDate) {
+      date = timestamp.toDate()
+    } else if (timestamp instanceof Date) {
+      date = timestamp
+    } else if (typeof timestamp === 'string') {
+      date = new Date(timestamp)
+    } else {
+      date = new Date()
+    }
     return date.toLocaleString('ko-KR')
   }
 
