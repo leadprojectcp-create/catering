@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useAuth } from '@/contexts/AuthContext'
 import { collection, getDocs, orderBy, query } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import styles from './AdminLogsPage.module.css'
@@ -19,8 +20,21 @@ export default function AdminLogsPage() {
   const [logs, setLogs] = useState<LogEntry[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | 'phone_call' | 'website_visit'>('all')
+  const { user, userData } = useAuth()
 
   useEffect(() => {
+    // Check if user is authenticated and has admin level (level 10)
+    if (!user || !userData) {
+      setIsLoading(false)
+      return
+    }
+
+    // Check if user has admin level (level 10)
+    if (userData.level !== 10) {
+      setIsLoading(false)
+      return
+    }
+
     const fetchLogs = async () => {
       try {
         const q = query(collection(db, 'activity_logs'), orderBy('timestamp', 'desc'))
@@ -38,7 +52,7 @@ export default function AdminLogsPage() {
     }
 
     fetchLogs()
-  }, [])
+  }, [user, userData])
 
   const filteredLogs = filter === 'all'
     ? logs
@@ -86,6 +100,26 @@ export default function AdminLogsPage() {
       <div className={styles.container}>
         <div className={styles.content}>
           <div className={styles.loading}>로딩 중...</div>
+        </div>
+      </div>
+    )
+  }
+
+  if (!user) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.content}>
+          <div className={styles.loading}>로그인이 필요합니다.</div>
+        </div>
+      </div>
+    )
+  }
+
+  if (userData && userData.level !== 10) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.content}>
+          <div className={styles.loading}>관리자 권한이 필요합니다. (레벨 10 필요)</div>
         </div>
       </div>
     )
