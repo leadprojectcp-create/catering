@@ -17,7 +17,22 @@ export async function getRestaurantById(id: string) {
 }
 
 // 주문 관련 함수들
-export async function createOrder(orderData: any) {
+interface OrderData {
+  userId: string
+  restaurantId: number
+  items: Array<{
+    id: number
+    name: string
+    price: number
+    quantity: number
+  }>
+  totalAmount: number
+  deliveryAddress: string
+  phoneNumber: string
+  specialRequests?: string
+}
+
+export async function createOrder(orderData: OrderData) {
   const client = await clientPromise
   const db = client.db('catering')
   const result = await db.collection('orders').insertOne({
