@@ -1,0 +1,40 @@
+.footer {
+  background-color: #f8f9fa;
+  color: #999;
+  padding: 40px 0;
+  margin-top: auto;
+  border-top: 1px solid #e9ecef;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+  text-align: left;
+}
+
+.companyName {
+  color: #ccc;
+  font-size: 32px;
+  font-weight: bold;
+  margin-bottom: 16px;
+}
+
+.companyInfo {
+  color: #999;
+  font-size: 12px;
+  line-height: 1.5;
+  margin-bottom: 8px;
+}
+
+.address {
+  color: #999;
+  font-size: 12px;
+  line-height: 1.5;
+  margin-bottom: 16px;
+}
+
+.copyright {
+  color: #999;
+  font-size: 12px;
+}

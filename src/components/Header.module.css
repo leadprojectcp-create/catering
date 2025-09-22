@@ -1,0 +1,131 @@
+.header {
+  height: 176px; /* h-44 */
+  background-color: #1d4ed8; /* bg-blue-700 */
+  border-bottom: 1px solid #e5e5e5; /* border-b border-neutral-200 */
+}
+
+.container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 24px 0; /* py-6 */
+}
+
+.logoSection {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.logoContainer {
+  width: 192px; /* w-48 */
+  height: 32px; /* h-8 */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.logo {
+  width: 192px; /* w-48 */
+  height: 32px; /* h-8 */
+  object-fit: contain;
+}
+
+.slogan {
+  color: white;
+  font-size: 16px; /* text-base */
+  font-weight: 400; /* font-normal */
+  margin-top: 15px;
+}
+
+.menuSection {
+  display: flex;
+  justify-content: center;
+  padding-bottom: 8px; /* pb-2 */
+  margin-top: 32px; /* mt-8 */
+  overflow-x: auto;
+  overflow-y: hidden;
+  /* 모든 브라우저에서 스크롤바 숨기기 */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.menuSection::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+.menuContainer {
+  display: flex;
+  justify-content: center;
+  gap: 48px; /* space-x-12 */
+  padding: 0 24px;
+  min-width: max-content;
+}
+
+.menuItem {
+  color: white;
+  font-size: 16px; /* 폰트 사이즈 증가 */
+  font-weight: 500; /* font-medium */
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.menuItem:hover {
+  color: #fb923c; /* text-orange-400 */
+  font-weight: 700; /* font-bold */
+}
+
+/* 데스크톱에서는 flex-wrap 적용 */
+@media (min-width: 1025px) {
+  .menuContainer {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 32px 48px;
+    min-width: auto;
+  }
+}
+
+@media (max-width: 1024px) {
+  .menuSection {
+    justify-content: flex-start;
+    padding: 0;
+    margin-top: 32px;
+  }
+
+  .menuContainer {
+    justify-content: flex-start;
+    gap: 32px;
+    padding: 0 24px;
+    /* 스크롤바 숨기기 */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .menuContainer::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .menuContainer {
+    gap: 24px;
+    padding: 0 16px;
+  }
+
+  .menuItem {
+    font-size: 14px; /* 모바일에서도 폰트 크기 유지 */
+  }
+}
+
+/* 터치 디바이스에서 부드러운 스크롤 */
+@media (hover: none) and (pointer: coarse) {
+  .menuSection {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+}
