@@ -54,23 +54,54 @@
   align-self: center;
 }
 
-.addButton {
+.adminButtons {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.addButton,
+.logButton,
+.logoutButton {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: #3b82f6;
-  color: white;
-  padding: 12px 24px;
+  padding: 12px 16px;
   border-radius: 8px;
   text-decoration: none;
   font-weight: 500;
   font-size: 14px;
   transition: background-color 0.2s;
   white-space: nowrap;
+  border: none;
+  cursor: pointer;
+}
+
+.addButton {
+  background: #3b82f6;
+  color: white;
 }
 
 .addButton:hover {
   background: #2563eb;
+}
+
+.logButton {
+  background: #10b981;
+  color: white;
+}
+
+.logButton:hover {
+  background: #059669;
+}
+
+.logoutButton {
+  background: #ef4444;
+  color: white;
+}
+
+.logoutButton:hover {
+  background: #dc2626;
 }
 
 /* 반응형 */
@@ -85,7 +116,14 @@
     align-self: stretch;
   }
 
-  .addButton {
+  .adminButtons {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .addButton,
+  .logButton,
+  .logoutButton {
     width: 100%;
     justify-content: center;
   }

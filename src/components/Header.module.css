@@ -80,6 +80,13 @@
   font-weight: 700; /* font-bold */
 }
 
+.menuItemActive {
+  color: #fb923c; /* text-orange-400 */
+  font-weight: 700; /* font-bold */
+  border-bottom: 2px solid #fb923c;
+  padding-bottom: 4px;
+}
+
 /* 데스크톱에서는 flex-wrap 적용 */
 @media (min-width: 1025px) {
   .menuContainer {

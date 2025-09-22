@@ -4,7 +4,23 @@ import Link from 'next/link'
 import Image from 'next/image'
 import styles from './Header.module.css'
 
-export default function Header() {
+const categories = [
+  '전체',
+  '케이터링 박스 / 플래터',
+  '샌드위치 / 베이커리',
+  '디저트 박스',
+  '김밥 / 한식 도시락',
+  '샐러드 / 과일 도시락',
+  '음료 / 커피 / 차',
+  '떡 / 전통한과 / 견과류'
+]
+
+interface HeaderProps {
+  selectedCategory?: string
+  onCategorySelect?: (category: string) => void
+}
+
+export default function Header({ selectedCategory = '전체', onCategorySelect }: HeaderProps) {
   return (
     <header className={styles.header}>
       <div className={styles.container}>
@@ -29,16 +45,15 @@ export default function Header() {
         {/* 카테고리 메뉴 영역 */}
         <div className={styles.menuSection}>
           <div className={styles.menuContainer}>
-            <div className={styles.menuItem}>전체</div>
-            <div className={styles.menuItem}>떡 / 전통한과 / 견과류</div>
-            <div className={styles.menuItem}>음료 / 커피 / 차</div>
-            <div className={styles.menuItem}>초콜릿 / 사탕</div>
-            <div className={styles.menuItem}>과일 도시락</div>
-            <div className={styles.menuItem}>김밥 / 컵밥류</div>
-            <div className={styles.menuItem}>샐러드 도시락</div>
-            <div className={styles.menuItem}>브런치 박스</div>
-            <div className={styles.menuItem}>샌드위치 / 베이커리</div>
-            <div className={styles.menuItem}>케이터링 박스 / 플래터</div>
+            {categories.map((category) => (
+              <div
+                key={category}
+                className={`${styles.menuItem} ${selectedCategory === category ? styles.menuItemActive : ''}`}
+                onClick={() => onCategorySelect?.(category)}
+              >
+                {category}
+              </div>
+            ))}
           </div>
         </div>
       </div>

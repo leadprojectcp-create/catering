@@ -1,65 +1,237 @@
 'use client'
 
+import { useState, useEffect } from 'react'
+import { collection, getDocs, deleteDoc, doc } from 'firebase/firestore'
+import { db } from '@/lib/firebase'
+import Image from 'next/image'
+import { logPhoneCall, logWebsiteVisit } from '@/lib/logger'
+import { useAuth } from '@/contexts/AuthContext'
+import { useRouter } from 'next/navigation'
+import styles from './RestaurantList.module.css'
+
 interface Restaurant {
-  id: number
+  id: string
   name: string
   category: string
-  rating: number
-  deliveryTime: string
-  deliveryFee: number
-  minOrder: number
-  image: string
+  location: string
+  phone: string
+  website?: string
+  imageUrl?: string
+  businessHours?: string
+  createdAt?: any
+  updatedAt?: any
 }
+
+const categories = [
+  '전체',
+  '케이터링 박스 / 플래터',
+  '샌드위치 / 베이커리',
+  '디저트 박스',
+  '김밥 / 한식 도시락',
+  '샐러드 / 과일 도시락',
+  '음료 / 커피 / 차',
+  '떡 / 전통한과 / 견과류'
+]
 
 interface RestaurantListProps {
-  restaurants: Restaurant[]
-  onOrderClick: (restaurant: Restaurant) => void
+  selectedCategory: string
 }
 
-export default function RestaurantList({ restaurants, onOrderClick }: RestaurantListProps) {
+export default function RestaurantList({ selectedCategory }: RestaurantListProps) {
+  const [restaurants, setRestaurants] = useState<Restaurant[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [showDropdown, setShowDropdown] = useState<string | null>(null)
+  const { userData } = useAuth()
+  const router = useRouter()
+
+  // 레벨 10 사용자(관리자) 확인
+  const isAdmin = userData?.level === 10
+
+  useEffect(() => {
+    const fetchRestaurants = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, 'restaurants'))
+        const restaurantData = querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        })) as Restaurant[]
+        setRestaurants(restaurantData)
+      } catch (error) {
+        console.error('레스토랑 데이터 가져오기 실패:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchRestaurants()
+  }, [])
+
+  const filteredRestaurants = selectedCategory === '전체'
+    ? restaurants
+    : restaurants.filter(restaurant => restaurant.category === selectedCategory)
+
+  const handlePhoneCall = async (restaurant: Restaurant) => {
+    await logPhoneCall(restaurant.id, restaurant.name, restaurant.phone)
+    window.open(`tel:${restaurant.phone}`, '_self')
+  }
+
+  const handleWebsiteVisit = async (restaurant: Restaurant) => {
+    if (restaurant.website) {
+      await logWebsiteVisit(restaurant.id, restaurant.name, restaurant.website)
+      window.open(restaurant.website, '_blank', 'noopener,noreferrer')
+    }
+  }
+
+  const handleEdit = (restaurant: Restaurant) => {
+    router.push(`/edit-restaurant/${restaurant.id}`)
+    setShowDropdown(null)
+  }
+
+  const handleDelete = async (restaurant: Restaurant) => {
+    if (window.confirm(`"${restaurant.name}" 업체를 삭제하시겠습니까?`)) {
+      try {
+        await deleteDoc(doc(db, 'restaurants', restaurant.id))
+        // 삭제 후 목록 새로고침
+        setRestaurants(restaurants.filter(r => r.id !== restaurant.id))
+        alert('업체가 삭제되었습니다.')
+      } catch (error) {
+        console.error('삭제 실패:', error)
+        alert('삭제 중 오류가 발생했습니다.')
+      }
+    }
+    setShowDropdown(null)
+  }
+
+  const toggleDropdown = (restaurantId: string) => {
+    setShowDropdown(showDropdown === restaurantId ? null : restaurantId)
+  }
+
+  if (isLoading) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.loading}>로딩 중...</div>
+      </div>
+    )
+  }
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
-        <h2 className="text-2xl font-bold text-gray-900">주변 음식점</h2>
-        <div className="flex flex-wrap gap-2">
-          <button className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium">전체</button>
-          <button className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors">치킨</button>
-          <button className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors">피자</button>
-          <button className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors">한식</button>
-        </div>
+    <div className={styles.container}>
+      <div className={styles.header}>
+        <h2 className={styles.title}>
+          {selectedCategory === '전체' ? '전체 목록' : `${selectedCategory} 목록`}
+        </h2>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {restaurants.map((restaurant) => (
-          <div key={restaurant.id} className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden">
-            <div className="p-6">
-              <div className="flex items-center mb-4">
-                <span className="text-4xl mr-4">{restaurant.image}</span>
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900">{restaurant.name}</h3>
-                  <p className="text-sm text-gray-600">{restaurant.category}</p>
+      <div className={styles.grid}>
+        {filteredRestaurants.length === 0 ? (
+          <div className={styles.emptyState}>
+            {selectedCategory === '전체' ? '등록된 업체가 없습니다.' : `${selectedCategory} 카테고리에 등록된 업체가 없습니다.`}
+          </div>
+        ) : (
+          filteredRestaurants.map((restaurant) => (
+            <div key={restaurant.id} className={styles.restaurantCard}>
+              <div className={styles.cardContent}>
+                {/* 왼쪽 이미지 - 180x180 */}
+                <div className={styles.imageContainer}>
+                  {restaurant.imageUrl ? (
+                    <Image
+                      src={restaurant.imageUrl}
+                      alt={restaurant.name}
+                      width={180}
+                      height={180}
+                      className={styles.restaurantImage}
+                    />
+                  ) : (
+                    <div className={styles.placeholderImage}>
+                      <span>🍽️</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* 오른쪽 정보 */}
+                <div className={styles.restaurantInfo}>
+                  {/* 상단 정보를 모두 동일한 크기로 분배 */}
+                  <div className={styles.infoContent}>
+                    {/* 카테고리 + 관리자 메뉴 */}
+                    <div className={styles.categoryRow}>
+                      <p className={styles.category}>{restaurant.category}</p>
+                      {/* 관리자용 점3개 메뉴 */}
+                      {isAdmin && (
+                        <div className={styles.adminMenu}>
+                          <button
+                            onClick={() => toggleDropdown(restaurant.id)}
+                            className={styles.adminButton}
+                          >
+                            <span className={styles.adminButtonText}>⋯</span>
+                          </button>
+
+                          {showDropdown === restaurant.id && (
+                            <div className={styles.dropdown}>
+                              <button
+                                onClick={() => handleEdit(restaurant)}
+                                className={`${styles.dropdownButton} ${styles.editButton}`}
+                              >
+                                수정하기
+                              </button>
+                              <button
+                                onClick={() => handleDelete(restaurant)}
+                                className={`${styles.dropdownButton} ${styles.deleteButton}`}
+                              >
+                                삭제하기
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* 가게명 */}
+                    <div className={styles.nameRow}>
+                      <h3 className={styles.restaurantName}>{restaurant.name}</h3>
+                    </div>
+
+                    {/* 위치 */}
+                    <div className={styles.locationRow}>
+                      <p className={styles.locationInfo}>
+                        <span className={styles.label}>위치:</span>
+                        <span className={styles.locationText}>{restaurant.location}</span>
+                      </p>
+                    </div>
+
+                    {/* 영업시간 */}
+                    <div className={styles.hoursRow}>
+                      {restaurant.businessHours ? (
+                        <p className={styles.hoursInfo}>
+                          <span className={styles.label}>영업:</span>
+                          <span className={styles.hoursText}>{restaurant.businessHours}</span>
+                        </p>
+                      ) : (
+                        <span></span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* 하단 버튼 */}
+                  <div className={styles.buttonContainer}>
+                    <button
+                      onClick={() => handlePhoneCall(restaurant)}
+                      className={`${styles.actionButton} ${styles.phoneButton}`}
+                    >
+                      전화하기
+                    </button>
+                    {restaurant.website && (
+                      <button
+                        onClick={() => handleWebsiteVisit(restaurant)}
+                        className={`${styles.actionButton} ${styles.websiteButton}`}
+                      >
+                        웹사이트 방문
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
-
-              <div className="flex items-center gap-4 mb-4 text-sm text-gray-600">
-                <span className="flex items-center">⭐ {restaurant.rating}</span>
-                <span className="flex items-center">🕐 {restaurant.deliveryTime}</span>
-              </div>
-
-              <div className="space-y-1 mb-6 text-sm text-gray-600">
-                <p>배송비 {restaurant.deliveryFee.toLocaleString()}원</p>
-                <p>최소주문 {restaurant.minOrder.toLocaleString()}원</p>
-              </div>
-
-              <button
-                onClick={() => onOrderClick(restaurant)}
-                className="w-full bg-blue-600 text-white font-medium py-3 rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                단체주문 신청
-              </button>
             </div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
     </div>
   )

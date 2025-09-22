@@ -5,42 +5,42 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 3rem 1rem;
+  padding: 48px 16px;
 }
 
 .formCard {
-  max-width: 28rem;
+  max-width: 448px;
   width: 100%;
   background-color: white;
-  border-radius: 1rem;
-  padding: 2.5rem;
+  border-radius: 16px;
+  padding: 40px;
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
 
 .header {
   text-align: center;
-  margin-bottom: 2rem;
+  margin-bottom: 32px;
 }
 
 .brand {
   color: #FE4651;
-  font-size: 2.25rem;
+  font-size: 36px;
   font-weight: 600;
   font-family: 'Hakgyoansim_Allimjang_OTF', sans-serif;
   letter-spacing: 0.1em;
-  margin-bottom: 1.5rem;
+  margin-bottom: 24px;
 }
 
 .title {
-  font-size: 1.875rem;
+  font-size: 30px;
   font-weight: 700;
   color: #1f2937;
-  margin-bottom: 0.5rem;
+  margin-bottom: 8px;
 }
 
 .subtitle {
   color: #4b5563;
-  font-size: 0.875rem;
+  font-size: 14px;
 }
 
 .signupLink {
@@ -57,19 +57,19 @@
 .form {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 24px;
 }
 
 .inputGroup {
-  margin-bottom: 1.25rem;
+  margin-bottom: 20px;
 }
 
 .label {
   display: block;
-  font-size: 0.875rem;
+  font-size: 14px;
   font-weight: 500;
   color: #374151;
-  margin-bottom: 0.5rem;
+  margin-bottom: 8px;
 }
 
 .inputWrapper {
@@ -78,20 +78,20 @@
 
 .inputIcon {
   position: absolute;
-  left: 0.75rem;
+  left: 12px;
   top: 50%;
   transform: translateY(-50%);
   color: #9ca3af;
-  width: 1.25rem;
-  height: 1.25rem;
+  width: 20px;
+  height: 20px;
 }
 
 .input {
   width: 100%;
-  padding: 0.75rem 1rem 0.75rem 2.5rem;
+  padding: 12px 16px 12px 40px;
   border: 1px solid #d1d5db;
-  border-radius: 0.5rem;
-  font-size: 0.875rem;
+  border-radius: 8px;
+  font-size: 14px;
   background-color: white;
   color: #1f2937;
   transition: all 0.2s;
@@ -111,7 +111,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin: 1.5rem 0;
+  margin: 24px 0;
 }
 
 .checkboxGroup {
@@ -120,12 +120,12 @@
 }
 
 .checkbox {
-  width: 1rem;
-  height: 1rem;
+  width: 16px;
+  height: 16px;
   color: #2563eb;
   border: 1px solid #d1d5db;
-  border-radius: 0.25rem;
-  margin-right: 0.5rem;
+  border-radius: 4px;
+  margin-right: 8px;
 }
 
 .checkbox:focus {
@@ -133,12 +133,12 @@
 }
 
 .checkboxLabel {
-  font-size: 0.875rem;
+  font-size: 14px;
   color: #1f2937;
 }
 
 .forgotLink {
-  font-size: 0.875rem;
+  font-size: 14px;
   color: #2563eb;
   font-weight: 500;
   text-decoration: none;
@@ -151,23 +151,23 @@
 
 .error {
   color: #dc2626;
-  font-size: 0.875rem;
+  font-size: 14px;
   text-align: center;
-  margin: 1rem 0;
+  margin: 16px 0;
 }
 
 .submitButton {
   width: 100%;
   background-color: #2563eb;
   color: white;
-  padding: 0.875rem 1rem;
+  padding: 14px 16px;
   border: none;
-  border-radius: 0.5rem;
-  font-size: 0.875rem;
+  border-radius: 8px;
+  font-size: 14px;
   font-weight: 500;
   cursor: pointer;
   transition: background-color 0.2s;
-  margin-bottom: 1.5rem;
+  margin-bottom: 24px;
 }
 
 .submitButton:hover:not(:disabled) {
@@ -181,7 +181,7 @@
 
 .divider {
   position: relative;
-  margin: 1.5rem 0;
+  margin: 24px 0;
 }
 
 .dividerLine {
@@ -200,11 +200,11 @@
   position: relative;
   display: flex;
   justify-content: center;
-  font-size: 0.875rem;
+  font-size: 14px;
 }
 
 .dividerLabel {
-  padding: 0 0.5rem;
+  padding: 0 8px;
   background-color: white;
   color: #4b5563;
 }
@@ -214,16 +214,16 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0.875rem 1rem;
+  padding: 14px 16px;
   border: 1px solid #d1d5db;
-  border-radius: 0.5rem;
+  border-radius: 8px;
   background-color: white;
-  font-size: 0.875rem;
+  font-size: 14px;
   font-weight: 500;
   color: #374151;
   cursor: pointer;
   transition: background-color 0.2s;
-  margin-bottom: 1.5rem;
+  margin-bottom: 24px;
 }
 
 .socialButton:hover {
@@ -231,7 +231,7 @@
 }
 
 .socialIcon {
-  margin-right: 0.5rem;
+  margin-right: 8px;
 }
 
 .homeLink {
@@ -240,7 +240,7 @@
 
 .homeLinkText {
   color: #4b5563;
-  font-size: 0.875rem;
+  font-size: 14px;
   text-decoration: none;
   transition: color 0.2s;
 }

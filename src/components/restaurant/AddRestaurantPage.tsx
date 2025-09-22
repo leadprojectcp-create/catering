@@ -14,6 +14,7 @@ interface RestaurantData {
   phone: string
   website?: string
   imageUrl?: string
+  businessHours?: string
 }
 
 const categories = [
@@ -33,14 +34,16 @@ export default function AddRestaurantPage() {
     name: '',
     location: '',
     phone: '',
-    website: ''
+    website: '',
+    businessHours: ''
   })
   const [selectedImage, setSelectedImage] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string>('')
+  const [imageDeleted, setImageDeleted] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value
@@ -51,12 +54,19 @@ export default function AddRestaurantPage() {
     const file = e.target.files?.[0]
     if (file) {
       setSelectedImage(file)
+      setImageDeleted(false)
       const reader = new FileReader()
       reader.onloadend = () => {
         setImagePreview(reader.result as string)
       }
       reader.readAsDataURL(file)
     }
+  }
+
+  const handleImageDelete = () => {
+    setSelectedImage(null)
+    setImagePreview('')
+    setImageDeleted(true)
   }
 
   const uploadImage = async (file: File): Promise<string> => {
@@ -98,7 +108,7 @@ export default function AddRestaurantPage() {
 
     try {
       let imageUrl = ''
-      if (selectedImage) {
+      if (selectedImage && !imageDeleted) {
         console.log('이미지 업로드 중...')
         imageUrl = await uploadImage(selectedImage)
         console.log('이미지 업로드 완료:', imageUrl)
@@ -124,7 +134,8 @@ export default function AddRestaurantPage() {
         name: '',
         location: '',
         phone: '',
-        website: ''
+        website: '',
+        businessHours: ''
       })
       setSelectedImage(null)
       setImagePreview('')
@@ -218,9 +229,22 @@ export default function AddRestaurantPage() {
             />
           </div>
 
-          {/* 6. 매장 대표사진 추가 */}
+          {/* 6. 영업시간 */}
           <div className={styles.inputGroup}>
-            <label className={styles.label}>6. 매장 대표사진 추가</label>
+            <label className={styles.label}>6. 영업시간</label>
+            <textarea
+              name="businessHours"
+              value={formData.businessHours}
+              onChange={handleChange}
+              className={styles.textarea}
+              placeholder="예: 평일 09:00-18:00, 토요일 09:00-15:00, 일요일 휴무"
+              rows={3}
+            />
+          </div>
+
+          {/* 7. 매장 대표사진 추가 */}
+          <div className={styles.inputGroup}>
+            <label className={styles.label}>7. 매장 대표사진 추가</label>
             <div className={styles.imageUploadContainer}>
               <input
                 type="file"
@@ -235,10 +259,26 @@ export default function AddRestaurantPage() {
               <label htmlFor="imageUpload" className={styles.uploadButton}>
                 파일업로드
               </label>
+              {imagePreview && !imageDeleted && (
+                <button
+                  type="button"
+                  onClick={handleImageDelete}
+                  className={styles.deleteButton}
+                >
+                  사진삭제
+                </button>
+              )}
             </div>
-            {imagePreview && (
+            {imagePreview && !imageDeleted && (
               <div className={styles.imagePreview}>
                 <Image src={imagePreview} alt="미리보기" className={styles.previewImage} width={200} height={200} />
+              </div>
+            )}
+            {imageDeleted && (
+              <div className={styles.imagePreview}>
+                <div className="text-center text-gray-500 py-8">
+                  사진이 삭제되었습니다.
+                </div>
               </div>
             )}
           </div>

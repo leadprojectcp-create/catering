@@ -1,0 +1,255 @@
+.container {
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.header {
+  margin-bottom: 32px;
+}
+
+.title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+}
+
+@media (min-width: 1024px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.emptyState {
+  grid-column: 1 / -1;
+  text-align: center;
+  color: #6b7280;
+  padding: 48px 0;
+}
+
+.loading {
+  text-align: center;
+}
+
+.restaurantCard {
+  position: relative;
+}
+
+.cardContent {
+  display: flex;
+  gap: 16px;
+}
+
+.imageContainer {
+  width: 180px;
+  height: 180px;
+  position: relative;
+  flex-shrink: 0;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.restaurantImage {
+  object-fit: cover;
+  width: 100%;
+  height: 100%;
+}
+
+.placeholderImage {
+  width: 100%;
+  height: 100%;
+  background-color: #f3f4f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36px;
+  color: #9ca3af;
+}
+
+.restaurantInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 180px;
+}
+
+.infoContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.categoryRow {
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.category {
+  font-size: 14px;
+  color: #6b7280;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-clamp: 1;
+}
+
+.adminMenu {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.adminButton {
+  border: none;
+  background: none;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+}
+
+.adminButton:hover {
+  background-color: #f3f4f6;
+}
+
+.adminButtonText {
+  color: #9ca3af;
+  font-size: 18px;
+}
+
+.dropdown {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  margin-top: 4px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  padding: 4px 0;
+  z-index: 10;
+  min-width: 100px;
+}
+
+.dropdownButton {
+  width: 100%;
+  padding: 8px 16px;
+  text-align: left;
+  font-size: 14px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.dropdownButton:hover {
+  background-color: #f3f4f6;
+}
+
+.editButton {
+  color: #374151;
+}
+
+.deleteButton {
+  color: #dc2626;
+}
+
+.nameRow {
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.restaurantName {
+  font-size: 18px;
+  font-weight: 700;
+  color: #111827;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-clamp: 1;
+}
+
+.locationRow {
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.locationInfo {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.label {
+  margin-right: 8px;
+  color: #9ca3af;
+}
+
+.locationText {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hoursRow {
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.hoursInfo {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.hoursText {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.buttonContainer {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.actionButton {
+  flex: 1;
+  font-weight: 500;
+  padding: 10px 0;
+  font-size: 14px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.phoneButton {
+  background-color: #10b981;
+  color: white;
+}
+
+.phoneButton:hover {
+  background-color: #059669;
+}
+
+.websiteButton {
+  background-color: #3b82f6;
+  color: white;
+}
+
+.websiteButton:hover {
+  background-color: #2563eb;
+}

@@ -1,0 +1,201 @@
+.container {
+  min-height: 100vh;
+  background-color: #f9fafb;
+  padding: 32px;
+}
+
+.content {
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.header {
+  margin-bottom: 32px;
+}
+
+.title {
+  font-size: 30px;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 16px;
+}
+
+.description {
+  color: #6b7280;
+}
+
+.loading {
+  text-align: center;
+}
+
+.filterContainer {
+  margin-bottom: 24px;
+  display: flex;
+  gap: 8px;
+}
+
+.filterButton {
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s;
+  border: none;
+  cursor: pointer;
+}
+
+.filterButtonActive {
+  background-color: #2563eb;
+  color: white;
+}
+
+.filterButtonInactive {
+  background-color: white;
+  color: #374151;
+}
+
+.filterButtonInactive:hover {
+  background-color: #f9fafb;
+}
+
+.tableContainer {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.emptyState {
+  padding: 48px;
+  text-align: center;
+  color: #6b7280;
+}
+
+.tableWrapper {
+  overflow-x: auto;
+}
+
+.table {
+  min-width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.tableHeader {
+  background-color: #f9fafb;
+}
+
+.tableHeaderCell {
+  padding: 12px 24px;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 500;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.tableBody {
+  background: white;
+}
+
+.tableRow {
+  transition: background-color 0.2s;
+}
+
+.tableRow:hover {
+  background-color: #f9fafb;
+}
+
+.tableCell {
+  padding: 16px 24px;
+  font-size: 14px;
+  color: #111827;
+  border-bottom: 1px solid #e5e7eb;
+  white-space: nowrap;
+}
+
+.restaurantName {
+  font-weight: 500;
+  color: #111827;
+}
+
+.restaurantId {
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.badge {
+  display: inline-flex;
+  padding: 2px 8px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 50px;
+}
+
+.badgePhone {
+  background-color: #dcfce7;
+  color: #166534;
+}
+
+.badgeWebsite {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+.badgeDefault {
+  background-color: #f3f4f6;
+  color: #374151;
+}
+
+.userInfo {
+  color: #6b7280;
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ipAddress {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.statsContainer {
+  margin-top: 32px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+}
+
+@media (min-width: 768px) {
+  .statsContainer {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.statCard {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 24px;
+}
+
+.statNumber {
+  font-size: 24px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.statNumberGreen {
+  color: #059669;
+}
+
+.statNumberBlue {
+  color: #2563eb;
+}
+
+.statLabel {
+  font-size: 14px;
+  color: #6b7280;
+}
