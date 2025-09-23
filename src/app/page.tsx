@@ -1,5 +1,10 @@
+import { Suspense } from 'react'
 import MainPage from '@/components/MainPage'
 
 export default function Home() {
-  return <MainPage />
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <MainPage />
+    </Suspense>
+  )
 }
