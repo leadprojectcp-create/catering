@@ -84,6 +84,7 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  gap: 10px;
 }
 
 .categoryRow {
@@ -188,14 +189,19 @@
   align-items: center;
   font-size: 14px;
   color: #6b7280;
+  gap: 8px;
 }
 
 .label {
-  margin-right: 8px;
   color: #9ca3af;
+  min-width: 40px;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .locationText {
+  flex: 1;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -212,9 +218,12 @@
   align-items: center;
   font-size: 14px;
   color: #6b7280;
+  gap: 8px;
 }
 
 .hoursText {
+  flex: 1;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -267,12 +276,9 @@
 }
 
 .phoneButton {
-  background-color: #10b981;
-  color: white;
-}
-
-.phoneButton:hover {
-  background-color: #059669;
+  background-color: #fff;
+  border: 1px solid #D9D9D9;
+  color: #333;
 }
 
 .websiteButton {
