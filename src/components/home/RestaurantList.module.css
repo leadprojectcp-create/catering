@@ -258,7 +258,6 @@
 /* 모바일 반응형 - 이미지와 정보는 좌우, 버튼만 아래 */
 @media (max-width: 768px) {
   .container {
-    padding: 0 16px;
     max-width: 100vw;
     overflow-x: hidden;
   }
@@ -327,11 +326,25 @@
   .locationInfo,
   .hoursInfo {
     font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
   }
 
   .label {
-    margin-right: 4px;
     font-size: 12px;
+    min-width: 32px;
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+
+  .locationText,
+  .hoursText {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .buttonContainer {
