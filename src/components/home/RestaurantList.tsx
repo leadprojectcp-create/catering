@@ -111,6 +111,9 @@ export default function RestaurantList({ selectedCategory }: RestaurantListProps
         <h2 className={styles.title}>
           {selectedCategory === '전체' ? '전체 목록' : `${selectedCategory} 목록`}
         </h2>
+        <p className={styles.resultCount}>
+          총 <span className={styles.countNumber}>{filteredRestaurants.length}</span>개의 결과
+        </p>
       </div>
 
       <div className={styles.grid}>
