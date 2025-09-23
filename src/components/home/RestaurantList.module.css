@@ -321,20 +321,24 @@
   }
 
   .buttonContainer {
-    gap: 8px;
+    gap: 6px;
     margin-top: 12px;
     width: 100%;
     max-width: 100%;
-    overflow: hidden;
+    box-sizing: border-box;
+    padding: 0 4px;
   }
 
   .actionButton {
-    padding: 10px 8px;
-    font-size: 13px;
+    padding: 8px 4px;
+    font-size: 12px;
     min-width: 0;
+    flex: 1;
+    max-width: calc(50% - 3px);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    box-sizing: border-box;
   }
 
   .placeholderImage {
