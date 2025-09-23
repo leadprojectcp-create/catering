@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
     const timestamp = Date.now()
     const randomId = Math.random().toString(36).substring(2, 15)
     const extension = file.name.split('.').pop()
-    const fileName = `meallab/restaurants/${timestamp}_${randomId}.${extension}`
+    const fileName = `picktoeat/restaurants/${timestamp}_${randomId}.${extension}`
 
     console.log('Generated filename:', fileName)
 
