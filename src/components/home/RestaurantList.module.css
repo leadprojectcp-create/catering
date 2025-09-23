@@ -226,6 +226,35 @@
   margin-top: 12px;
 }
 
+/* PC와 모바일에서 버튼 표시/숨김 제어 */
+.pcButtons {
+  display: none;
+}
+
+.mobileButtons {
+  display: flex;
+}
+
+/* PC에서는 PC 버튼만 표시 */
+@media (min-width: 769px) {
+  .pcButtons {
+    display: flex;
+    margin-top: 16px;
+  }
+
+  .mobileButtons {
+    display: none;
+  }
+
+  .restaurantInfo {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 180px;
+    justify-content: space-between;
+  }
+}
+
 .actionButton {
   flex: 1;
   font-weight: 500;
@@ -305,7 +334,7 @@
   }
 
   .infoContent {
-    gap: 6px;
+    gap: 2px;
   }
 
   .categoryRow,

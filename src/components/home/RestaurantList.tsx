@@ -198,11 +198,29 @@ export default function RestaurantList({ selectedCategory }: RestaurantListProps
                       )}
                     </div>
                   </div>
+
+                  {/* PC에서 버튼을 restaurantInfo 내부에 배치 */}
+                  <div className={`${styles.buttonContainer} ${styles.pcButtons}`}>
+                    <button
+                      onClick={() => handlePhoneCall(restaurant)}
+                      className={`${styles.actionButton} ${styles.phoneButton}`}
+                    >
+                      전화하기
+                    </button>
+                    {restaurant.website && (
+                      <button
+                        onClick={() => handleWebsiteVisit(restaurant)}
+                        className={`${styles.actionButton} ${styles.websiteButton}`}
+                      >
+                        웹사이트 방문
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
 
               {/* 모바일에서 버튼을 카드 외부 하단에 배치 */}
-              <div className={styles.buttonContainer}>
+              <div className={`${styles.buttonContainer} ${styles.mobileButtons}`}>
                 <button
                   onClick={() => handlePhoneCall(restaurant)}
                   className={`${styles.actionButton} ${styles.phoneButton}`}
