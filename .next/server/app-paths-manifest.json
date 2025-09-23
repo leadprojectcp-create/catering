@@ -1,7 +1,5 @@
 {
-  "/add-restaurant/page": "app/add-restaurant/page.js",
   "/admin/logs/page": "app/admin/logs/page.js",
-  "/edit-restaurant/[id]/page": "app/edit-restaurant/[id]/page.js",
   "/favicon.ico/route": "app/favicon.ico/route.js",
   "/page": "app/page.js"
 }
