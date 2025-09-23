@@ -1,42 +1,13 @@
 {
-  "hosting": {
-    "public": ".next/out",
+  "apphosting": {
+    "backendId": "catering",
+    "rootDir": "/",
     "ignore": [
-      "firebase.json",
-      "**/.*",
-      "**/node_modules/**"
-    ],
-    "rewrites": [
-      {
-        "source": "**",
-        "destination": "/index.html"
-      }
+      "node_modules",
+      ".git",
+      "firebase-debug.log",
+      "firebase-debug.*.log",
+      "functions"
     ]
-  },
-  "functions": [
-    {
-      "source": "functions",
-      "codebase": "default",
-      "ignore": [
-        "node_modules",
-        ".git",
-        "firebase-debug.log",
-        "firebase-debug.*.log"
-      ]
-    }
-  ],
-  "firestore": [
-    {
-      "rules": "firestore.rules",
-      "indexes": "firestore.indexes.json"
-    },
-    {
-      "database": "catering",
-      "rules": "firestore.catering.rules",
-      "indexes": "firestore.indexes.json"
-    }
-  ],
-  "storage": {
-    "rules": "storage.rules"
   }
 }

@@ -73,18 +73,33 @@ export default function AddRestaurantPage() {
     const formData = new FormData()
     formData.append('file', file)
 
+    console.log('Uploading image:', file.name, file.size, 'bytes')
+
     const response = await fetch('/api/upload', {
       method: 'POST',
       body: formData
     })
 
+    console.log('Upload response status:', response.status, response.statusText)
+
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
-      console.error('Upload API error:', response.status, errorData)
-      throw new Error(`이미지 업로드 실패: ${errorData.error || response.statusText}`)
+      console.error('Upload API error:', response.status, response.statusText, errorData)
+
+      let errorMessage = `이미지 업로드 실패 (${response.status})`
+      if (errorData.error) {
+        errorMessage += `: ${errorData.error}`
+      }
+      if (errorData.details) {
+        console.error('Upload error details:', errorData.details)
+        errorMessage += ` [환경설정 문제 가능성]`
+      }
+
+      throw new Error(errorMessage)
     }
 
     const result = await response.json()
+    console.log('Upload result:', result)
     return result.url
   }
 
