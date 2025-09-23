@@ -44,7 +44,10 @@ export default function RestaurantList({ selectedCategory }: RestaurantListProps
           id: doc.id,
           ...doc.data()
         })) as Restaurant[]
-        setRestaurants(restaurantData)
+
+        // 배열을 랜덤하게 섞기
+        const shuffledRestaurants = restaurantData.sort(() => Math.random() - 0.5)
+        setRestaurants(shuffledRestaurants)
       } catch (error) {
         console.error('레스토랑 데이터 가져오기 실패:', error)
       } finally {
