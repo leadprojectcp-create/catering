@@ -258,7 +258,9 @@
 /* 모바일 반응형 - 이미지와 정보는 좌우, 버튼만 아래 */
 @media (max-width: 768px) {
   .container {
-    padding: 0;
+    padding: 0 16px;
+    max-width: 100vw;
+    overflow-x: hidden;
   }
 
   .header {
@@ -271,15 +273,23 @@
 
   .grid {
     gap: 16px;
+    width: 100%;
   }
 
   .restaurantCard {
     display: flex;
     flex-direction: column;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
   }
 
   .cardContent {
     gap: 12px;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
   }
 
   .imageContainer {
@@ -289,6 +299,10 @@
 
   .restaurantInfo {
     min-height: 100px;
+    width: 100%;
+    max-width: calc(100% - 112px);
+    flex: 1;
+    overflow: hidden;
   }
 
   .infoContent {
@@ -321,20 +335,20 @@
   }
 
   .buttonContainer {
-    gap: 6px;
+    gap: 8px;
     margin-top: 12px;
     width: 100%;
     max-width: 100%;
     box-sizing: border-box;
-    padding: 0 4px;
+    padding: 0;
   }
 
   .actionButton {
-    padding: 8px 4px;
-    font-size: 12px;
+    padding: 10px 8px;
+    font-size: 13px;
     min-width: 0;
     flex: 1;
-    max-width: calc(50% - 3px);
+    max-width: calc(50% - 4px);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
