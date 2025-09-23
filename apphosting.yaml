@@ -51,15 +51,15 @@ env:
 
   # Bunny CDN Configuration
   - variable: BUNNY_STORAGE_ZONE_NAME
-    value: catering-images
+    value: tripjoy
     availability:
       - RUNTIME
   - variable: BUNNY_STORAGE_PASSWORD
-    value: 2e458e9a-13b9-456a-b8db1d334dce-efef-434d
+    value: 529a5878-2b3a-4ddb-aacb70439702-834b-4ccf
     availability:
       - RUNTIME
   - variable: BUNNY_CDN_HOSTNAME
-    value: catering-images.b-cdn.net
+    value: storage.bunnycdn.com
     availability:
       - BUILD
       - RUNTIME
