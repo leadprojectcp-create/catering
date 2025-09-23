@@ -31,7 +31,22 @@
   color: #999;
   font-size: 12px;
   line-height: 1.5;
+  margin-bottom: 8px;
+}
+
+.inquiryLink {
   margin-bottom: 16px;
+}
+
+.inquiryText {
+  color: #999;
+  font-size: 12px;
+  text-decoration: underline;
+  transition: color 0.2s;
+}
+
+.inquiryText:hover {
+  color: #666;
 }
 
 .copyright {

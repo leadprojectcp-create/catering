@@ -33,6 +33,16 @@ export default function Footer() {
             <div className={styles.address}>
               서울특별시 광진구 아차산로62길 14-12(구의동, 대영트윈,투)
             </div>
+            <div className={styles.inquiryLink}>
+              <a
+                href="https://open.kakao.com/o/s82xhBTh"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.inquiryText}
+              >
+                입점 문의
+              </a>
+            </div>
             <div className={styles.copyright}>
               © 2025 Leapcompany. All rights reserved.
             </div>
