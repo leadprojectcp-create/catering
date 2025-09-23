@@ -35,7 +35,7 @@ export default function Footer() {
             </div>
             <div className={styles.inquiryLink}>
               <a
-                href="https://open.kakao.com/o/s82xhBTh"
+                href="https://open.kakao.com/o/sMuPjBTh"
                 target="_blank"
                 rel="noopener noreferrer"
                 className={styles.inquiryText}
