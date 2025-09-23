@@ -26,7 +26,7 @@ export default function Footer() {
       <div className={styles.container}>
         <div className={styles.content}>
           <div className={styles.leftContent}>
-            <div className={styles.companyName}>Meal Lab</div>
+            <div className={styles.companyName}>Pick to Eat</div>
             <div className={styles.companyInfo}>
               (주)리프컴퍼니 | CEO 박상호 | 사업자 등록번호 413-87-02826
             </div>

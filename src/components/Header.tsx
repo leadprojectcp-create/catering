@@ -39,7 +39,7 @@ export default function Header({ selectedCategory = '전체', onCategorySelect }
               />
             </Link>
           </div>
-          <div className={styles.slogan}>단체주문부터 답례품까지 밀랩에서 한번에</div>
+          <div className={styles.slogan}>단체주문부터 답례품까지 픽투잇에서 한번에</div>
         </div>
 
         {/* 카테고리 메뉴 영역 */}
