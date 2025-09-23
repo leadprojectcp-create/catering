@@ -49,6 +49,21 @@ env:
       - BUILD
       - RUNTIME
 
+  # Bunny CDN Configuration
+  - variable: BUNNY_STORAGE_ZONE_NAME
+    value: catering-images
+    availability:
+      - RUNTIME
+  - variable: BUNNY_STORAGE_PASSWORD
+    value: 2e458e9a-13b9-456a-b8db1d334dce-efef-434d
+    availability:
+      - RUNTIME
+  - variable: BUNNY_CDN_HOSTNAME
+    value: catering-images.b-cdn.net
+    availability:
+      - BUILD
+      - RUNTIME
+
   # Grant access to secrets in Cloud Secret Manager.
   # See https://firebase.google.com/docs/app-hosting/configure#secret-parameters
   # - variable: MY_SECRET
