@@ -181,7 +181,7 @@ export default function RestaurantList({ selectedCategory }: RestaurantListProps
                     {/* 위치 */}
                     <div className={styles.locationRow}>
                       <p className={styles.locationInfo}>
-                        <span className={styles.label}>위치:</span>
+                        <span className={styles.label}>위치 </span>
                         <span className={styles.locationText}>{restaurant.location}</span>
                       </p>
                     </div>
@@ -190,7 +190,7 @@ export default function RestaurantList({ selectedCategory }: RestaurantListProps
                     <div className={styles.hoursRow}>
                       {restaurant.businessHours ? (
                         <p className={styles.hoursInfo}>
-                          <span className={styles.label}>영업:</span>
+                          <span className={styles.label}>영업 </span>
                           <span className={styles.hoursText}>{restaurant.businessHours}</span>
                         </p>
                       ) : (
@@ -198,25 +198,25 @@ export default function RestaurantList({ selectedCategory }: RestaurantListProps
                       )}
                     </div>
                   </div>
-
-                  {/* 하단 버튼 */}
-                  <div className={styles.buttonContainer}>
-                    <button
-                      onClick={() => handlePhoneCall(restaurant)}
-                      className={`${styles.actionButton} ${styles.phoneButton}`}
-                    >
-                      전화하기
-                    </button>
-                    {restaurant.website && (
-                      <button
-                        onClick={() => handleWebsiteVisit(restaurant)}
-                        className={`${styles.actionButton} ${styles.websiteButton}`}
-                      >
-                        웹사이트 방문
-                      </button>
-                    )}
-                  </div>
                 </div>
+              </div>
+
+              {/* 모바일에서 버튼을 카드 외부 하단에 배치 */}
+              <div className={styles.buttonContainer}>
+                <button
+                  onClick={() => handlePhoneCall(restaurant)}
+                  className={`${styles.actionButton} ${styles.phoneButton}`}
+                >
+                  전화하기
+                </button>
+                {restaurant.website && (
+                  <button
+                    onClick={() => handleWebsiteVisit(restaurant)}
+                    className={`${styles.actionButton} ${styles.websiteButton}`}
+                  >
+                    웹사이트 방문
+                  </button>
+                )}
               </div>
             </div>
           ))
