@@ -1,11 +1,14 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Mail, Lock } from 'lucide-react'
 import { signInWithEmailAndPassword } from 'firebase/auth'
 import { auth } from '@/lib/firebase'
+import { handleRedirectResult } from '@/lib/auth'
+import SocialLogin from './SocialLogin'
+import AuthGuard from './AuthGuard'
 import styles from './LoginPage.module.css'
 
 export default function LoginPage() {
@@ -16,6 +19,30 @@ export default function LoginPage() {
   })
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
+
+  // 소셜 로그인 리다이렉트 결과 처리 (Firebase 기본 핸들러 사용)
+  useEffect(() => {
+    const checkRedirectResult = async () => {
+      try {
+        const result = await handleRedirectResult()
+        if (result) {
+          if (result.success) {
+            if ('isExistingUser' in result && result.isExistingUser && 'registrationComplete' in result && result.registrationComplete) {
+              router.push('/')
+            } else {
+              router.push('/signup/choose-type')
+            }
+          } else {
+            setError(result.error || '소셜 로그인 중 오류가 발생했습니다.')
+          }
+        }
+      } catch (error) {
+        console.error('Redirect result check error:', error)
+      }
+    }
+
+    checkRedirectResult()
+  }, [router])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -41,7 +68,8 @@ export default function LoginPage() {
   }
 
   return (
-    <div className={styles.container}>
+    <AuthGuard requireAuth={false}>
+      <div className={styles.container}>
       <div className={styles.formCard}>
         <div className={styles.header}>
           <div className={styles.brand}>
@@ -50,12 +78,6 @@ export default function LoginPage() {
           <h2 className={styles.title}>
             로그인
           </h2>
-          <p className={styles.subtitle}>
-            계정이 없으신가요?{' '}
-            <Link href="/signup" className={styles.signupLink}>
-              회원가입하기
-            </Link>
-          </p>
         </div>
 
         <form className={styles.form} onSubmit={handleSubmit}>
@@ -138,28 +160,7 @@ export default function LoginPage() {
           </div>
 
           {/* 소셜 로그인 */}
-          <div className={styles.divider}>
-            <div className={styles.dividerLine}>
-              <div className={styles.dividerBorder} />
-            </div>
-            <div className={styles.dividerText}>
-              <span className={styles.dividerLabel}>또는</span>
-            </div>
-          </div>
-
-          <div>
-            <button
-              type="button"
-              className={styles.socialButton}
-              onClick={() => {
-                // TODO: Google 로그인 구현
-                console.log('Google 로그인')
-              }}
-            >
-              <span className={styles.socialIcon}>🔍</span>
-              Google로 로그인
-            </button>
-          </div>
+          <SocialLogin onError={setError} />
 
           <div className={styles.homeLink}>
             <Link href="/" className={styles.homeLinkText}>
@@ -169,5 +170,6 @@ export default function LoginPage() {
         </form>
       </div>
     </div>
+    </AuthGuard>
   )
 }

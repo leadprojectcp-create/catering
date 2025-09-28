@@ -12,6 +12,7 @@ interface UserData {
   level: number
   companyName?: string
   phone?: string
+  registrationComplete?: boolean
 }
 
 interface AuthContextType {
@@ -58,7 +59,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               name: data.name,
               level: data.level || 1, // 기본 레벨 1
               companyName: data.companyName,
-              phone: data.phone
+              phone: data.phone,
+              registrationComplete: data.registrationComplete || false
             })
           }
         } catch (error) {

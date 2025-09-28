@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { User, Mail, Lock, Building } from 'lucide-react'
 import { signupUser } from '@/lib/auth'
+import AuthGuard from './AuthGuard'
 import styles from './SignupPage.module.css'
 
 export default function SignupPage() {
@@ -59,7 +60,12 @@ export default function SignupPage() {
         alert('회원가입이 완료되었습니다!')
         router.push('/login')
       } else {
-        setError(result.error || '회원가입 중 오류가 발생했습니다.')
+        if (result.existingUserType) {
+          const userType = result.existingUserType === 'partner' ? '파트너 회원' : '일반 회원'
+          setError(`이미 ${userType}으로 가입된 이메일입니다.`)
+        } else {
+          setError(result.error || '회원가입 중 오류가 발생했습니다.')
+        }
       }
     } catch (error) {
       console.error('Caught error:', error)
@@ -71,7 +77,8 @@ export default function SignupPage() {
   }
 
   return (
-    <div className={styles.container}>
+    <AuthGuard requireAuth={false}>
+      <div className={styles.container}>
       <div className={styles.formCard}>
         <div className={styles.header}>
           <h2 className={styles.title}>
@@ -215,7 +222,7 @@ export default function SignupPage() {
               disabled={isLoading}
               className={styles.submitButton}
             >
-              {isLoading ? '가입 중...' : '회원가입'}
+{isLoading ? '가입 중...' : '회원가입'}
             </button>
           </div>
 
@@ -227,5 +234,6 @@ export default function SignupPage() {
         </form>
       </div>
     </div>
+    </AuthGuard>
   )
 }

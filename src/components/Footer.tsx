@@ -6,7 +6,7 @@ import { Plus, FileText, LogOut } from 'lucide-react'
 import styles from './Footer.module.css'
 
 export default function Footer() {
-  const { userData, logout } = useAuth()
+  const { user, userData, logout } = useAuth()
 
   const handleLogout = async () => {
     try {
@@ -20,6 +20,8 @@ export default function Footer() {
 
   // 레벨 10 사용자(관리자)만 업체 추가 버튼 표시
   const isAdmin = userData?.level === 10
+  // 로그인된 사용자인지 확인
+  const isLoggedIn = !!user
 
   return (
     <footer className={styles.footer}>
@@ -48,17 +50,21 @@ export default function Footer() {
             </div>
           </div>
 
-          {isAdmin && (
+          {isLoggedIn && (
             <div className={styles.rightContent}>
               <div className={styles.adminButtons}>
-                <Link href="/add-restaurant" className={styles.addButton}>
-                  <Plus size={20} />
-                  업체 추가
-                </Link>
-                <Link href="/admin/logs" className={styles.logButton}>
-                  <FileText size={20} />
-                  로그 보기
-                </Link>
+                {isAdmin && (
+                  <>
+                    <Link href="/add-restaurant" className={styles.addButton}>
+                      <Plus size={20} />
+                      업체 추가
+                    </Link>
+                    <Link href="/admin/logs" className={styles.logButton}>
+                      <FileText size={20} />
+                      로그 보기
+                    </Link>
+                  </>
+                )}
                 <button onClick={handleLogout} className={styles.logoutButton}>
                   <LogOut size={20} />
                   로그아웃

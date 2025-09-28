@@ -1,0 +1,156 @@
+.container {
+  margin-top: 24px;
+}
+
+.divider {
+  position: relative;
+  margin: 24px 0;
+}
+
+.divider::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background-color: #e5e7eb;
+}
+
+.dividerText {
+  position: relative;
+  background-color: white;
+  padding: 0 16px;
+  color: #6b7280;
+  font-size: 14px;
+  display: block;
+  text-align: center;
+}
+
+.emailSignupSection {
+  margin-bottom: 16px;
+}
+
+.emailSignupButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 12px 16px;
+  background-color: #3b82f6;
+  color: white;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all 0.2s ease-in-out;
+  border: 1px solid #3b82f6;
+}
+
+.emailSignupButton:hover {
+  background-color: #2563eb;
+  border-color: #2563eb;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.socialButtons {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.socialButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  position: relative;
+}
+
+.socialButton:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.socialButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.socialButton:disabled:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.googleButton {
+  background-color: white;
+  color: #374151;
+  border-color: #d1d5db;
+}
+
+.googleButton:hover:not(:disabled) {
+  background-color: #f9fafb;
+}
+
+.kakaoButton {
+  background-color: #fee500;
+  color: #000000;
+  border-color: #fee500;
+}
+
+.kakaoButton:hover:not(:disabled) {
+  background-color: #fde047;
+}
+
+.appleButton {
+  background-color: #000000;
+  color: #ffffff;
+  border-color: #000000;
+}
+
+.appleButton:hover:not(:disabled) {
+  background-color: #1f2937;
+}
+
+.socialIcon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid transparent;
+  border-top: 2px solid currentColor;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 640px) {
+  .socialButton {
+    padding: 14px 16px;
+    font-size: 14px;
+  }
+
+  .socialIcon {
+    width: 18px;
+    height: 18px;
+  }
+}
