@@ -1,6 +1,15 @@
 {
+  "/_not-found/page": "app/_not-found/page.js",
+  "/add-product/page": "app/add-product/page.js",
+  "/add-restaurant/page": "app/add-restaurant/page.js",
   "/admin/logs/page": "app/admin/logs/page.js",
+  "/api/upload/route": "app/api/upload/route.js",
+  "/edit-restaurant/[id]/page": "app/edit-restaurant/[id]/page.js",
   "/favicon.ico/route": "app/favicon.ico/route.js",
   "/login/page": "app/login/page.js",
-  "/page": "app/page.js"
+  "/page": "app/page.js",
+  "/partner-signup/page": "app/partner-signup/page.js",
+  "/signup/choose-type/page": "app/signup/choose-type/page.js",
+  "/signup/complete/page": "app/signup/complete/page.js",
+  "/signup/page": "app/signup/page.js"
 }

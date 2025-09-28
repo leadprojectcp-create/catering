@@ -83,7 +83,7 @@ export default function AddProductPage() {
     }))
   }
 
-  const updateOption = (index: number, field: keyof ProductOption, value: any) => {
+  const updateOption = (index: number, field: keyof ProductOption, value: string | string[] | { [key: string]: number }) => {
     setFormData(prev => ({
       ...prev,
       options: prev.options.map((option, i) =>

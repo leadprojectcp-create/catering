@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { User, Mail, Lock, Building, Phone } from 'lucide-react'
+import { User, Mail, Building, Phone } from 'lucide-react'
 import { doc, setDoc } from 'firebase/firestore'
 import { auth, db } from '@/lib/firebase'
 import AuthGuard from './AuthGuard'

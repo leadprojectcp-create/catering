@@ -97,7 +97,7 @@ export async function signupUser(userData: SignupData) {
 }
 
 // 소셜 로그인용 사용자 데이터 처리
-async function handleSocialUser(firebaseUser: any, provider: string) {
+async function handleSocialUser(firebaseUser: { uid: string; email?: string | null; displayName?: string | null }, provider: string) {
   try {
     // 1. Firebase UID로 기존 사용자 확인
     const userRef = doc(db, 'users', firebaseUser.uid)
@@ -120,7 +120,7 @@ async function handleSocialUser(firebaseUser: any, provider: string) {
       }
     } else {
       // 2. 이메일로 기존 사용자 중복 체크
-      const existingUser = await checkExistingUser(firebaseUser.email)
+      const existingUser = await checkExistingUser(firebaseUser.email || '')
       if (existingUser.exists) {
         const userType = existingUser.type === 'partner' ? '파트너 회원' : '일반 회원'
         return {
@@ -164,7 +164,7 @@ export async function signInWithGoogle() {
 
     const result = await signInWithPopup(auth, provider)
     return await handleSocialUser(result.user, 'google')
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Google login error:', error)
     return { success: false, error: '구글 로그인 중 오류가 발생했습니다.' }
   }
@@ -181,7 +181,7 @@ export async function signInWithKakao() {
 
     const result = await signInWithPopup(auth, provider)
     return await handleSocialUser(result.user, 'kakao')
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Kakao login error:', error)
     return { success: false, error: '카카오톡 로그인 중 오류가 발생했습니다.' }
   }
@@ -199,7 +199,7 @@ export async function handleRedirectResult() {
       return await handleSocialUser(result.user, provider)
     }
     return null
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Redirect result error:', error)
     return { success: false, error: '소셜 로그인 중 오류가 발생했습니다.' }
   }

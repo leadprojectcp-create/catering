@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Building, User, ChevronRight } from 'lucide-react'
 import AuthGuard from './AuthGuard'
@@ -9,12 +9,7 @@ import styles from './ChooseTypePage.module.css'
 
 export default function ChooseTypePage() {
   const router = useRouter()
-  const searchParams = useSearchParams()
   const [selectedType, setSelectedType] = useState<'user' | 'partner' | null>(null)
-
-  // URL 파라미터에서 소셜 로그인 정보 가져오기
-  const provider = searchParams.get('provider')
-  const tempUserId = searchParams.get('tempUserId')
 
   const handleContinue = () => {
     if (!selectedType) return
