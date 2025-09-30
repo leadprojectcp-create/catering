@@ -1,15 +1,34 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { User, Mail, Lock, Building } from 'lucide-react'
+import { Eye, EyeOff } from 'lucide-react'
 import { signupUser } from '@/lib/auth'
 import AuthGuard from './AuthGuard'
 import styles from './SignupPage.module.css'
 
 export default function SignupPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const selectedType = searchParams.get('type') as 'user' | 'partner' | null
+
+  // 약관 동의 정보 받기
+  const termsAgreements = {
+    service: searchParams.get('terms') === 'true',
+    privacy: searchParams.get('privacy') === 'true',
+    marketing: searchParams.get('marketing') === 'true'
+  }
+
+  // 디버깅을 위한 로그
+  console.log('URL searchParams:', {
+    terms: searchParams.get('terms'),
+    privacy: searchParams.get('privacy'),
+    thirdparty: searchParams.get('thirdparty'),
+    marketing: searchParams.get('marketing'),
+    type: searchParams.get('type')
+  })
+  console.log('parsed termsAgreements:', termsAgreements)
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -20,6 +39,8 @@ export default function SignupPage() {
   })
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -46,13 +67,23 @@ export default function SignupPage() {
 
     try {
       console.log('Calling signupUser...')
-      const result = await signupUser({
+      console.log('formData:', formData)
+      console.log('termsAgreements:', termsAgreements)
+      console.log('selectedType:', selectedType)
+
+      const signupUserData = {
         email: formData.email,
         password: formData.password,
         name: formData.name,
         companyName: formData.companyName || undefined,
-        phone: formData.phone || undefined
-      })
+        phone: formData.phone || undefined,
+        type: selectedType || 'user',
+        termsAgreements
+      }
+
+      console.log('Full signupUserData to be sent:', signupUserData)
+
+      const result = await signupUser(signupUserData)
 
       console.log('signupUser result:', result)
 
@@ -60,12 +91,7 @@ export default function SignupPage() {
         alert('회원가입이 완료되었습니다!')
         router.push('/login')
       } else {
-        if (result.existingUserType) {
-          const userType = result.existingUserType === 'partner' ? '파트너 회원' : '일반 회원'
-          setError(`이미 ${userType}으로 가입된 이메일입니다.`)
-        } else {
-          setError(result.error || '회원가입 중 오류가 발생했습니다.')
-        }
+        setError(result.error || '회원가입 중 오류가 발생했습니다.')
       }
     } catch (error) {
       console.error('Caught error:', error)
@@ -81,15 +107,10 @@ export default function SignupPage() {
       <div className={styles.container}>
       <div className={styles.formCard}>
         <div className={styles.header}>
-          <h2 className={styles.title}>
-            회원가입
-          </h2>
-          <p className={styles.subtitle}>
-            이미 계정이 있으신가요?{' '}
-            <Link href="/login" className={styles.loginLink}>
-              로그인하기
-            </Link>
-          </p>
+          <h1 className={styles.title}>
+            회원가입을 위해<br />
+            정보를 입력해주세요
+          </h1>
         </div>
 
         <form className={styles.form} onSubmit={handleSubmit}>
@@ -97,60 +118,35 @@ export default function SignupPage() {
             {/* 이름 */}
             <div className={styles.inputGroup}>
               <label htmlFor="name" className={styles.label}>
-                이름 *
+                이름
               </label>
-              <div className={styles.inputWrapper}>
-                <User className={styles.inputIcon} />
-                <input
-                  id="name"
-                  name="name"
-                  type="text"
-                  required
-                  value={formData.name}
-                  onChange={handleChange}
-                  className={styles.input}
-                  placeholder="홍길동"
-                />
-              </div>
+              <input
+                id="name"
+                name="name"
+                type="text"
+                required
+                value={formData.name}
+                onChange={handleChange}
+                className={styles.inputNoIcon}
+                placeholder="홍길동"
+              />
             </div>
 
             {/* 이메일 */}
             <div className={styles.inputGroup}>
               <label htmlFor="email" className={styles.label}>
-                이메일 *
+                이메일
               </label>
-              <div className={styles.inputWrapper}>
-                <Mail className={styles.inputIcon} />
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  required
-                  value={formData.email}
-                  onChange={handleChange}
-                  className={styles.input}
-                  placeholder="example@company.com"
-                />
-              </div>
-            </div>
-
-            {/* 회사명 */}
-            <div className={styles.inputGroup}>
-              <label htmlFor="companyName" className={styles.label}>
-                회사/단체명
-              </label>
-              <div className={styles.inputWrapper}>
-                <Building className={styles.inputIcon} />
-                <input
-                  id="companyName"
-                  name="companyName"
-                  type="text"
-                  value={formData.companyName}
-                  onChange={handleChange}
-                  className={styles.input}
-                  placeholder="회사명 (선택사항)"
-                />
-              </div>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                required
+                value={formData.email}
+                onChange={handleChange}
+                className={styles.inputNoIcon}
+                placeholder="example@company.com"
+              />
             </div>
 
             {/* 전화번호 */}
@@ -162,6 +158,7 @@ export default function SignupPage() {
                 id="phone"
                 name="phone"
                 type="tel"
+                required
                 value={formData.phone}
                 onChange={handleChange}
                 className={styles.inputNoIcon}
@@ -172,40 +169,52 @@ export default function SignupPage() {
             {/* 비밀번호 */}
             <div className={styles.inputGroup}>
               <label htmlFor="password" className={styles.label}>
-                비밀번호 *
+                비밀번호
               </label>
-              <div className={styles.inputWrapper}>
-                <Lock className={styles.inputIcon} />
+              <div className={styles.passwordWrapper}>
                 <input
                   id="password"
                   name="password"
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   required
                   value={formData.password}
                   onChange={handleChange}
-                  className={styles.input}
+                  className={styles.passwordInput}
                   placeholder="6자 이상 입력해주세요"
                 />
+                <button
+                  type="button"
+                  className={styles.eyeButton}
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
               </div>
             </div>
 
             {/* 비밀번호 확인 */}
             <div className={styles.inputGroup}>
               <label htmlFor="confirmPassword" className={styles.label}>
-                비밀번호 확인 *
+                비밀번호 확인
               </label>
-              <div className={styles.inputWrapper}>
-                <Lock className={styles.inputIcon} />
+              <div className={styles.passwordWrapper}>
                 <input
                   id="confirmPassword"
                   name="confirmPassword"
-                  type="password"
+                  type={showConfirmPassword ? "text" : "password"}
                   required
                   value={formData.confirmPassword}
                   onChange={handleChange}
-                  className={styles.input}
+                  className={styles.passwordInput}
                   placeholder="비밀번호를 다시 입력해주세요"
                 />
+                <button
+                  type="button"
+                  className={styles.eyeButton}
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                >
+                  {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
               </div>
             </div>
           </div>
@@ -226,9 +235,9 @@ export default function SignupPage() {
             </button>
           </div>
 
-          <div className={styles.homeLink}>
-            <Link href="/" className={styles.homeLinkText}>
-              홈으로 돌아가기
+          <div className={styles.backLink}>
+            <Link href="/signup/terms" className={styles.backLinkText}>
+              이전으로 돌아가기
             </Link>
           </div>
         </form>

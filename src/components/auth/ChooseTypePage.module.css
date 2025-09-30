@@ -3,30 +3,30 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #f9fafb;
+  background-color: white;
   padding: 16px;
 }
 
 .content {
-  max-width: 800px;
+  max-width: 500px;
   width: 100%;
 }
 
 .header {
-  text-align: center;
   margin-bottom: 48px;
 }
 
 .title {
-  font-size: 32px;
+  color: #333;
+  font-size: 24px;
   font-weight: 700;
-  color: #111827;
   margin-bottom: 8px;
 }
 
 .subtitle {
+  color: #333;
   font-size: 16px;
-  color: #6b7280;
+  font-weight: 500;
   margin: 0;
 }
 
@@ -37,29 +37,20 @@
   margin-bottom: 48px;
 }
 
-@media (min-width: 768px) {
-  .typeCards {
-    grid-template-columns: 1fr 1fr;
-  }
-}
-
 .typeCard {
-  background: white;
-  border: 2px solid #e5e7eb;
-  border-radius: 16px;
-  padding: 32px;
+  border-radius: 10px;
+  background: #FAFAFA;
+  padding: 25px 20px;
   cursor: pointer;
   transition: all 0.2s ease-in-out;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  align-items: center;
   position: relative;
-  min-height: 280px;
 }
 
 .typeCard:hover {
-  border-color: #d1d5db;
   transform: translateY(-2px);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
 }
 
 .typeCard.selected {
@@ -96,9 +87,17 @@
 }
 
 .cardDescription {
+  color: #4E5968;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.cardAction {
+  color: #333;
   font-size: 16px;
-  color: #6b7280;
-  margin-bottom: 24px;
+  font-weight: 700;
+  margin: 0;
 }
 
 .cardFeatures {
@@ -124,11 +123,9 @@
 }
 
 .cardArrow {
-  position: absolute;
-  top: 24px;
-  right: 24px;
   color: #9ca3af;
   transition: all 0.2s ease-in-out;
+  margin-left: 16px;
 }
 
 .selected .cardArrow {
@@ -150,7 +147,7 @@
   cursor: pointer;
   transition: all 0.2s ease-in-out;
   margin-bottom: 24px;
-  min-width: 200px;
+  min-width: 100%;
 }
 
 .continueButton:hover:not(:disabled) {
@@ -183,17 +180,24 @@
 }
 
 @media (max-width: 767px) {
+  .container {
+    padding: 20px;
+  }
+
   .typeCards {
     gap: 16px;
   }
 
   .typeCard {
-    padding: 24px;
-    min-height: 240px;
+    padding: 25px 20px;
   }
 
   .title {
-    font-size: 28px;
+    font-size: 20px;
+  }
+
+  .subtitle {
+    font-size: 16px;
   }
 
   .cardTitle {

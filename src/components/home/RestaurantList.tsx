@@ -43,13 +43,14 @@ export default function RestaurantList({ selectedCategory }: RestaurantListProps
         const restaurantData = querySnapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data()
-        })) as Restaurant[]
+        } as Restaurant))
 
-        // 배열을 랜덤하게 섞기
+        // 랜덤 셔플
         const shuffledRestaurants = restaurantData.sort(() => Math.random() - 0.5)
         setRestaurants(shuffledRestaurants)
       } catch (error) {
         console.error('레스토랑 데이터 가져오기 실패:', error)
+        setRestaurants([])
       } finally {
         setIsLoading(false)
       }
@@ -83,7 +84,6 @@ export default function RestaurantList({ selectedCategory }: RestaurantListProps
     if (window.confirm(`"${restaurant.name}" 업체를 삭제하시겠습니까?`)) {
       try {
         await deleteDoc(doc(db, 'restaurants', restaurant.id))
-        // 삭제 후 목록 새로고침
         setRestaurants(restaurants.filter(r => r.id !== restaurant.id))
         alert('업체가 삭제되었습니다.')
       } catch (error) {
@@ -105,6 +105,7 @@ export default function RestaurantList({ selectedCategory }: RestaurantListProps
       </div>
     )
   }
+
   return (
     <div className={styles.container}>
       <div className={styles.header}>

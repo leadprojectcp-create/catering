@@ -44,6 +44,12 @@ export default function SocialLogin({ onError }: SocialLoginProps) {
         }
       } else {
         const errorMessage = 'error' in result ? (result.error || '로그인 중 오류가 발생했습니다.') : '로그인 중 오류가 발생했습니다.'
+
+        // 이메일 설정 필요한 경우 특별 처리
+        if ('needsEmailSetup' in result && result.needsEmailSetup) {
+          console.log('Email setup needed for social login')
+        }
+
         onError?.(errorMessage)
       }
     } catch (error) {

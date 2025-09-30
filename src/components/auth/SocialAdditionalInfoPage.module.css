@@ -1,0 +1,139 @@
+/* SocialAdditionalInfoPage 모듈 CSS */
+
+.container {
+  min-height: 100vh;
+  background-color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.formCard {
+  max-width: 500px;
+  width: 100%;
+}
+
+.header {
+  margin-bottom: 30px;
+}
+
+.title {
+  color: #333;
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  color: #333;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+}
+
+.inputGroup {
+  margin-bottom: 20px;
+}
+
+.label {
+  display: block;
+  color: #333;
+  font-size: 14px;
+  font-weight: 400;
+  margin-bottom: 10px;
+}
+
+.required {
+  color: #ef4444;
+}
+
+.inputNoIcon {
+  width: 100%;
+  padding: 12px 16px;
+  border: none;
+  border-radius: 10px;
+  background: #FAFAFA;
+  color: #333;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.inputNoIcon::placeholder {
+  color: #999;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.inputNoIcon:focus {
+  outline: none;
+}
+
+.staticInfo {
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: #f3f4f6;
+  color: #6b7280;
+  font-size: 14px;
+  font-weight: 500;
+  border: 1px solid #e5e7eb;
+}
+
+.error {
+  color: #dc2626;
+  font-size: 14px;
+  text-align: center;
+  margin: 16px 0;
+}
+
+.submitButton {
+  width: 100%;
+  background-color: #2563eb;
+  color: white;
+  padding: 14px 16px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  margin-bottom: 24px;
+}
+
+.submitButton:hover:not(:disabled) {
+  background-color: #1d4ed8;
+}
+
+.submitButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.backLink {
+  margin-top: 16px;
+  text-align: center;
+}
+
+.backLinkText {
+  color: #6b7280;
+  text-decoration: none;
+  font-size: 14px;
+  transition: color 0.2s ease-in-out;
+}
+
+.backLinkText:hover {
+  color: #374151;
+}
+
+@media (max-width: 768px) {
+  .formCard {
+    margin: 30px 10px 30px 10px;
+  }
+
+  .title {
+    font-size: 20px;
+  }
+}

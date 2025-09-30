@@ -1,0 +1,167 @@
+/* TermsAgreementPage 모듈 CSS */
+.container {
+  min-height: 100vh;
+  background-color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.formCard {
+  width: 100%;
+  max-width: 500px;
+}
+
+@media (max-width: 768px) {
+  .formCard {
+    margin: 30px 10px 30px 10px;
+  }
+}
+
+.header {
+  margin-bottom: 30px;
+}
+
+.title {
+  color: #333;
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 30px;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+}
+
+.termsSection {
+  margin-bottom: 20px;
+}
+
+.allAgreementWrapper {
+  border-radius: 10px;
+  border: 1px solid #E4E4E4;
+  margin-bottom: 20px;
+  padding: 15px 20px;
+}
+
+.allAgreementItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0;
+}
+
+.termsTitle {
+  color: #333;
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 20px;
+}
+
+.agreementItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 25px;
+}
+
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.checkbox {
+  width: 20px;
+  height: 20px;
+  margin-right: 12px;
+  cursor: pointer;
+  appearance: none;
+  background-image: url('/icons/check.png');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.checkbox:checked {
+  background-image: url('/icons/check_active.png');
+}
+
+.checkboxText {
+  color: #333;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.allAgreementInactive {
+  color: #999;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.allAgreementActive {
+  color: #333;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.viewLink {
+  color: #999;
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: underline;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.viewLink:hover {
+  color: #666;
+}
+
+.divider {
+  height: 1px;
+  background-color: #E4E4E4;
+  margin: 10px 0;
+}
+
+.submitButton {
+  width: 100%;
+  background-color: #2563eb;
+  color: white;
+  padding: 14px 16px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  margin: 20px 0;
+  color: #FFF;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.submitButton:hover:not(:disabled) {
+  background-color: #1d4ed8;
+}
+
+.submitButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.backLink {
+  margin-top: 16px;
+  text-align: center;
+}
+
+.backLinkText {
+  color: #6b7280;
+  text-decoration: none;
+  font-size: 14px;
+  transition: color 0.2s ease-in-out;
+}
+
+.backLinkText:hover {
+  color: #374151;
+}
