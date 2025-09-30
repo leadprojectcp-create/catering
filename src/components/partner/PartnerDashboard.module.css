@@ -1,6 +1,7 @@
 .container {
   min-height: 100vh;
   padding: 20px;
+  padding-top: 80px; /* 헤더 높이(60px) + 여백 */
   background-color: #f9fafb;
 }
 

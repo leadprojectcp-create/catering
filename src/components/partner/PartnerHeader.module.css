@@ -1,0 +1,224 @@
+/* 헤더 */
+.header {
+  height: 60px;
+  background-color: white;
+  border-bottom: 1px solid #e5e5e5;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+}
+
+.container {
+  height: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.logoContainer {
+  display: flex;
+  align-items: center;
+}
+
+.logo {
+  width: 250px;
+  height: auto;
+  object-fit: contain;
+}
+
+/* 햄버거 메뉴 버튼 */
+.menuButton {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 24px;
+  height: 18px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.hamburger {
+  width: 100%;
+  height: 2px;
+  background-color: #333;
+  transition: all 0.3s ease;
+}
+
+.menuButton:hover .hamburger {
+  background-color: #025BD9;
+}
+
+/* 오버레이 */
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 200;
+}
+
+/* 사이드 드로어 */
+.drawer {
+  position: fixed;
+  top: 0;
+  right: -300px;
+  width: 300px;
+  height: 100vh;
+  background-color: white;
+  box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+  transition: right 0.3s ease;
+  z-index: 300;
+  display: flex;
+  flex-direction: column;
+}
+
+.drawerOpen {
+  right: 0;
+}
+
+.drawerHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.drawerTitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: #333;
+  margin: 0;
+}
+
+.closeButton {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #999;
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.closeButton:hover {
+  color: #333;
+}
+
+/* 드로어 내비게이션 */
+.drawerNav {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 0;
+}
+
+/* 메뉴 카테고리 */
+.menuCategory {
+  margin-bottom: 20px;
+}
+
+.categoryTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.categoryIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #999;
+}
+
+.categoryItems {
+  padding: 5px 0;
+}
+
+.drawerMenuItem {
+  display: block;
+  padding: 12px 20px 12px 35px;
+  color: #333;
+  text-decoration: none;
+  font-size: 15px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  border-left: 3px solid transparent;
+}
+
+.drawerMenuItem:hover {
+  background-color: #f5f5f5;
+  color: #025BD9;
+  border-left-color: #025BD9;
+}
+
+.drawerMenuItemActive {
+  background-color: #f0f7ff;
+  color: #025BD9;
+  border-left-color: #025BD9;
+  font-weight: 700;
+}
+
+/* 드로어 푸터 */
+.drawerFooter {
+  padding: 20px;
+  border-top: 1px solid #e5e5e5;
+}
+
+.drawerLogoutButton {
+  width: 100%;
+  padding: 12px;
+  background-color: #f5f5f5;
+  border: none;
+  border-radius: 8px;
+  color: #333;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.drawerLogoutButton:hover {
+  background-color: #ff4444;
+  color: white;
+}
+
+/* 모바일 반응형 */
+@media (max-width: 768px) {
+  .container {
+    padding: 0 16px;
+  }
+
+  .drawer {
+    width: 280px;
+  }
+
+  .drawerMenuItem {
+    font-size: 14px;
+    padding: 12px 16px;
+  }
+
+  .drawerTitle {
+    font-size: 16px;
+  }
+}

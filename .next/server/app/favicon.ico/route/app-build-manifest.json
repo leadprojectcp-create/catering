@@ -3,10 +3,10 @@
     "/favicon.ico/route": [
       "static/chunks/3c125580a7016abb.js",
       "static/chunks/91adb7bdb9870c6a.js",
-      "static/chunks/8de370c3cbabf345.js",
-      "static/chunks/d7eefcf0774315f0.js",
       "static/chunks/8082ab48faca5ea1.js",
-      "static/chunks/turbopack-31c28a13b9415851.js"
+      "static/chunks/d7eefcf0774315f0.js",
+      "static/chunks/8de370c3cbabf345.js",
+      "static/chunks/turbopack-0b531325cec29ee0.js"
     ]
   }
 }

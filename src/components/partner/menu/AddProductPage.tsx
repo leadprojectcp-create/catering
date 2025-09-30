@@ -212,6 +212,13 @@ export default function AddProductPage() {
     setIsSubmitting(true)
 
     try {
+      // 현재 로그인한 사용자 정보 확인
+      const { auth } = await import('@/lib/firebase')
+      const currentUser = auth.currentUser
+      console.log('Current user in AddProductPage:', currentUser)
+      console.log('Current user email:', currentUser?.email)
+      console.log('Current user uid:', currentUser?.uid)
+
       // 이미지 업로드 처리
       const uploadedImageUrls: string[] = []
 

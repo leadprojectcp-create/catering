@@ -2,6 +2,7 @@
 
 import { useAuth } from '@/contexts/AuthContext'
 import AuthGuard from '@/components/auth/AuthGuard'
+import PartnerHeader from './PartnerHeader'
 import styles from './PartnerDashboard.module.css'
 
 export default function PartnerDashboard() {
@@ -9,6 +10,7 @@ export default function PartnerDashboard() {
 
   return (
     <AuthGuard requireAuth={true}>
+      <PartnerHeader />
       <div className={styles.container}>
         <div className={styles.header}>
           <h1 className={styles.title}>파트너 대시보드</h1>

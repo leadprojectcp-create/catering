@@ -44,13 +44,28 @@ export async function createProduct(productData: Omit<ProductData, 'partnerId' |
     throw new Error('로그인이 필요합니다.')
   }
 
-  console.log('Current user email:', user.email) // 디버깅용 로그
+  // 사용자 이메일 가져오기
+  let userEmail = user.email
+
+  // 이메일이 없으면 사용자 정보를 다시 로드
+  if (!userEmail) {
+    await user.reload()
+    userEmail = user.email
+  }
+
+  // 그래도 이메일이 없으면 에러 발생
+  if (!userEmail) {
+    console.error('User object:', user)
+    throw new Error('사용자 이메일을 찾을 수 없습니다.')
+  }
+
+  console.log('Current user email:', userEmail) // 디버깅용 로그
 
   const completeProductData: ProductData = {
     ...productData,
     partnerId: user.uid,
-    partnerEmail: user.email || 'no-email', // 이메일이 없으면 'no-email'로 저장
-    status: 'active',
+    partnerEmail: userEmail,
+    status: 'pending',
     viewCount: 0,
     orderCount: 0,
     createdAt: new Date().toISOString(),
@@ -200,8 +215,8 @@ export async function incrementProductView(productId: string): Promise<void> {
   })
 }
 
-// 상품 상태 변경 (active, inactive, soldout)
-export async function updateProductStatus(productId: string, status: 'active' | 'inactive' | 'soldout'): Promise<void> {
+// 상품 상태 변경 (active, inactive, pending)
+export async function updateProductStatus(productId: string, status: 'active' | 'inactive' | 'pending'): Promise<void> {
   const user = auth.currentUser
   if (!user) {
     throw new Error('로그인이 필요합니다.')

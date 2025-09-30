@@ -1,0 +1,381 @@
+.container {
+  padding: 20px;
+  padding-top: 80px;
+  max-width: 600px;
+  margin: 0 auto;
+  background-color: white;
+  min-height: 100vh;
+}
+
+.header {
+  margin-bottom: 30px;
+}
+
+.title {
+  color: #333;
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  color: #333;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 150%;
+  margin-bottom: 20px;
+}
+
+.actionBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.filterButtons {
+  display: flex;
+  gap: 8px;
+}
+
+.searchBar {
+  margin-bottom: 20px;
+}
+
+.searchInput {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #F0F0F3;
+  border-radius: 5px;
+  font-size: 14px;
+  font-weight: 400;
+  color: #333;
+  transition: all 0.3s ease;
+}
+
+.searchInput::placeholder {
+  color: #9CA3AF;
+}
+
+.searchInput:focus {
+  outline: none;
+  border-color: #237AF2;
+}
+
+.filterButton {
+  padding: 8px 16px;
+  background-color: white;
+  color: #4E5968;
+  border: 1px solid #F0F0F3;
+  border-radius: 5px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.filterButton:hover {
+  border-color: #237AF2;
+  color: #237AF2;
+}
+
+.filterButtonActive {
+  padding: 8px 16px;
+  background: #F0F6FF;
+  color: #237AF2;
+  border: 1px solid #237AF2;
+  border-radius: 5px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.addButton {
+  padding: 10px 20px;
+  background-color: white;
+  color: #333;
+  border: 1px solid #EBEBEB;
+  border-radius: 5px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.addButton:hover {
+  border-color: #025BD9;
+  color: #025BD9;
+}
+
+.menuGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.menuCard {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.menuImage {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  background-color: #f5f5f5;
+}
+
+.menuInfo {
+  padding: 16px;
+}
+
+.menuName {
+  font-size: 18px;
+  font-weight: 700;
+  color: #333;
+  margin: 0 0 8px 0;
+}
+
+.menuCategory {
+  font-size: 12px;
+  color: #666;
+  margin: 0 0 8px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.menuDescription {
+  font-size: 14px;
+  color: #666;
+  margin: 0 0 12px 0;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.menuPrice {
+  font-size: 18px;
+  font-weight: 700;
+  color: #025BD9;
+  margin: 0 0 12px 0;
+}
+
+.menuStatus {
+  display: inline-block;
+}
+
+.available {
+  display: inline-block;
+  padding: 4px 12px;
+  background-color: #e7f5ff;
+  color: #0066cc;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.soldOut {
+  display: inline-block;
+  padding: 4px 12px;
+  background-color: #ffe7e7;
+  color: #cc0000;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.pending {
+  display: inline-block;
+  padding: 4px 12px;
+  background-color: #fff5e6;
+  color: #ff8c00;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.menuActions {
+  display: flex;
+  gap: 8px;
+  padding: 0 16px 16px;
+}
+
+.toggleButton,
+.editButton,
+.deleteButton {
+  flex: 1;
+  padding: 8px;
+  border: 1px solid #e5e5e5;
+  border-radius: 6px;
+  background-color: white;
+  color: #333;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.toggleButton:hover {
+  background-color: #f0f0f0;
+  border-color: #999;
+}
+
+.editButton:hover {
+  background-color: #e7f5ff;
+  border-color: #0066cc;
+  color: #0066cc;
+}
+
+.deleteButton:hover {
+  background-color: #ffe7e7;
+  border-color: #cc0000;
+  color: #cc0000;
+}
+
+.emptyState {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 60px 20px;
+  color: #666;
+}
+
+.emptyState p {
+  margin: 0 0 8px 0;
+  font-size: 16px;
+}
+
+.loading {
+  text-align: center;
+  padding: 60px 20px;
+  color: #666;
+  font-size: 16px;
+}
+
+/* 모달 스타일 */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modalTitle {
+  font-size: 20px;
+  font-weight: 700;
+  color: #333;
+  margin: 0 0 20px 0;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.input {
+  padding: 12px;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: border-color 0.3s ease;
+}
+
+.input:focus {
+  outline: none;
+  border-color: #025BD9;
+}
+
+.textarea {
+  padding: 12px;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  font-size: 14px;
+  min-height: 80px;
+  resize: vertical;
+  transition: border-color 0.3s ease;
+}
+
+.textarea:focus {
+  outline: none;
+  border-color: #025BD9;
+}
+
+.modalButtons {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.submitButton,
+.cancelButton {
+  flex: 1;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.submitButton {
+  background-color: #025BD9;
+  color: white;
+  border: none;
+}
+
+.submitButton:hover {
+  background-color: #0246a8;
+}
+
+.cancelButton {
+  background-color: white;
+  color: #666;
+  border: 1px solid #e5e5e5;
+}
+
+.cancelButton:hover {
+  background-color: #f5f5f5;
+  border-color: #999;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .container {
+    padding: 16px;
+  }
+
+  .title {
+    font-size: 20px;
+  }
+
+  .menuGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .modal {
+    width: 95%;
+    padding: 20px;
+  }
+}

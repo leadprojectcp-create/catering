@@ -33,12 +33,6 @@
       "namedRegex": "^/_not\\-found(?:/)?$"
     },
     {
-      "page": "/add-product",
-      "regex": "^/add\\-product(?:/)?$",
-      "routeKeys": {},
-      "namedRegex": "^/add\\-product(?:/)?$"
-    },
-    {
       "page": "/admin/logs",
       "regex": "^/admin/logs(?:/)?$",
       "routeKeys": {},
@@ -57,10 +51,22 @@
       "namedRegex": "^/login(?:/)?$"
     },
     {
+      "page": "/partner/add-product",
+      "regex": "^/partner/add\\-product(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/partner/add\\-product(?:/)?$"
+    },
+    {
       "page": "/partner/dashboard",
       "regex": "^/partner/dashboard(?:/)?$",
       "routeKeys": {},
       "namedRegex": "^/partner/dashboard(?:/)?$"
+    },
+    {
+      "page": "/partner/menu/management",
+      "regex": "^/partner/menu/management(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/partner/menu/management(?:/)?$"
     },
     {
       "page": "/signup",
