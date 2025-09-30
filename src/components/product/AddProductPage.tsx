@@ -1,140 +1,266 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { createProduct } from '@/lib/services/productService'
 import styles from './AddProductPage.module.css'
 
+interface OptionValue {
+  name: string
+  price: number
+}
+
 interface ProductOption {
-  optionName: string
-  optionValues: string[]
-  additionalPrices: { [key: string]: number }
+  groupName: string
+  values: OptionValue[]
 }
 
 interface ProductFormData {
-  category: string
-  orderType: 'single' | 'subscription'
   name: string
-  mainImage: File | null
-  additionalImages: File[]
+  images: File[]
   price: number
-  discount: {
-    enabled: boolean
-    type: 'amount' | 'percentage'
-    value: number
-  }
   options: ProductOption[]
   description: string
   minOrderQuantity: number
   maxOrderQuantity: number
-  deliveryMethod: 'delivery' | 'quick' | 'self'
-  origin: {
-    type: 'detail' | 'custom'
-    customOrigins: { ingredient: string, origin: string }[]
+  deliveryMethods: {
+    self: boolean
+    quick: boolean
+    pickup: boolean
   }
+  additionalSettings: {
+    sameDayDelivery: boolean
+    thermalPack: boolean
+    stickerCustom: boolean
+  }
+  origin: { ingredient: string, origin: string }[]
 }
 
 export default function AddProductPage() {
+  const router = useRouter()
+  const [hasSavedData, setHasSavedData] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [formData, setFormData] = useState<ProductFormData>({
-    category: '',
-    orderType: 'single',
     name: '',
-    mainImage: null,
-    additionalImages: [],
+    images: [],
     price: 0,
-    discount: {
-      enabled: false,
-      type: 'amount',
-      value: 0
-    },
-    options: [],
+    options: [{ groupName: '', values: [{ name: '', price: 0 }] }],
     description: '',
     minOrderQuantity: 10,
     maxOrderQuantity: 11,
-    deliveryMethod: 'delivery',
-    origin: {
-      type: 'detail',
-      customOrigins: []
-    }
+    deliveryMethods: {
+      self: false,
+      quick: false,
+      pickup: false
+    },
+    additionalSettings: {
+      sameDayDelivery: false,
+      thermalPack: false,
+      stickerCustom: false
+    },
+    origin: []
   })
 
-  const availableCategories = [
-    '케이터링 박스 / 플래터',
-    '샌드위치 / 베이커리',
-    '디저트 박스',
-    '김밥 / 한식 도시락',
-    '샐러드 / 과일 도시락',
-    '음료 / 커피 / 차',
-    '떡 / 전통한과 / 견과류'
-  ]
-
-  const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setFormData(prev => ({
-      ...prev,
-      category: e.target.value
-    }))
+  // Format number with commas
+  const formatNumberWithCommas = (num: number): string => {
+    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')
   }
 
-  const addOption = () => {
+  // Parse formatted number string to number
+  const parseFormattedNumber = (str: string): number => {
+    return Number(str.replace(/,/g, '')) || 0
+  }
+
+  // Check if there's saved data on component mount
+  useEffect(() => {
+    const savedData = localStorage.getItem('productFormData')
+    if (savedData) {
+      setHasSavedData(true)
+    }
+  }, [])
+
+  // Save to local storage
+  const handleSaveToLocal = () => {
+    // Create a copy of formData without images (can't store File objects in localStorage)
+    const dataToSave = {
+      ...formData,
+      images: [] // Images need to be handled separately
+    }
+    localStorage.setItem('productFormData', JSON.stringify(dataToSave))
+    setHasSavedData(true)
+    alert('임시저장되었습니다.')
+  }
+
+  // Load from local storage
+  const handleLoadFromLocal = () => {
+    const savedData = localStorage.getItem('productFormData')
+    if (savedData) {
+      const parsedData = JSON.parse(savedData)
+      setFormData({
+        ...parsedData,
+        images: formData.images // Keep current images
+      })
+      // Clear the saved data after loading
+      localStorage.removeItem('productFormData')
+      setHasSavedData(false)
+      alert('임시저장된 데이터를 불러왔습니다.')
+    }
+  }
+
+  // Handle cancel
+  const handleCancel = () => {
+    if (confirm('작성중인 내용이 삭제됩니다. 취소하시겠습니까?')) {
+      router.back()
+    }
+  }
+
+
+  const addOptionGroup = () => {
     setFormData(prev => ({
       ...prev,
       options: [
         ...prev.options,
-        { optionName: '', optionValues: [], additionalPrices: {} }
+        { groupName: '', values: [{ name: '', price: 0 }] }
       ]
     }))
   }
 
-  const updateOption = (index: number, field: keyof ProductOption, value: string | string[] | { [key: string]: number }) => {
-    setFormData(prev => ({
-      ...prev,
-      options: prev.options.map((option, i) =>
-        i === index ? { ...option, [field]: value } : option
-      )
-    }))
-  }
-
-  const removeOption = (index: number) => {
+  const removeOptionGroup = (index: number) => {
     setFormData(prev => ({
       ...prev,
       options: prev.options.filter((_, i) => i !== index)
     }))
   }
 
+  const updateOptionGroup = (index: number, groupName: string) => {
+    setFormData(prev => ({
+      ...prev,
+      options: prev.options.map((option, i) =>
+        i === index ? { ...option, groupName } : option
+      )
+    }))
+  }
+
+  const addOptionValue = (groupIndex: number) => {
+    setFormData(prev => ({
+      ...prev,
+      options: prev.options.map((option, i) =>
+        i === groupIndex
+          ? { ...option, values: [...option.values, { name: '', price: 0 }] }
+          : option
+      )
+    }))
+  }
+
+  const updateOptionValue = (groupIndex: number, valueIndex: number, field: 'name' | 'price', value: string | number) => {
+    setFormData(prev => ({
+      ...prev,
+      options: prev.options.map((option, i) =>
+        i === groupIndex
+          ? {
+              ...option,
+              values: option.values.map((val, j) =>
+                j === valueIndex
+                  ? { ...val, [field]: field === 'price' ? Number(value) : value }
+                  : val
+              )
+            }
+          : option
+      )
+    }))
+  }
+
+  const removeOptionValue = (groupIndex: number, valueIndex: number) => {
+    setFormData(prev => ({
+      ...prev,
+      options: prev.options.map((option, i) =>
+        i === groupIndex
+          ? { ...option, values: option.values.filter((_, j) => j !== valueIndex) }
+          : option
+      )
+    }))
+  }
+
   const addCustomOrigin = () => {
     setFormData(prev => ({
       ...prev,
-      origin: {
-        ...prev.origin,
-        customOrigins: [...prev.origin.customOrigins, { ingredient: '', origin: '' }]
-      }
+      origin: [...prev.origin, { ingredient: '', origin: '' }]
     }))
   }
 
   const updateCustomOrigin = (index: number, field: 'ingredient' | 'origin', value: string) => {
     setFormData(prev => ({
       ...prev,
-      origin: {
-        ...prev.origin,
-        customOrigins: prev.origin.customOrigins.map((item, i) =>
-          i === index ? { ...item, [field]: value } : item
-        )
-      }
+      origin: prev.origin.map((item, i) =>
+        i === index ? { ...item, [field]: value } : item
+      )
     }))
   }
 
   const removeCustomOrigin = (index: number) => {
     setFormData(prev => ({
       ...prev,
-      origin: {
-        ...prev.origin,
-        customOrigins: prev.origin.customOrigins.filter((_, i) => i !== index)
-      }
+      origin: prev.origin.filter((_, i) => i !== index)
     }))
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    console.log('Product data:', formData)
-    // 상품 등록 로직 구현
+
+    if (isSubmitting) return // 이미 제출 중이면 무시
+
+    setIsSubmitting(true)
+
+    try {
+      // 이미지 업로드 처리
+      const uploadedImageUrls: string[] = []
+
+      for (const imageFile of formData.images) {
+        const formDataToUpload = new FormData()
+        formDataToUpload.append('file', imageFile)
+        formDataToUpload.append('type', 'product')
+
+        const uploadResponse = await fetch('/api/upload', {
+          method: 'POST',
+          body: formDataToUpload
+        })
+
+        if (!uploadResponse.ok) {
+          throw new Error('이미지 업로드 실패')
+        }
+
+        const uploadResult = await uploadResponse.json()
+        uploadedImageUrls.push(uploadResult.url)
+      }
+
+      // orderType을 'single'로 고정하여 전송
+      const submitData = {
+        ...formData,
+        images: uploadedImageUrls, // File 객체 대신 업로드된 URL들
+        orderType: 'single', // 항상 단건주문으로 설정
+        createdAt: new Date().toISOString()
+      }
+
+      console.log('Product data to save:', submitData)
+
+      // productService를 사용하여 Firestore에 저장
+      const productId = await createProduct(submitData)
+
+      console.log('Product saved with ID:', productId)
+      alert('상품이 성공적으로 등록되었습니다!')
+
+      // 임시저장 데이터 삭제
+      localStorage.removeItem('productFormData')
+
+      // 목록 페이지로 이동
+      router.push('/partner/dashboard')
+
+    } catch (error) {
+      console.error('상품 등록 중 오류:', error)
+      alert('상품 등록 중 오류가 발생했습니다.')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -143,264 +269,245 @@ export default function AddProductPage() {
         <h1 className={styles.title}>상품 등록</h1>
 
         <form onSubmit={handleSubmit} className={styles.form}>
-        {/* 카테고리 선택 */}
+        {/* 상품 이미지 등록 */}
         <div className={styles.section}>
-          <h2 className={styles.sectionTitle}>카테고리 선택</h2>
-          <select
-            value={formData.category}
-            onChange={handleCategoryChange}
-            className={styles.textInput}
-            required
-          >
-            <option value="">카테고리를 선택해주세요</option>
-            {availableCategories.map(category => (
-              <option key={category} value={category}>
-                {category}
-              </option>
-            ))}
-          </select>
-        </div>
+          <div className={styles.titleWithNumber}>
+            <span className={styles.numberCircle}>1</span>
+            <span className={styles.sectionTitle}>상품 이미지 등록</span>
+          </div>
+          <div className={styles.imageUploadSection}>
+            <div className={styles.imageGrid}>
+              {/* 이미지 미리보기 */}
+              {formData.images.map((file, index) => (
+                <div key={index} className={`${styles.imagePreviewBox} ${index === 0 ? styles.mainImage : ''}`}>
+                  <img
+                    src={URL.createObjectURL(file)}
+                    alt={`상품 이미지 ${index + 1}`}
+                    className={styles.previewImage}
+                  />
+                  {index === 0 && (
+                    <div className={styles.mainImageLabel}>대표</div>
+                  )}
+                  <button
+                    type="button"
+                    className={styles.removeImageBtn}
+                    onClick={() => {
+                      setFormData(prev => ({
+                        ...prev,
+                        images: prev.images.filter((_, i) => i !== index)
+                      }))
+                    }}
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
 
-        {/* 주문 타입 */}
-        <div className={styles.section}>
-          <h2 className={styles.sectionTitle}>주문 타입</h2>
-          <div className={styles.radioGroup}>
-            <label className={styles.radioLabel}>
-              <input
-                type="radio"
-                name="orderType"
-                value="single"
-                checked={formData.orderType === 'single'}
-                onChange={(e) => setFormData(prev => ({ ...prev, orderType: e.target.value as 'single' | 'subscription' }))}
-                className={styles.radioInput}
-              />
-              단건주문
-            </label>
-            <label className={styles.radioLabel}>
-              <input
-                type="radio"
-                name="orderType"
-                value="subscription"
-                checked={formData.orderType === 'subscription'}
-                onChange={(e) => setFormData(prev => ({ ...prev, orderType: e.target.value as 'single' | 'subscription' }))}
-                className={styles.radioInput}
-              />
-              정기배송
-            </label>
+              {/* 이미지 추가 버튼 */}
+              <label className={styles.addImageButton}>
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={(e) => {
+                    const files = Array.from(e.target.files || [])
+                    setFormData(prev => ({
+                      ...prev,
+                      images: [...prev.images, ...files]
+                    }))
+                  }}
+                  className={styles.fileInput}
+                />
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+                  <path d="M5 12H12M12 12H19M12 12V5M12 12V19" stroke="#999999" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </label>
+            </div>
           </div>
         </div>
 
         {/* 상품명 */}
         <div className={styles.section}>
-          <h2 className={styles.sectionTitle}>상품명</h2>
-          <input
-            type="text"
-            value={formData.name}
-            onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-            placeholder="상품명을 입력하세요 (100자 이내)"
-            maxLength={100}
-            className={styles.textInput}
-            required
-          />
-          <p className={styles.textCounter}>{formData.name.length}/100자</p>
+          <div className={styles.titleWithNumber}>
+            <span className={styles.numberCircle}>2</span>
+            <span className={styles.sectionTitle}>상품명</span>
+          </div>
+          <div className={styles.inputWithCounter}>
+            <input
+              type="text"
+              value={formData.name}
+              onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+              placeholder="상품명을 입력하세요"
+              maxLength={100}
+              className={styles.textInput}
+              required
+            />
+            <span className={styles.inputCounter}>{formData.name.length}/100자</span>
+          </div>
         </div>
 
-        {/* 상품이미지 */}
+        {/* 상품 판매가 */}
         <div className={styles.section}>
-          <h2 className={styles.sectionTitle}>상품이미지</h2>
-          <div className={styles.imageSection}>
-            <div className={styles.imageGroup}>
-              <label className={styles.sectionTitle}>대표이미지</label>
-              <div className={styles.imageUploadContainer}>
+          <div className={styles.titleWithNumber}>
+            <span className={styles.numberCircle}>3</span>
+            <span className={styles.sectionTitle}>상품 판매가</span>
+          </div>
+          <div className={styles.inputWithUnit}>
+            <input
+              type="text"
+              value={formData.price ? formatNumberWithCommas(formData.price) : ''}
+              onChange={(e) => {
+                const numericValue = parseFormattedNumber(e.target.value)
+                setFormData(prev => ({ ...prev, price: numericValue }))
+              }}
+              placeholder=""
+              className={styles.textInput}
+              required
+            />
+            <span className={styles.inputUnit}>원</span>
+          </div>
+        </div>
+
+        {/* 상품 수량 설정 */}
+        <div className={styles.section}>
+          <div className={styles.titleWithNumber}>
+            <span className={styles.numberCircle}>4</span>
+            <span className={styles.sectionTitle}>상품 수량 설정</span>
+          </div>
+          <div className={styles.quantityGrid}>
+            <div className={styles.quantityGroup}>
+              <label className={styles.sectionTitle}>최소 수량</label>
+              <div className={styles.inputWithUnit}>
                 <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => setFormData(prev => ({ ...prev, mainImage: e.target.files?.[0] || null }))}
-                  className={styles.fileInput}
-                  id="mainImage"
-                  required
+                  type="number"
+                  value={formData.minOrderQuantity}
+                  onChange={(e) => setFormData(prev => ({ ...prev, minOrderQuantity: Number(e.target.value) }))}
+                  onBlur={(e) => {
+                    const value = Number(e.target.value)
+                    if (value < 10) {
+                      alert('최소 주문수량은 10개 이상이어야 합니다.')
+                      setFormData(prev => ({ ...prev, minOrderQuantity: 10 }))
+                    }
+                  }}
+                  min="10"
+                  className={styles.textInput}
                 />
-                <label htmlFor="mainImage" className={styles.fileLabel}>
-                  {formData.mainImage ? '파일 변경' : '파일을 선택해주세요'}
-                </label>
-                <label htmlFor="mainImage" className={styles.uploadButton}>
-                  파일업로드
-                </label>
+                <span className={styles.inputUnit}>개</span>
               </div>
             </div>
-            <div className={styles.imageGroup}>
-              <label className={styles.sectionTitle}>추가이미지</label>
-              <div className={styles.imageUploadContainer}>
+            <div className={styles.quantityGroup}>
+              <label className={styles.sectionTitle}>최대 수량</label>
+              <div className={styles.inputWithUnit}>
                 <input
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  onChange={(e) => setFormData(prev => ({ ...prev, additionalImages: Array.from(e.target.files || []) }))}
-                  className={styles.fileInput}
-                  id="additionalImages"
+                  type="number"
+                  value={formData.maxOrderQuantity}
+                  onChange={(e) => setFormData(prev => ({ ...prev, maxOrderQuantity: Number(e.target.value) }))}
+                  min="11"
+                  className={styles.textInput}
                 />
-                <label htmlFor="additionalImages" className={styles.fileLabel}>
-                  {formData.additionalImages.length > 0 ? `${formData.additionalImages.length}개 파일 선택됨` : '파일을 선택해주세요'}
-                </label>
-                <label htmlFor="additionalImages" className={styles.uploadButton}>
-                  파일업로드
-                </label>
+                <span className={styles.inputUnit}>개</span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* 판매가 */}
+        {/* 상품 옵션 설정 */}
         <div className={styles.section}>
-          <h2 className={styles.sectionTitle}>판매가</h2>
-          <div className={styles.priceSection}>
-            <div>
-              <label className={styles.sectionTitle}>판매가</label>
-              <input
-                type="number"
-                value={formData.price}
-                onChange={(e) => setFormData(prev => ({ ...prev, price: Number(e.target.value) }))}
-                placeholder="판매가를 입력하세요"
-                className={styles.textInput}
-                required
-              />
-            </div>
-            <div>
-              <label className={styles.checkboxLabel}>
-                <input
-                  type="checkbox"
-                  checked={formData.discount.enabled}
-                  onChange={(e) => setFormData(prev => ({
-                    ...prev,
-                    discount: { ...prev.discount, enabled: e.target.checked }
-                  }))}
-                  className={styles.checkboxInput}
-                />
-                즉시할인 설정
-              </label>
-              {formData.discount.enabled && (
-                <div className={styles.discountControls}>
-                  <select
-                    value={formData.discount.type}
-                    onChange={(e) => setFormData(prev => ({
-                      ...prev,
-                      discount: { ...prev.discount, type: e.target.value as 'amount' | 'percentage' }
-                    }))}
+          <div className={styles.titleWithNumber}>
+            <span className={styles.numberCircle}>5</span>
+            <span className={styles.sectionTitle}>상품 옵션 설정</span>
+          </div>
+          {formData.options.map((option, groupIndex) => (
+            <div key={groupIndex} className={styles.optionCard}>
+              <div className={styles.optionGroupHeader}>
+                <label className={styles.optionLabel}>옵션그룹명</label>
+                {formData.options.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => removeOptionGroup(groupIndex)}
+                    className={styles.removeGroupButton}
                   >
-                    <option value="amount">원</option>
-                    <option value="percentage">%</option>
-                  </select>
-                  <input
-                    type="number"
-                    value={formData.discount.value}
-                    onChange={(e) => setFormData(prev => ({
-                      ...prev,
-                      discount: { ...prev.discount, value: Number(e.target.value) }
-                    }))}
-                    placeholder="할인값"
-                  />
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* 옵션 선택 */}
-        <div className={styles.section}>
-          <h2 className={styles.sectionTitle}>옵션 선택</h2>
-          {formData.options.map((option, index) => (
-            <div key={index} className={styles.optionCard}>
-              <div className={styles.optionHeader}>
-                <h3 className={styles.optionTitle}>옵션 {index + 1}</h3>
-                <button
-                  type="button"
-                  onClick={() => removeOption(index)}
-                  className={styles.removeButton}
-                >
-                  삭제
-                </button>
-              </div>
-              <div className={styles.optionInputs}>
-                <input
-                  type="text"
-                  placeholder="옵션명"
-                  value={option.optionName}
-                  onChange={(e) => updateOption(index, 'optionName', e.target.value)}
-                  className={styles.textInput}
-                />
-                <input
-                  type="text"
-                  placeholder="옵션값 (콤마로 구분)"
-                  value={option.optionValues.join(', ')}
-                  onChange={(e) => updateOption(index, 'optionValues', e.target.value.split(',').map(v => v.trim()))}
-                  className={styles.textInput}
-                />
-                {option.optionValues.length > 0 && (
-                  <div className={styles.optionTable}>
-                    <table>
-                      <thead>
-                        <tr>
-                          <th>옵션명</th>
-                          <th>옵션값</th>
-                          <th>추가금액</th>
-                          <th>삭제</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {option.optionValues.map((value, valueIndex) => (
-                          <tr key={valueIndex}>
-                            {valueIndex === 0 && (
-                              <td rowSpan={option.optionValues.length}>{option.optionName}</td>
-                            )}
-                            <td>{value}</td>
-                            <td>
-                              <input
-                                type="number"
-                                placeholder="0"
-                                value={option.additionalPrices[value] || ''}
-                                onChange={(e) => {
-                                  const newPrices = { ...option.additionalPrices }
-                                  newPrices[value] = Number(e.target.value)
-                                  updateOption(index, 'additionalPrices', newPrices)
-                                }}
-                              />
-                            </td>
-                            <td>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  const newValues = option.optionValues.filter((_, i) => i !== valueIndex)
-                                  const newPrices = { ...option.additionalPrices }
-                                  delete newPrices[value]
-                                  updateOption(index, 'optionValues', newValues)
-                                  updateOption(index, 'additionalPrices', newPrices)
-                                }}
-                                className={styles.removeButton}
-                              >
-                                삭제
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
+                      <path d="M9.33464 6.66667V11.3333M6.66797 6.66667V11.3333M4.0013 4V11.8667C4.0013 12.6134 4.0013 12.9865 4.14663 13.2717C4.27446 13.5226 4.47828 13.727 4.72917 13.8548C5.0141 14 5.3873 14 6.13258 14H9.87003C10.6153 14 10.988 14 11.2729 13.8548C11.5238 13.727 11.7283 13.5226 11.8561 13.2717C12.0013 12.9868 12.0013 12.614 12.0013 11.8687V4M4.0013 4H5.33464M4.0013 4H2.66797M5.33464 4H10.668M5.33464 4C5.33464 3.37874 5.33464 3.06827 5.43613 2.82324C5.57145 2.49654 5.83085 2.23682 6.15755 2.10149C6.40258 2 6.71338 2 7.33464 2H8.66797C9.28922 2 9.59985 2 9.84488 2.10149C10.1716 2.23682 10.4311 2.49654 10.5664 2.82324C10.6679 3.06827 10.668 3.37875 10.668 4M10.668 4H12.0013M12.0013 4H13.3346" stroke="#999999" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    옵션 삭제
+                  </button>
                 )}
+              </div>
+              <input
+                type="text"
+                placeholder="ex) 메인"
+                value={option.groupName}
+                onChange={(e) => updateOptionGroup(groupIndex, e.target.value)}
+                className={styles.textInput}
+              />
+
+              <div className={styles.optionValuesContainer}>
+                <div className={styles.optionValuesHeader}>
+                  <label className={styles.optionLabel}>옵션명</label>
+                  <label className={styles.optionLabel}>옵션가격</label>
+                </div>
+                {option.values.map((value, valueIndex) => (
+                  <div key={valueIndex} className={styles.optionValueRow}>
+                    <input
+                      type="text"
+                      placeholder="ex) 참치샌드위치"
+                      value={value.name}
+                      onChange={(e) => updateOptionValue(groupIndex, valueIndex, 'name', e.target.value)}
+                      className={styles.textInput}
+                    />
+                    <div className={styles.priceInputWrapper}>
+                      <input
+                        type="text"
+                        placeholder="ex) +1,000"
+                        value={value.price !== undefined && value.price !== null ? `+${formatNumberWithCommas(value.price)}` : ''}
+                        onChange={(e) => {
+                          const cleanedValue = e.target.value.replace('+', '').replace(',', '')
+                          const numValue = cleanedValue === '' ? 0 : parseFormattedNumber(cleanedValue)
+                          updateOptionValue(groupIndex, valueIndex, 'price', numValue)
+                        }}
+                        className={styles.textInput}
+                      />
+                      {valueIndex === option.values.length - 1 ? (
+                        <button
+                          type="button"
+                          onClick={() => addOptionValue(groupIndex)}
+                          className={styles.addOptionValueButton}
+                        >
+                          +
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => removeOptionValue(groupIndex, valueIndex)}
+                          className={styles.removeOptionValueButton}
+                        >
+                          −
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           ))}
-          <button
-            type="button"
-            onClick={addOption}
-            className={styles.addButton}
-          >
-            옵션 추가
-          </button>
+          <div className={styles.optionButtonContainer}>
+            <button
+              type="button"
+              onClick={addOptionGroup}
+              className={styles.addOptionGroupButton}
+            >
+              +옵션그룹추가
+            </button>
+          </div>
         </div>
 
-        {/* 상세설명 */}
+        {/* 상품설명 작성 */}
         <div className={styles.section}>
-          <h2 className={styles.sectionTitle}>상세설명</h2>
+          <div className={styles.titleWithNumber}>
+            <span className={styles.numberCircle}>6</span>
+            <span className={styles.sectionTitle}>상품설명 작성</span>
+          </div>
           <textarea
             value={formData.description}
             onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
@@ -410,160 +517,237 @@ export default function AddProductPage() {
           />
         </div>
 
-        {/* 주문수량 */}
-        <div className={styles.section}>
-          <h2 className={styles.sectionTitle}>주문수량</h2>
-          <div className={styles.quantityGrid}>
-            <div className={styles.quantityGroup}>
-              <label className={styles.sectionTitle}>최소 주문수량</label>
-              <input
-                type="number"
-                value={formData.minOrderQuantity}
-                onChange={(e) => setFormData(prev => ({ ...prev, minOrderQuantity: Number(e.target.value) }))}
-                onBlur={(e) => {
-                  const value = Number(e.target.value)
-                  if (value < 10) {
-                    alert('최소 주문수량은 10개 이상이어야 합니다.')
-                    setFormData(prev => ({ ...prev, minOrderQuantity: 10 }))
-                  }
-                }}
-                min="10"
-                className={styles.textInput}
-              />
-            </div>
-            <div className={styles.quantityGroup}>
-              <label className={styles.sectionTitle}>최대 주문수량</label>
-              <input
-                type="number"
-                value={formData.maxOrderQuantity}
-                onChange={(e) => setFormData(prev => ({ ...prev, maxOrderQuantity: Number(e.target.value) }))}
-                min="11"
-                className={styles.textInput}
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* 배송방법 */}
-        <div className={styles.section}>
-          <h2 className={styles.sectionTitle}>배송방법</h2>
-          <div className={styles.radioGroup}>
-            <label className={styles.radioLabel}>
-              <input
-                type="radio"
-                name="deliveryMethod"
-                value="delivery"
-                checked={formData.deliveryMethod === 'delivery'}
-                onChange={(e) => setFormData(prev => ({ ...prev, deliveryMethod: e.target.value as 'delivery' | 'quick' | 'self' }))}
-                className={styles.radioInput}
-              />
-              택배
-            </label>
-            <label className={styles.radioLabel}>
-              <input
-                type="radio"
-                name="deliveryMethod"
-                value="quick"
-                checked={formData.deliveryMethod === 'quick'}
-                onChange={(e) => setFormData(prev => ({ ...prev, deliveryMethod: e.target.value as 'delivery' | 'quick' | 'self' }))}
-                className={styles.radioInput}
-              />
-              퀵
-            </label>
-            <label className={styles.radioLabel}>
-              <input
-                type="radio"
-                name="deliveryMethod"
-                value="self"
-                checked={formData.deliveryMethod === 'self'}
-                onChange={(e) => setFormData(prev => ({ ...prev, deliveryMethod: e.target.value as 'delivery' | 'quick' | 'self' }))}
-                className={styles.radioInput}
-              />
-              자체배달
-            </label>
-          </div>
-        </div>
-
         {/* 원산지 표기 */}
         <div className={styles.section}>
-          <h2 className={styles.sectionTitle}>원산지 표기</h2>
-          <div className={styles.originControls}>
-            <div className={styles.originRadios}>
-              <label className={styles.radioLabel}>
+          <div className={styles.titleWithNumber}>
+            <span className={styles.numberCircle}>7</span>
+            <span className={styles.sectionTitle}>원산지 표기</span>
+          </div>
+          <div className={styles.originContainer}>
+            {formData.origin.length === 0 ? (
+              <div className={styles.originRow}>
                 <input
-                  type="radio"
-                  name="originType"
-                  value="detail"
-                  checked={formData.origin.type === 'detail'}
-                  onChange={() => setFormData(prev => ({
-                    ...prev,
-                    origin: { ...prev.origin, type: 'detail' }
-                  }))}
-                  className={styles.radioInput}
+                  type="text"
+                  placeholder="ex) 돼지고기,양배추"
+                  className={styles.textInput}
+                  value=""
+                  onChange={(e) => {
+                    if (e.target.value) {
+                      setFormData(prev => ({
+                        ...prev,
+                        origin: [{ ingredient: e.target.value, origin: '' }]
+                      }))
+                    }
+                  }}
                 />
-                상품상세참조
-              </label>
-              <label className={styles.radioLabel}>
-                <input
-                  type="radio"
-                  name="originType"
-                  value="custom"
-                  checked={formData.origin.type === 'custom'}
-                  onChange={() => setFormData(prev => ({
-                    ...prev,
-                    origin: { ...prev.origin, type: 'custom' }
-                  }))}
-                  className={styles.radioInput}
-                />
-                추가 사항 입력
-              </label>
-            </div>
-
-            {formData.origin.type === 'custom' && (
-              <div className={styles.customOrigins}>
-                {formData.origin.customOrigins.map((item, index) => (
-                  <div key={index} className={styles.originRow}>
+                <div className={styles.originInputWrapper}>
+                  <input
+                    type="text"
+                    placeholder="ex) 국내산"
+                    className={styles.textInput}
+                    disabled
+                  />
+                  <button
+                    type="button"
+                    className={styles.addOriginButton}
+                    disabled
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+            ) : (
+              formData.origin.map((item, index) => (
+                <div key={index} className={styles.originRow}>
+                  <input
+                    type="text"
+                    placeholder="ex) 돼지고기"
+                    value={item.ingredient}
+                    onChange={(e) => updateCustomOrigin(index, 'ingredient', e.target.value)}
+                    className={styles.textInput}
+                  />
+                  <div className={styles.originInputWrapper}>
                     <input
                       type="text"
-                      placeholder="재료명"
-                      value={item.ingredient}
-                      onChange={(e) => updateCustomOrigin(index, 'ingredient', e.target.value)}
-                    />
-                    <span className={styles.originSeparator}>-</span>
-                    <input
-                      type="text"
-                      placeholder="원산지"
+                      placeholder="ex) 국내산"
                       value={item.origin}
                       onChange={(e) => updateCustomOrigin(index, 'origin', e.target.value)}
+                      className={styles.textInput}
                     />
-                    <button
-                      type="button"
-                      onClick={() => removeCustomOrigin(index)}
-                      className={styles.removeButton}
-                    >
-                      삭제
-                    </button>
+                    {index === formData.origin.length - 1 ? (
+                      <button
+                        type="button"
+                        onClick={addCustomOrigin}
+                        className={styles.addOriginButton}
+                      >
+                        +
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => removeCustomOrigin(index)}
+                        className={styles.removeOriginButton}
+                      >
+                        −
+                      </button>
+                    )}
                   </div>
-                ))}
-                <button
-                  type="button"
-                  onClick={addCustomOrigin}
-                  className={styles.grayButton}
-                >
-                  원산지 정보 추가
-                </button>
-              </div>
+                </div>
+              ))
             )}
           </div>
         </div>
 
-        {/* 제출 버튼 */}
-        <div className={styles.submitContainer}>
+        {/* 상품 배송 설정 */}
+        <div className={styles.section}>
+          <div className={styles.titleWithNumber}>
+            <span className={styles.numberCircle}>8</span>
+            <span className={styles.sectionTitle}>상품 배송 설정</span>
+          </div>
+          <div className={styles.checkboxGroup}>
+            <label className={styles.checkboxLabel}>
+              <input
+                type="checkbox"
+                checked={formData.deliveryMethods.self}
+                onChange={(e) => setFormData(prev => ({
+                  ...prev,
+                  deliveryMethods: { ...prev.deliveryMethods, self: e.target.checked }
+                }))}
+                className={styles.hiddenCheckbox}
+              />
+              <span className={styles.customCheckbox}>
+                <img
+                  src={formData.deliveryMethods.self ? "/icons/check_active.png" : "/icons/check.png"}
+                  alt="체크박스"
+                />
+              </span>
+              자체 배송
+            </label>
+            <label className={styles.checkboxLabel}>
+              <input
+                type="checkbox"
+                checked={formData.deliveryMethods.quick}
+                onChange={(e) => setFormData(prev => ({
+                  ...prev,
+                  deliveryMethods: { ...prev.deliveryMethods, quick: e.target.checked }
+                }))}
+                className={styles.hiddenCheckbox}
+              />
+              <span className={styles.customCheckbox}>
+                <img
+                  src={formData.deliveryMethods.quick ? "/icons/check_active.png" : "/icons/check.png"}
+                  alt="체크박스"
+                />
+              </span>
+              퀵업체 배송
+            </label>
+            <label className={styles.checkboxLabel}>
+              <input
+                type="checkbox"
+                checked={formData.deliveryMethods.pickup}
+                onChange={(e) => setFormData(prev => ({
+                  ...prev,
+                  deliveryMethods: { ...prev.deliveryMethods, pickup: e.target.checked }
+                }))}
+                className={styles.hiddenCheckbox}
+              />
+              <span className={styles.customCheckbox}>
+                <img
+                  src={formData.deliveryMethods.pickup ? "/icons/check_active.png" : "/icons/check.png"}
+                  alt="체크박스"
+                />
+              </span>
+              매장 픽업
+            </label>
+          </div>
+        </div>
+
+        {/* 상품주문 추가설정 */}
+        <div className={styles.section}>
+          <div className={styles.titleWithNumber}>
+            <span className={styles.numberCircle}>9</span>
+            <span className={styles.sectionTitle}>상품주문 추가설정</span>
+          </div>
+          <div className={styles.checkboxGroup}>
+            <label className={styles.checkboxLabel}>
+              <input
+                type="checkbox"
+                checked={formData.additionalSettings.sameDayDelivery}
+                onChange={(e) => setFormData(prev => ({
+                  ...prev,
+                  additionalSettings: { ...prev.additionalSettings, sameDayDelivery: e.target.checked }
+                }))}
+                className={styles.hiddenCheckbox}
+              />
+              <span className={styles.customCheckbox}>
+                <img
+                  src={formData.additionalSettings.sameDayDelivery ? "/icons/check_active.png" : "/icons/check.png"}
+                  alt="체크박스"
+                />
+              </span>
+              당일배송가능
+            </label>
+            <label className={styles.checkboxLabel}>
+              <input
+                type="checkbox"
+                checked={formData.additionalSettings.thermalPack}
+                onChange={(e) => setFormData(prev => ({
+                  ...prev,
+                  additionalSettings: { ...prev.additionalSettings, thermalPack: e.target.checked }
+                }))}
+                className={styles.hiddenCheckbox}
+              />
+              <span className={styles.customCheckbox}>
+                <img
+                  src={formData.additionalSettings.thermalPack ? "/icons/check_active.png" : "/icons/check.png"}
+                  alt="체크박스"
+                />
+              </span>
+              보온•냉팩 포장 가능
+            </label>
+            <label className={styles.checkboxLabel}>
+              <input
+                type="checkbox"
+                checked={formData.additionalSettings.stickerCustom}
+                onChange={(e) => setFormData(prev => ({
+                  ...prev,
+                  additionalSettings: { ...prev.additionalSettings, stickerCustom: e.target.checked }
+                }))}
+                className={styles.hiddenCheckbox}
+              />
+              <span className={styles.customCheckbox}>
+                <img
+                  src={formData.additionalSettings.stickerCustom ? "/icons/check_active.png" : "/icons/check.png"}
+                  alt="체크박스"
+                />
+              </span>
+              스티커 제작 가능
+            </label>
+          </div>
+        </div>
+
+        {/* 버튼 영역 */}
+        <div className={styles.buttonContainer}>
+          <button
+            type="button"
+            onClick={handleCancel}
+            className={styles.cancelButton}
+          >
+            취소
+          </button>
+          <button
+            type="button"
+            onClick={hasSavedData ? handleLoadFromLocal : handleSaveToLocal}
+            className={styles.tempSaveButton}
+          >
+            {hasSavedData ? '임시저장 불러오기' : '임시저장'}
+          </button>
           <button
             type="submit"
             className={styles.submitButton}
+            disabled={isSubmitting}
           >
-            상품 등록
+            {isSubmitting ? '등록 중...' : '상품 등록'}
           </button>
         </div>
         </form>

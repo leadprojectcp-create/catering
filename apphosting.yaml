@@ -66,15 +66,15 @@ env:
 
   # Bunny CDN Configuration
   - variable: BUNNY_STORAGE_ZONE_NAME
-    value: tripjoy
+    value: picktoeat
     availability:
       - RUNTIME
   - variable: BUNNY_STORAGE_PASSWORD
-    value: 529a5878-2b3a-4ddb-aacb70439702-834b-4ccf
+    value: c16ddfa2-fc66-47af-b9a089b6db2a-17b8-4b77
     availability:
       - RUNTIME
   - variable: BUNNY_CDN_HOSTNAME
-    value: storage.bunnycdn.com
+    value: sg.storage.bunnycdn.com
     availability:
       - BUILD
       - RUNTIME

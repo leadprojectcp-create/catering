@@ -38,7 +38,8 @@ export async function POST(request: NextRequest) {
       'restaurant': 'restaurants',
       'business-registration': 'business-registrations',
       'menu': 'menus',
-      'profile': 'profiles'
+      'profile': 'profiles',
+      'product': 'products'
     }
 
     const folder = folderMap[uploadType] || 'others'
