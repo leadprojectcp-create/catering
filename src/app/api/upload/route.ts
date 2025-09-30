@@ -9,8 +9,10 @@ export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData()
     const file = formData.get('file') as File
+    const uploadType = formData.get('type') as string || 'restaurant' // 기본값은 restaurant
+    const userId = formData.get('userId') as string // 사용자 식별자 (이메일 또는 UID)
 
-    console.log('File received:', file?.name, file?.size)
+    console.log('File received:', file?.name, file?.size, 'Type:', uploadType, 'UserId:', userId)
 
     if (!file) {
       console.log('No file in request')
@@ -31,11 +33,33 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '파일 크기가 너무 큽니다. (최대 10MB)' }, { status: 400 })
     }
 
+    // 업로드 타입에 따라 폴더 구분
+    const folderMap: { [key: string]: string } = {
+      'restaurant': 'restaurants',
+      'business-registration': 'business-registrations',
+      'menu': 'menus',
+      'profile': 'profiles'
+    }
+
+    const folder = folderMap[uploadType] || 'others'
+
     // 파일명 생성
     const timestamp = Date.now()
     const randomId = Math.random().toString(36).substring(2, 15)
     const extension = file.name.split('.').pop()
-    const fileName = `picktoeat/restaurants/${timestamp}_${randomId}.${extension}`
+
+    // userId가 있으면 사용자별 폴더에 저장, 없으면 공용 폴더에 저장
+    let fileName: string
+    if (userId && uploadType === 'business-registration') {
+      // 사업자 등록증은 사용자별로 구분
+      fileName = `picktoeat/${folder}/${userId}/${timestamp}_${randomId}.${extension}`
+    } else if (userId) {
+      // 기타 사용자 관련 파일도 사용자별로 구분
+      fileName = `picktoeat/${folder}/${userId}/${timestamp}_${randomId}.${extension}`
+    } else {
+      // userId가 없으면 기존 방식대로
+      fileName = `picktoeat/${folder}/${timestamp}_${randomId}.${extension}`
+    }
 
     console.log('Generated filename:', fileName)
 

@@ -60,12 +60,15 @@ export default function PartnerSignupStep2() {
     storeName: '',
     businessRegistration: '',
     businessOwner: '',
+    businessRegistrationImage: '',
     address: '',
     detailAddress: ''
   })
   const [error, setError] = useState('')
   const [isPostcodeLoaded, setIsPostcodeLoaded] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [uploadedFileName, setUploadedFileName] = useState<string>('')
+  const [isUploading, setIsUploading] = useState(false)
 
   useEffect(() => {
     // Step 1 데이터 확인
@@ -143,6 +146,72 @@ export default function PartnerSignupStep2() {
     console.log('Kakao Postcode API loaded successfully');
   }
 
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // 파일 크기 체크 (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setError('이미지 크기는 5MB 이하여야 합니다.')
+      return
+    }
+
+    // 파일 타입 체크
+    if (!file.type.startsWith('image/')) {
+      setError('이미지 파일만 업로드 가능합니다.')
+      return
+    }
+
+    setIsUploading(true)
+    setError('')
+
+    try {
+      // FormData 생성
+      const formDataToUpload = new FormData()
+      formDataToUpload.append('file', file)
+      formDataToUpload.append('type', 'business-registration') // 사업자 등록증 타입 지정
+
+      // 사용자 이메일을 식별자로 사용 (회원가입 전이므로 UID가 없음)
+      if (step1Data?.email) {
+        // 이메일에서 @ 와 . 을 언더스코어로 변경하여 폴더명으로 사용 가능하게 함
+        const sanitizedEmail = step1Data.email.replace(/[@.]/g, '_')
+        formDataToUpload.append('userId', sanitizedEmail)
+      }
+
+      // 업로드 API 호출
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formDataToUpload
+      })
+
+      if (!response.ok) {
+        throw new Error('이미지 업로드에 실패했습니다.')
+      }
+
+      const data = await response.json()
+
+      setFormData({
+        ...formData,
+        businessRegistrationImage: data.url
+      })
+      setUploadedFileName(file.name)
+    } catch (error) {
+      console.error('Image upload error:', error)
+      setError('이미지 업로드 중 오류가 발생했습니다.')
+      setUploadedFileName('')
+    } finally {
+      setIsUploading(false)
+    }
+  }
+
+  const handleRemoveImage = () => {
+    setFormData({
+      ...formData,
+      businessRegistrationImage: ''
+    })
+    setUploadedFileName('')
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
@@ -182,6 +251,7 @@ export default function PartnerSignupStep2() {
         // 추가 파트너 정보
         businessCategory: formData.categories[0], // 첫 번째 선택을 대표 업종으로
         businessRegistration: formData.businessRegistration,
+        businessRegistrationImage: formData.businessRegistrationImage,
         businessOwner: formData.businessOwner,
         businessAddress: {
           city: formData.address.split(' ')[0] || '',
@@ -376,6 +446,43 @@ export default function PartnerSignupStep2() {
                   className={styles.inputNoIcon}
                   placeholder="사업자 대표이름을 입력해주세요"
                 />
+              </div>
+
+              {/* 사업자 등록증 이미지 추가 */}
+              <div className={styles.inputGroup}>
+                <label className={styles.label}>
+                  사업자 등록증 이미지 추가
+                </label>
+                <div className={styles.fileInputContainer}>
+                  <div className={styles.fileDisplayArea}>
+                    {uploadedFileName ? (
+                      <>
+                        <span className={styles.fileName}>{uploadedFileName}</span>
+                        <button
+                          type="button"
+                          onClick={handleRemoveImage}
+                          className={styles.removeButton}
+                          disabled={isUploading}
+                        >
+                          ✕
+                        </button>
+                      </>
+                    ) : (
+                      <span className={styles.filePlaceholder}>파일을 첨부해주세요</span>
+                    )}
+                  </div>
+                  <label htmlFor="businessRegistrationImage" className={styles.fileUploadButton}>
+                    <input
+                      id="businessRegistrationImage"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      className={styles.fileInput}
+                      disabled={isUploading}
+                    />
+                    {isUploading ? '업로드 중...' : '파일첨부'}
+                  </label>
+                </div>
               </div>
 
               {/* 가게 주소 */}

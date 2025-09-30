@@ -28,6 +28,7 @@ interface SignupData {
   // 파트너 추가 정보
   businessCategory?: string
   businessRegistration?: string
+  businessRegistrationImage?: string
   businessOwner?: string
   businessAddress?: {
     city: string
@@ -110,6 +111,7 @@ export async function signupUser(userData: SignupData) {
       ...(userData.type === 'partner' && {
         businessCategory: userData.businessCategory,
         businessRegistration: userData.businessRegistration,
+        businessRegistrationImage: userData.businessRegistrationImage,
         businessOwner: userData.businessOwner,
         businessAddress: userData.businessAddress
       })
