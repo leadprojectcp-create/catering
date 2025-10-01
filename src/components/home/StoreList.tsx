@@ -1,17 +1,14 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { collection, getDocs, deleteDoc, doc, query, where } from 'firebase/firestore'
+import { collection, getDocs, query, where } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import Image from 'next/image'
 import { Swiper, SwiperSlide } from 'swiper/react'
-import { Navigation, Pagination } from 'swiper/modules'
+import { Navigation } from 'swiper/modules'
 import 'swiper/css'
 import 'swiper/css/navigation'
 import 'swiper/css/pagination'
-import { logPhoneCall, logWebsiteVisit } from '@/lib/logger'
-import { useAuth } from '@/contexts/AuthContext'
-import { useRouter } from 'next/navigation'
 import styles from './StoreList.module.css'
 
 interface Store {
@@ -23,7 +20,6 @@ interface Store {
   address?: {
     city?: string
     district?: string
-    [key: string]: any
   }
   categories?: string[]
   phone?: string
@@ -44,12 +40,6 @@ interface StoreListProps {
 export default function StoreList({ selectedCategory }: StoreListProps) {
   const [stores, setStores] = useState<Store[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [showDropdown, setShowDropdown] = useState<string | null>(null)
-  const { userData } = useAuth()
-  const router = useRouter()
-
-  // 레벨 10 사용자(관리자) 확인
-  const isAdmin = userData?.level === 10
 
   useEffect(() => {
     const fetchStores = async () => {
@@ -96,43 +86,6 @@ export default function StoreList({ selectedCategory }: StoreListProps) {
     ? stores
     : stores.filter(store => store.businessCategory === selectedCategory)
 
-  const handlePhoneCall = async (store: Store) => {
-    if (store.phone) {
-      await logPhoneCall(store.id, store.companyName, store.phone)
-      window.open(`tel:${store.phone}`, '_self')
-    }
-  }
-
-  const handleWebsiteVisit = async (store: Store) => {
-    if (store.website) {
-      await logWebsiteVisit(store.id, store.companyName, store.website)
-      window.open(store.website, '_blank', 'noopener,noreferrer')
-    }
-  }
-
-  const handleEdit = (store: Store) => {
-    router.push(`/edit-store/${store.id}`)
-    setShowDropdown(null)
-  }
-
-  const handleDelete = async (store: Store) => {
-    if (window.confirm(`"${store.companyName}" 업체를 삭제하시겠습니까?`)) {
-      try {
-        await deleteDoc(doc(db, 'users', store.id))
-        setStores(stores.filter(r => r.id !== store.id))
-        alert('업체가 삭제되었습니다.')
-      } catch (error) {
-        console.error('삭제 실패:', error)
-        alert('삭제 중 오류가 발생했습니다.')
-      }
-    }
-    setShowDropdown(null)
-  }
-
-  const toggleDropdown = (storeId: string) => {
-    setShowDropdown(showDropdown === storeId ? null : storeId)
-  }
-
   if (isLoading) {
     return (
       <div className={styles.container}>
@@ -158,11 +111,10 @@ export default function StoreList({ selectedCategory }: StoreListProps) {
                 <div className={styles.imageSlider}>
                   {images.length > 0 ? (
                     <Swiper
-                      modules={[Navigation, Pagination]}
+                      modules={[Navigation]}
                       slidesPerView={3}
                       spaceBetween={5}
                       navigation
-                      pagination={{ clickable: true }}
                       className={styles.storeSwiper}
                     >
                       {images.map((image, index) => (
