@@ -10,6 +10,7 @@ interface UserData {
   email: string
   name: string
   level: number
+  type?: string
   companyName?: string
   phone?: string
   registrationComplete?: boolean
@@ -58,6 +59,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               email: data.email,
               name: data.name,
               level: data.level || 1, // 기본 레벨 1
+              type: data.type,
               companyName: data.companyName,
               phone: data.phone,
               registrationComplete: data.registrationComplete || false

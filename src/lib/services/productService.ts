@@ -55,11 +55,8 @@ export async function createProduct(productData: Omit<ProductData, 'partnerId' |
 
   // 그래도 이메일이 없으면 에러 발생
   if (!userEmail) {
-    console.error('User object:', user)
     throw new Error('사용자 이메일을 찾을 수 없습니다.')
   }
-
-  console.log('Current user email:', userEmail) // 디버깅용 로그
 
   const completeProductData: ProductData = {
     ...productData,
@@ -72,11 +69,7 @@ export async function createProduct(productData: Omit<ProductData, 'partnerId' |
     updatedAt: new Date().toISOString()
   }
 
-  console.log('Product data to save:', completeProductData) // 저장될 데이터 확인
-
   const docRef = await addDoc(collection(db, 'products'), completeProductData)
-  console.log('Product created with ID:', docRef.id, 'with email:', completeProductData.partnerEmail)
-
   return docRef.id
 }
 

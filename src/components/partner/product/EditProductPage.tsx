@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { createProduct } from '@/lib/services/productService'
+import { getProduct, updateProduct } from '@/lib/services/productService'
 import styles from './AddProductPage.module.css'
 
 interface OptionValue {
@@ -17,7 +17,7 @@ interface ProductOption {
 
 interface ProductFormData {
   name: string
-  images: File[]
+  images: string[]
   price: number
   options: ProductOption[]
   description: string
@@ -34,12 +34,26 @@ interface ProductFormData {
     stickerCustom: boolean
   }
   origin: { ingredient: string, origin: string }[]
+  status?: 'active' | 'inactive' | 'pending'
+  discount?: {
+    enabled: boolean
+    type: 'amount' | 'percent'
+    value: number
+    startDate: string | null
+    endDate: string | null
+    isAlwaysActive: boolean
+  }
+  discountedPrice?: number
 }
 
-export default function AddProductPage() {
+export default function EditProductPage({ productId }: { productId: string }) {
   const router = useRouter()
-  const [hasSavedData, setHasSavedData] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+  const [newImages, setNewImages] = useState<File[]>([])
+  const [showCalendar, setShowCalendar] = useState(false)
+  const [currentMonth, setCurrentMonth] = useState(new Date())
+  const [selectingDate, setSelectingDate] = useState<'start' | 'end'>('start')
   const [formData, setFormData] = useState<ProductFormData>({
     name: '',
     images: [],
@@ -58,7 +72,8 @@ export default function AddProductPage() {
       thermalPack: false,
       stickerCustom: false
     },
-    origin: []
+    origin: [],
+    status: 'pending'
   })
 
   // Format number with commas
@@ -71,49 +86,184 @@ export default function AddProductPage() {
     return Number(str.replace(/,/g, '')) || 0
   }
 
-  // Check if there's saved data on component mount
+  // 할인 계산
+  const calculateDiscountedPrice = () => {
+    if (!formData.discount?.enabled || !formData.discount.value) return formData.price
+
+    if (formData.discount.type === 'amount') {
+      return Math.max(0, formData.price - formData.discount.value)
+    } else {
+      return Math.max(0, formData.price * (1 - formData.discount.value / 100))
+    }
+  }
+
+  const calculateDiscountPercent = () => {
+    if (!formData.discount?.enabled || !formData.discount.value) return 0
+
+    if (formData.discount.type === 'percent') {
+      return formData.discount.value
+    } else {
+      return Math.round((formData.discount.value / formData.price) * 100)
+    }
+  }
+
+  // 달력 관련 함수들
+  const getDaysInMonth = (date: Date) => {
+    const year = date.getFullYear()
+    const month = date.getMonth()
+    const firstDay = new Date(year, month, 1).getDay()
+    const daysInMonth = new Date(year, month + 1, 0).getDate()
+    return { firstDay, daysInMonth, year, month }
+  }
+
+  const formatDateToYYYYMMDD = (date: Date) => {
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
+  }
+
+  const handleDateSelect = (day: number) => {
+    const selectedDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day)
+    const formattedDate = formatDateToYYYYMMDD(selectedDate)
+
+    if (selectingDate === 'start') {
+      setFormData(prev => ({
+        ...prev,
+        discount: { ...prev.discount!, startDate: formattedDate }
+      }))
+      setSelectingDate('end')
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        discount: { ...prev.discount!, endDate: formattedDate }
+      }))
+      setShowCalendar(false)
+    }
+  }
+
+  const changeMonth = (direction: number) => {
+    const newMonth = new Date(currentMonth)
+    newMonth.setMonth(newMonth.getMonth() + direction)
+    setCurrentMonth(newMonth)
+  }
+
+  const renderCalendar = () => {
+    const monthData = getDaysInMonth(currentMonth)
+    const days = []
+
+    for (let i = 0; i < monthData.firstDay; i++) {
+      days.push(<div key={`empty-${i}`} className={styles.calendarDay}></div>)
+    }
+
+    for (let day = 1; day <= monthData.daysInMonth; day++) {
+      const currentDate = formatDateToYYYYMMDD(new Date(monthData.year, monthData.month, day))
+      const isSelected = currentDate === formData.discount?.startDate || currentDate === formData.discount?.endDate
+      const isInRange = formData.discount?.startDate && formData.discount?.endDate &&
+                        currentDate > formData.discount.startDate && currentDate < formData.discount.endDate
+
+      days.push(
+        <div
+          key={day}
+          className={`${styles.calendarDay} ${isSelected ? styles.calendarDaySelected : ''} ${isInRange ? styles.calendarDayInRange : ''}`}
+          onClick={() => handleDateSelect(day)}
+        >
+          {day}
+        </div>
+      )
+    }
+
+    return (
+      <div className={styles.calendarDropdown}>
+        <div className={styles.calendarHeader}>
+          <button type="button" onClick={() => changeMonth(-1)} className={styles.calendarNavButton}>
+            ‹
+          </button>
+          <span className={styles.calendarMonth}>
+            {monthData.year}년 {monthData.month + 1}월
+          </span>
+          <button type="button" onClick={() => changeMonth(1)} className={styles.calendarNavButton}>
+            ›
+          </button>
+        </div>
+        <div className={styles.calendarWeekdays}>
+          <div>일</div>
+          <div>월</div>
+          <div>화</div>
+          <div>수</div>
+          <div>목</div>
+          <div>금</div>
+          <div>토</div>
+        </div>
+        <div className={styles.calendarGrid}>
+          {days}
+        </div>
+      </div>
+    )
+  }
+
+  // 기존 상품 데이터 불러오기
   useEffect(() => {
-    const savedData = localStorage.getItem('productFormData')
-    if (savedData) {
-      setHasSavedData(true)
+    const loadProduct = async () => {
+      try {
+        const product = await getProduct(productId)
+        if (product) {
+          setFormData({
+            name: product.name || '',
+            images: product.images || [],
+            price: product.price || 0,
+            options: product.options || [{ groupName: '', values: [{ name: '', price: 0 }] }],
+            description: product.description || '',
+            minOrderQuantity: product.minOrderQuantity || 10,
+            maxOrderQuantity: product.maxOrderQuantity || 11,
+            deliveryMethods: product.deliveryMethods || {
+              self: false,
+              quick: false,
+              pickup: false
+            },
+            additionalSettings: product.additionalSettings || {
+              sameDayDelivery: false,
+              thermalPack: false,
+              stickerCustom: false
+            },
+            origin: Array.isArray(product.origin) ? product.origin : [],
+            status: product.status as 'active' | 'inactive' | 'pending',
+            discount: product.discount ? {
+              enabled: !!(product.discount && product.discountedPrice),
+              type: product.discount.type || 'percent',
+              value: product.discount.value || 0,
+              startDate: product.discount.startDate || null,
+              endDate: product.discount.endDate || null,
+              isAlwaysActive: product.discount.isAlwaysActive !== undefined ? product.discount.isAlwaysActive : true
+            } : {
+              enabled: false,
+              type: 'percent',
+              value: 0,
+              startDate: null,
+              endDate: null,
+              isAlwaysActive: true
+            },
+            discountedPrice: product.discountedPrice
+          })
+        }
+      } catch (error) {
+        console.error('상품 정보 로딩 실패:', error)
+        alert('상품 정보를 불러오는 데 실패했습니다.')
+        router.back()
+      } finally {
+        setIsLoading(false)
+      }
     }
-  }, [])
 
-  // Save to local storage
-  const handleSaveToLocal = () => {
-    // Create a copy of formData without images (can't store File objects in localStorage)
-    const dataToSave = {
-      ...formData,
-      images: [] // Images need to be handled separately
-    }
-    localStorage.setItem('productFormData', JSON.stringify(dataToSave))
-    setHasSavedData(true)
-    alert('임시저장되었습니다.')
-  }
-
-  // Load from local storage
-  const handleLoadFromLocal = () => {
-    const savedData = localStorage.getItem('productFormData')
-    if (savedData) {
-      const parsedData = JSON.parse(savedData)
-      setFormData({
-        ...parsedData,
-        images: formData.images // Keep current images
-      })
-      // Clear the saved data after loading
-      localStorage.removeItem('productFormData')
-      setHasSavedData(false)
-      alert('임시저장된 데이터를 불러왔습니다.')
-    }
-  }
+    loadProduct()
+  }, [productId, router])
 
   // Handle cancel
   const handleCancel = () => {
-    if (confirm('작성중인 내용이 삭제됩니다. 취소하시겠습니까?')) {
+    if (confirm('수정중인 내용이 삭제됩니다. 취소하시겠습니까?')) {
       router.back()
     }
   }
-
 
   const addOptionGroup = () => {
     setFormData(prev => ({
@@ -207,22 +357,15 @@ export default function AddProductPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (isSubmitting) return // 이미 제출 중이면 무시
+    if (isSubmitting) return
 
     setIsSubmitting(true)
 
     try {
-      // 현재 로그인한 사용자 정보 확인
-      const { auth } = await import('@/lib/firebase')
-      const currentUser = auth.currentUser
-      console.log('Current user in AddProductPage:', currentUser)
-      console.log('Current user email:', currentUser?.email)
-      console.log('Current user uid:', currentUser?.uid)
+      // 새로운 이미지 업로드 처리
+      const uploadedImageUrls: string[] = [...formData.images]
 
-      // 이미지 업로드 처리
-      const uploadedImageUrls: string[] = []
-
-      for (const imageFile of formData.images) {
+      for (const imageFile of newImages) {
         const formDataToUpload = new FormData()
         formDataToUpload.append('file', imageFile)
         formDataToUpload.append('type', 'product')
@@ -240,40 +383,62 @@ export default function AddProductPage() {
         uploadedImageUrls.push(uploadResult.url)
       }
 
-      // orderType을 'single'로 고정하여 전송
-      const submitData = {
+      // 수정된 데이터 준비
+      const submitData: any = {
         ...formData,
-        images: uploadedImageUrls, // File 객체 대신 업로드된 URL들
-        orderType: 'single', // 항상 단건주문으로 설정
-        createdAt: new Date().toISOString()
+        images: uploadedImageUrls,
+        updatedAt: new Date().toISOString()
       }
 
-      console.log('Product data to save:', submitData)
+      // 할인이 활성화되어 있으면 할인 데이터 추가
+      if (formData.discount?.enabled && formData.discount.value > 0) {
+        submitData.discount = {
+          type: formData.discount.type,
+          value: formData.discount.value,
+          startDate: formData.discount.startDate,
+          endDate: formData.discount.endDate,
+          isAlwaysActive: formData.discount.isAlwaysActive
+        }
+        submitData.discountedPrice = Math.round(calculateDiscountedPrice())
+      } else {
+        // 할인이 비활성화되면 기존 할인 데이터 제거
+        submitData.discount = null
+        submitData.discountedPrice = null
+      }
 
-      // productService를 사용하여 Firestore에 저장
-      const productId = await createProduct(submitData)
+      // Firestore 업데이트
+      await updateProduct(productId, submitData)
 
-      console.log('Product saved with ID:', productId)
-      alert('상품이 성공적으로 등록되었습니다!')
-
-      // 임시저장 데이터 삭제
-      localStorage.removeItem('productFormData')
-
-      // 목록 페이지로 이동
-      router.push('/partner/dashboard')
+      alert('상품이 성공적으로 수정되었습니다!')
+      router.push('/partner/menu/management')
 
     } catch (error) {
-      console.error('상품 등록 중 오류:', error)
-      alert('상품 등록 중 오류가 발생했습니다.')
+      console.error('상품 수정 중 오류:', error)
+      alert('상품 수정 중 오류가 발생했습니다.')
     } finally {
       setIsSubmitting(false)
     }
   }
 
+  const removeImage = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      images: prev.images.filter((_, i) => i !== index)
+    }))
+  }
+
+  if (isLoading) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.loading}>상품 정보를 불러오는 중...</div>
+      </div>
+    )
+  }
+
   return (
     <div className={styles.container}>
       <div className={styles.formCard}>
-        <h1 className={styles.title}>상품 등록</h1>
+        <h1 className={styles.title}>상품 수정</h1>
 
         <form onSubmit={handleSubmit} className={styles.form}>
         {/* 상품 이미지 등록 */}
@@ -284,11 +449,11 @@ export default function AddProductPage() {
           </div>
           <div className={styles.imageUploadSection}>
             <div className={styles.imageGrid}>
-              {/* 이미지 미리보기 */}
-              {formData.images.map((file, index) => (
-                <div key={index} className={`${styles.imagePreviewBox} ${index === 0 ? styles.mainImage : ''}`}>
+              {/* 기존 이미지 미리보기 */}
+              {formData.images.map((url, index) => (
+                <div key={`existing-${index}`} className={`${styles.imagePreviewBox} ${index === 0 ? styles.mainImage : ''}`}>
                   <img
-                    src={URL.createObjectURL(file)}
+                    src={url}
                     alt={`상품 이미지 ${index + 1}`}
                     className={styles.previewImage}
                   />
@@ -298,11 +463,26 @@ export default function AddProductPage() {
                   <button
                     type="button"
                     className={styles.removeImageBtn}
+                    onClick={() => removeImage(index)}
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+
+              {/* 새로 추가한 이미지 미리보기 */}
+              {newImages.map((file, index) => (
+                <div key={`new-${index}`} className={styles.imagePreviewBox}>
+                  <img
+                    src={URL.createObjectURL(file)}
+                    alt={`새 이미지 ${index + 1}`}
+                    className={styles.previewImage}
+                  />
+                  <button
+                    type="button"
+                    className={styles.removeImageBtn}
                     onClick={() => {
-                      setFormData(prev => ({
-                        ...prev,
-                        images: prev.images.filter((_, i) => i !== index)
-                      }))
+                      setNewImages(prev => prev.filter((_, i) => i !== index))
                     }}
                   >
                     ✕
@@ -318,10 +498,7 @@ export default function AddProductPage() {
                   multiple
                   onChange={(e) => {
                     const files = Array.from(e.target.files || [])
-                    setFormData(prev => ({
-                      ...prev,
-                      images: [...prev.images, ...files]
-                    }))
+                    setNewImages(prev => [...prev, ...files])
                   }}
                   className={styles.fileInput}
                 />
@@ -359,20 +536,186 @@ export default function AddProductPage() {
             <span className={styles.numberCircle}>3</span>
             <span className={styles.sectionTitle}>상품 판매가</span>
           </div>
-          <div className={styles.inputWithUnit}>
-            <input
-              type="text"
-              value={formData.price ? formatNumberWithCommas(formData.price) : ''}
-              onChange={(e) => {
-                const numericValue = parseFormattedNumber(e.target.value)
-                setFormData(prev => ({ ...prev, price: numericValue }))
-              }}
-              placeholder=""
-              className={styles.textInput}
-              required
-            />
-            <span className={styles.inputUnit}>원</span>
+          <div className={styles.priceInputRow}>
+            <div className={`${styles.inputWithUnit} ${styles.priceInputWrapper}`}>
+              <input
+                type="text"
+                value={formData.price ? formatNumberWithCommas(formData.price) : ''}
+                onChange={(e) => {
+                  const numericValue = parseFormattedNumber(e.target.value)
+                  setFormData(prev => ({ ...prev, price: numericValue }))
+                }}
+                placeholder=""
+                className={styles.textInput}
+                required
+              />
+              <span className={styles.inputUnit}>원</span>
+            </div>
+            <label className={`${styles.checkboxLabel} ${styles.checkboxNoMargin}`} style={{ whiteSpace: 'nowrap' }}>
+              <input
+                type="checkbox"
+                checked={formData.discount?.enabled || false}
+                onChange={(e) => setFormData(prev => ({
+                  ...prev,
+                  discount: { ...prev.discount!, enabled: e.target.checked }
+                }))}
+                className={styles.hiddenCheckbox}
+              />
+              <span className={styles.customCheckbox}>
+                <img
+                  src={formData.discount?.enabled ? "/icons/check_active.png" : "/icons/check.png"}
+                  alt="체크박스"
+                />
+              </span>
+              할인 적용
+            </label>
           </div>
+
+          {/* 할인 설정 영역 */}
+          {formData.discount?.enabled && (
+            <div className={styles.discountSection}>
+              {/* 할인 유형 */}
+              <div className={styles.discountInputGroup}>
+                <label className={styles.discountLabel}>할인 유형</label>
+                <div className={styles.discountTypeButtons}>
+                  <button
+                    type="button"
+                    onClick={() => setFormData(prev => ({
+                      ...prev,
+                      discount: { ...prev.discount!, type: 'amount' }
+                    }))}
+                    className={formData.discount.type === 'amount' ? styles.discountTypeButtonActive : styles.discountTypeButton}
+                  >
+                    정액할인(원)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFormData(prev => ({
+                      ...prev,
+                      discount: { ...prev.discount!, type: 'percent' }
+                    }))}
+                    className={formData.discount.type === 'percent' ? styles.discountTypeButtonActive : styles.discountTypeButton}
+                  >
+                    정률할인(%)
+                  </button>
+                </div>
+              </div>
+
+              {/* 할인 금액/율 */}
+              <div className={styles.discountInputGroup}>
+                <label className={styles.discountLabel}>
+                  {formData.discount.type === 'amount' ? '할인 금액' : '할인율'}
+                </label>
+                <div className={styles.inputWithUnit}>
+                  <input
+                    type="number"
+                    value={formData.discount.value || ''}
+                    onChange={(e) => setFormData(prev => ({
+                      ...prev,
+                      discount: { ...prev.discount!, value: Number(e.target.value) }
+                    }))}
+                    placeholder="0"
+                    className={styles.textInput}
+                  />
+                  <span className={styles.inputUnit}>{formData.discount.type === 'amount' ? '원' : '%'}</span>
+                </div>
+              </div>
+
+              {/* 진행 기간 */}
+              <div className={styles.discountInputGroup}>
+                <div className={styles.dateRangeHeader}>
+                  <label className={`${styles.discountLabel} ${styles.labelNoMargin}`}>진행 기간</label>
+                  <label className={`${styles.checkboxLabel} ${styles.checkboxNoMargin}`}>
+                    <input
+                      type="checkbox"
+                      checked={formData.discount.isAlwaysActive}
+                      onChange={(e) => {
+                        setFormData(prev => ({
+                          ...prev,
+                          discount: {
+                            ...prev.discount!,
+                            isAlwaysActive: e.target.checked,
+                            startDate: e.target.checked ? null : prev.discount!.startDate,
+                            endDate: e.target.checked ? null : prev.discount!.endDate
+                          }
+                        }))
+                        setShowCalendar(false)
+                      }}
+                      className={styles.hiddenCheckbox}
+                    />
+                    <span className={styles.customCheckbox}>
+                      <img
+                        src={formData.discount.isAlwaysActive ? "/icons/check_active.png" : "/icons/check.png"}
+                        alt="체크박스"
+                      />
+                    </span>
+                    상시 적용
+                  </label>
+                </div>
+                <div className={styles.dateRangeWrapper}>
+                  <div className={styles.dateInputContainer}>
+                    <input
+                      type="text"
+                      value={
+                        formData.discount.startDate && formData.discount.endDate
+                          ? `${formData.discount.startDate.replace(/-/g, '.')} ~ ${formData.discount.endDate.replace(/-/g, '.')}`
+                          : formData.discount.startDate
+                          ? `${formData.discount.startDate.replace(/-/g, '.')} ~ 종료일 선택`
+                          : '기간 선택'
+                      }
+                      placeholder="기간 선택"
+                      className={styles.dateInput}
+                      disabled={formData.discount.isAlwaysActive}
+                      readOnly
+                      onClick={() => {
+                        if (!formData.discount.isAlwaysActive) {
+                          setShowCalendar(!showCalendar)
+                          setSelectingDate('start')
+                        }
+                      }}
+                    />
+                    <button
+                      type="button"
+                      className={styles.calendarButton}
+                      disabled={formData.discount.isAlwaysActive}
+                      onClick={() => {
+                        setShowCalendar(!showCalendar)
+                        setSelectingDate('start')
+                      }}
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <path d="M6.66667 1.66666V4.16666M13.3333 1.66666V4.16666M2.5 7.49999H17.5M4.16667 3.33333H15.8333C16.7538 3.33333 17.5 4.07952 17.5 4.99999V16.6667C17.5 17.5871 16.7538 18.3333 15.8333 18.3333H4.16667C3.24619 18.3333 2.5 17.5871 2.5 16.6667V4.99999C2.5 4.07952 3.24619 3.33333 4.16667 3.33333Z" stroke="#999" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </button>
+                    {showCalendar && !formData.discount.isAlwaysActive && renderCalendar()}
+                  </div>
+                </div>
+              </div>
+
+              {/* 할인 적용 결과 */}
+              {formData.discount.value > 0 && (
+                <div className={styles.discountPreview}>
+                  <div className={styles.discountPreviewRow}>
+                    <span style={{ color: '#666' }}>원가</span>
+                    <span className={styles.discountOriginalPrice}>
+                      {formatNumberWithCommas(formData.price)}원
+                    </span>
+                  </div>
+                  <div className={styles.discountPreviewRow}>
+                    <span style={{ fontWeight: '600', color: '#EA4335' }}>할인가</span>
+                    <div style={{ textAlign: 'right' }}>
+                      <span className={styles.discountBadge}>
+                        {calculateDiscountPercent()}%
+                      </span>
+                      <span className={styles.discountFinalPrice}>
+                        {formatNumberWithCommas(Math.round(calculateDiscountedPrice()))}원
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* 상품 수량 설정 */}
@@ -531,7 +874,7 @@ export default function AddProductPage() {
             <span className={styles.sectionTitle}>원산지 표기</span>
           </div>
           <div className={styles.originContainer}>
-            {formData.origin.length === 0 ? (
+            {!formData.origin || formData.origin.length === 0 ? (
               <div className={styles.originRow}>
                 <input
                   type="text"
@@ -564,7 +907,7 @@ export default function AddProductPage() {
                 </div>
               </div>
             ) : (
-              formData.origin.map((item, index) => (
+              formData.origin && Array.isArray(formData.origin) && formData.origin.map((item, index) => (
                 <div key={index} className={styles.originRow}>
                   <input
                     type="text"
@@ -743,18 +1086,11 @@ export default function AddProductPage() {
             취소
           </button>
           <button
-            type="button"
-            onClick={hasSavedData ? handleLoadFromLocal : handleSaveToLocal}
-            className={styles.tempSaveButton}
-          >
-            {hasSavedData ? '임시저장 불러오기' : '임시저장'}
-          </button>
-          <button
             type="submit"
             className={styles.submitButton}
             disabled={isSubmitting}
           >
-            {isSubmitting ? '등록 중...' : '상품 등록'}
+            {isSubmitting ? '수정 중...' : '상품 수정'}
           </button>
         </div>
         </form>

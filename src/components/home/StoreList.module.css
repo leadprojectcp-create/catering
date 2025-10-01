@@ -50,7 +50,7 @@
   text-align: center;
 }
 
-.restaurantCard {
+.storeCard {
   position: relative;
 }
 
@@ -68,7 +68,7 @@
   overflow: hidden;
 }
 
-.restaurantImage {
+.storeImage {
   object-fit: cover;
   width: 100%;
   height: 100%;
@@ -85,7 +85,7 @@
   color: #9ca3af;
 }
 
-.restaurantInfo {
+.storeInfo {
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -181,7 +181,7 @@
   align-items: center;
 }
 
-.restaurantName {
+.storeName {
   font-size: 18px;
   font-weight: 700;
   color: #111827;
@@ -268,7 +268,7 @@
     display: none;
   }
 
-  .restaurantInfo {
+  .storeInfo {
     flex: 1;
     display: flex;
     flex-direction: column;
@@ -323,7 +323,7 @@
     width: 100%;
   }
 
-  .restaurantCard {
+  .storeCard {
     display: flex;
     flex-direction: column;
     width: 100%;
@@ -344,7 +344,7 @@
     height: 100px;
   }
 
-  .restaurantInfo {
+  .storeInfo {
     min-height: 100px;
     width: 100%;
     max-width: calc(100% - 112px);
@@ -367,7 +367,7 @@
     font-size: 12px;
   }
 
-  .restaurantName {
+  .storeName {
     font-size: 16px;
   }
 

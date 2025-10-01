@@ -37,7 +37,7 @@ const partnerMenuItems = [
     ]
   },
   {
-    category: '메뉴',
+    category: '상품',
     icon: (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
@@ -45,9 +45,8 @@ const partnerMenuItems = [
       </svg>
     ),
     items: [
-      { name: '상품 등록', path: '/partner/add-product' },
-      { name: '메뉴관리', path: '/partner/menu/management' },
-      { name: '메뉴품절', path: '/partner/menu/soldout' }
+      { name: '상품등록', path: '/partner/product/add' },
+      { name: '상품관리', path: '/partner/product/management' }
     ]
   },
   {
@@ -108,11 +107,11 @@ export default function PartnerHeader() {
             </Link>
           </div>
 
-          {/* 햄버거 메뉴 버튼 */}
+          {/* 햄버거 상품 버튼 */}
           <button
             className={styles.menuButton}
             onClick={toggleDrawer}
-            aria-label="메뉴"
+            aria-label="상품"
           >
             <span className={styles.hamburger}></span>
             <span className={styles.hamburger}></span>
@@ -133,7 +132,7 @@ export default function PartnerHeader() {
           <button
             className={styles.closeButton}
             onClick={closeDrawer}
-            aria-label="메뉴 닫기"
+            aria-label="상품 닫기"
           >
             ✕
           </button>

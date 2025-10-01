@@ -239,17 +239,55 @@ export default function PartnerSignupStep2() {
     }
 
     try {
-      // Step3에서 사용할 모든 데이터를 세션 스토리지에 저장 (회원가입은 Step3에서 진행)
-      const allSignupData = {
-        email: step1Data.email,
-        password: step1Data.password || '', // 소셜 사용자는 비밀번호 없음
-        name: step1Data.name,
+      // Step1에서 저장한 UID 가져오기
+      const uid = sessionStorage.getItem('partnerSignupUid')
+      if (!uid) {
+        setError('사용자 정보를 찾을 수 없습니다.')
+        setIsLoading(false)
+        return
+      }
+
+      // stores 컬렉션에 가게 정보 저장
+      const { doc, setDoc } = await import('firebase/firestore')
+      const { db } = await import('@/lib/firebase')
+
+      // 카테고리 ID를 한글 이름으로 변환
+      const categoryNames = formData.categories.map(id => {
+        const category = categories.find(c => c.id === id)
+        return category ? category.name : id
+      })
+
+      const storeData = {
+        partnerId: uid,
+        storeName: formData.storeName,
+        categories: categoryNames, // 한글 카테고리 이름
+        primaryCategory: categoryNames[0], // 대표 업종
+        businessRegistration: formData.businessRegistration,
+        businessRegistrationImage: formData.businessRegistrationImage || '',
+        businessOwner: formData.businessOwner,
+        address: {
+          city: formData.address.split(' ')[0] || '',
+          district: formData.address.split(' ')[1] || '',
+          dong: formData.address.split(' ')[2] || '',
+          detail: formData.detailAddress,
+          fullAddress: formData.address
+        },
         phone: step1Data.phone,
+        description: '',
+        openingHours: '',
+        closedDays: [],
+        status: 'pending', // 'pending' | 'active' | 'inactive' - 검수 대기 중
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
+
+      await setDoc(doc(db, 'stores', uid), storeData)
+
+      // users 컬렉션 업데이트 - 가게명 추가 및 회원가입 완료 처리
+      const userRef = doc(db, 'users', uid)
+      await setDoc(userRef, {
         companyName: formData.storeName,
-        type: 'partner' as const,
-        termsAgreements: step1Data.termsAgreements,
-        // 추가 파트너 정보
-        businessCategory: formData.categories[0], // 첫 번째 선택을 대표 업종으로
+        businessCategory: categoryNames[0], // 한글 카테고리
         businessRegistration: formData.businessRegistration,
         businessRegistrationImage: formData.businessRegistrationImage,
         businessOwner: formData.businessOwner,
@@ -259,16 +297,15 @@ export default function PartnerSignupStep2() {
           dong: formData.address.split(' ')[2] || '',
           detail: formData.detailAddress,
           fullAddress: formData.address
-        }
-      }
-
-      // 모든 회원가입 데이터 저장
-      sessionStorage.setItem('partnerSignupData', JSON.stringify(allSignupData))
+        },
+        registrationComplete: true, // Step2 완료 시점에 회원가입 완료 처리
+        updatedAt: new Date()
+      }, { merge: true })
 
       // Step3 표시용 데이터 저장
       const step2Data = {
         storeName: formData.storeName,
-        category: formData.categories[0],
+        category: categoryNames[0], // 한글 카테고리
         city: formData.address.split(' ')[0] || '',
         district: formData.address.split(' ')[1] || '',
         dong: formData.address.split(' ')[2] || '',
@@ -281,9 +318,9 @@ export default function PartnerSignupStep2() {
     } catch (error) {
       console.error('Partner signup step2 error:', error)
       if (error instanceof Error) {
-        setError(`데이터 저장 중 오류가 발생했습니다: ${error.message}`)
+        setError(`가게 정보 저장 중 오류가 발생했습니다: ${error.message}`)
       } else {
-        setError('데이터 저장 중 오류가 발생했습니다.')
+        setError('가게 정보 저장 중 오류가 발생했습니다.')
       }
     } finally {
       setIsLoading(false)

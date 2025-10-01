@@ -1,0 +1,83 @@
+.container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.categoryTitle {
+  color: #333;
+  font-size: 16px;
+  font-weight: 700;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.categoryDescription {
+  color: #999;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.5;
+  margin-bottom: 16px;
+}
+
+.categoryHighlight {
+  color: #F79B2C;
+  font-weight: 600;
+}
+
+.categoryGrid {
+  display: flex;
+  gap: 64px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+}
+
+.categoryRowTop {
+  display: contents;
+}
+
+.categoryRowBottom {
+  display: contents;
+}
+
+.categoryCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.categoryCard:hover {
+  opacity: 0.8;
+}
+
+
+.categoryIcon {
+  width: 72px;
+  height: 72px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+  transition: all 0.2s ease;
+}
+
+.categoryIcon img {
+  width: 72px;
+  height: 72px;
+}
+
+.categoryName {
+  color: #333;
+  font-size: 14px;
+  font-weight: 700;
+  text-align: center;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+

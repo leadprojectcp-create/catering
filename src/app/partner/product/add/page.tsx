@@ -1,7 +1,7 @@
 'use client'
 
 import PartnerHeader from '@/components/partner/PartnerHeader'
-import AddProductPage from '@/components/partner/menu/AddProductPage'
+import AddProductPage from '@/components/partner/product/AddProductPage'
 
 export default function AddProduct() {
   return (

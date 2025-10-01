@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Eye, EyeOff } from 'lucide-react'
 import { onAuthStateChanged } from 'firebase/auth'
-import { doc, getDoc } from 'firebase/firestore'
+import { doc, getDoc, setDoc } from 'firebase/firestore'
 import { auth, db } from '@/lib/firebase'
 import AuthGuard from './AuthGuard'
 import styles from './SignupPage.module.css'
@@ -109,20 +109,80 @@ export default function PartnerSignupStep1() {
       return
     }
 
-    // Step 1 데이터를 세션 스토리지에 저장하고 다음 단계로
-    const step1Data = isSocialUser ? {
-      name: formData.name,
-      phone: formData.phone,
-      email: formData.email,
-      termsAgreements: createTermsAgreements()
-      // 소셜 사용자는 비밀번호 필요 없음
-    } : {
-      ...formData,
-      termsAgreements: createTermsAgreements()
-    }
+    try {
+      // Firebase Auth 계정 생성 및 users 컬렉션에 기본 정보 저장
+      const currentUser = auth.currentUser
+      let uid: string
 
-    sessionStorage.setItem('partnerSignupStep1', JSON.stringify(step1Data))
-    router.push('/signup/partner/step2')
+      if (isSocialUser && currentUser) {
+        // 소셜 사용자는 이미 Firebase Auth에 등록되어 있음
+        uid = currentUser.uid
+
+        // users 컬렉션에 기본 정보 업데이트
+        const userRef = doc(db, 'users', uid)
+        await setDoc(userRef, {
+          email: formData.email,
+          name: formData.name,
+          phone: formData.phone,
+          type: 'partner',
+          terms: createTermsAgreements(),
+          registrationComplete: false, // Step2 완료 후 true로 변경
+          createdAt: new Date(),
+          updatedAt: new Date()
+        }, { merge: true })
+      } else {
+        // 일반 회원가입 - Firebase Auth 계정 생성
+        const { createUserWithEmailAndPassword } = await import('firebase/auth')
+        const userCredential = await createUserWithEmailAndPassword(
+          auth,
+          formData.email,
+          formData.password
+        )
+        uid = userCredential.user.uid
+
+        // users 컬렉션에 기본 정보 저장
+        const userRef = doc(db, 'users', uid)
+        await setDoc(userRef, {
+          email: formData.email,
+          name: formData.name,
+          phone: formData.phone,
+          type: 'partner',
+          terms: createTermsAgreements(),
+          registrationComplete: false, // Step2 완료 후 true로 변경
+          createdAt: new Date(),
+          updatedAt: new Date()
+        })
+      }
+
+      // UID를 세션 스토리지에 저장
+      sessionStorage.setItem('partnerSignupUid', uid)
+
+      // Step 1 데이터도 저장 (Step3에서 표시용)
+      const step1Data = {
+        name: formData.name,
+        phone: formData.phone,
+        email: formData.email
+      }
+      sessionStorage.setItem('partnerSignupStep1', JSON.stringify(step1Data))
+
+      router.push('/signup/partner/step2')
+    } catch (error: unknown) {
+      console.error('Partner signup step1 error:', error)
+
+      // Firebase 에러 메시지를 한국어로 변환
+      const errorMessages: { [key: string]: string } = {
+        'auth/email-already-in-use': '이미 사용 중인 이메일입니다.',
+        'auth/weak-password': '비밀번호가 너무 약합니다. 6자 이상 입력해주세요.',
+        'auth/invalid-email': '유효하지 않은 이메일 주소입니다.'
+      }
+
+      const errorCode = (error as { code?: string }).code
+      const errorMessage = errorCode && errorMessages[errorCode]
+        ? errorMessages[errorCode]
+        : '회원가입 중 오류가 발생했습니다.'
+
+      setError(errorMessage)
+    }
   }
 
   return (

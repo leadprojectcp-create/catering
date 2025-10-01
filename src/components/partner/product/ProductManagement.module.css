@@ -7,9 +7,6 @@
   min-height: 100vh;
 }
 
-.header {
-  margin-bottom: 30px;
-}
 
 .title {
   color: #333;
@@ -34,20 +31,39 @@
   margin-bottom: 16px;
 }
 
+@media (max-width: 768px) {
+  .actionBar {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .filterButtons {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .addButton {
+    width: 100%;
+  }
+}
+
 .filterButtons {
   display: flex;
   gap: 8px;
 }
 
 .searchBar {
+  position: relative;
   margin-bottom: 20px;
 }
 
 .searchInput {
   width: 100%;
   padding: 12px 16px;
-  border: 1px solid #F0F0F3;
-  border-radius: 5px;
+  padding-right: 48px;
+  border: none;
+  border-radius: 10px;
+  background: #FAFAFA;
   font-size: 14px;
   font-weight: 400;
   color: #333;
@@ -60,7 +76,18 @@
 
 .searchInput:focus {
   outline: none;
-  border-color: #237AF2;
+  background: #F5F5F5;
+}
+
+.searchIcon {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  pointer-events: none;
 }
 
 .filterButton {
@@ -109,85 +136,170 @@
 }
 
 .menuGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 20px;
+  display: flex;
+  flex-direction: column;
 }
 
 .menuCard {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.menuCard:last-child {
+  border-bottom: none;
+}
+
+.menuTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.imageWrapper {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  flex-shrink: 0;
 }
 
 .menuImage {
   width: 100%;
-  height: 180px;
+  height: 100%;
   object-fit: cover;
+  border-radius: 8px;
   background-color: #f5f5f5;
 }
 
+.imageOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.6);
+  color: #FFF;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 8px;
+}
+
 .menuInfo {
-  padding: 16px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.menuHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .menuName {
   font-size: 18px;
   font-weight: 700;
   color: #333;
-  margin: 0 0 8px 0;
+  margin: 0;
+}
+
+.inactiveMenuName {
+  color: #999;
 }
 
 .menuCategory {
-  font-size: 12px;
-  color: #666;
-  margin: 0 0 8px 0;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin: 0;
+}
+
+.deliveryBadge {
+  display: inline-block;
+  padding: 4px 8px;
+  background: #F5F7F9;
+  color: #999;
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.settingBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  background: #025BD9;
+  color: #FFF;
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 700;
 }
 
 .menuDescription {
-  font-size: 14px;
-  color: #666;
-  margin: 0 0 12px 0;
-  line-height: 1.4;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
+  display: none;
 }
+
+.priceContainer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
 
 .menuPrice {
-  font-size: 18px;
-  font-weight: 700;
-  color: #025BD9;
-  margin: 0 0 12px 0;
+  color: #333;
+  font-size: 16px;
+  font-weight: 600;
 }
 
-.menuStatus {
-  display: inline-block;
+.originalPrice {
+  font-size: 13px;
+  font-weight: 500;
+  color: #999;
+  text-decoration: line-through;
 }
+
+.discountRate {
+  font-size: 14px;
+  font-weight: 600;
+  color: #EA4335;
+}
+
+.discountedPrice {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
 
 .available {
-  display: inline-block;
-  padding: 4px 12px;
-  background-color: #e7f5ff;
-  color: #0066cc;
-  border-radius: 4px;
-  font-size: 12px;
-  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  padding: 5px;
+  background: #F5F7F9;
+  color: #237AF2;
+  border-radius: 3px;
+  font-size: 13px;
+  font-weight: 500;
 }
 
 .soldOut {
-  display: inline-block;
-  padding: 4px 12px;
-  background-color: #ffe7e7;
-  color: #cc0000;
-  border-radius: 4px;
-  font-size: 12px;
-  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  padding: 5px;
+  background: #F5F7F9;
+  color: #999;
+  border-radius: 3px;
+  font-size: 13px;
+  font-weight: 500;
 }
 
 .pending {
@@ -200,42 +312,58 @@
   font-weight: 600;
 }
 
+.menuFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.toggleArea {
+  display: flex;
+}
+
 .menuActions {
   display: flex;
   gap: 8px;
-  padding: 0 16px 16px;
+  margin-left: auto;
 }
 
-.toggleButton,
-.editButton,
-.deleteButton {
-  flex: 1;
-  padding: 8px;
-  border: 1px solid #e5e5e5;
-  border-radius: 6px;
+.toggleSwitch {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: opacity 0.3s ease;
+}
+
+.toggleSwitch:hover {
+  opacity: 0.8;
+}
+
+.toggleSwitch svg {
+  display: block;
+}
+
+.actionButton {
+  display: inline-flex;
+  padding: 5px 10px;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  border-radius: 3px;
+  border: 1px solid #4E5968;
   background-color: white;
-  color: #333;
-  font-size: 13px;
+  color: #4E5968;
+  font-size: 14px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.3s ease;
 }
 
-.toggleButton:hover {
-  background-color: #f0f0f0;
-  border-color: #999;
-}
-
-.editButton:hover {
-  background-color: #e7f5ff;
-  border-color: #0066cc;
-  color: #0066cc;
-}
-
-.deleteButton:hover {
-  background-color: #ffe7e7;
-  border-color: #cc0000;
-  color: #cc0000;
+.actionButton:hover {
+  background-color: #f5f5f5;
 }
 
 .emptyState {
@@ -364,6 +492,7 @@
 @media (max-width: 768px) {
   .container {
     padding: 16px;
+    padding-top: 80px;
   }
 
   .title {

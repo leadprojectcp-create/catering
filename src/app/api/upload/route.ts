@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData()
     const file = formData.get('file') as File
-    const uploadType = formData.get('type') as string || 'restaurant' // 기본값은 restaurant
+    const uploadType = formData.get('type') as string || 'store' // 기본값은 store
     const userId = formData.get('userId') as string // 사용자 식별자 (이메일 또는 UID)
 
     console.log('File received:', file?.name, file?.size, 'Type:', uploadType, 'UserId:', userId)
@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
 
     // 업로드 타입에 따라 폴더 구분
     const folderMap: { [key: string]: string } = {
-      'restaurant': 'restaurants',
+      'store': 'stores',
       'business-registration': 'business-registrations',
       'menu': 'menus',
       'profile': 'profiles',
