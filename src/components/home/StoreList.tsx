@@ -4,6 +4,11 @@ import { useState, useEffect } from 'react'
 import { collection, getDocs, deleteDoc, doc, query, where } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import Image from 'next/image'
+import { Swiper, SwiperSlide } from 'swiper/react'
+import { Navigation, Pagination } from 'swiper/modules'
+import 'swiper/css'
+import 'swiper/css/navigation'
+import 'swiper/css/pagination'
 import { logPhoneCall, logWebsiteVisit } from '@/lib/logger'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
@@ -11,12 +16,22 @@ import styles from './StoreList.module.css'
 
 interface Store {
   id: string
-  companyName: string
+  storeName: string
+  companyName?: string
   businessCategory: string
   businessAddress: string
+  address?: {
+    city?: string
+    district?: string
+    [key: string]: any
+  }
+  categories?: string[]
   phone?: string
   website?: string
   imageUrl?: string
+  storeImages?: string[]
+  rating?: number
+  reviewCount?: number
   businessHours?: string
   createdAt?: { toDate?: () => Date } | Date | string
   updatedAt?: { toDate?: () => Date } | Date | string
@@ -39,20 +54,26 @@ export default function StoreList({ selectedCategory }: StoreListProps) {
   useEffect(() => {
     const fetchStores = async () => {
       try {
-        const q = query(collection(db, 'users'), where('type', '==', 'partner'))
+        const q = query(collection(db, 'stores'), where('isActive', '==', 'active'))
         const querySnapshot = await getDocs(q)
         const storeData = querySnapshot.docs.map(doc => {
           const data = doc.data()
           return {
             id: doc.id,
+            storeName: data.storeName,
             companyName: data.companyName,
             businessCategory: data.businessCategory,
             businessAddress: typeof data.businessAddress === 'object'
               ? data.businessAddress.fullAddress || `${data.businessAddress.city || ''} ${data.businessAddress.district || ''} ${data.businessAddress.dong || ''} ${data.businessAddress.detail || ''}`.trim()
               : data.businessAddress,
+            address: data.address || {},
+            categories: data.categories || [],
             phone: data.phone,
             website: data.website,
             imageUrl: data.imageUrl,
+            storeImages: data.storeImages || [],
+            rating: data.rating || 0,
+            reviewCount: data.reviewCount || 0,
             businessHours: data.businessHours
           } as Store
         })
@@ -61,7 +82,7 @@ export default function StoreList({ selectedCategory }: StoreListProps) {
         const shuffledStores = storeData.sort(() => Math.random() - 0.5)
         setStores(shuffledStores)
       } catch (error) {
-        console.error('파트너 데이터 가져오기 실패:', error)
+        console.error('스토어 데이터 가져오기 실패:', error)
         setStores([])
       } finally {
         setIsLoading(false)
@@ -122,34 +143,42 @@ export default function StoreList({ selectedCategory }: StoreListProps) {
 
   return (
     <div className={styles.container}>
-      <div className={styles.header}>
-        <h2 className={styles.title}>
-          {selectedCategory === '전체' ? '전체 목록' : `${selectedCategory} 목록`}
-        </h2>
-        <p className={styles.resultCount}>
-          총 <span className={styles.countNumber}>{filteredStores.length}</span>개의 결과
-        </p>
-      </div>
-
-      <div className={styles.grid}>
+      <div className={styles.storeGrid}>
         {filteredStores.length === 0 ? (
           <div className={styles.emptyState}>
             {selectedCategory === '전체' ? '등록된 업체가 없습니다.' : `${selectedCategory} 카테고리에 등록된 업체가 없습니다.`}
           </div>
         ) : (
-          filteredStores.map((store) => (
-            <div key={store.id} className={styles.storeCard}>
-              <div className={styles.cardContent}>
-                {/* 왼쪽 이미지 - 180x180 */}
-                <div className={styles.imageContainer}>
-                  {store.imageUrl ? (
-                    <Image
-                      src={store.imageUrl}
-                      alt={store.companyName}
-                      width={180}
-                      height={180}
-                      className={styles.storeImage}
-                    />
+          filteredStores.map((store) => {
+            const images = store.storeImages && store.storeImages.length > 0 ? store.storeImages : []
+
+            return (
+              <div key={store.id} className={styles.card}>
+                {/* 이미지 슬라이더 */}
+                <div className={styles.imageSlider}>
+                  {images.length > 0 ? (
+                    <Swiper
+                      modules={[Navigation, Pagination]}
+                      slidesPerView={3}
+                      spaceBetween={5}
+                      navigation
+                      pagination={{ clickable: true }}
+                      className={styles.storeSwiper}
+                    >
+                      {images.map((image, index) => (
+                        <SwiperSlide key={index}>
+                          <div className={styles.imageWrapper}>
+                            <Image
+                              src={image}
+                              alt={`${store.storeName || '가게'} 이미지 ${index + 1}`}
+                              fill
+                              className={styles.cardImage}
+                              style={{ objectFit: 'cover' }}
+                            />
+                          </div>
+                        </SwiperSlide>
+                      ))}
+                    </Swiper>
                   ) : (
                     <div className={styles.placeholderImage}>
                       <span>🍽️</span>
@@ -157,108 +186,30 @@ export default function StoreList({ selectedCategory }: StoreListProps) {
                   )}
                 </div>
 
-                {/* 오른쪽 정보 */}
-                <div className={styles.storeInfo}>
-                  {/* 상단 정보를 모두 동일한 크기로 분배 */}
-                  <div className={styles.infoContent}>
-                    {/* 카테고리 + 관리자 메뉴 */}
-                    <div className={styles.categoryRow}>
-                      <p className={styles.category}>{store.businessCategory}</p>
-                      {/* 관리자용 점3개 메뉴 */}
-                      {isAdmin && (
-                        <div className={styles.adminMenu}>
-                          <button
-                            onClick={() => toggleDropdown(store.id)}
-                            className={styles.adminButton}
-                          >
-                            <span className={styles.adminButtonText}>⋯</span>
-                          </button>
-
-                          {showDropdown === store.id && (
-                            <div className={styles.dropdown}>
-                              <button
-                                onClick={() => handleEdit(store)}
-                                className={`${styles.dropdownButton} ${styles.editButton}`}
-                              >
-                                수정하기
-                              </button>
-                              <button
-                                onClick={() => handleDelete(store)}
-                                className={`${styles.dropdownButton} ${styles.deleteButton}`}
-                              >
-                                삭제하기
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* 가게명 */}
-                    <div className={styles.nameRow}>
-                      <h3 className={styles.storeName}>{store.companyName}</h3>
-                    </div>
-
-                    {/* 위치 */}
-                    <div className={styles.locationRow}>
-                      <p className={styles.locationInfo}>
-                        <span className={styles.label}>위치 </span>
-                        <span className={styles.locationText}>{store.businessAddress}</span>
-                      </p>
-                    </div>
-
-                    {/* 영업시간 */}
-                    <div className={styles.hoursRow}>
-                      {store.businessHours ? (
-                        <p className={styles.hoursInfo}>
-                          <span className={styles.label}>영업 </span>
-                          <span className={styles.hoursText}>{store.businessHours}</span>
-                        </p>
-                      ) : (
-                        <span></span>
-                      )}
-                    </div>
+                {/* 카드 정보 */}
+                <div className={styles.cardInfo}>
+                  <div className={styles.categoryRow}>
+                    <span className={styles.district}>
+                      {store.address?.city && store.address?.district
+                        ? `${store.address.city}/${store.address.district}`
+                        : store.address?.city || store.address?.district || ''}
+                    </span>
+                    <span className={styles.category}>{store.categories?.[0] || ''}</span>
                   </div>
-
-                  {/* PC에서 버튼을 storeInfo 내부에 배치 */}
-                  <div className={`${styles.buttonContainer} ${styles.pcButtons}`}>
-                    <button
-                      onClick={() => handlePhoneCall(store)}
-                      className={`${styles.actionButton} ${styles.phoneButton}`}
-                    >
-                      전화하기
-                    </button>
-                    {store.website && (
-                      <button
-                        onClick={() => handleWebsiteVisit(store)}
-                        className={`${styles.actionButton} ${styles.websiteButton}`}
-                      >
-                        웹사이트 방문
-                      </button>
-                    )}
+                  <h3 className={styles.cardTitle}>{store.storeName}</h3>
+                  <div className={styles.ratingRow}>
+                    <span className={styles.star}>⭐</span>
+                    <span className={styles.ratingNumber}>
+                      {store.rating ? store.rating.toFixed(1) : '0.0'}
+                    </span>
+                    <span className={styles.reviewCount}>
+                      ({store.reviewCount ? store.reviewCount.toLocaleString() : '0'})
+                    </span>
                   </div>
                 </div>
               </div>
-
-              {/* 모바일에서 버튼을 카드 외부 하단에 배치 */}
-              <div className={`${styles.buttonContainer} ${styles.mobileButtons}`}>
-                <button
-                  onClick={() => handlePhoneCall(store)}
-                  className={`${styles.actionButton} ${styles.phoneButton}`}
-                >
-                  전화하기
-                </button>
-                {store.website && (
-                  <button
-                    onClick={() => handleWebsiteVisit(store)}
-                    className={`${styles.actionButton} ${styles.websiteButton}`}
-                  >
-                    웹사이트 방문
-                  </button>
-                )}
-              </div>
-            </div>
-          ))
+            )
+          })
         )}
       </div>
     </div>

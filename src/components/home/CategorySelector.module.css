@@ -29,7 +29,7 @@
 
 .categoryGrid {
   display: flex;
-  row-gap: 24px;
+  row-gap: 16px;
   column-gap: 24px;
   flex-wrap: wrap;
   width: 100%;

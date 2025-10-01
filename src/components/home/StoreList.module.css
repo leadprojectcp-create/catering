@@ -1,42 +1,159 @@
 .container {
   max-width: 1280px;
   margin: 0 auto;
-  padding: 0;
+  padding: 32px 0;
 }
 
-.header {
-  margin-bottom: 32px;
-}
-
-.title {
-  font-size: 24px;
-  font-weight: 700;
-  color: #111827;
-}
-
-.resultCount {
-  color: #333;
-  font-size: 16px;
-  font-weight: 600;
-  margin-top: 8px;
-}
-
-.countNumber {
-  color: #025BD9;
-  font-size: 16px;
-  font-weight: 600;
-}
-
-.grid {
+.storeGrid {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 24px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
 }
 
-@media (min-width: 1024px) {
-  .grid {
-    grid-template-columns: repeat(2, 1fr);
+@media (max-width: 768px) {
+  .storeGrid {
+    grid-template-columns: repeat(1, 1fr);
+    gap: 12px;
   }
+}
+
+.card {
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.imageSlider {
+  position: relative;
+  width: 100%;
+  height: 100px;
+  background-color: white;
+  overflow: visible;
+  display: flex;
+  align-items: center;
+}
+
+.storeSwiper {
+  width: 100%;
+  height: 100px;
+}
+
+.storeSwiper :global(.swiper-slide) {
+  width: 100px !important;
+  height: 100px !important;
+}
+
+.imageWrapper {
+  position: relative;
+  width: 100px !important;
+  height: 100px !important;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.cardImage {
+  object-fit: cover;
+  border-radius: 10px;
+}
+
+.placeholderImage {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 48px;
+  background-color: #F5F5F5;
+}
+
+/* Swiper 네비게이션 커스텀 */
+.storeSwiper :global(.swiper-button-prev),
+.storeSwiper :global(.swiper-button-next) {
+  width: 24px;
+  height: 24px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+}
+
+.storeSwiper :global(.swiper-button-prev):after,
+.storeSwiper :global(.swiper-button-next):after {
+  font-size: 12px;
+  color: #333;
+  font-weight: bold;
+}
+
+.storeSwiper :global(.swiper-pagination) {
+  bottom: 4px;
+}
+
+.storeSwiper :global(.swiper-pagination-bullet) {
+  width: 6px;
+  height: 6px;
+  background: white;
+  opacity: 0.7;
+}
+
+.storeSwiper :global(.swiper-pagination-bullet-active) {
+  background: white;
+  opacity: 1;
+}
+
+.cardInfo {
+  padding: 12px 0;
+}
+
+.categoryRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.district {
+  color: #999;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.category {
+  color: #237AF2;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.cardTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ratingRow {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.star {
+  font-size: 14px;
+}
+
+.ratingNumber {
+  font-size: 14px;
+  font-weight: 700;
+  color: #333;
+}
+
+.reviewCount {
+  font-size: 14px;
+  color: #999;
 }
 
 .emptyState {
@@ -48,375 +165,6 @@
 
 .loading {
   text-align: center;
-}
-
-.storeCard {
-  position: relative;
-}
-
-.cardContent {
-  display: flex;
-  gap: 16px;
-}
-
-.imageContainer {
-  width: 180px;
-  height: 180px;
-  position: relative;
-  flex-shrink: 0;
-  border-radius: 12px;
-  overflow: hidden;
-}
-
-.storeImage {
-  object-fit: cover;
-  width: 100%;
-  height: 100%;
-}
-
-.placeholderImage {
-  width: 100%;
-  height: 100%;
-  background-color: #f3f4f6;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 36px;
-  color: #9ca3af;
-}
-
-.storeInfo {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-height: 180px;
-}
-
-.infoContent {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  gap: 10px;
-}
-
-.categoryRow {
-  flex: 1;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.category {
-  font-size: 14px;
   color: #6b7280;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  line-clamp: 1;
-}
-
-.adminMenu {
-  position: relative;
-  flex-shrink: 0;
-}
-
-.adminButton {
-  border: none;
-  background: none;
-  cursor: pointer;
-  border-radius: 50%;
-  transition: background-color 0.2s;
-}
-
-.adminButton:hover {
-  background-color: #f3f4f6;
-}
-
-.adminButtonText {
-  color: #9ca3af;
-  font-size: 18px;
-}
-
-.dropdown {
-  position: absolute;
-  right: 0;
-  top: 100%;
-  margin-top: 4px;
-  background: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-  padding: 4px 0;
-  z-index: 10;
-  min-width: 100px;
-}
-
-.dropdownButton {
-  width: 100%;
-  padding: 8px 16px;
-  text-align: left;
-  font-size: 14px;
-  border: none;
-  background: none;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.dropdownButton:hover {
-  background-color: #f3f4f6;
-}
-
-.editButton {
-  color: #374151;
-}
-
-.deleteButton {
-  color: #dc2626;
-}
-
-.nameRow {
-  flex: 1;
-  display: flex;
-  align-items: center;
-}
-
-.storeName {
-  font-size: 18px;
-  font-weight: 700;
-  color: #111827;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  line-clamp: 1;
-}
-
-.locationRow {
-  flex: 1;
-  display: flex;
-  align-items: center;
-}
-
-.locationInfo {
-  display: flex;
-  align-items: center;
-  font-size: 14px;
-  color: #6b7280;
-  gap: 8px;
-}
-
-.label {
-  color: #9ca3af;
-  min-width: 40px;
-  flex-shrink: 0;
-  white-space: nowrap;
-}
-
-.locationText {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.hoursRow {
-  flex: 1;
-  display: flex;
-  align-items: center;
-}
-
-.hoursInfo {
-  display: flex;
-  align-items: center;
-  font-size: 14px;
-  color: #6b7280;
-  gap: 8px;
-}
-
-.hoursText {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.buttonContainer {
-  display: flex;
-  gap: 8px;
-  margin-top: 12px;
-}
-
-/* PC와 모바일에서 버튼 표시/숨김 제어 */
-.pcButtons {
-  display: none;
-}
-
-.mobileButtons {
-  display: flex;
-}
-
-/* PC에서는 PC 버튼만 표시 */
-@media (min-width: 769px) {
-  .pcButtons {
-    display: flex;
-    margin-top: 16px;
-  }
-
-  .mobileButtons {
-    display: none;
-  }
-
-  .storeInfo {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    min-height: 180px;
-    justify-content: space-between;
-  }
-}
-
-.actionButton {
-  flex: 1;
-  font-weight: 500;
-  padding: 10px 0;
-  font-size: 14px;
-  border-radius: 8px;
-  border: none;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.phoneButton {
-  background-color: #fff;
-  border: 1px solid #D9D9D9;
-  color: #333;
-}
-
-.websiteButton {
-  background-color: #3b82f6;
-  color: white;
-}
-
-.websiteButton:hover {
-  background-color: #2563eb;
-}
-
-/* 모바일 반응형 - 이미지와 정보는 좌우, 버튼만 아래 */
-@media (max-width: 768px) {
-  .container {
-    max-width: 100vw;
-    overflow-x: hidden;
-  }
-
-  .header {
-    margin-bottom: 20px;
-  }
-
-  .title {
-    font-size: 18px;
-  }
-
-  .grid {
-    gap: 16px;
-    width: 100%;
-  }
-
-  .storeCard {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    max-width: 100%;
-    box-sizing: border-box;
-    overflow: hidden;
-  }
-
-  .cardContent {
-    gap: 12px;
-    width: 100%;
-    max-width: 100%;
-    box-sizing: border-box;
-  }
-
-  .imageContainer {
-    width: 100px;
-    height: 100px;
-  }
-
-  .storeInfo {
-    min-height: 100px;
-    width: 100%;
-    max-width: calc(100% - 112px);
-    flex: 1;
-    overflow: hidden;
-  }
-
-  .infoContent {
-    gap: 2px;
-  }
-
-  .categoryRow,
-  .nameRow,
-  .locationRow,
-  .hoursRow {
-    flex: none;
-  }
-
-  .category {
-    font-size: 12px;
-  }
-
-  .storeName {
-    font-size: 16px;
-  }
-
-  .locationInfo,
-  .hoursInfo {
-    font-size: 13px;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-  }
-
-  .label {
-    font-size: 12px;
-    min-width: 32px;
-    flex-shrink: 0;
-    white-space: nowrap;
-  }
-
-  .locationText,
-  .hoursText {
-    flex: 1;
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .buttonContainer {
-    gap: 8px;
-    margin-top: 12px;
-    width: 100%;
-    max-width: 100%;
-    box-sizing: border-box;
-    padding: 0;
-  }
-
-  .actionButton {
-    padding: 10px 8px;
-    font-size: 13px;
-    min-width: 0;
-    flex: 1;
-    max-width: calc(50% - 4px);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    box-sizing: border-box;
-  }
-
-  .placeholderImage {
-    font-size: 20px;
-  }
+  padding: 48px 0;
 }
