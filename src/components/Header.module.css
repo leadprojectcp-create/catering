@@ -1,8 +1,8 @@
 /* 헤더 */
 .header {
-  height: 60px;
-  background-color: white;
-  border-bottom: 1px solid #e5e5e5;
+  height: 80px;
+  background-color: #025BD9;
+  border-bottom: 1px solid #025BD9;
   position: fixed;
   top: 0;
   left: 0;
@@ -26,8 +26,6 @@
 }
 
 .logo {
-  width: 250px;
-  height: auto;
   object-fit: contain;
 }
 
@@ -43,18 +41,13 @@
   align-items: center;
   justify-content: center;
   gap: 4px;
-  color: #333;
+  color: white;
   text-decoration: none;
-  transition: color 0.3s ease;
 }
 
 .partnerIconLink span {
   font-size: 12px;
   font-weight: 500;
-}
-
-.partnerIconLink:hover {
-  color: #025BD9;
 }
 
 /* 햄버거 메뉴 버튼 */
@@ -73,12 +66,7 @@
 .hamburger {
   width: 100%;
   height: 2px;
-  background-color: #333;
-  transition: all 0.3s ease;
-}
-
-.menuButton:hover .hamburger {
-  background-color: #025BD9;
+  background-color: white;
 }
 
 /* 오버레이 */

@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import Header from './Header'
 import Footer from './Footer'
+import MainTitle from './home/MainTitle'
+import Banner from './home/Banner'
 import StoreList from './home/StoreList'
 import CategorySelector from './home/CategorySelector'
 import styles from './MainPage.module.css'
@@ -29,6 +31,9 @@ export default function MainPage() {
       {/* 메인 컨텐츠 영역 */}
       <main className={styles.main}>
         <div className={styles.mainContent}>
+          {/* 메인 타이틀 */}
+          <MainTitle />
+
           {/* 카테고리 선택 */}
           <div>
             <CategorySelector
@@ -36,6 +41,9 @@ export default function MainPage() {
               onCategorySelect={handleCategorySelect}
             />
           </div>
+
+          {/* 배너 */}
+          <Banner />
 
           {/* 레스토랑 리스트 */}
           <StoreList selectedCategory="전체" />

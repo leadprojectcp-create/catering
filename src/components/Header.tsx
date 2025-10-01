@@ -71,7 +71,7 @@ export default function Header() {
               <Image
                 src="/assets/logo.png"
                 alt="로고"
-                width={250}
+                width={150}
                 height={0}
                 className={styles.logo}
                 quality={100}
