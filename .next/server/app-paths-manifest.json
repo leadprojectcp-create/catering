@@ -1,21 +1,3 @@
 {
-  "/_not-found/page": "app/_not-found/page.js",
-  "/admin/logs/page": "app/admin/logs/page.js",
-  "/api/upload/route": "app/api/upload/route.js",
-  "/favicon.ico/route": "app/favicon.ico/route.js",
-  "/login/page": "app/login/page.js",
-  "/page": "app/page.js",
-  "/partner/dashboard/page": "app/partner/dashboard/page.js",
-  "/partner/product/add/page": "app/partner/product/add/page.js",
-  "/partner/product/edit/[id]/page": "app/partner/product/edit/[id]/page.js",
-  "/partner/product/management/page": "app/partner/product/management/page.js",
-  "/partner/store/management/page": "app/partner/store/management/page.js",
-  "/signup/choose-type/page": "app/signup/choose-type/page.js",
-  "/signup/complete/page": "app/signup/complete/page.js",
-  "/signup/page": "app/signup/page.js",
-  "/signup/partner/step1/page": "app/signup/partner/step1/page.js",
-  "/signup/partner/step2/page": "app/signup/partner/step2/page.js",
-  "/signup/partner/step3/page": "app/signup/partner/step3/page.js",
-  "/signup/social-additional-info/page": "app/signup/social-additional-info/page.js",
-  "/signup/terms/page": "app/signup/terms/page.js"
+  "/page": "app/page.js"
 }

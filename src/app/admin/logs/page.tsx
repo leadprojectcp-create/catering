@@ -18,10 +18,7 @@ export default function AdminLogs() {
 
   return (
     <>
-      <Header
-        selectedCategory="전체"
-        onCategorySelect={handleCategorySelect}
-      />
+      <Header />
       <AdminLogsPage />
       <Footer />
     </>
