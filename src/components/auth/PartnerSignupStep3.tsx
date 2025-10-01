@@ -7,10 +7,10 @@ import styles from './SignupPage.module.css'
 
 const categoryNames: { [key: string]: string } = {
   dessert: '디저트박스',
-  sandwich: '샌드위치/베이커리',
+  sandwich: '샌드위치',
   salad: '샐러드/과일',
   kimbap: '김밥/한식',
-  traditional: '떡/전통한과/건과류'
+  traditional: '떡/전통한과'
 }
 
 interface Step2Data {

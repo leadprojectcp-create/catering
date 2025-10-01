@@ -34,10 +34,10 @@ interface CategoryOption {
 
 const categories: CategoryOption[] = [
   { id: 'dessert', name: '디저트 박스', icon: '/icons/dessert_box.png' },
-  { id: 'sandwich', name: '샌드위치/베이커리', icon: '/icons/sandwich_bakery.png' },
+  { id: 'sandwich', name: '샌드위치', icon: '/icons/sandwich_bakery.png' },
   { id: 'salad', name: '샐러드/과일', icon: '/icons/salad_fruit.png' },
   { id: 'kimbap', name: '김밥/한식', icon: '/icons/kimbap_korean.png' },
-  { id: 'traditional', name: '떡/전통한과/건과류', icon: '/icons/ricecake_traditional.png' }
+  { id: 'traditional', name: '떡/전통한과', icon: '/icons/ricecake_traditional.png' }
 ]
 
 interface Step1Data {
