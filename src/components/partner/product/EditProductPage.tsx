@@ -32,6 +32,7 @@ interface ProductFormData {
     sameDayDelivery: boolean
     thermalPack: boolean
     stickerCustom: boolean
+    giftItem: boolean
   }
   origin: { ingredient: string, origin: string }[]
   status?: 'active' | 'inactive' | 'pending'
@@ -70,7 +71,8 @@ export default function EditProductPage({ productId }: { productId: string }) {
     additionalSettings: {
       sameDayDelivery: false,
       thermalPack: false,
-      stickerCustom: false
+      stickerCustom: false,
+      giftItem: false
     },
     origin: [],
     status: 'pending'
@@ -224,7 +226,8 @@ export default function EditProductPage({ productId }: { productId: string }) {
             additionalSettings: product.additionalSettings || {
               sameDayDelivery: false,
               thermalPack: false,
-              stickerCustom: false
+              stickerCustom: false,
+              giftItem: false
             },
             origin: Array.isArray(product.origin) ? product.origin : [],
             status: product.status as 'active' | 'inactive' | 'pending',
@@ -1072,6 +1075,24 @@ export default function EditProductPage({ productId }: { productId: string }) {
                 />
               </span>
               스티커 제작 가능
+            </label>
+            <label className={styles.checkboxLabel}>
+              <input
+                type="checkbox"
+                checked={formData.additionalSettings.giftItem}
+                onChange={(e) => setFormData(prev => ({
+                  ...prev,
+                  additionalSettings: { ...prev.additionalSettings, giftItem: e.target.checked }
+                }))}
+                className={styles.hiddenCheckbox}
+              />
+              <span className={styles.customCheckbox}>
+                <img
+                  src={formData.additionalSettings.giftItem ? "/icons/check_active.png" : "/icons/check.png"}
+                  alt="체크박스"
+                />
+              </span>
+              답례품
             </label>
           </div>
         </div>

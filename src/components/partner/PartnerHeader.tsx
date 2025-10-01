@@ -98,11 +98,9 @@ export default function PartnerHeader() {
                 src="/assets/partners_logo.png"
                 alt="파트너 로고"
                 width={250}
-                height={0}
-                className={styles.logo}
-                quality={100}
+                height={50}
+                style={{ width: '250px', height: 'auto' }}
                 priority
-                style={{ height: 'auto' }}
               />
             </Link>
           </div>

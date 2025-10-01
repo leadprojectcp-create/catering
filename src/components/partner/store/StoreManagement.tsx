@@ -764,7 +764,7 @@ export default function StoreManagement() {
                 {storeInfo.storeName || '가게명'}
               </div>
               <div className={styles.previewRating}>
-                <Image src="/icons/star.png" alt="star" width={16} height={16} />
+                <Image src="/icons/star.png" alt="star" width={16} height={16} style={{ width: '16px', height: 'auto' }} />
                 <span className={styles.ratingScore}>0/5</span>
                 <span className={styles.ratingCount}>(0)</span>
               </div>
