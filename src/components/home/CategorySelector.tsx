@@ -1,6 +1,5 @@
 'use client'
 
-import { useState } from 'react'
 import Image from 'next/image'
 import styles from './CategorySelector.module.css'
 
@@ -22,13 +21,11 @@ const categories: CategoryOption[] = [
 interface CategorySelectorProps {
   selectedCategories: string[]
   onCategorySelect: (categoryId: string) => void
-  maxSelection?: number
 }
 
 export default function CategorySelector({
   selectedCategories,
-  onCategorySelect,
-  maxSelection = 2
+  onCategorySelect
 }: CategorySelectorProps) {
   return (
     <div className={styles.container}>

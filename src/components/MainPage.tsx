@@ -34,7 +34,6 @@ export default function MainPage() {
             <CategorySelector
               selectedCategories={selectedCategories}
               onCategorySelect={handleCategorySelect}
-              maxSelection={10}
             />
           </div>
 

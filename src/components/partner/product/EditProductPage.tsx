@@ -223,11 +223,11 @@ export default function EditProductPage({ productId }: { productId: string }) {
               quick: false,
               pickup: false
             },
-            additionalSettings: product.additionalSettings || {
-              sameDayDelivery: false,
-              thermalPack: false,
-              stickerCustom: false,
-              giftItem: false
+            additionalSettings: {
+              sameDayDelivery: product.additionalSettings?.sameDayDelivery || false,
+              thermalPack: product.additionalSettings?.thermalPack || false,
+              stickerCustom: product.additionalSettings?.stickerCustom || false,
+              giftItem: product.additionalSettings?.giftItem || false
             },
             origin: Array.isArray(product.origin) ? product.origin : [],
             status: product.status as 'active' | 'inactive' | 'pending',
@@ -387,6 +387,7 @@ export default function EditProductPage({ productId }: { productId: string }) {
       }
 
       // 수정된 데이터 준비
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const submitData: any = {
         ...formData,
         images: uploadedImageUrls,
@@ -668,10 +669,10 @@ export default function EditProductPage({ productId }: { productId: string }) {
                       }
                       placeholder="기간 선택"
                       className={styles.dateInput}
-                      disabled={formData.discount.isAlwaysActive}
+                      disabled={formData.discount?.isAlwaysActive}
                       readOnly
                       onClick={() => {
-                        if (!formData.discount.isAlwaysActive) {
+                        if (!formData.discount?.isAlwaysActive) {
                           setShowCalendar(!showCalendar)
                           setSelectingDate('start')
                         }
@@ -680,7 +681,7 @@ export default function EditProductPage({ productId }: { productId: string }) {
                     <button
                       type="button"
                       className={styles.calendarButton}
-                      disabled={formData.discount.isAlwaysActive}
+                      disabled={formData.discount?.isAlwaysActive}
                       onClick={() => {
                         setShowCalendar(!showCalendar)
                         setSelectingDate('start')
@@ -690,7 +691,7 @@ export default function EditProductPage({ productId }: { productId: string }) {
                         <path d="M6.66667 1.66666V4.16666M13.3333 1.66666V4.16666M2.5 7.49999H17.5M4.16667 3.33333H15.8333C16.7538 3.33333 17.5 4.07952 17.5 4.99999V16.6667C17.5 17.5871 16.7538 18.3333 15.8333 18.3333H4.16667C3.24619 18.3333 2.5 17.5871 2.5 16.6667V4.99999C2.5 4.07952 3.24619 3.33333 4.16667 3.33333Z" stroke="#999" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                       </svg>
                     </button>
-                    {showCalendar && !formData.discount.isAlwaysActive && renderCalendar()}
+                    {showCalendar && !formData.discount?.isAlwaysActive && renderCalendar()}
                   </div>
                 </div>
               </div>

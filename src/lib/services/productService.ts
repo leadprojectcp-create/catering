@@ -25,6 +25,7 @@ export interface ProductData {
     sameDayDelivery: boolean
     thermalPack: boolean
     stickerCustom: boolean
+    giftItem: boolean
   }
   origin: { ingredient: string, origin: string }[]
   orderType: string
@@ -35,6 +36,14 @@ export interface ProductData {
   orderCount?: number
   createdAt?: string
   updatedAt?: string
+  discount?: {
+    type: 'amount' | 'percent'
+    value: number
+    startDate: string | null
+    endDate: string | null
+    isAlwaysActive: boolean
+  }
+  discountedPrice?: number
 }
 
 // 상품 등록

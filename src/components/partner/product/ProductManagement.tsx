@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import styles from './ProductManagement.module.css'
@@ -48,14 +48,7 @@ export default function ProductManagement() {
   const [filter, setFilter] = useState<'all' | 'active' | 'inactive' | 'pending'>('all')
   const [searchQuery, setSearchQuery] = useState('')
 
-  // 상품 목록 가져오기
-  useEffect(() => {
-    if (user?.uid) {
-      fetchMenuItems()
-    }
-  }, [user?.uid])
-
-  const fetchMenuItems = async () => {
+  const fetchMenuItems = useCallback(async () => {
     if (!user?.uid) return
 
     try {
@@ -77,7 +70,14 @@ export default function ProductManagement() {
       console.error('상품 목록 가져오기 실패:', error)
       setLoading(false)
     }
-  }
+  }, [user?.uid])
+
+  // 상품 목록 가져오기
+  useEffect(() => {
+    if (user?.uid) {
+      fetchMenuItems()
+    }
+  }, [user?.uid, fetchMenuItems])
 
   // 필터링 및 검색
   useEffect(() => {

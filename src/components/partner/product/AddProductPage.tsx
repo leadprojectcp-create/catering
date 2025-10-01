@@ -383,7 +383,8 @@ export default function AddProductPage() {
       }
 
       // orderType을 'single'로 고정하여 전송
-      const submitData: Record<string, unknown> = {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const submitData: any = {
         ...formData,
         images: uploadedImageUrls, // File 객체 대신 업로드된 URL들
         orderType: 'single', // 항상 단건주문으로 설정
@@ -403,7 +404,7 @@ export default function AddProductPage() {
       }
 
       // productService를 사용하여 Firestore에 저장
-      const productId = await createProduct(submitData)
+      await createProduct(submitData)
       alert('상품이 성공적으로 등록되었습니다!')
 
       // 임시저장 데이터 삭제
@@ -647,10 +648,10 @@ export default function AddProductPage() {
                       }
                       placeholder="기간 선택"
                       className={styles.dateInput}
-                      disabled={formData.discount.isAlwaysActive}
+                      disabled={formData.discount?.isAlwaysActive}
                       readOnly
                       onClick={() => {
-                        if (!formData.discount.isAlwaysActive) {
+                        if (!formData.discount?.isAlwaysActive) {
                           setShowCalendar(!showCalendar)
                           setSelectingDate('start')
                         }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import Script from 'next/script'
@@ -76,41 +76,15 @@ export default function StoreManagement() {
   // 임시 이미지 상태 (미리보기용)
   const [tempImages, setTempImages] = useState<File[]>([])
   const [previewUrls, setPreviewUrls] = useState<string[]>([])
-  const [hasChanges, setHasChanges] = useState(false)
+  const [, setHasChanges] = useState(false)
   const [isPostcodeLoaded, setIsPostcodeLoaded] = useState(false)
-  const [showAddressSearch, setShowAddressSearch] = useState(false)
   const [showPreviewModal, setShowPreviewModal] = useState(false)
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [modalImageIndex, setModalImageIndex] = useState(0)
   const [showStoreNameInfoModal, setShowStoreNameInfoModal] = useState(false)
   const [mainImageIndex, setMainImageIndex] = useState(0)
 
-  useEffect(() => {
-    if (authLoading) return
-
-    if (!user) {
-      router.push('/signin')
-      return
-    }
-
-    loadStoreInfo()
-  }, [user, authLoading, router])
-
-  useEffect(() => {
-    // 카카오 API가 이미 로드되어 있는지 확인
-    const checkKakaoAPI = () => {
-      if (typeof window !== 'undefined' && window.daum && window.daum.Postcode) {
-        setIsPostcodeLoaded(true)
-      }
-    }
-
-    checkKakaoAPI()
-    const timer = setTimeout(checkKakaoAPI, 1000)
-
-    return () => clearTimeout(timer)
-  }, [])
-
-  const loadStoreInfo = async () => {
+  const loadStoreInfo = useCallback(async () => {
     if (!user) return
 
     try {
@@ -126,7 +100,32 @@ export default function StoreManagement() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [user])
+
+  useEffect(() => {
+    if (authLoading) return
+
+    if (!user) {
+      router.push('/signin')
+      return
+    }
+
+    loadStoreInfo()
+  }, [user, authLoading, router, loadStoreInfo])
+
+  useEffect(() => {
+    // 카카오 API가 이미 로드되어 있는지 확인
+    const checkKakaoAPI = () => {
+      if (typeof window !== 'undefined' && window.daum && window.daum.Postcode) {
+        setIsPostcodeLoaded(true)
+      }
+    }
+
+    checkKakaoAPI()
+    const timer = setTimeout(checkKakaoAPI, 1000)
+
+    return () => clearTimeout(timer)
+  }, [])
 
   // 필드 값 변경 (임시 저장)
   const handleFieldChange = (field: string, value: string) => {
@@ -136,7 +135,6 @@ export default function StoreManagement() {
       ...storeInfo,
       [field]: value
     })
-    setHasChanges(true)
   }
 
   // 이미지 파일 선택 (미리보기만)
