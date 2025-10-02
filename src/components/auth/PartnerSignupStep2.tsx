@@ -33,10 +33,11 @@ interface CategoryOption {
 }
 
 const categories: CategoryOption[] = [
-  { id: 'dessert', name: '디저트 박스', icon: '/icons/dessert_box.png' },
+  { id: 'dessert', name: '디저트', icon: '/icons/dessert_box.png' },
   { id: 'sandwich', name: '샌드위치', icon: '/icons/sandwich_bakery.png' },
   { id: 'salad', name: '샐러드/과일', icon: '/icons/salad_fruit.png' },
-  { id: 'kimbap', name: '김밥/한식', icon: '/icons/kimbap_korean.png' },
+  { id: 'kimbap', name: '김밥', icon: '/icons/kimbap_korean.png' },
+  { id: 'lunchbox', name: '도시락', icon: '/icons/kimbap_korean.png' },
   { id: 'traditional', name: '떡/전통한과', icon: '/icons/ricecake_traditional.png' }
 ]
 
@@ -404,7 +405,7 @@ export default function PartnerSignupStep2() {
                     })}
                   </div>
                   <div className={styles.categoryRowBottom}>
-                    {categories.slice(3, 5).map((category) => {
+                    {categories.slice(3, 6).map((category) => {
                       const isSelected = formData.categories.includes(category.id)
                       const isFirstSelection = formData.categories[0] === category.id
 
