@@ -47,6 +47,15 @@ export default function RootLayout({
                 }
                 lastTouchEnd = now;
               }, false);
+
+              // Prevent zoom on input focus
+              window.addEventListener('resize', function() {
+                if (document.activeElement.tagName === 'INPUT' ||
+                    document.activeElement.tagName === 'TEXTAREA') {
+                  window.scrollTo(0, 0);
+                  document.body.scrollTop = 0;
+                }
+              });
             `,
           }}
         />
