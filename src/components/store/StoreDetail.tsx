@@ -5,6 +5,9 @@ import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { doc, getDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
+import Header from '@/components/Header'
+import Footer from '@/components/Footer'
+import ProductList from '@/components/home/product/ProductList'
 import styles from './StoreDetail.module.css'
 
 interface Store {
@@ -57,24 +60,34 @@ export default function StoreDetail({ storeId }: StoreDetailProps) {
 
   if (loading) {
     return (
-      <div className={styles.container}>
-        <div className={styles.loading}>로딩 중...</div>
-      </div>
+      <>
+        <Header />
+        <div className={styles.container}>
+          <div className={styles.loading}>로딩 중...</div>
+        </div>
+        <Footer />
+      </>
     )
   }
 
   if (!store) {
     return (
-      <div className={styles.container}>
-        <div className={styles.error}>가게를 찾을 수 없습니다.</div>
-      </div>
+      <>
+        <Header />
+        <div className={styles.container}>
+          <div className={styles.error}>가게를 찾을 수 없습니다.</div>
+        </div>
+        <Footer />
+      </>
     )
   }
 
   const images = store.storeImages && store.storeImages.length > 0 ? store.storeImages : []
 
   return (
-    <div className={styles.container}>
+    <>
+      <Header />
+      <div className={styles.container}>
       {/* 이미지 슬라이더 */}
       <div className={styles.imageSection}>
         {images.length > 0 ? (
@@ -180,6 +193,11 @@ export default function StoreDetail({ storeId }: StoreDetailProps) {
           )}
         </div>
       </div>
-    </div>
+
+      {/* 상품 목록 */}
+      <ProductList storeId={storeId} />
+      </div>
+      <Footer />
+    </>
   )
 }
