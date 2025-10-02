@@ -56,15 +56,17 @@ export async function createProduct(productData: Omit<ProductData, 'partnerId' |
   // 사용자 이메일 가져오기
   let userEmail = user.email
 
-  // 이메일이 없으면 사용자 정보를 다시 로드
+  // 이메일이 없으면 Firestore users 컬렉션에서 가져오기
   if (!userEmail) {
-    await user.reload()
-    userEmail = user.email
+    const userDoc = await getDoc(doc(db, 'users', user.uid))
+    if (userDoc.exists()) {
+      userEmail = userDoc.data().email
+    }
   }
 
-  // 그래도 이메일이 없으면 에러 발생
+  // 그래도 이메일이 없으면 빈 문자열 사용
   if (!userEmail) {
-    throw new Error('사용자 이메일을 찾을 수 없습니다.')
+    userEmail = ''
   }
 
   const completeProductData: ProductData = {
