@@ -28,7 +28,27 @@ export default function RootLayout({
       <head>
         <meta
           name="viewport"
-          content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0, viewport-fit=cover"
+        />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              document.addEventListener('touchstart', function(event) {
+                if (event.touches.length > 1) {
+                  event.preventDefault();
+                }
+              }, { passive: false });
+
+              let lastTouchEnd = 0;
+              document.addEventListener('touchend', function(event) {
+                const now = Date.now();
+                if (now - lastTouchEnd <= 300) {
+                  event.preventDefault();
+                }
+                lastTouchEnd = now;
+              }, false);
+            `,
+          }}
         />
         <link
           rel="stylesheet"
