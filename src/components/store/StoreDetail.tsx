@@ -5,65 +5,55 @@ import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { doc, getDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
-import styles from './ProductDetail.module.css'
+import styles from './StoreDetail.module.css'
 
-interface Product {
+interface Store {
   id: string
-  name: string
-  description: string
-  price: number
-  images: string[]
-  category: string
-  storeId: string
   storeName: string
+  description?: string
+  storeImages?: string[]
+  categories?: string[]
+  primaryCategory?: string
   rating?: number
   reviewCount?: number
-  options?: {
-    name: string
-    price: number
-  }[]
+  phone?: string
+  address?: {
+    fullAddress?: string
+    detail?: string
+  }
+  closedDays?: string[]
 }
 
-interface ProductDetailProps {
-  productId: string
+interface StoreDetailProps {
+  storeId: string
 }
 
-export default function ProductDetail({ productId }: ProductDetailProps) {
+export default function StoreDetail({ storeId }: StoreDetailProps) {
   const router = useRouter()
-  const [product, setProduct] = useState<Product | null>(null)
+  const [store, setStore] = useState<Store | null>(null)
   const [loading, setLoading] = useState(true)
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
-  const [quantity, setQuantity] = useState(1)
 
   useEffect(() => {
-    const fetchProduct = async () => {
+    const fetchStore = async () => {
       try {
-        const productDoc = await getDoc(doc(db, 'products', productId))
+        const storeDoc = await getDoc(doc(db, 'stores', storeId))
 
-        if (productDoc.exists()) {
-          setProduct({
-            id: productDoc.id,
-            ...productDoc.data()
-          } as Product)
+        if (storeDoc.exists()) {
+          setStore({
+            id: storeDoc.id,
+            ...storeDoc.data()
+          } as Store)
         }
       } catch (error) {
-        console.error('상품 정보 로드 실패:', error)
+        console.error('가게 정보 로드 실패:', error)
       } finally {
         setLoading(false)
       }
     }
 
-    fetchProduct()
-  }, [productId])
-
-  const handleQuantityChange = (delta: number) => {
-    setQuantity(prev => Math.max(1, prev + delta))
-  }
-
-  const handleOrder = () => {
-    // 주문 로직 구현
-    console.log('주문:', { productId, quantity })
-  }
+    fetchStore()
+  }, [storeId])
 
   if (loading) {
     return (
@@ -73,15 +63,15 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
     )
   }
 
-  if (!product) {
+  if (!store) {
     return (
       <div className={styles.container}>
-        <div className={styles.error}>상품을 찾을 수 없습니다.</div>
+        <div className={styles.error}>가게를 찾을 수 없습니다.</div>
       </div>
     )
   }
 
-  const images = product.images && product.images.length > 0 ? product.images : []
+  const images = store.storeImages && store.storeImages.length > 0 ? store.storeImages : []
 
   return (
     <div className={styles.container}>
@@ -92,7 +82,7 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
             <div className={styles.mainImage}>
               <Image
                 src={images[currentImageIndex]}
-                alt={product.name}
+                alt={store.storeName}
                 fill
                 className={styles.image}
                 style={{ objectFit: 'cover' }}
@@ -133,64 +123,61 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
         )}
       </div>
 
-      {/* 상품 정보 */}
+      {/* 가게 정보 */}
       <div className={styles.infoSection}>
         <div className={styles.header}>
-          <h1 className={styles.productName}>{product.name}</h1>
+          <h1 className={styles.storeName}>{store.storeName}</h1>
           <div className={styles.rating}>
             <span className={styles.star}>⭐</span>
             <span className={styles.ratingNumber}>
-              {product.rating ? product.rating.toFixed(1) : '0.0'}
+              {store.rating ? store.rating.toFixed(1) : '0.0'}
             </span>
             <span className={styles.reviewCount}>
-              ({product.reviewCount || 0})
+              ({store.reviewCount || 0})
             </span>
           </div>
         </div>
 
-        <div className={styles.storeName}>{product.storeName}</div>
+        {store.categories && store.categories.length > 0 && (
+          <div className={styles.category}>{store.categories.join(' · ')}</div>
+        )}
 
-        <div className={styles.price}>
-          {product.price.toLocaleString()}원
-        </div>
-
-        <div className={styles.description}>
-          {product.description}
-        </div>
-
-        {/* 수량 선택 */}
-        <div className={styles.quantitySection}>
-          <span className={styles.quantityLabel}>수량</span>
-          <div className={styles.quantityControl}>
-            <button
-              className={styles.quantityButton}
-              onClick={() => handleQuantityChange(-1)}
-            >
-              -
-            </button>
-            <span className={styles.quantityValue}>{quantity}</span>
-            <button
-              className={styles.quantityButton}
-              onClick={() => handleQuantityChange(1)}
-            >
-              +
-            </button>
+        {store.description && (
+          <div className={styles.description}>
+            {store.description}
           </div>
-        </div>
+        )}
 
-        {/* 총 금액 */}
-        <div className={styles.totalPrice}>
-          <span className={styles.totalLabel}>총 금액</span>
-          <span className={styles.totalAmount}>
-            {(product.price * quantity).toLocaleString()}원
-          </span>
-        </div>
+        <div className={styles.detailsSection}>
+          <h2 className={styles.sectionTitle}>가게 정보</h2>
 
-        {/* 주문 버튼 */}
-        <div className={styles.actions}>
-          <button className={styles.orderButton} onClick={handleOrder}>
-            주문하기
-          </button>
+          {store.phone && (
+            <div className={styles.detailItem}>
+              <span className={styles.detailLabel}>전화</span>
+              <span className={styles.detailValue}>{store.phone}</span>
+            </div>
+          )}
+
+          {store.address && (
+            <div className={styles.detailItem}>
+              <span className={styles.detailLabel}>주소</span>
+              <div className={styles.detailValueColumn}>
+                {store.address.fullAddress && (
+                  <span className={styles.detailValue}>{store.address.fullAddress}</span>
+                )}
+                {store.address.detail && (
+                  <span className={styles.detailValue}>{store.address.detail}</span>
+                )}
+              </div>
+            </div>
+          )}
+
+          {store.closedDays && store.closedDays.length > 0 && (
+            <div className={styles.detailItem}>
+              <span className={styles.detailLabel}>휴무일</span>
+              <span className={styles.detailValue}>{store.closedDays.join(', ')}</span>
+            </div>
+          )}
         </div>
       </div>
     </div>

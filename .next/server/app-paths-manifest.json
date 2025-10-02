@@ -1,7 +1,6 @@
 {
-  "/api/upload/route": "app/api/upload/route.js",
   "/favicon.ico/route": "app/favicon.ico/route.js",
+  "/login/page": "app/login/page.js",
   "/page": "app/page.js",
-  "/partner/dashboard/page": "app/partner/dashboard/page.js",
-  "/partner/store/management/page": "app/partner/store/management/page.js"
+  "/partner/dashboard/page": "app/partner/dashboard/page.js"
 }

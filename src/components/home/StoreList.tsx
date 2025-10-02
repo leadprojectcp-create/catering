@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { collection, getDocs, query, where } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import Image from 'next/image'
@@ -38,6 +39,7 @@ interface StoreListProps {
 }
 
 export default function StoreList({ selectedCategory }: StoreListProps) {
+  const router = useRouter()
   const [stores, setStores] = useState<Store[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
@@ -106,7 +108,11 @@ export default function StoreList({ selectedCategory }: StoreListProps) {
             const images = store.storeImages && store.storeImages.length > 0 ? store.storeImages : []
 
             return (
-              <div key={store.id} className={styles.card}>
+              <div
+                key={store.id}
+                className={styles.card}
+                onClick={() => router.push(`/store/${store.id}`)}
+              >
                 {/* 이미지 슬라이더 */}
                 <div className={styles.imageSlider}>
                   {images.length > 0 ? (
