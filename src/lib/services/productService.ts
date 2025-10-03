@@ -31,6 +31,7 @@ export interface ProductData {
   orderType: string
   partnerId?: string
   partnerEmail?: string
+  storeId?: string
   status?: string
   viewCount?: number
   orderCount?: number
@@ -47,7 +48,7 @@ export interface ProductData {
 }
 
 // 상품 등록
-export async function createProduct(productData: Omit<ProductData, 'partnerId' | 'partnerEmail' | 'status' | 'viewCount' | 'orderCount' | 'createdAt' | 'updatedAt'>): Promise<string> {
+export async function createProduct(productData: Omit<ProductData, 'partnerId' | 'partnerEmail' | 'storeId' | 'status' | 'viewCount' | 'orderCount' | 'createdAt' | 'updatedAt'>): Promise<string> {
   const user = auth.currentUser
   if (!user) {
     throw new Error('로그인이 필요합니다.')
@@ -69,10 +70,14 @@ export async function createProduct(productData: Omit<ProductData, 'partnerId' |
     userEmail = ''
   }
 
+  // storeId는 partnerId와 동일 (user.uid)
+  const storeId = user.uid
+
   const completeProductData: ProductData = {
     ...productData,
     partnerId: user.uid,
     partnerEmail: userEmail,
+    storeId: storeId,
     status: 'pending',
     viewCount: 0,
     orderCount: 0,

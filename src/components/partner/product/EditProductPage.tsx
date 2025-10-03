@@ -396,25 +396,31 @@ export default function EditProductPage({ productId }: { productId: string }) {
 
       // 할인이 활성화되어 있으면 할인 데이터 추가
       if (formData.discount?.enabled && formData.discount.value > 0) {
+        const discountedPrice = Math.round(calculateDiscountedPrice())
+        const discountAmount = formData.price - discountedPrice
+        const discountPercent = formData.price > 0 ? Math.round((discountAmount / formData.price) * 100) : 0
+
         submitData.discount = {
-          type: formData.discount.type,
-          value: formData.discount.value,
+          discountAmount: discountAmount,
+          discountPercent: discountPercent,
           startDate: formData.discount.startDate,
           endDate: formData.discount.endDate,
           isAlwaysActive: formData.discount.isAlwaysActive
         }
-        submitData.discountedPrice = Math.round(calculateDiscountedPrice())
+        submitData.discountedPrice = discountedPrice
+        console.log('=== 할인 데이터 ===', submitData.discount)
       } else {
         // 할인이 비활성화되면 기존 할인 데이터 제거
         submitData.discount = null
         submitData.discountedPrice = null
       }
 
+      console.log('=== 최종 저장 데이터 ===', submitData)
       // Firestore 업데이트
       await updateProduct(productId, submitData)
 
       alert('상품이 성공적으로 수정되었습니다!')
-      router.push('/partner/menu/management')
+      router.push('/partner/product/management')
 
     } catch (error) {
       console.error('상품 수정 중 오류:', error)

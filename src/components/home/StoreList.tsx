@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { collection, getDocs, query, where } from 'firebase/firestore'
+import { collection, getDocs, query, where, limit } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import Image from 'next/image'
 import { Swiper, SwiperSlide } from 'swiper/react'
 import { Navigation } from 'swiper/modules'
+import { generateStoreSlug } from '@/lib/utils/slug'
 import 'swiper/css'
 import 'swiper/css/navigation'
 import 'swiper/css/pagination'
@@ -46,7 +47,11 @@ export default function StoreList({ selectedCategory }: StoreListProps) {
   useEffect(() => {
     const fetchStores = async () => {
       try {
-        const q = query(collection(db, 'stores'), where('isActive', '==', 'active'))
+        const q = query(
+          collection(db, 'stores'),
+          where('status', '==', 'active'),
+          limit(20)
+        )
         const querySnapshot = await getDocs(q)
         const storeData = querySnapshot.docs.map(doc => {
           const data = doc.data()
@@ -107,11 +112,20 @@ export default function StoreList({ selectedCategory }: StoreListProps) {
           filteredStores.map((store) => {
             const images = store.storeImages && store.storeImages.length > 0 ? store.storeImages : []
 
+            // URL 슬러그 생성
+            const slug = generateStoreSlug(
+              store.address?.city || '',
+              store.address?.district || '',
+              store.storeName,
+              store.categories?.[0] || '',
+              store.id
+            )
+
             return (
               <div
                 key={store.id}
                 className={styles.card}
-                onClick={() => router.push(`/store/${store.id}`)}
+                onClick={() => router.push(`/store/${slug}`)}
               >
                 {/* 이미지 슬라이더 */}
                 <div className={styles.imageSlider}>
@@ -132,6 +146,9 @@ export default function StoreList({ selectedCategory }: StoreListProps) {
                               fill
                               className={styles.cardImage}
                               style={{ objectFit: 'cover' }}
+                              priority={index === 0}
+                              loading={index === 0 ? 'eager' : 'lazy'}
+                              sizes="(max-width: 768px) 100vw, 25vw"
                             />
                           </div>
                         </SwiperSlide>

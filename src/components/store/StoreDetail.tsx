@@ -7,7 +7,7 @@ import { doc, getDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
-import ProductList from '@/components/home/product/ProductList'
+import ProductList from '@/components/product/ProductList'
 import styles from './StoreDetail.module.css'
 
 interface Store {
@@ -21,10 +21,14 @@ interface Store {
   reviewCount?: number
   phone?: string
   address?: {
+    city?: string
+    district?: string
+    dong?: string
     fullAddress?: string
     detail?: string
   }
   closedDays?: string[]
+  openingHours?: string
 }
 
 interface StoreDetailProps {
@@ -139,21 +143,48 @@ export default function StoreDetail({ storeId }: StoreDetailProps) {
       {/* 가게 정보 */}
       <div className={styles.infoSection}>
         <div className={styles.header}>
-          <h1 className={styles.storeName}>{store.storeName}</h1>
-          <div className={styles.rating}>
-            <span className={styles.star}>⭐</span>
-            <span className={styles.ratingNumber}>
-              {store.rating ? store.rating.toFixed(1) : '0.0'}
-            </span>
-            <span className={styles.reviewCount}>
-              ({store.reviewCount || 0})
-            </span>
+          <div className={styles.topRow}>
+            <div className={styles.location}>
+              {store.address?.city && store.address?.district && store.primaryCategory && (
+                <span>{store.address.city}, {store.address.district} | {store.primaryCategory}</span>
+              )}
+            </div>
+            <button className={styles.likeButton}>
+              <Image
+                src="/icons/like.png"
+                alt="좋아요"
+                width={24}
+                height={24}
+              />
+            </button>
+          </div>
+          <div className={styles.nameRatingRow}>
+            <div className={styles.nameRatingWrapper}>
+              <h1 className={styles.storeName}>{store.storeName}</h1>
+              <div className={styles.rating}>
+                <Image src="/icons/star.png" alt="star" width={16} height={16} className={styles.star} />
+                <span className={styles.ratingNumber}>
+                  {store.rating ? store.rating.toFixed(1) : '0.0'}/5
+                </span>
+                <span className={styles.reviewCount}>
+                  ({store.reviewCount || 0})
+                </span>
+              </div>
+            </div>
+            <div className={styles.actionButtons}>
+              <button className={styles.chatButton}>
+                <Image src="/icons/chat.png" alt="채팅" width={20} height={20} />
+                <span>채팅</span>
+              </button>
+              {store.phone && (
+                <a href={`tel:${store.phone}`} className={styles.phoneButton}>
+                  <Image src="/icons/phone.png" alt="전화" width={20} height={20} />
+                  <span>전화</span>
+                </a>
+              )}
+            </div>
           </div>
         </div>
-
-        {store.categories && store.categories.length > 0 && (
-          <div className={styles.category}>{store.categories.join(' · ')}</div>
-        )}
 
         {store.description && (
           <div className={styles.description}>
@@ -162,37 +193,26 @@ export default function StoreDetail({ storeId }: StoreDetailProps) {
         )}
 
         <div className={styles.detailsSection}>
-          <h2 className={styles.sectionTitle}>가게 정보</h2>
-
-          {store.phone && (
-            <div className={styles.detailItem}>
-              <span className={styles.detailLabel}>전화</span>
-              <span className={styles.detailValue}>{store.phone}</span>
-            </div>
-          )}
-
           {store.address && (
             <div className={styles.detailItem}>
-              <span className={styles.detailLabel}>주소</span>
-              <div className={styles.detailValueColumn}>
-                {store.address.fullAddress && (
-                  <span className={styles.detailValue}>{store.address.fullAddress}</span>
-                )}
-                {store.address.detail && (
-                  <span className={styles.detailValue}>{store.address.detail}</span>
-                )}
-              </div>
+              <Image src="/icons/map_pin.svg" alt="주소" width={24} height={24} />
+              <span className={styles.detailValue}>
+                {store.address.fullAddress}
+                {store.address.detail && ` ${store.address.detail}`}
+              </span>
             </div>
           )}
 
-          {store.closedDays && store.closedDays.length > 0 && (
+          {store.openingHours && (
             <div className={styles.detailItem}>
-              <span className={styles.detailLabel}>휴무일</span>
-              <span className={styles.detailValue}>{store.closedDays.join(', ')}</span>
+              <Image src="/icons/clock.svg" alt="운영시간" width={24} height={24} />
+              <span className={styles.detailValue}>{store.openingHours} 휴무</span>
             </div>
           )}
         </div>
       </div>
+
+      <div className={styles.divider}></div>
 
       {/* 상품 목록 */}
       <ProductList storeId={storeId} />

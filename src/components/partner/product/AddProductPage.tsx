@@ -393,16 +393,22 @@ export default function AddProductPage() {
 
       // 할인이 활성화되어 있으면 할인 데이터 추가
       if (formData.discount?.enabled && formData.discount.value > 0) {
+        const discountedPrice = Math.round(calculateDiscountedPrice())
+        const discountAmount = formData.price - discountedPrice
+        const discountPercent = formData.price > 0 ? Math.round((discountAmount / formData.price) * 100) : 0
+
         submitData.discount = {
-          type: formData.discount.type,
-          value: formData.discount.value,
+          discountAmount: discountAmount,
+          discountPercent: discountPercent,
           startDate: formData.discount.startDate,
           endDate: formData.discount.endDate,
           isAlwaysActive: formData.discount.isAlwaysActive
         }
-        submitData.discountedPrice = Math.round(calculateDiscountedPrice())
+        submitData.discountedPrice = discountedPrice
+        console.log('=== 할인 데이터 ===', submitData.discount)
       }
 
+      console.log('=== 최종 저장 데이터 ===', submitData)
       // productService를 사용하여 Firestore에 저장
       await createProduct(submitData)
       alert('상품이 성공적으로 등록되었습니다!')
