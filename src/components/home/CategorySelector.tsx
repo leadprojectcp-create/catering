@@ -18,7 +18,8 @@ const categories: CategoryOption[] = [
   { id: 'traditional', name: '떡/전통한과', icon: '/icons/ricecake_traditional.png' },
   { id: 'gift', name: '답례품', icon: '/icons/gift.png' },
   { id: 'delivery', name: '당일배송', icon: '/icons/delivery.png' },
-  { id: 'ai', name: 'AI추천', icon: '/icons/ai_recommendation.png' }
+  { id: 'ai', name: 'AI추천', icon: '/icons/ai_recommendation.png' },
+  { id: 'magazine', name: '픽투잇 매거진', icon: '/icons/magazine.png' }
 ]
 
 interface CategorySelectorProps {
@@ -35,6 +36,9 @@ export default function CategorySelector({
       <div className={styles.categoryGrid}>
         {categories.map((category) => {
           const isSelected = selectedCategories.includes(category.id)
+          const hasBackground = category.id === 'ai' || category.id === 'magazine'
+          const backgroundImage = category.id === 'ai' ? '/icons/ai_bg.png' :
+                                  category.id === 'magazine' ? '/icons/magazine_bg.png' : null
 
           return (
             <button
@@ -43,7 +47,15 @@ export default function CategorySelector({
               className={`${styles.categoryCard} ${isSelected ? styles.selected : ''}`}
               onClick={() => onCategorySelect(category.id)}
             >
-              <div className={styles.categoryIcon}>
+              <div
+                className={styles.categoryIcon}
+                style={hasBackground && backgroundImage ? {
+                  backgroundImage: `url(${backgroundImage})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  backgroundColor: 'transparent'
+                } : undefined}
+              >
                 <Image
                   src={category.icon}
                   alt={category.name}

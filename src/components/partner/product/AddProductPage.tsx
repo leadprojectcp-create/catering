@@ -24,17 +24,8 @@ interface ProductFormData {
   description: string
   minOrderQuantity: number
   maxOrderQuantity: number
-  deliveryMethods: {
-    self: boolean
-    quick: boolean
-    pickup: boolean
-  }
-  additionalSettings: {
-    sameDayDelivery: boolean
-    thermalPack: boolean
-    stickerCustom: boolean
-    giftItem: boolean
-  }
+  deliveryMethods: string[]
+  additionalSettings: string[]
   origin: { ingredient: string, origin: string }[]
   discount?: {
     enabled: boolean
@@ -62,17 +53,8 @@ export default function AddProductPage() {
     description: '',
     minOrderQuantity: 10,
     maxOrderQuantity: 11,
-    deliveryMethods: {
-      self: false,
-      quick: false,
-      pickup: false
-    },
-    additionalSettings: {
-      sameDayDelivery: false,
-      thermalPack: false,
-      stickerCustom: false,
-      giftItem: false
-    },
+    deliveryMethods: [],
+    additionalSettings: [],
     origin: [],
     discount: {
       enabled: false,
@@ -947,16 +929,18 @@ export default function AddProductPage() {
             <label className={styles.checkboxLabel}>
               <input
                 type="checkbox"
-                checked={formData.deliveryMethods.self}
+                checked={formData.deliveryMethods.includes('자체 배송')}
                 onChange={(e) => setFormData(prev => ({
                   ...prev,
-                  deliveryMethods: { ...prev.deliveryMethods, self: e.target.checked }
+                  deliveryMethods: e.target.checked
+                    ? [...prev.deliveryMethods, '자체 배송']
+                    : prev.deliveryMethods.filter(m => m !== '자체 배송')
                 }))}
                 className={styles.hiddenCheckbox}
               />
               <span className={styles.customCheckbox}>
                 <img
-                  src={formData.deliveryMethods.self ? "/icons/check_active.png" : "/icons/check.png"}
+                  src={formData.deliveryMethods.includes('자체 배송') ? "/icons/check_active.png" : "/icons/check.png"}
                   alt="체크박스"
                 />
               </span>
@@ -965,16 +949,18 @@ export default function AddProductPage() {
             <label className={styles.checkboxLabel}>
               <input
                 type="checkbox"
-                checked={formData.deliveryMethods.quick}
+                checked={formData.deliveryMethods.includes('퀵업체 배송')}
                 onChange={(e) => setFormData(prev => ({
                   ...prev,
-                  deliveryMethods: { ...prev.deliveryMethods, quick: e.target.checked }
+                  deliveryMethods: e.target.checked
+                    ? [...prev.deliveryMethods, '퀵업체 배송']
+                    : prev.deliveryMethods.filter(m => m !== '퀵업체 배송')
                 }))}
                 className={styles.hiddenCheckbox}
               />
               <span className={styles.customCheckbox}>
                 <img
-                  src={formData.deliveryMethods.quick ? "/icons/check_active.png" : "/icons/check.png"}
+                  src={formData.deliveryMethods.includes('퀵업체 배송') ? "/icons/check_active.png" : "/icons/check.png"}
                   alt="체크박스"
                 />
               </span>
@@ -983,16 +969,18 @@ export default function AddProductPage() {
             <label className={styles.checkboxLabel}>
               <input
                 type="checkbox"
-                checked={formData.deliveryMethods.pickup}
+                checked={formData.deliveryMethods.includes('매장 픽업')}
                 onChange={(e) => setFormData(prev => ({
                   ...prev,
-                  deliveryMethods: { ...prev.deliveryMethods, pickup: e.target.checked }
+                  deliveryMethods: e.target.checked
+                    ? [...prev.deliveryMethods, '매장 픽업']
+                    : prev.deliveryMethods.filter(m => m !== '매장 픽업')
                 }))}
                 className={styles.hiddenCheckbox}
               />
               <span className={styles.customCheckbox}>
                 <img
-                  src={formData.deliveryMethods.pickup ? "/icons/check_active.png" : "/icons/check.png"}
+                  src={formData.deliveryMethods.includes('매장 픽업') ? "/icons/check_active.png" : "/icons/check.png"}
                   alt="체크박스"
                 />
               </span>
@@ -1011,70 +999,78 @@ export default function AddProductPage() {
             <label className={styles.checkboxLabel}>
               <input
                 type="checkbox"
-                checked={formData.additionalSettings.sameDayDelivery}
+                checked={formData.additionalSettings.includes('당일배송')}
                 onChange={(e) => setFormData(prev => ({
                   ...prev,
-                  additionalSettings: { ...prev.additionalSettings, sameDayDelivery: e.target.checked }
+                  additionalSettings: e.target.checked
+                    ? [...prev.additionalSettings, '당일배송']
+                    : prev.additionalSettings.filter(s => s !== '당일배송')
                 }))}
                 className={styles.hiddenCheckbox}
               />
               <span className={styles.customCheckbox}>
                 <img
-                  src={formData.additionalSettings.sameDayDelivery ? "/icons/check_active.png" : "/icons/check.png"}
+                  src={formData.additionalSettings.includes('당일배송') ? "/icons/check_active.png" : "/icons/check.png"}
                   alt="체크박스"
                 />
               </span>
-              당일배송가능
+              당일배송
             </label>
             <label className={styles.checkboxLabel}>
               <input
                 type="checkbox"
-                checked={formData.additionalSettings.thermalPack}
+                checked={formData.additionalSettings.includes('보냉팩 포장')}
                 onChange={(e) => setFormData(prev => ({
                   ...prev,
-                  additionalSettings: { ...prev.additionalSettings, thermalPack: e.target.checked }
+                  additionalSettings: e.target.checked
+                    ? [...prev.additionalSettings, '보냉팩 포장']
+                    : prev.additionalSettings.filter(s => s !== '보냉팩 포장')
                 }))}
                 className={styles.hiddenCheckbox}
               />
               <span className={styles.customCheckbox}>
                 <img
-                  src={formData.additionalSettings.thermalPack ? "/icons/check_active.png" : "/icons/check.png"}
+                  src={formData.additionalSettings.includes('보냉팩 포장') ? "/icons/check_active.png" : "/icons/check.png"}
                   alt="체크박스"
                 />
               </span>
-              보온•냉팩 포장 가능
+              보냉팩 포장
             </label>
             <label className={styles.checkboxLabel}>
               <input
                 type="checkbox"
-                checked={formData.additionalSettings.stickerCustom}
+                checked={formData.additionalSettings.includes('스티커 제작')}
                 onChange={(e) => setFormData(prev => ({
                   ...prev,
-                  additionalSettings: { ...prev.additionalSettings, stickerCustom: e.target.checked }
+                  additionalSettings: e.target.checked
+                    ? [...prev.additionalSettings, '스티커 제작']
+                    : prev.additionalSettings.filter(s => s !== '스티커 제작')
                 }))}
                 className={styles.hiddenCheckbox}
               />
               <span className={styles.customCheckbox}>
                 <img
-                  src={formData.additionalSettings.stickerCustom ? "/icons/check_active.png" : "/icons/check.png"}
+                  src={formData.additionalSettings.includes('스티커 제작') ? "/icons/check_active.png" : "/icons/check.png"}
                   alt="체크박스"
                 />
               </span>
-              스티커 제작 가능
+              스티커 제작
             </label>
             <label className={styles.checkboxLabel}>
               <input
                 type="checkbox"
-                checked={formData.additionalSettings.giftItem}
+                checked={formData.additionalSettings.includes('답례품')}
                 onChange={(e) => setFormData(prev => ({
                   ...prev,
-                  additionalSettings: { ...prev.additionalSettings, giftItem: e.target.checked }
+                  additionalSettings: e.target.checked
+                    ? [...prev.additionalSettings, '답례품']
+                    : prev.additionalSettings.filter(s => s !== '답례품')
                 }))}
                 className={styles.hiddenCheckbox}
               />
               <span className={styles.customCheckbox}>
                 <img
-                  src={formData.additionalSettings.giftItem ? "/icons/check_active.png" : "/icons/check.png"}
+                  src={formData.additionalSettings.includes('답례품') ? "/icons/check_active.png" : "/icons/check.png"}
                   alt="체크박스"
                 />
               </span>

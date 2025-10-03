@@ -19,20 +19,12 @@ interface MenuItem {
   partnerId: string
   createdAt: Date
   updatedAt: Date
-  deliveryMethods?: {
-    self: boolean
-    quick: boolean
-    pickup: boolean
-  }
-  additionalSettings?: {
-    sameDayDelivery: boolean
-    thermalPack: boolean
-    stickerCustom: boolean
-  }
+  deliveryMethods?: string[]
+  additionalSettings?: string[]
   discountedPrice?: number
   discount?: {
-    type: 'amount' | 'percent'
-    value: number
+    discountAmount: number
+    discountPercent: number
     startDate: string | null
     endDate: string | null
     isAlwaysActive: boolean
@@ -227,20 +219,22 @@ export default function ProductManagement() {
                     {item.discountedPrice ? (
                       <>
                         <span className={styles.originalPrice}>{item.price.toLocaleString()}원</span>
-                        <span className={styles.discountRate}>{item.discount?.value}%</span>
-                        <span className={styles.discountedPrice}>{item.discountedPrice.toLocaleString()}원</span>
+                        <div className={styles.discountRow}>
+                          <span className={styles.discountedPrice}>{item.discountedPrice.toLocaleString()}원</span>
+                          <span className={styles.discountRate}>{item.discount?.discountPercent}%</span>
+                        </div>
                       </>
                     ) : (
                       <span className={styles.menuPrice}>{item.price.toLocaleString()}원</span>
                     )}
                   </div>
                   <div className={styles.menuCategory}>
-                    {item.deliveryMethods?.self && <span className={styles.deliveryBadge}>자체 배송</span>}
-                    {item.deliveryMethods?.quick && <span className={styles.deliveryBadge}>퀵업체 배송</span>}
-                    {item.deliveryMethods?.pickup && <span className={styles.deliveryBadge}>매장 픽업</span>}
-                    {item.additionalSettings?.sameDayDelivery && <span className={styles.settingBadge}>당일배송가능</span>}
-                    {item.additionalSettings?.thermalPack && <span className={styles.settingBadge}>보온•냉팩 포장 가능</span>}
-                    {item.additionalSettings?.stickerCustom && <span className={styles.settingBadge}>스티커 제작 가능</span>}
+                    {item.deliveryMethods?.map((method, index) => (
+                      <span key={index} className={styles.deliveryBadge}>{method}</span>
+                    ))}
+                    {item.additionalSettings?.map((setting, index) => (
+                      <span key={index} className={styles.settingBadge}>{setting}</span>
+                    ))}
                   </div>
                 </div>
                 {item.images && item.images.length > 0 && (

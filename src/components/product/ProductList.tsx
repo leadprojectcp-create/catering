@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { collection, getDocs, query, where } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import Image from 'next/image'
@@ -23,6 +23,8 @@ interface Product {
   status?: string
   minOrderQuantity?: number
   maxOrderQuantity?: number
+  deliveryMethods?: string[]
+  additionalSettings?: string[]
 }
 
 interface ProductListProps {
@@ -111,11 +113,12 @@ export default function ProductList({ storeId }: ProductListProps) {
       </div>
 
       <div className={styles.productGrid}>
-        {products.map((product) => {
+        {products.map((product, index) => {
           const imageUrl = product.images && product.images.length > 0 ? product.images[0] : ''
 
           return (
-            <div key={product.id} className={styles.card}>
+            <React.Fragment key={product.id}>
+              <div className={styles.card}>
               <div className={styles.info}>
                 <h3 className={styles.productName}>{product.name}</h3>
 
@@ -140,6 +143,16 @@ export default function ProductList({ storeId }: ProductListProps) {
                     주문가능 수량 최소 {product.minOrderQuantity}개 ~ {product.maxOrderQuantity}개
                   </div>
                 )}
+
+                {/* 배송 방법 및 추가 설정 - PC용 */}
+                <div className={styles.badgeContainerDesktop}>
+                  {product.deliveryMethods?.map((method, index) => (
+                    <span key={index} className={styles.deliveryBadge}>{method}</span>
+                  ))}
+                  {product.additionalSettings?.map((setting, index) => (
+                    <span key={index} className={styles.settingBadge}>{setting}</span>
+                  ))}
+                </div>
               </div>
 
               <div className={styles.imageWrapper}>
@@ -157,7 +170,19 @@ export default function ProductList({ storeId }: ProductListProps) {
                   </div>
                 )}
               </div>
+
+              {/* 배송 방법 및 추가 설정 - 모바일용 */}
+              <div className={styles.badgeContainerMobile}>
+                {product.deliveryMethods?.map((method, index) => (
+                  <span key={index} className={styles.deliveryBadge}>{method}</span>
+                ))}
+                {product.additionalSettings?.map((setting, index) => (
+                  <span key={index} className={styles.settingBadge}>{setting}</span>
+                ))}
+              </div>
             </div>
+            {index < products.length - 1 && <div className={styles.divider}></div>}
+          </React.Fragment>
           )
         })}
       </div>
