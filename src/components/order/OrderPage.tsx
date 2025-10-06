@@ -273,13 +273,13 @@ export default function OrderPage({ productId, storeId }: OrderPageProps) {
 
       window.addEventListener('touchmove', handleMove)
       window.addEventListener('touchend', handleEnd)
-      window.addEventListener('mousemove', handleMove as any)
+      window.addEventListener('mousemove', handleMove as EventListener)
       window.addEventListener('mouseup', handleEnd)
 
       return () => {
         window.removeEventListener('touchmove', handleMove)
         window.removeEventListener('touchend', handleEnd)
-        window.removeEventListener('mousemove', handleMove as any)
+        window.removeEventListener('mousemove', handleMove as EventListener)
         window.removeEventListener('mouseup', handleEnd)
       }
     }
