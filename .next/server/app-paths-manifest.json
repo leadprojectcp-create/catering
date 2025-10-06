@@ -1,12 +1,4 @@
 {
-  "/_not-found/page": "app/_not-found/page.js",
-  "/api/upload/route": "app/api/upload/route.js",
   "/favicon.ico/route": "app/favicon.ico/route.js",
-  "/page": "app/page.js",
-  "/partner/dashboard/page": "app/partner/dashboard/page.js",
-  "/partner/product/add/page": "app/partner/product/add/page.js",
-  "/partner/product/edit/[id]/page": "app/partner/product/edit/[id]/page.js",
-  "/partner/product/management/page": "app/partner/product/management/page.js",
-  "/partner/store/management/page": "app/partner/store/management/page.js",
-  "/store/[id]/page": "app/store/[id]/page.js"
+  "/partner/product/management/page": "app/partner/product/management/page.js"
 }

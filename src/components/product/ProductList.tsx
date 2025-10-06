@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { collection, getDocs, query, where } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import Image from 'next/image'
@@ -32,6 +33,7 @@ interface ProductListProps {
 }
 
 export default function ProductList({ storeId }: ProductListProps) {
+  const router = useRouter()
   const [products, setProducts] = useState<Product[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
@@ -118,24 +120,25 @@ export default function ProductList({ storeId }: ProductListProps) {
 
           return (
             <React.Fragment key={product.id}>
-              <div className={styles.card}>
+              <div
+                className={styles.card}
+                onClick={() => router.push(`/order/${product.id}?storeId=${storeId}`)}
+              >
               <div className={styles.info}>
                 <h3 className={styles.productName}>{product.name}</h3>
 
                 {/* 가격 정보 */}
-                <div className={styles.priceSection}>
-                  {product.discount ? (
-                    <>
-                      <span className={styles.originalPrice}>{product.price.toLocaleString()}원</span>
-                      <div className={styles.discountRow}>
-                        <span className={styles.discountedPrice}>{product.discountedPrice?.toLocaleString()}원</span>
-                        <span className={styles.discountPercent}>{product.discount.discountPercent}%</span>
-                      </div>
-                    </>
-                  ) : (
-                    <span className={styles.regularPrice}>{product.price.toLocaleString()}원</span>
-                  )}
-                </div>
+                {product.discount ? (
+                  <>
+                    <span className={styles.originalPrice}>{product.price.toLocaleString()}원</span>
+                    <div className={styles.discountRow}>
+                      <span className={styles.discountedPrice}>{product.discountedPrice?.toLocaleString()}원</span>
+                      <span className={styles.discountPercent}>{product.discount.discountPercent}%</span>
+                    </div>
+                  </>
+                ) : (
+                  <span className={styles.regularPrice}>{product.price.toLocaleString()}원</span>
+                )}
 
                 {/* 주문 가능 수량 */}
                 {product.minOrderQuantity && product.maxOrderQuantity && (
@@ -146,12 +149,16 @@ export default function ProductList({ storeId }: ProductListProps) {
 
                 {/* 배송 방법 및 추가 설정 - PC용 */}
                 <div className={styles.badgeContainerDesktop}>
-                  {product.deliveryMethods?.map((method, index) => (
-                    <span key={index} className={styles.deliveryBadge}>{method}</span>
-                  ))}
-                  {product.additionalSettings?.map((setting, index) => (
-                    <span key={index} className={styles.settingBadge}>{setting}</span>
-                  ))}
+                  <div className={styles.badgeRow}>
+                    {product.deliveryMethods?.map((method, index) => (
+                      <span key={index} className={styles.deliveryBadge}>{method}</span>
+                    ))}
+                  </div>
+                  <div className={styles.badgeRow}>
+                    {product.additionalSettings?.map((setting, index) => (
+                      <span key={index} className={styles.settingBadge}>{setting}</span>
+                    ))}
+                  </div>
                 </div>
               </div>
 
@@ -173,12 +180,16 @@ export default function ProductList({ storeId }: ProductListProps) {
 
               {/* 배송 방법 및 추가 설정 - 모바일용 */}
               <div className={styles.badgeContainerMobile}>
-                {product.deliveryMethods?.map((method, index) => (
-                  <span key={index} className={styles.deliveryBadge}>{method}</span>
-                ))}
-                {product.additionalSettings?.map((setting, index) => (
-                  <span key={index} className={styles.settingBadge}>{setting}</span>
-                ))}
+                <div className={styles.badgeRow}>
+                  {product.deliveryMethods?.map((method, index) => (
+                    <span key={index} className={styles.deliveryBadge}>{method}</span>
+                  ))}
+                </div>
+                <div className={styles.badgeRow}>
+                  {product.additionalSettings?.map((setting, index) => (
+                    <span key={index} className={styles.settingBadge}>{setting}</span>
+                  ))}
+                </div>
               </div>
             </div>
             {index < products.length - 1 && <div className={styles.divider}></div>}

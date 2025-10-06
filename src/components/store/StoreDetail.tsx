@@ -7,6 +7,7 @@ import { doc, getDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
+import Loading from '@/components/Loading'
 import ProductList from '@/components/product/ProductList'
 import styles from './StoreDetail.module.css'
 
@@ -66,9 +67,7 @@ export default function StoreDetail({ storeId }: StoreDetailProps) {
     return (
       <>
         <Header />
-        <div className={styles.container}>
-          <div className={styles.loading}>로딩 중...</div>
-        </div>
+        <Loading />
         <Footer />
       </>
     )

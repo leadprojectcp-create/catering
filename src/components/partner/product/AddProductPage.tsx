@@ -4,7 +4,10 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createProduct } from '@/lib/services/productService'
 import { useAuth } from '@/contexts/AuthContext'
+import CustomEditor from '@/components/common/CustomEditor'
 import styles from './AddProductPage.module.css'
+
+
 
 interface OptionValue {
   name: string
@@ -45,6 +48,7 @@ export default function AddProductPage() {
   const [showCalendar, setShowCalendar] = useState(false)
   const [currentMonth, setCurrentMonth] = useState(new Date())
   const [selectingDate, setSelectingDate] = useState<'start' | 'end'>('start')
+  const [tempProductId] = useState(() => `temp_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`)
   const [formData, setFormData] = useState<ProductFormData>({
     name: '',
     images: [],
@@ -345,11 +349,14 @@ export default function AddProductPage() {
 
       // 이미지 업로드 처리
       const uploadedImageUrls: string[] = []
+      const storeId = user.uid // storeId는 user.uid와 동일
 
       for (const imageFile of formData.images) {
         const formDataToUpload = new FormData()
         formDataToUpload.append('file', imageFile)
         formDataToUpload.append('type', 'product')
+        formDataToUpload.append('storeId', storeId)
+        formDataToUpload.append('productId', tempProductId)
 
         const uploadResponse = await fetch('/api/upload', {
           method: 'POST',
@@ -829,12 +836,12 @@ export default function AddProductPage() {
             <span className={styles.numberCircle}>6</span>
             <span className={styles.sectionTitle}>상품설명 작성</span>
           </div>
-          <textarea
+          <CustomEditor
             value={formData.description}
-            onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+            onChange={(value) => setFormData(prev => ({ ...prev, description: value }))}
             placeholder="상품에 대한 상세한 설명을 입력하세요"
-            rows={10}
-            className={styles.textarea}
+            storeId={user?.uid}
+            productId={tempProductId}
           />
         </div>
 

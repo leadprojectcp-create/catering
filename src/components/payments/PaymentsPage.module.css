@@ -1,0 +1,326 @@
+.container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+  padding-top: 80px;
+  padding-bottom: 100px;
+}
+
+.title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 24px;
+}
+
+.section {
+  margin-bottom: 32px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid #F5F5F5;
+}
+
+.sectionTitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.required {
+  font-size: 12px;
+  font-weight: 400;
+  color: #999;
+}
+
+.productContainer {
+  border: 1px solid #E5E5E5;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.productList {
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #F5F5F5;
+}
+
+.storeName {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 12px;
+}
+
+.productItem {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.productImage {
+  width: 100px;
+  height: 100px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.productInfo {
+  flex: 1;
+}
+
+.productName {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 4px;
+}
+
+.productOption {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 2px;
+}
+
+.productQuantity {
+  font-size: 13px;
+  color: #999;
+}
+
+.priceRow {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 8px;
+}
+
+.discount {
+  color: #EA4335;
+}
+
+.totalRow {
+  display: flex;
+  justify-content: space-between;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #F5F5F5;
+}
+
+.totalPrice {
+  color: #025BD9;
+  font-weight: 700;
+}
+
+.radioGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.radioLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #333;
+  cursor: pointer;
+}
+
+.radioLabel input[type="radio"] {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+}
+
+.deliveryFee {
+  color: #025BD9;
+  font-weight: 600;
+  margin-left: 8px;
+}
+
+.notice {
+  background: #F5F7F9;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.noticeText {
+  font-size: 13px;
+  color: #666;
+  margin: 0 0 4px 0;
+}
+
+.requiredText {
+  font-size: 13px;
+  color: #EA4335;
+  margin: 0;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.formRow {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+}
+
+.input {
+  padding: 12px;
+  border: 1px solid #E5E5E5;
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+}
+
+.input::placeholder {
+  color: #999;
+}
+
+.select {
+  padding: 12px;
+  border: 1px solid #E5E5E5;
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+  background: white;
+  cursor: pointer;
+}
+
+.textarea {
+  padding: 12px;
+  border: 1px solid #E5E5E5;
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+  min-height: 100px;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.textarea::placeholder {
+  color: #999;
+}
+
+.paymentSection {
+  background: #F5F7F9;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 0;
+  border: none;
+}
+
+.paymentRow {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 8px;
+}
+
+.paymentTotal {
+  display: flex;
+  justify-content: space-between;
+  font-size: 16px;
+  font-weight: 700;
+  color: #333;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #E5E5E5;
+}
+
+.finalPrice {
+  color: #025BD9;
+  font-size: 20px;
+}
+
+.agreements {
+  margin-top: 24px;
+  margin-bottom: 24px;
+}
+
+.agreementTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 12px;
+}
+
+.agreementLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 8px;
+  cursor: pointer;
+}
+
+.agreementLabel input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.buttonGroup {
+  display: flex;
+  gap: 12px;
+}
+
+.cancelButton {
+  flex: 1;
+  padding: 16px;
+  border: 1px solid #E5E5E5;
+  border-radius: 8px;
+  background: white;
+  font-size: 16px;
+  font-weight: 600;
+  color: #666;
+  cursor: pointer;
+}
+
+.payButton {
+  flex: 2;
+  padding: 16px;
+  border: none;
+  border-radius: 8px;
+  background: #025BD9;
+  font-size: 16px;
+  font-weight: 600;
+  color: white;
+  cursor: pointer;
+}
+
+.payButton:hover {
+  background: #0147a3;
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 16px;
+  }
+
+  .title {
+    font-size: 20px;
+  }
+
+  .sectionTitle {
+    font-size: 16px;
+  }
+}

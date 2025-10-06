@@ -11,8 +11,10 @@ export async function POST(request: NextRequest) {
     const file = formData.get('file') as File
     const uploadType = formData.get('type') as string || 'store' // 기본값은 store
     const userId = formData.get('userId') as string // 사용자 식별자 (이메일 또는 UID)
+    const storeId = formData.get('storeId') as string // 스토어 ID
+    const productId = formData.get('productId') as string // 상품 ID
 
-    console.log('File received:', file?.name, file?.size, 'Type:', uploadType, 'UserId:', userId)
+    console.log('File received:', file?.name, file?.size, 'Type:', uploadType, 'UserId:', userId, 'StoreId:', storeId, 'ProductId:', productId)
 
     if (!file) {
       console.log('No file in request')
@@ -49,16 +51,21 @@ export async function POST(request: NextRequest) {
     const randomId = Math.random().toString(36).substring(2, 15)
     const extension = file.name.split('.').pop()
 
-    // userId가 있으면 사용자별 폴더에 저장, 없으면 공용 폴더에 저장
+    // 파일 경로 결정
     let fileName: string
-    if (userId && uploadType === 'business-registration') {
-      // 사업자 등록증은 사용자별로 구분
+
+    // 상품 관련 이미지는 storeId/productId 구조로 저장
+    if (uploadType === 'product' && storeId && productId) {
+      fileName = `picktoeat/${folder}/${storeId}/${productId}/${timestamp}_${randomId}.${extension}`
+    }
+    // userId가 있으면 사용자별 폴더에 저장
+    else if (userId && uploadType === 'business-registration') {
       fileName = `picktoeat/${folder}/${userId}/${timestamp}_${randomId}.${extension}`
     } else if (userId) {
-      // 기타 사용자 관련 파일도 사용자별로 구분
       fileName = `picktoeat/${folder}/${userId}/${timestamp}_${randomId}.${extension}`
-    } else {
-      // userId가 없으면 기존 방식대로
+    }
+    // 기본 경로
+    else {
       fileName = `picktoeat/${folder}/${timestamp}_${randomId}.${extension}`
     }
 

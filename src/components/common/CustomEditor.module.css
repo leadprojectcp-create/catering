@@ -1,0 +1,182 @@
+.editorContainer {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  overflow: hidden;
+  background: white;
+}
+
+.toolbar {
+  display: flex;
+  gap: 8px;
+  padding: 10px;
+  background: #f8f9fa;
+  border-bottom: 1px solid #ddd;
+  flex-wrap: wrap;
+}
+
+.toolGroup {
+  display: flex;
+  gap: 4px;
+  padding: 0 8px;
+  border-right: 1px solid #ddd;
+  position: relative;
+}
+
+.toolGroup:last-child {
+  border-right: none;
+}
+
+.toolButton {
+  width: 32px;
+  height: 32px;
+  border: 1px solid #ddd;
+  background: white;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  transition: all 0.2s;
+}
+
+.toolButton:hover {
+  background: #e9ecef;
+  border-color: #adb5bd;
+}
+
+.toolButton:active {
+  background: #dee2e6;
+}
+
+.fontSizeSelect {
+  height: 32px;
+  padding: 0 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: white;
+  cursor: pointer;
+  font-size: 14px;
+  min-width: 100px;
+}
+
+.fontSizeSelect:hover {
+  border-color: #adb5bd;
+}
+
+.colorPickerWrapper {
+  position: relative;
+}
+
+.colorButton {
+  width: 32px;
+  height: 32px;
+  border: 1px solid #ddd;
+  background: white;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  transition: all 0.2s;
+}
+
+.colorButton:hover {
+  background: #e9ecef;
+  border-color: #adb5bd;
+}
+
+.colorIcon {
+  font-weight: bold;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.colorBar {
+  width: 20px;
+  height: 3px;
+  border-radius: 1px;
+}
+
+.colorPicker {
+  position: absolute;
+  top: 40px;
+  left: 0;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+}
+
+.colorGrid {
+  display: grid;
+  grid-template-columns: repeat(5, 24px);
+  gap: 8px;
+}
+
+.colorOption {
+  width: 24px;
+  height: 24px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.colorOption:hover {
+  transform: scale(1.1);
+  border-color: #000;
+}
+
+.editorContent {
+  min-height: 300px;
+  max-height: 600px;
+  overflow-y: auto;
+  padding: 16px;
+  font-size: 14px;
+  line-height: normal;
+  outline: none;
+}
+
+.editorContent:empty:before {
+  content: attr(data-placeholder);
+  color: #999;
+  pointer-events: none;
+}
+
+.editorContent img {
+  max-width: 100%;
+  height: auto;
+  margin: 10px 0;
+  border-radius: 4px;
+}
+
+.editorContent:focus {
+  outline: none;
+}
+
+/* 에디터 내용 스타일링 */
+.editorContent p {
+  margin: 0 0 10px 0;
+  line-height: normal;
+}
+
+.editorContent ul,
+.editorContent ol {
+  margin: 10px 0;
+  padding-left: 30px;
+  line-height: normal;
+}
+
+.editorContent li {
+  margin: 5px 0;
+  line-height: normal;
+}
+
+.editorContent span {
+  line-height: normal;
+}

@@ -105,8 +105,10 @@
   order: 1;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: space-around;
   max-height: 140px;
+  min-width: 0;
+  padding-right: 16px;
 }
 
 .productName {
@@ -117,12 +119,13 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  min-width: 0;
 }
 
 .priceSection {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
   margin: 0;
 }
 
@@ -166,13 +169,19 @@
 
 .badgeContainerDesktop {
   display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 4px;
   margin: 0;
 }
 
 .badgeContainerMobile {
   display: none;
+}
+
+.badgeRow {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
 }
 
 .deliveryBadge {
@@ -221,12 +230,12 @@
 
   .badgeContainerMobile {
     display: flex;
+    flex-direction: column;
     order: 3;
     width: 100%;
-    justify-content: flex-end;
+    align-items: flex-end;
     margin-top: 8px;
-    gap: 6px;
-    flex-wrap: wrap;
+    gap: 4px;
   }
 
   .imageWrapper {

@@ -3,7 +3,9 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { getProduct, updateProduct } from '@/lib/services/productService'
+import CustomEditor from '@/components/common/CustomEditor'
 import styles from './AddProductPage.module.css'
+
 
 interface OptionValue {
   name: string
@@ -46,6 +48,7 @@ export default function EditProductPage({ productId }: { productId: string }) {
   const [showCalendar, setShowCalendar] = useState(false)
   const [currentMonth, setCurrentMonth] = useState(new Date())
   const [selectingDate, setSelectingDate] = useState<'start' | 'end'>('start')
+  const [storeId, setStoreId] = useState<string>('')
   const [formData, setFormData] = useState<ProductFormData>({
     name: '',
     images: [],
@@ -219,6 +222,11 @@ export default function EditProductPage({ productId }: { productId: string }) {
             }
           }
 
+          // storeId 저장
+          if (product.storeId) {
+            setStoreId(product.storeId)
+          }
+
           setFormData({
             name: product.name || '',
             images: product.images || [],
@@ -372,6 +380,8 @@ export default function EditProductPage({ productId }: { productId: string }) {
         const formDataToUpload = new FormData()
         formDataToUpload.append('file', imageFile)
         formDataToUpload.append('type', 'product')
+        formDataToUpload.append('storeId', storeId)
+        formDataToUpload.append('productId', productId)
 
         const uploadResponse = await fetch('/api/upload', {
           method: 'POST',
@@ -868,12 +878,12 @@ export default function EditProductPage({ productId }: { productId: string }) {
             <span className={styles.numberCircle}>6</span>
             <span className={styles.sectionTitle}>상품설명 작성</span>
           </div>
-          <textarea
+          <CustomEditor
             value={formData.description}
-            onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+            onChange={(value) => setFormData(prev => ({ ...prev, description: value }))}
             placeholder="상품에 대한 상세한 설명을 입력하세요"
-            rows={10}
-            className={styles.textarea}
+            storeId={storeId}
+            productId={productId}
           />
         </div>
 

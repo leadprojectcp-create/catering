@@ -7,6 +7,7 @@ import styles from './ProductManagement.module.css'
 import { db } from '@/lib/firebase'
 import { collection, query, where, getDocs, updateDoc, deleteDoc, doc } from 'firebase/firestore'
 import { useAuth } from '@/contexts/AuthContext'
+import ProductPreviewModal from './ProductPreviewModal'
 
 interface MenuItem {
   id: string
@@ -29,6 +30,9 @@ interface MenuItem {
     endDate: string | null
     isAlwaysActive: boolean
   }
+  minOrderQuantity?: number
+  maxOrderQuantity?: number
+  origin?: { ingredient: string; origin: string }[]
 }
 
 export default function ProductManagement() {
@@ -39,6 +43,7 @@ export default function ProductManagement() {
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | 'active' | 'inactive' | 'pending'>('all')
   const [searchQuery, setSearchQuery] = useState('')
+  const [previewProduct, setPreviewProduct] = useState<MenuItem | null>(null)
 
   const fetchMenuItems = useCallback(async () => {
     if (!user?.uid) return
@@ -204,52 +209,85 @@ export default function ProductManagement() {
               <div className={styles.menuTop}>
                 <div className={styles.menuInfo}>
                   <div className={styles.menuHeader}>
-                    <h3 className={`${styles.menuName} ${item.status === 'inactive' ? styles.inactiveMenuName : ''}`}>{item.name}</h3>
-                    <span className={
-                      item.status === 'active' ? styles.available :
-                      item.status === 'inactive' ? styles.soldOut :
-                      styles.pending
-                    }>
-                      {item.status === 'active' ? '판매중' :
-                       item.status === 'inactive' ? '숨김' :
-                       '심사중'}
-                    </span>
+                    <h3 className={`${styles.menuName} ${item.status === 'inactive' ? styles.inactiveMenuName : ''}`}>
+                      <span>{item.name}</span>
+                      <span className={
+                        item.status === 'active' ? styles.available :
+                        item.status === 'inactive' ? styles.soldOut :
+                        styles.pending
+                      }>
+                        {item.status === 'active' ? '판매중' :
+                         item.status === 'inactive' ? '숨김' :
+                         '심사중'}
+                      </span>
+                    </h3>
                   </div>
-                  <div className={styles.priceContainer}>
-                    {item.discountedPrice ? (
-                      <>
-                        <span className={styles.originalPrice}>{item.price.toLocaleString()}원</span>
-                        <div className={styles.discountRow}>
-                          <span className={styles.discountedPrice}>{item.discountedPrice.toLocaleString()}원</span>
-                          <span className={styles.discountRate}>{item.discount?.discountPercent}%</span>
-                        </div>
-                      </>
-                    ) : (
-                      <span className={styles.menuPrice}>{item.price.toLocaleString()}원</span>
-                    )}
+
+                  {item.discountedPrice ? (
+                    <>
+                      <span className={styles.originalPrice}>{item.price.toLocaleString()}원</span>
+                      <div className={styles.discountRow}>
+                        <span className={styles.discountedPrice}>{item.discountedPrice.toLocaleString()}원</span>
+                        <span className={styles.discountPercent}>{item.discount?.discountPercent}%</span>
+                      </div>
+                    </>
+                  ) : (
+                    <span className={styles.regularPrice}>{item.price.toLocaleString()}원</span>
+                  )}
+
+                  {item.minOrderQuantity && item.maxOrderQuantity && (
+                    <div className={styles.orderQuantity}>
+                      주문가능 수량 최소 {item.minOrderQuantity}개 ~ {item.maxOrderQuantity}개
+                    </div>
+                  )}
+
+                  <div className={styles.badgeContainerDesktop}>
+                    <div className={styles.badgeRow}>
+                      {item.deliveryMethods?.map((method, index) => (
+                        <span key={index} className={styles.deliveryBadge}>{method}</span>
+                      ))}
+                    </div>
+                    <div className={styles.badgeRow}>
+                      {item.additionalSettings?.map((setting, index) => (
+                        <span key={index} className={styles.settingBadge}>{setting}</span>
+                      ))}
+                    </div>
                   </div>
-                  <div className={styles.menuCategory}>
+                </div>
+
+                <div className={styles.imageWrapper}>
+                  {item.images && item.images.length > 0 ? (
+                    <>
+                      <img
+                        src={`${item.images[0]}?width=140&height=140`}
+                        alt={item.name}
+                        className={styles.image}
+                      />
+                      {item.status === 'inactive' && (
+                        <div className={styles.imageOverlay}>숨김</div>
+                      )}
+                    </>
+                  ) : (
+                    <div className={styles.placeholderImage}>
+                      <span>이미지 없음</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className={styles.badgeContainerMobile}>
+                  <div className={styles.badgeRow}>
                     {item.deliveryMethods?.map((method, index) => (
                       <span key={index} className={styles.deliveryBadge}>{method}</span>
                     ))}
+                  </div>
+                  <div className={styles.badgeRow}>
                     {item.additionalSettings?.map((setting, index) => (
                       <span key={index} className={styles.settingBadge}>{setting}</span>
                     ))}
                   </div>
                 </div>
-                {item.images && item.images.length > 0 && (
-                  <div className={styles.imageWrapper}>
-                    <img
-                      src={`${item.images[0]}?width=100&height=100`}
-                      alt={item.name}
-                      className={styles.menuImage}
-                    />
-                    {item.status === 'inactive' && (
-                      <div className={styles.imageOverlay}>숨김</div>
-                    )}
-                  </div>
-                )}
               </div>
+
               <div className={styles.menuFooter}>
                 <div className={styles.toggleArea}>
                   {item.status !== 'pending' && (
@@ -276,7 +314,7 @@ export default function ProductManagement() {
                   </button>
                   <button
                     className={styles.actionButton}
-                    onClick={() => {/* TODO: 미리보기 */}}
+                    onClick={() => setPreviewProduct(item)}
                   >
                     미리보기
                   </button>
@@ -292,6 +330,14 @@ export default function ProductManagement() {
           ))
         )}
       </div>
+
+      {/* 미리보기 모달 */}
+      {previewProduct && (
+        <ProductPreviewModal
+          product={previewProduct}
+          onClose={() => setPreviewProduct(null)}
+        />
+      )}
     </div>
   )
 }

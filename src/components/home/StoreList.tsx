@@ -8,6 +8,7 @@ import Image from 'next/image'
 import { Swiper, SwiperSlide } from 'swiper/react'
 import { Navigation } from 'swiper/modules'
 import { generateStoreSlug } from '@/lib/utils/slug'
+import Loading from '@/components/Loading'
 import 'swiper/css'
 import 'swiper/css/navigation'
 import 'swiper/css/pagination'
@@ -94,11 +95,7 @@ export default function StoreList({ selectedCategory }: StoreListProps) {
     : stores.filter(store => store.businessCategory === selectedCategory)
 
   if (isLoading) {
-    return (
-      <div className={styles.container}>
-        <div className={styles.loading}>로딩 중...</div>
-      </div>
-    )
+    return <Loading />
   }
 
   return (
@@ -171,15 +168,23 @@ export default function StoreList({ selectedCategory }: StoreListProps) {
                     </span>
                     <span className={styles.category}>{store.categories?.[0] || ''}</span>
                   </div>
-                  <h3 className={styles.cardTitle}>{store.storeName}</h3>
-                  <div className={styles.ratingRow}>
-                    <span className={styles.star}>⭐</span>
-                    <span className={styles.ratingNumber}>
-                      {store.rating ? store.rating.toFixed(1) : '0.0'}
-                    </span>
-                    <span className={styles.reviewCount}>
-                      ({store.reviewCount ? store.reviewCount.toLocaleString() : '0'})
-                    </span>
+                  <div className={styles.titleRow}>
+                    <h3 className={styles.cardTitle}>{store.storeName}</h3>
+                    <div className={styles.ratingRow}>
+                      <Image
+                        src="/icons/star.png"
+                        alt="별점"
+                        width={14}
+                        height={14}
+                        className={styles.star}
+                      />
+                      <span className={styles.ratingNumber}>
+                        {store.rating ? store.rating.toFixed(1) : '0.0'}
+                      </span>
+                      <span className={styles.reviewCount}>
+                        ({store.reviewCount ? store.reviewCount.toLocaleString() : '0'})
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>

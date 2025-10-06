@@ -160,6 +160,13 @@ export default function PartnerHeader() {
         </nav>
 
         <div className={styles.drawerFooter}>
+          <Link
+            href="/"
+            className={styles.drawerMainButton}
+            onClick={closeDrawer}
+          >
+            메인 페이지
+          </Link>
           <button
             onClick={handleLogout}
             className={styles.drawerLogoutButton}
