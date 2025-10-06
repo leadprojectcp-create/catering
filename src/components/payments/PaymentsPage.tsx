@@ -328,68 +328,107 @@ export default function PaymentsPage() {
             </div>
           </div>
 
-          {/* 배송지 목록 */}
+          {/* 배송지 목록 모달 */}
           {showAddressList && (
             <div style={{
-              marginBottom: '20px',
-              padding: '15px',
-              backgroundColor: '#f5f5f5',
-              borderRadius: '8px'
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: 'rgba(0,0,0,0.5)',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              zIndex: 1000
             }}>
-              <h3 style={{ marginBottom: '15px', fontSize: '16px', fontWeight: '600' }}>저장된 배송지</h3>
-              {savedAddresses.map((address) => (
-                <div
-                  key={address.id}
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    padding: '12px',
-                    marginBottom: '10px',
-                    backgroundColor: 'white',
-                    borderRadius: '6px',
-                    border: '1px solid #ddd'
-                  }}
-                >
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: '600', marginBottom: '5px' }}>{address.name}</div>
-                    <div style={{ fontSize: '14px', color: '#666' }}>
-                      {address.orderer} | {address.phone}
-                    </div>
-                    <div style={{ fontSize: '14px', color: '#666' }}>{address.address}</div>
-                  </div>
-                  <div style={{ display: 'flex', gap: '8px' }}>
-                    <button
-                      onClick={() => loadAddress(address)}
-                      style={{
-                        padding: '6px 12px',
-                        backgroundColor: '#2196F3',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: 'pointer',
-                        fontSize: '13px'
-                      }}
-                    >
-                      불러오기
-                    </button>
-                    <button
-                      onClick={() => deleteAddress(address.id)}
-                      style={{
-                        padding: '6px 12px',
-                        backgroundColor: '#f44336',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: 'pointer',
-                        fontSize: '13px'
-                      }}
-                    >
-                      삭제
-                    </button>
-                  </div>
+              <div style={{
+                backgroundColor: 'white',
+                padding: '30px',
+                borderRadius: '12px',
+                width: '90%',
+                maxWidth: '600px',
+                maxHeight: '80vh',
+                overflow: 'auto'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                  <h3 style={{ fontSize: '18px', fontWeight: '600' }}>저장된 배송지</h3>
+                  <button
+                    onClick={() => setShowAddressList(false)}
+                    style={{
+                      padding: '6px 12px',
+                      backgroundColor: '#ccc',
+                      color: 'black',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontSize: '14px'
+                    }}
+                  >
+                    닫기
+                  </button>
                 </div>
-              ))}
+                {savedAddresses.map((address) => (
+                  <div
+                    key={address.id}
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      padding: '15px',
+                      marginBottom: '12px',
+                      backgroundColor: '#f5f5f5',
+                      borderRadius: '8px',
+                      border: '1px solid #ddd'
+                    }}
+                  >
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontWeight: '600', marginBottom: '8px', fontSize: '16px' }}>{address.name}</div>
+                      <div style={{ fontSize: '14px', color: '#666', marginBottom: '4px' }}>
+                        주문자: {address.orderer}
+                      </div>
+                      <div style={{ fontSize: '14px', color: '#666', marginBottom: '4px' }}>
+                        전화번호: {address.phone}
+                      </div>
+                      <div style={{ fontSize: '14px', color: '#666' }}>
+                        주소: {address.address}
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', gap: '8px', marginLeft: '15px' }}>
+                      <button
+                        onClick={() => loadAddress(address)}
+                        style={{
+                          padding: '8px 16px',
+                          backgroundColor: '#2196F3',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '6px',
+                          cursor: 'pointer',
+                          fontSize: '14px',
+                          whiteSpace: 'nowrap'
+                        }}
+                      >
+                        불러오기
+                      </button>
+                      <button
+                        onClick={() => deleteAddress(address.id)}
+                        style={{
+                          padding: '8px 16px',
+                          backgroundColor: '#f44336',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '6px',
+                          cursor: 'pointer',
+                          fontSize: '14px',
+                          whiteSpace: 'nowrap'
+                        }}
+                      >
+                        삭제
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 
