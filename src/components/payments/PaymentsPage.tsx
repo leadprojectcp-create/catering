@@ -26,6 +26,18 @@ interface OrderData {
   items: OrderItem[]
 }
 
+interface DeliveryAddress {
+  id: string
+  name: string
+  orderer: string
+  phone: string
+  email: string
+  address: string
+  deliveryDate: string
+  deliveryTime: string
+  request: string
+}
+
 export default function PaymentsPage() {
   const router = useRouter()
   const { user } = useAuth()
@@ -47,6 +59,10 @@ export default function PaymentsPage() {
     refund: false,
     marketing: false
   })
+  const [savedAddresses, setSavedAddresses] = useState<DeliveryAddress[]>([])
+  const [showAddressList, setShowAddressList] = useState(false)
+  const [addressName, setAddressName] = useState('')
+  const [showSaveDialog, setShowSaveDialog] = useState(false)
 
   useEffect(() => {
     const loadData = async () => {
@@ -63,15 +79,15 @@ export default function PaymentsPage() {
         const data = JSON.parse(savedOrderData) as OrderData
         setOrderData(data)
 
-        // Firestore에서 저장된 배송지 정보 불러오기
+        // Firestore에서 저장된 배송지 목록 불러오기
         if (user) {
           const userDocRef = doc(db, 'users', user.uid)
           const userDoc = await getDoc(userDocRef)
 
           if (userDoc.exists()) {
             const userData = userDoc.data()
-            if (userData.deliveryInfo) {
-              setOrderInfo(userData.deliveryInfo)
+            if (userData.deliveryAddresses) {
+              setSavedAddresses(userData.deliveryAddresses)
             }
           }
         }
@@ -85,6 +101,11 @@ export default function PaymentsPage() {
     loadData()
   }, [user])
 
+  // 배송지 저장 다이얼로그 열기
+  const openSaveDialog = () => {
+    setShowSaveDialog(true)
+  }
+
   // 배송지 정보 저장 함수
   const saveDeliveryInfo = async () => {
     if (!user) {
@@ -92,16 +113,68 @@ export default function PaymentsPage() {
       return
     }
 
+    if (!addressName.trim()) {
+      alert('배송지 이름을 입력해주세요.')
+      return
+    }
+
     try {
+      const newAddress: DeliveryAddress = {
+        id: Date.now().toString(),
+        name: addressName,
+        ...orderInfo
+      }
+
+      const updatedAddresses = [...savedAddresses, newAddress]
+
       const userDocRef = doc(db, 'users', user.uid)
       await setDoc(userDocRef, {
-        deliveryInfo: orderInfo
+        deliveryAddresses: updatedAddresses
       }, { merge: true })
 
+      setSavedAddresses(updatedAddresses)
+      setAddressName('')
+      setShowSaveDialog(false)
       alert('배송지 정보가 저장되었습니다.')
     } catch (error) {
       console.error('배송지 정보 저장 실패:', error)
       alert('배송지 정보 저장에 실패했습니다.')
+    }
+  }
+
+  // 저장된 배송지 불러오기
+  const loadAddress = (address: DeliveryAddress) => {
+    setOrderInfo({
+      orderer: address.orderer,
+      phone: address.phone,
+      email: address.email,
+      address: address.address,
+      deliveryDate: address.deliveryDate,
+      deliveryTime: address.deliveryTime,
+      request: address.request
+    })
+    setShowAddressList(false)
+  }
+
+  // 배송지 삭제
+  const deleteAddress = async (addressId: string) => {
+    if (!user) return
+
+    if (!confirm('이 배송지를 삭제하시겠습니까?')) return
+
+    try {
+      const updatedAddresses = savedAddresses.filter(addr => addr.id !== addressId)
+
+      const userDocRef = doc(db, 'users', user.uid)
+      await setDoc(userDocRef, {
+        deliveryAddresses: updatedAddresses
+      }, { merge: true })
+
+      setSavedAddresses(updatedAddresses)
+      alert('배송지가 삭제되었습니다.')
+    } catch (error) {
+      console.error('배송지 삭제 실패:', error)
+      alert('배송지 삭제에 실패했습니다.')
     }
   }
 
@@ -219,22 +292,180 @@ export default function PaymentsPage() {
               배송지 정보
               <span className={styles.required}>*모든 항목은 필수 입니다.</span>
             </h2>
-            <button
-              type="button"
-              onClick={saveDeliveryInfo}
-              style={{
-                padding: '8px 16px',
-                backgroundColor: '#4CAF50',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontSize: '14px'
-              }}
-            >
-              배송지 저장
-            </button>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              {savedAddresses.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setShowAddressList(!showAddressList)}
+                  style={{
+                    padding: '8px 16px',
+                    backgroundColor: '#2196F3',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    fontSize: '14px'
+                  }}
+                >
+                  배송지 목록 ({savedAddresses.length})
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={openSaveDialog}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: '#4CAF50',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontSize: '14px'
+                }}
+              >
+                배송지 저장
+              </button>
+            </div>
           </div>
+
+          {/* 배송지 목록 */}
+          {showAddressList && (
+            <div style={{
+              marginBottom: '20px',
+              padding: '15px',
+              backgroundColor: '#f5f5f5',
+              borderRadius: '8px'
+            }}>
+              <h3 style={{ marginBottom: '15px', fontSize: '16px', fontWeight: '600' }}>저장된 배송지</h3>
+              {savedAddresses.map((address) => (
+                <div
+                  key={address.id}
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    padding: '12px',
+                    marginBottom: '10px',
+                    backgroundColor: 'white',
+                    borderRadius: '6px',
+                    border: '1px solid #ddd'
+                  }}
+                >
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: '600', marginBottom: '5px' }}>{address.name}</div>
+                    <div style={{ fontSize: '14px', color: '#666' }}>
+                      {address.orderer} | {address.phone}
+                    </div>
+                    <div style={{ fontSize: '14px', color: '#666' }}>{address.address}</div>
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button
+                      onClick={() => loadAddress(address)}
+                      style={{
+                        padding: '6px 12px',
+                        backgroundColor: '#2196F3',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontSize: '13px'
+                      }}
+                    >
+                      불러오기
+                    </button>
+                    <button
+                      onClick={() => deleteAddress(address.id)}
+                      style={{
+                        padding: '6px 12px',
+                        backgroundColor: '#f44336',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontSize: '13px'
+                      }}
+                    >
+                      삭제
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* 배송지 저장 다이얼로그 */}
+          {showSaveDialog && (
+            <div style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: 'rgba(0,0,0,0.5)',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              zIndex: 1000
+            }}>
+              <div style={{
+                backgroundColor: 'white',
+                padding: '30px',
+                borderRadius: '12px',
+                width: '90%',
+                maxWidth: '400px'
+              }}>
+                <h3 style={{ marginBottom: '20px', fontSize: '18px', fontWeight: '600' }}>배송지 저장</h3>
+                <input
+                  type="text"
+                  placeholder="배송지 이름 (예: 집, 회사)"
+                  value={addressName}
+                  onChange={(e) => setAddressName(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    border: '1px solid #ddd',
+                    borderRadius: '6px',
+                    marginBottom: '20px',
+                    fontSize: '14px'
+                  }}
+                />
+                <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+                  <button
+                    onClick={() => {
+                      setShowSaveDialog(false)
+                      setAddressName('')
+                    }}
+                    style={{
+                      padding: '10px 20px',
+                      backgroundColor: '#ccc',
+                      color: 'black',
+                      border: 'none',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      fontSize: '14px'
+                    }}
+                  >
+                    취소
+                  </button>
+                  <button
+                    onClick={saveDeliveryInfo}
+                    style={{
+                      padding: '10px 20px',
+                      backgroundColor: '#4CAF50',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      fontSize: '14px'
+                    }}
+                  >
+                    저장
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className={styles.formGroup}>
             <div className={styles.formRow}>
               <label className={styles.label}>주문자</label>
