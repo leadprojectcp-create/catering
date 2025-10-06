@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
+import { doc, getDoc, setDoc } from 'firebase/firestore'
+import { db } from '@/lib/firebase'
 import { useAuth } from '@/contexts/AuthContext'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
@@ -47,24 +49,61 @@ export default function PaymentsPage() {
   })
 
   useEffect(() => {
-    // 세션 스토리지에서 주문 데이터 가져오기
-    const savedOrderData = sessionStorage.getItem('orderData')
+    const loadData = async () => {
+      // 세션 스토리지에서 주문 데이터 가져오기
+      const savedOrderData = sessionStorage.getItem('orderData')
 
-    if (!savedOrderData) {
-      console.log('주문 정보가 없습니다.')
-      setLoading(false)
+      if (!savedOrderData) {
+        console.log('주문 정보가 없습니다.')
+        setLoading(false)
+        return
+      }
+
+      try {
+        const data = JSON.parse(savedOrderData) as OrderData
+        setOrderData(data)
+
+        // Firestore에서 저장된 배송지 정보 불러오기
+        if (user) {
+          const userDocRef = doc(db, 'users', user.uid)
+          const userDoc = await getDoc(userDocRef)
+
+          if (userDoc.exists()) {
+            const userData = userDoc.data()
+            if (userData.deliveryInfo) {
+              setOrderInfo(userData.deliveryInfo)
+            }
+          }
+        }
+      } catch (error) {
+        console.error('데이터 로딩 실패:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadData()
+  }, [user])
+
+  // 배송지 정보 저장 함수
+  const saveDeliveryInfo = async () => {
+    if (!user) {
+      alert('로그인이 필요합니다.')
       return
     }
 
     try {
-      const data = JSON.parse(savedOrderData) as OrderData
-      setOrderData(data)
+      const userDocRef = doc(db, 'users', user.uid)
+      await setDoc(userDocRef, {
+        deliveryInfo: orderInfo
+      }, { merge: true })
+
+      alert('배송지 정보가 저장되었습니다.')
     } catch (error) {
-      console.error('주문 데이터 파싱 실패:', error)
-    } finally {
-      setLoading(false)
+      console.error('배송지 정보 저장 실패:', error)
+      alert('배송지 정보 저장에 실패했습니다.')
     }
-  }, [])
+  }
 
   const deliveryFee = deliveryMethod === 'delivery' ? 25000 : 0
   const totalProductPrice = orderData
@@ -175,10 +214,27 @@ export default function PaymentsPage() {
 
         {/* 배송지 정보 */}
         <section className={styles.section}>
-          <h2 className={styles.sectionTitle}>
-            배송지 정보
-            <span className={styles.required}>*모든 항목은 필수 입니다.</span>
-          </h2>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+            <h2 className={styles.sectionTitle}>
+              배송지 정보
+              <span className={styles.required}>*모든 항목은 필수 입니다.</span>
+            </h2>
+            <button
+              type="button"
+              onClick={saveDeliveryInfo}
+              style={{
+                padding: '8px 16px',
+                backgroundColor: '#4CAF50',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontSize: '14px'
+              }}
+            >
+              배송지 저장
+            </button>
+          </div>
           <div className={styles.formGroup}>
             <div className={styles.formRow}>
               <label className={styles.label}>주문자</label>
