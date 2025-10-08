@@ -1,13 +1,13 @@
-/* 헤더 */
+/* 상단 헤더 */
 .header {
   height: 60px;
   background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
-  z-index: 100;
+  z-index: 1000;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .container {
@@ -16,17 +16,6 @@
   justify-content: space-between;
   align-items: center;
   padding: 0 20px;
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-.logoContainer {
-  display: flex;
-  align-items: center;
-}
-
-.logo {
-  object-fit: contain;
 }
 
 /* 햄버거 메뉴 버튼 */
@@ -40,6 +29,7 @@
   border: none;
   cursor: pointer;
   padding: 0;
+  margin-right: 20px;
 }
 
 .hamburger {
@@ -53,196 +43,133 @@
   background-color: #fbbf24;
 }
 
-/* 오버레이 */
-.overlay {
+/* 로고 */
+.logoContainer {
+  flex: 1;
+}
+
+.logoText {
+  font-size: 24px;
+  font-weight: 700;
+  color: white;
+  text-decoration: none;
+}
+
+/* 로그아웃 버튼 */
+.logoutButton {
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: 6px;
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.logoutButton:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* 왼쪽 사이드바 */
+.sidebar {
   position: fixed;
-  top: 0;
+  top: 60px;
+  left: -250px;
+  width: 250px;
+  height: calc(100vh - 60px);
+  background: white;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+  transition: left 0.3s ease;
+  z-index: 999;
+  overflow-y: auto;
+}
+
+.sidebarOpen {
   left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  z-index: 200;
 }
 
-/* 사이드 드로어 */
-.drawer {
-  position: fixed;
-  top: 0;
-  right: -300px;
-  width: 300px;
-  height: 100vh;
-  background-color: white;
-  box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
-  transition: right 0.3s ease;
-  z-index: 300;
-  display: flex;
-  flex-direction: column;
-}
-
-.drawerOpen {
-  right: 0;
-}
-
-.drawerHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+.sidebarHeader {
   padding: 20px;
   background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
   color: white;
 }
 
-.drawerTitle {
+.sidebarTitle {
   font-size: 18px;
   font-weight: 700;
-  color: white;
   margin: 0;
-}
-
-.closeButton {
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(255, 255, 255, 0.2);
-  border: none;
-  border-radius: 6px;
-  font-size: 24px;
   color: white;
-  cursor: pointer;
-  transition: background 0.3s ease;
 }
 
-.closeButton:hover {
-  background: rgba(255, 255, 255, 0.3);
+/* 사이드바 네비게이션 */
+.sidebarNav {
+  padding: 10px 0;
 }
 
-/* 드로어 내비게이션 */
-.drawerNav {
-  flex: 1;
-  overflow-y: auto;
-  padding: 20px 0;
-}
-
-/* 메뉴 카테고리 */
-.menuCategory {
-  margin-bottom: 20px;
-}
-
-.categoryTitle {
+.sidebarMenuItem {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 20px;
-  font-size: 14px;
-  font-weight: 700;
-  color: #8b5cf6;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin: 0;
-  border-bottom: 1px solid #e5e5e5;
-}
-
-.categoryIcon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #8b5cf6;
-}
-
-.categoryItems {
-  padding: 5px 0;
-}
-
-.drawerMenuItem {
-  display: block;
-  padding: 12px 20px 12px 35px;
-  color: #333;
+  gap: 12px;
+  padding: 14px 20px;
+  color: #374151;
   text-decoration: none;
   font-size: 15px;
   font-weight: 500;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
   border-left: 3px solid transparent;
 }
 
-.drawerMenuItem:hover {
-  background-color: #f5f5f5;
+.sidebarMenuItem:hover {
+  background-color: #f3f4f6;
   color: #8b5cf6;
   border-left-color: #8b5cf6;
 }
 
-.drawerMenuItemActive {
+.sidebarMenuItemActive {
   background-color: #f3f0ff;
   color: #8b5cf6;
   border-left-color: #8b5cf6;
   font-weight: 700;
 }
 
-/* 드로어 푸터 */
-.drawerFooter {
-  padding: 20px;
-  border-top: 1px solid #e5e5e5;
+.menuIcon {
+  font-size: 20px;
   display: flex;
-  flex-direction: column;
-  gap: 10px;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
 }
 
-.drawerMainButton {
-  width: 100%;
-  padding: 12px;
-  background-color: #f5f5f5;
-  border: none;
-  border-radius: 8px;
-  color: #333;
-  font-size: 15px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  text-align: center;
-  text-decoration: none;
-  display: block;
+.menuLabel {
+  flex: 1;
 }
 
-.drawerMainButton:hover {
-  background-color: #8b5cf6;
-  color: white;
-}
-
-.drawerLogoutButton {
-  width: 100%;
-  padding: 12px;
-  background-color: #f5f5f5;
-  border: none;
-  border-radius: 8px;
-  color: #333;
-  font-size: 15px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.drawerLogoutButton:hover {
-  background-color: #ff4444;
-  color: white;
-}
-
-/* 모바일 반응형 */
+/* 반응형 */
 @media (max-width: 768px) {
-  .container {
-    padding: 0 16px;
+  .sidebar {
+    width: 200px;
+    left: -200px;
   }
 
-  .drawer {
-    width: 280px;
-  }
-
-  .drawerMenuItem {
-    font-size: 14px;
+  .sidebarMenuItem {
     padding: 12px 16px;
+    font-size: 14px;
   }
 
-  .drawerTitle {
-    font-size: 16px;
+  .menuIcon {
+    font-size: 18px;
+    width: 20px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .sidebar {
+    left: 0;
+  }
+
+  .menuButton {
+    display: none;
   }
 }

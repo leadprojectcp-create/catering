@@ -1,8 +1,16 @@
 .container {
   min-height: 100vh;
   padding: 20px;
-  padding-top: 100px;
+  padding-top: 80px;
+  padding-left: 270px;
   background-color: #f9fafb;
+  transition: padding-left 0.3s ease;
+}
+
+@media (max-width: 1023px) {
+  .container {
+    padding-left: 20px;
+  }
 }
 
 .header {

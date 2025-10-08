@@ -2,6 +2,15 @@
   min-height: 100vh;
   background-color: #f9fafb;
   padding: 32px;
+  padding-top: 92px;
+  padding-left: 282px;
+  transition: padding-left 0.3s ease;
+}
+
+@media (max-width: 1023px) {
+  .container {
+    padding-left: 32px;
+  }
 }
 
 .content {
