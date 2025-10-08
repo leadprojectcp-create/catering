@@ -81,8 +81,9 @@ export default function CategorySelector({
                 <Image
                   src={category.icon}
                   alt={category.name}
-                  width={44}
-                  height={44}
+                  width={55}
+                  height={55}
+                  quality={100}
                 />
               </div>
               <div className={styles.categoryName}>{category.name}</div>
