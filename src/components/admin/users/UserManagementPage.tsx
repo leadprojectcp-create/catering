@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { getAllUsers, updateUserType, toggleUserStatus } from '@/lib/services/userService'
 import type { User } from '@/lib/services/userService'
+import type { Timestamp, FieldValue } from 'firebase/firestore'
 import Loading from '@/components/Loading'
 import styles from './UserManagementPage.module.css'
 
@@ -68,9 +69,9 @@ export default function UserManagementPage() {
     }
   }
 
-  const formatDate = (date: any) => {
+  const formatDate = (date: Date | Timestamp | FieldValue | undefined) => {
     if (!date) return '-'
-    const d = date.toDate ? date.toDate() : new Date(date)
+    const d = typeof date === 'object' && 'toDate' in date ? (date as Timestamp).toDate() : new Date(date as string | number | Date)
     return d.toLocaleDateString('ko-KR', {
       year: 'numeric',
       month: '2-digit',
