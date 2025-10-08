@@ -19,9 +19,7 @@ const partnerMenuItems = [
       </svg>
     ),
     items: [
-      { name: '가게현황', path: '/partner/store/status' },
-      { name: '가게관리', path: '/partner/store/management' },
-      { name: '영업시간 관리', path: '/partner/store/hours' }
+      { name: '가게관리', path: '/partner/store/management' }
     ]
   },
   {
