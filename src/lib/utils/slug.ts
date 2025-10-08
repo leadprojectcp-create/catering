@@ -53,15 +53,17 @@ export function parseStoreSlug(slug: string): {
 }
 
 // 매거진 슬러그 생성
-export function createMagazineSlug(id: string, title: string): string {
-  const cleanTitle = title
+export function createMagazineSlug(id: string | undefined, title: string | undefined): string {
+  if (!id) return ''
+
+  const cleanTitle = (title || '')
     .toLowerCase()
     .replace(/\s+/g, '-')
     .replace(/[^\w가-힣-]/g, '')
     .replace(/--+/g, '-')
     .replace(/^-|-$/g, '')
 
-  return `${id}-${cleanTitle}`
+  return cleanTitle ? `${id}-${cleanTitle}` : id
 }
 
 // 매거진 슬러그에서 ID 추출
