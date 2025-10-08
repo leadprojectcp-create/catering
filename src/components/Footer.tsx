@@ -2,23 +2,13 @@
 
 import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
-import { Plus, FileText, LogOut, LayoutDashboard } from 'lucide-react'
+import { LayoutDashboard } from 'lucide-react'
 import styles from './Footer.module.css'
 
 export default function Footer() {
-  const { user, userData, logout } = useAuth()
+  const { user, userData } = useAuth()
 
-  const handleLogout = async () => {
-    try {
-      await logout()
-      alert('로그아웃되었습니다.')
-    } catch (error) {
-      console.error('로그아웃 실패:', error)
-      alert('로그아웃 중 오류가 발생했습니다.')
-    }
-  }
-
-  // 레벨 10 사용자(관리자)만 업체 추가 버튼 표시
+  // 레벨 10 사용자(관리자)만 대시보드 버튼 표시
   const isAdmin = userData?.level === 10
   // 로그인된 사용자인지 확인
   const isLoggedIn = !!user
@@ -54,25 +44,11 @@ export default function Footer() {
             <div className={styles.rightContent}>
               <div className={styles.adminButtons}>
                 {isAdmin && (
-                  <>
-                    <Link href="/admin/dashboard" className={styles.dashboardButton}>
-                      <LayoutDashboard size={20} />
-                      관리자 대시보드
-                    </Link>
-                    <Link href="/add-restaurant" className={styles.addButton}>
-                      <Plus size={20} />
-                      업체 추가
-                    </Link>
-                    <Link href="/admin/logs" className={styles.logButton}>
-                      <FileText size={20} />
-                      로그 보기
-                    </Link>
-                  </>
+                  <Link href="/admin/dashboard" className={styles.dashboardButton}>
+                    <LayoutDashboard size={20} />
+                    관리자 대시보드
+                  </Link>
                 )}
-                <button onClick={handleLogout} className={styles.logoutButton}>
-                  <LogOut size={20} />
-                  로그아웃
-                </button>
               </div>
             </div>
           )}
