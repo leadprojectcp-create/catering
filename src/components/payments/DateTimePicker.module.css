@@ -1,0 +1,270 @@
+.formRow {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.label {
+  width: 120px;
+  font-weight: 500;
+  font-size: 14px;
+  color: #333;
+}
+
+.pickerWrapper {
+  position: relative;
+  flex: 1;
+}
+
+.input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  background-color: white;
+}
+
+/* 달력 모달 */
+.calendarModal {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  max-width: 320px;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+}
+
+.calendarHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  border-bottom: 1px solid #eee;
+}
+
+.calendarHeader button {
+  background: none;
+  border: none;
+  color: #333;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+
+.calendarHeader span {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.calendarWeekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  border-bottom: 1px solid #eee;
+}
+
+.weekday {
+  text-align: center;
+  padding: 8px 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: #666;
+}
+
+.calendarDays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  padding: 4px;
+  gap: 2px;
+}
+
+.calendarDay {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+.calendarDay:hover:not(.disabled):not(.otherMonth) {
+  background-color: #f0f0f0;
+}
+
+.calendarDay.otherMonth {
+  color: #ccc;
+  cursor: default;
+}
+
+.calendarDay.disabled {
+  color: #ddd;
+  cursor: not-allowed;
+  text-decoration: line-through;
+}
+
+.calendarDay.today {
+  background-color: #e8f5e9;
+  font-weight: 600;
+}
+
+.calendarDay.selected {
+  background-color: #4CAF50;
+  color: white;
+  font-weight: 600;
+}
+
+/* 시간 선택 모달 */
+.timeModal {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  max-width: 280px;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+}
+
+.timeHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  border-bottom: 1px solid #eee;
+}
+
+.timeHeader span {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.timeHeader button {
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  color: #666;
+  padding: 0;
+}
+
+.wheelPicker {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  padding: 0 20px;
+}
+
+.wheelColumn {
+  flex: 1;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.wheelScroll {
+  height: 100%;
+  overflow-y: scroll;
+  scroll-snap-type: y mandatory;
+  -webkit-overflow-scrolling: touch;
+  padding: 80px 0;
+}
+
+.wheelScroll::-webkit-scrollbar {
+  display: none;
+}
+
+.wheelItem {
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  color: #ccc;
+  cursor: pointer;
+  scroll-snap-align: center;
+  transition: all 0.15s;
+  user-select: none;
+}
+
+.wheelItem.wheelItemSelected {
+  color: #333;
+  font-weight: 600;
+  font-size: 20px;
+}
+
+.wheelSeparator {
+  font-size: 20px;
+  font-weight: 600;
+  color: #333;
+  margin: 0 8px;
+  z-index: 2;
+}
+
+.selectionHighlight {
+  position: absolute;
+  top: 50%;
+  left: 20px;
+  right: 20px;
+  height: 40px;
+  margin-top: -25px;
+  border-top: 1px solid #ddd;
+  border-bottom: 1px solid #ddd;
+  background-color: rgba(76, 175, 80, 0.05);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.timeFooter {
+  padding: 8px 12px;
+  border-top: 1px solid #eee;
+}
+
+.timeFooter button {
+  width: 100%;
+  padding: 10px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* 모바일 반응형 */
+@media (max-width: 768px) {
+  .calendarModal {
+    max-width: 100%;
+  }
+
+  .timeModal {
+    max-width: 100%;
+  }
+
+  .calendarDay {
+    font-size: 12px;
+  }
+
+  .weekday {
+    font-size: 11px;
+    padding: 6px 0;
+  }
+
+  .calendarHeader {
+    padding: 6px 10px;
+  }
+
+  .wheelPicker {
+    padding: 0 15px;
+  }
+}
