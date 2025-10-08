@@ -14,7 +14,7 @@ import DeliveryAddressModal from './DeliveryAddressModal'
 import SaveAddressDialog from './SaveAddressDialog'
 import DateTimePicker from './DateTimePicker'
 import { OrderData, DeliveryAddress } from './types'
-import { createOrder } from '@/lib/services/orderService'
+import { createOrder } from '@/lib/services/paymentsService'
 import styles from './PaymentsPage.module.css'
 
 interface DaumPostcodeData {
@@ -209,12 +209,21 @@ export default function PaymentsPage() {
         storeId: orderData.storeId,
         storeName: orderData.storeName,
         items: orderItems,
-        totalAmount: totalPrice,
+        totalPrice: totalPrice,
+        totalProductPrice: orderData.productPrice * orderItems.reduce((sum, item) => sum + item.quantity, 0),
+        deliveryFee: deliveryFee,
         orderStatus: 'pending' as const,
-        paymentMethod: '결제 대기',
-        deliveryAddress: `${orderInfo.address} ${orderInfo.email}`,
-        phoneNumber: orderInfo.phone,
-        requestNote: `${orderInfo.request}\n배송일시: ${orderInfo.deliveryDate} ${orderInfo.deliveryTime}\n상세요청: ${detailedRequest}`
+        paymentStatus: 'unpaid' as const,
+        deliveryMethod: deliveryMethod,
+        deliveryDate: orderInfo.deliveryDate,
+        deliveryTime: orderInfo.deliveryTime,
+        address: orderInfo.address,
+        detailAddress: orderInfo.email,
+        recipient: '수령인',
+        orderer: user.displayName || user.email || '주문자',
+        phone: orderInfo.phone,
+        request: orderInfo.request,
+        detailedRequest: detailedRequest
       }
 
       console.log('=== 주문 생성 디버깅 ===')
