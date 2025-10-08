@@ -1,11 +1,9 @@
 import MagazineDetailPage from '@/components/magazine/MagazineDetailPage'
 
-export default async function MagazineDetailPageWrapper({
-  params
-}: {
-  params: Promise<{ id: string }>
-}) {
-  const { id } = await params
+interface PageProps {
+  params: { id: string }
+}
 
-  return <MagazineDetailPage magazineId={id} />
+export default function MagazineDetailPageWrapper({ params }: PageProps) {
+  return <MagazineDetailPage magazineId={params.id} />
 }
