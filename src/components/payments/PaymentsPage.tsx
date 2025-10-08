@@ -210,7 +210,7 @@ export default function PaymentsPage() {
         storeName: orderData.storeName,
         items: orderItems,
         totalAmount: totalPrice,
-        status: 'pending' as const,
+        orderStatus: 'pending' as const,
         paymentMethod: '결제 대기',
         deliveryAddress: `${orderInfo.address} ${orderInfo.email}`,
         phoneNumber: orderInfo.phone,
