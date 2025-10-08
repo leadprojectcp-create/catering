@@ -1,3 +1,5 @@
+import { collection, getDocs, addDoc, query, orderBy, where, updateDoc, doc, serverTimestamp, Timestamp, FieldValue } from 'firebase/firestore'
+import { db } from '@/lib/firebase'
 
 export interface OrderItem {
   productId: string
@@ -7,21 +9,25 @@ export interface OrderItem {
   price: number
 }
 
+export type OrderStatus = 'pending' | 'accepted' | 'preparing' | 'shipping' | 'delivered' | 'rejected' | 'cancelled'
+
 export interface Order {
   id?: string
   orderNumber?: string
   userId: string
+  userName?: string
+  userEmail?: string
   storeId: string
   storeName: string
   items: OrderItem[]
   totalAmount: number
-  status: 'pending' | 'accepted' | 'preparing' | 'completed' | 'cancelled'
+  orderStatus: OrderStatus
   paymentMethod: string
   deliveryAddress: string
   phoneNumber: string
   requestNote?: string
-  createdAt?: Date | string
-  updatedAt?: Date | string
+  createdAt?: Date | Timestamp | FieldValue
+  updatedAt?: Date | Timestamp | FieldValue
 }
 
 // 주문번호 생성 함수 (간단한 버전)
@@ -41,31 +47,114 @@ export const generateOrderNumber = (): string => {
   return `${dateStr}${randomStr}`
 }
 
-// Firebase 함수들은 실제 사용 시점에 별도로 구현
+const COLLECTION_NAME = 'orders'
+
+// 주문 생성
 export const createOrder = async (orderData: Omit<Order, 'id'>): Promise<string> => {
-  // 실제 구현은 사용하는 컴포넌트에서 처리
-  console.log('createOrder called with:', orderData)
-  return generateOrderNumber()
+  try {
+    const orderNumber = generateOrderNumber()
+    const docRef = await addDoc(collection(db, COLLECTION_NAME), {
+      ...orderData,
+      orderNumber,
+      orderStatus: 'pending',
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    })
+    return docRef.id
+  } catch (error) {
+    console.error('주문 생성 실패:', error)
+    throw error
+  }
 }
 
-export const getOrder = async (orderId: string): Promise<Order | null> => {
-  console.log('getOrder called with:', orderId)
-  return null
+// 모든 주문 가져오기 (관리자용)
+export const getAllOrders = async (): Promise<Order[]> => {
+  try {
+    const q = query(
+      collection(db, COLLECTION_NAME),
+      orderBy('createdAt', 'desc')
+    )
+    const snapshot = await getDocs(q)
+    return snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    } as Order))
+  } catch (error) {
+    console.error('주문 목록 조회 실패:', error)
+    throw error
+  }
 }
 
+// 상태별 주문 가져오기
+export const getOrdersByStatus = async (status: OrderStatus): Promise<Order[]> => {
+  try {
+    const q = query(
+      collection(db, COLLECTION_NAME),
+      where('orderStatus', '==', status),
+      orderBy('createdAt', 'desc')
+    )
+    const snapshot = await getDocs(q)
+    return snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    } as Order))
+  } catch (error) {
+    console.error('상태별 주문 조회 실패:', error)
+    throw error
+  }
+}
+
+// 주문 상태 업데이트
 export const updateOrderStatus = async (
   orderId: string,
-  status: Order['status']
+  status: OrderStatus
 ): Promise<void> => {
-  console.log('updateOrderStatus called:', orderId, status)
+  try {
+    const orderRef = doc(db, COLLECTION_NAME, orderId)
+    await updateDoc(orderRef, {
+      orderStatus: status,
+      updatedAt: new Date()
+    })
+  } catch (error) {
+    console.error('주문 상태 업데이트 실패:', error)
+    throw error
+  }
 }
 
-export const getStoreOrders = async (storeId: string): Promise<Order[]> => {
-  console.log('getStoreOrders called with:', storeId)
-  return []
-}
-
+// 사용자별 주문 가져오기
 export const getUserOrders = async (userId: string): Promise<Order[]> => {
-  console.log('getUserOrders called with:', userId)
-  return []
+  try {
+    const q = query(
+      collection(db, COLLECTION_NAME),
+      where('userId', '==', userId),
+      orderBy('createdAt', 'desc')
+    )
+    const snapshot = await getDocs(q)
+    return snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    } as Order))
+  } catch (error) {
+    console.error('사용자 주문 조회 실패:', error)
+    throw error
+  }
+}
+
+// 매장별 주문 가져오기
+export const getStoreOrders = async (storeId: string): Promise<Order[]> => {
+  try {
+    const q = query(
+      collection(db, COLLECTION_NAME),
+      where('storeId', '==', storeId),
+      orderBy('createdAt', 'desc')
+    )
+    const snapshot = await getDocs(q)
+    return snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    } as Order))
+  } catch (error) {
+    console.error('매장 주문 조회 실패:', error)
+    throw error
+  }
 }
