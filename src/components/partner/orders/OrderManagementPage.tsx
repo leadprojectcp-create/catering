@@ -143,86 +143,89 @@ export default function OrderManagementPage() {
         </div>
       </div>
 
-      <div className={styles.tableContainer}>
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th>주문번호</th>
-              <th>주문일시</th>
-              <th>고객정보</th>
-              <th>매장명</th>
-              <th>상품정보</th>
-              <th>금액</th>
-              <th>배송지</th>
-              <th>상태</th>
-              <th>관리</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredOrders.length === 0 ? (
-              <tr>
-                <td colSpan={9} className={styles.empty}>
-                  주문이 없습니다.
-                </td>
-              </tr>
-            ) : (
-              filteredOrders.map((order) => (
-                <tr key={order.id}>
-                  <td className={styles.orderNumber}>{order.orderNumber || order.id}</td>
-                  <td>{formatDate(order.createdAt)}</td>
-                  <td>
-                    <div className={styles.userInfo}>
-                      <div>{order.userName || '-'}</div>
-                      <div className={styles.subText}>{order.userEmail || '-'}</div>
-                      <div className={styles.subText}>{order.phoneNumber}</div>
-                    </div>
-                  </td>
-                  <td>{order.storeName}</td>
-                  <td>
-                    <div className={styles.itemsInfo}>
-                      {order.items.slice(0, 2).map((item, idx) => (
-                        <div key={idx} className={styles.itemRow}>
-                          {item.productName} x {item.quantity}
-                        </div>
-                      ))}
-                      {order.items.length > 2 && (
-                        <div className={styles.moreItems}>외 {order.items.length - 2}개</div>
-                      )}
-                    </div>
-                  </td>
-                  <td className={styles.amount}>{formatCurrency(order.totalAmount)}</td>
-                  <td>
-                    <div className={styles.address}>{order.deliveryAddress}</div>
-                  </td>
-                  <td>
-                    <select
-                      className={`${styles.statusSelect} ${styles[`status_${order.orderStatus}`]}`}
-                      value={order.orderStatus}
-                      onChange={(e) => handleStatusChange(order.id || '', e.target.value as OrderStatus)}
-                    >
-                      <option value="pending">신규 주문</option>
-                      <option value="accepted">접수됨</option>
-                      <option value="preparing">준비중</option>
-                      <option value="shipping">배송중</option>
-                      <option value="delivered">배송완료</option>
-                      <option value="rejected">거부됨</option>
-                      <option value="cancelled">취소됨</option>
-                    </select>
-                  </td>
-                  <td>
-                    <button
-                      className={styles.detailBtn}
-                      onClick={() => alert('주문 상세 기능은 추후 구현 예정입니다.')}
-                    >
-                      상세보기
-                    </button>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+      {filteredOrders.length === 0 ? (
+        <div className={styles.empty}>
+          주문이 없습니다.
+        </div>
+      ) : (
+        <div className={styles.orderGrid}>
+          {filteredOrders.map((order) => (
+            <div key={order.id} className={styles.orderCard}>
+              <div className={styles.cardHeader}>
+                <div className={styles.orderNumber}>
+                  {order.orderNumber || order.id}
+                </div>
+                <div className={styles.orderDate}>
+                  {formatDate(order.createdAt)}
+                </div>
+              </div>
+
+              <div className={styles.cardBody}>
+                <div className={styles.section}>
+                  <div className={styles.sectionLabel}>고객 정보</div>
+                  <div className={styles.userInfo}>
+                    <div className={styles.userName}>{order.userName || '-'}</div>
+                    <div className={styles.userEmail}>{order.userEmail || '-'}</div>
+                    <div className={styles.userPhone}>{order.phoneNumber}</div>
+                  </div>
+                </div>
+
+                <div className={styles.section}>
+                  <div className={styles.sectionLabel}>매장</div>
+                  <div className={styles.storeName}>{order.storeName}</div>
+                </div>
+
+                <div className={styles.section}>
+                  <div className={styles.sectionLabel}>주문 상품</div>
+                  <div className={styles.itemsList}>
+                    {order.items.slice(0, 2).map((item, idx) => (
+                      <div key={idx} className={styles.itemRow}>
+                        <span className={styles.itemName}>{item.productName}</span>
+                        <span className={styles.itemQuantity}>x {item.quantity}</span>
+                      </div>
+                    ))}
+                    {order.items.length > 2 && (
+                      <div className={styles.moreItems}>외 {order.items.length - 2}개</div>
+                    )}
+                  </div>
+                </div>
+
+                <div className={styles.section}>
+                  <div className={styles.sectionLabel}>배송지</div>
+                  <div className={styles.address}>{order.deliveryAddress}</div>
+                </div>
+
+                <div className={styles.section}>
+                  <div className={styles.sectionLabel}>주문 금액</div>
+                  <div className={styles.amount}>{formatCurrency(order.totalAmount)}</div>
+                </div>
+              </div>
+
+              <div className={styles.cardFooter}>
+                <select
+                  className={`${styles.statusSelect} ${styles[`status_${order.orderStatus}`]}`}
+                  value={order.orderStatus}
+                  onChange={(e) => handleStatusChange(order.id || '', e.target.value as OrderStatus)}
+                >
+                  <option value="pending">신규 주문</option>
+                  <option value="accepted">접수됨</option>
+                  <option value="preparing">준비중</option>
+                  <option value="shipping">배송중</option>
+                  <option value="delivered">배송완료</option>
+                  <option value="rejected">거부됨</option>
+                  <option value="cancelled">취소됨</option>
+                </select>
+                <button
+                  className={styles.detailBtn}
+                  onClick={() => alert('주문 상세 기능은 추후 구현 예정입니다.')}
+                >
+                  상세보기
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

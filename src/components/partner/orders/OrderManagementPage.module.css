@@ -1,15 +1,9 @@
 .container {
   min-height: 100vh;
+  max-width: 1280px;
+  margin: 0 auto;
   padding: 40px 20px;
-  padding-left: 270px;
   background-color: #f9fafb;
-  transition: padding-left 0.3s ease;
-}
-
-@media (max-width: 1023px) {
-  .container {
-    padding-left: 20px;
-  }
 }
 
 .header {
@@ -30,11 +24,12 @@
 }
 
 .filterBtn {
-  padding: 8px 16px;
-  border: 1px solid #e0e0e0;
+  padding: 10px 20px;
+  border: 2px solid #e0e0e0;
   background: white;
-  border-radius: 6px;
+  border-radius: 8px;
   font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
   white-space: nowrap;
@@ -42,6 +37,7 @@
 
 .filterBtn:hover {
   background: #f5f5f5;
+  border-color: #2c5282;
 }
 
 .filterBtn.active {
@@ -50,55 +46,62 @@
   border-color: #2c5282;
 }
 
-.tableContainer {
+.orderGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+  gap: 20px;
+}
+
+.orderCard {
   background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  overflow-x: auto;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: all 0.2s;
+  border: 1px solid #e9ecef;
 }
 
-.table {
-  width: 100%;
-  min-width: 1200px;
-  border-collapse: collapse;
+.orderCard:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
 }
 
-.table thead {
-  background: #f8f9fa;
-}
-
-.table th {
-  padding: 16px 12px;
-  text-align: left;
-  font-weight: 600;
-  color: #495057;
-  border-bottom: 2px solid #dee2e6;
-  font-size: 14px;
-  white-space: nowrap;
-}
-
-.table td {
-  padding: 16px 12px;
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+  padding-bottom: 16px;
   border-bottom: 1px solid #e9ecef;
-  font-size: 14px;
-  color: #495057;
-  vertical-align: top;
-}
-
-.table tbody tr:hover {
-  background: #f8f9fa;
-}
-
-.empty {
-  text-align: center;
-  padding: 60px 20px !important;
-  color: #868e96;
 }
 
 .orderNumber {
   font-family: 'Courier New', monospace;
-  font-weight: 600;
+  font-weight: 700;
+  font-size: 16px;
   color: #2c5282;
+}
+
+.orderDate {
+  font-size: 13px;
+  color: #868e96;
+}
+
+.cardBody {
+  margin-bottom: 16px;
+}
+
+.section {
+  margin-bottom: 16px;
+}
+
+.sectionLabel {
+  font-size: 12px;
+  font-weight: 600;
+  color: #868e96;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
 }
 
 .userInfo {
@@ -107,110 +110,176 @@
   gap: 4px;
 }
 
-.subText {
-  font-size: 12px;
-  color: #868e96;
+.userName {
+  font-weight: 600;
+  font-size: 15px;
+  color: #1a1a1a;
 }
 
-.itemsInfo {
-  max-width: 200px;
+.userEmail,
+.userPhone {
+  font-size: 13px;
+  color: #495057;
+}
+
+.storeName {
+  font-weight: 600;
+  font-size: 15px;
+  color: #1a1a1a;
+  padding: 8px 12px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  display: inline-block;
+}
+
+.itemsList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .itemRow {
-  margin-bottom: 4px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.itemName {
+  font-weight: 500;
+  color: #1a1a1a;
+}
+
+.itemQuantity {
+  color: #868e96;
   font-size: 13px;
 }
 
 .moreItems {
-  font-size: 12px;
+  font-size: 13px;
   color: #868e96;
-  margin-top: 4px;
+  font-style: italic;
+  padding-left: 12px;
 }
 
 .amount {
-  font-weight: 600;
+  font-size: 20px;
+  font-weight: 700;
   color: #2c5282;
-  white-space: nowrap;
+  text-align: right;
 }
 
 .address {
-  max-width: 200px;
-  font-size: 13px;
-  word-break: break-word;
+  font-size: 14px;
+  color: #495057;
+  line-height: 1.5;
+  padding: 12px;
+  background: #f8f9fa;
+  border-radius: 6px;
+}
+
+.cardFooter {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #e9ecef;
 }
 
 .statusSelect {
-  padding: 6px 12px;
-  border: 1px solid #ced4da;
-  border-radius: 4px;
-  font-size: 13px;
+  flex: 1;
+  padding: 10px 14px;
+  border: 2px solid #ced4da;
+  border-radius: 8px;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   background: white;
-  min-width: 100px;
+  transition: all 0.2s;
 }
 
 .statusSelect:focus {
   outline: none;
+  border-color: #2c5282;
+  box-shadow: 0 0 0 3px rgba(44, 82, 130, 0.1);
+}
+
+.statusSelect:hover {
   border-color: #2c5282;
 }
 
 .status_pending {
   color: #856404;
   background: #fff3cd !important;
-  border-color: #ffeaa7 !important;
+  border-color: #ffc107 !important;
 }
 
 .status_accepted {
   color: #004085;
   background: #cce5ff !important;
-  border-color: #b8daff !important;
+  border-color: #0d6efd !important;
 }
 
 .status_preparing {
   color: #383d41;
   background: #e2e3e5 !important;
-  border-color: #d6d8db !important;
+  border-color: #6c757d !important;
 }
 
 .status_shipping {
-  color: #004085;
+  color: #0c5460;
   background: #d1ecf1 !important;
-  border-color: #bee5eb !important;
+  border-color: #17a2b8 !important;
 }
 
 .status_delivered {
   color: #155724;
   background: #d4edda !important;
-  border-color: #c3e6cb !important;
+  border-color: #28a745 !important;
 }
 
 .status_rejected,
 .status_cancelled {
   color: #721c24;
   background: #f8d7da !important;
-  border-color: #f5c6cb !important;
+  border-color: #dc3545 !important;
 }
 
 .detailBtn {
-  padding: 6px 16px;
+  padding: 10px 20px;
   background: #6c757d;
   color: white;
   border: none;
-  border-radius: 4px;
-  font-size: 13px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: all 0.2s;
   white-space: nowrap;
 }
 
 .detailBtn:hover {
   background: #5a6268;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.empty {
+  text-align: center;
+  padding: 80px 20px;
+  color: #868e96;
+  font-size: 16px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 @media (max-width: 768px) {
   .container {
-    padding: 15px;
+    padding: 20px 15px;
     padding-top: 85px;
   }
 
@@ -224,17 +293,24 @@
 
   .filterBtn {
     flex: 1;
-    min-width: 120px;
+    min-width: 100px;
     font-size: 12px;
-    padding: 6px 10px;
+    padding: 8px 12px;
   }
 
-  .table {
-    font-size: 12px;
+  .orderGrid {
+    grid-template-columns: 1fr;
   }
 
-  .table th,
-  .table td {
-    padding: 12px 8px;
+  .orderCard {
+    padding: 20px;
+  }
+
+  .cardFooter {
+    flex-direction: column;
+  }
+
+  .detailBtn {
+    width: 100%;
   }
 }
