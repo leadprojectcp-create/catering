@@ -15,17 +15,24 @@ export interface Order {
   id?: string
   orderNumber?: string
   userId: string
-  userName?: string
-  userEmail?: string
   storeId: string
   storeName: string
   items: OrderItem[]
-  totalAmount: number
+  totalPrice: number
+  totalProductPrice: number
+  deliveryFee: number
   orderStatus: OrderStatus
-  paymentMethod: string
-  deliveryAddress: string
-  phoneNumber: string
-  requestNote?: string
+  paymentStatus: 'paid' | 'unpaid'
+  deliveryMethod: string
+  deliveryDate: string
+  deliveryTime: string
+  address: string
+  detailAddress: string
+  recipient: string
+  orderer: string
+  phone: string
+  request?: string
+  detailedRequest?: string
   createdAt?: Date | Timestamp | FieldValue
   updatedAt?: Date | Timestamp | FieldValue
 }
@@ -140,12 +147,13 @@ export const getUserOrders = async (userId: string): Promise<Order[]> => {
   }
 }
 
-// 매장별 주문 가져오기
+// 매장별 주문 가져오기 (결제 완료된 주문만)
 export const getStoreOrders = async (storeId: string): Promise<Order[]> => {
   try {
     const q = query(
       collection(db, COLLECTION_NAME),
       where('storeId', '==', storeId),
+      where('paymentStatus', '==', 'paid'),
       orderBy('createdAt', 'desc')
     )
     const snapshot = await getDocs(q)

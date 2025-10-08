@@ -162,11 +162,11 @@ export default function OrderManagementPage() {
 
               <div className={styles.cardBody}>
                 <div className={styles.section}>
-                  <div className={styles.sectionLabel}>고객 정보</div>
+                  <div className={styles.sectionLabel}>주문자 / 수령인</div>
                   <div className={styles.userInfo}>
-                    <div className={styles.userName}>{order.userName || '-'}</div>
-                    <div className={styles.userEmail}>{order.userEmail || '-'}</div>
-                    <div className={styles.userPhone}>{order.phoneNumber}</div>
+                    <div className={styles.userName}>주문: {order.orderer}</div>
+                    <div className={styles.userName}>수령: {order.recipient}</div>
+                    <div className={styles.userPhone}>{order.phone}</div>
                   </div>
                 </div>
 
@@ -180,7 +180,14 @@ export default function OrderManagementPage() {
                   <div className={styles.itemsList}>
                     {order.items.slice(0, 2).map((item, idx) => (
                       <div key={idx} className={styles.itemRow}>
-                        <span className={styles.itemName}>{item.productName}</span>
+                        <span className={styles.itemName}>
+                          {item.productName}
+                          {item.options && Object.keys(item.options).length > 0 && (
+                            <span className={styles.itemOptions}>
+                              ({Object.entries(item.options).map(([key, value]) => `${key}: ${value}`).join(', ')})
+                            </span>
+                          )}
+                        </span>
                         <span className={styles.itemQuantity}>x {item.quantity}</span>
                       </div>
                     ))}
@@ -191,13 +198,40 @@ export default function OrderManagementPage() {
                 </div>
 
                 <div className={styles.section}>
-                  <div className={styles.sectionLabel}>배송지</div>
-                  <div className={styles.address}>{order.deliveryAddress}</div>
+                  <div className={styles.sectionLabel}>배송 정보</div>
+                  <div className={styles.deliveryInfo}>
+                    <div>{order.deliveryMethod}</div>
+                    <div className={styles.deliveryDateTime}>
+                      {order.deliveryDate} {order.deliveryTime}
+                    </div>
+                    <div className={styles.address}>
+                      {order.address} {order.detailAddress}
+                    </div>
+                    {order.request && (
+                      <div className={styles.requestNote}>요청사항: {order.request}</div>
+                    )}
+                    {order.detailedRequest && (
+                      <div className={styles.requestNote}>상세요청: {order.detailedRequest}</div>
+                    )}
+                  </div>
                 </div>
 
                 <div className={styles.section}>
-                  <div className={styles.sectionLabel}>주문 금액</div>
-                  <div className={styles.amount}>{formatCurrency(order.totalAmount)}</div>
+                  <div className={styles.sectionLabel}>결제 금액</div>
+                  <div className={styles.priceBreakdown}>
+                    <div className={styles.priceRow}>
+                      <span>상품금액</span>
+                      <span>{formatCurrency(order.totalProductPrice)}</span>
+                    </div>
+                    <div className={styles.priceRow}>
+                      <span>배송비</span>
+                      <span>{formatCurrency(order.deliveryFee)}</span>
+                    </div>
+                    <div className={`${styles.priceRow} ${styles.totalPriceRow}`}>
+                      <span>총 결제금액</span>
+                      <span className={styles.amount}>{formatCurrency(order.totalPrice)}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
 
