@@ -6,6 +6,7 @@ import Image from 'next/image'
 import { doc, getDoc, collection, addDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { useAuth } from '@/contexts/AuthContext'
+import Loading from '@/components/Loading'
 import styles from './OrderPage.module.css'
 
 interface Store {
@@ -314,11 +315,13 @@ export default function OrderPage({ productId, storeId }: OrderPageProps) {
     )
   }
 
+  if (loading) {
+    return <Loading />
+  }
+
   return (
     <div className={styles.container}>
-      {loading ? (
-        <div className={styles.error}>로딩 중...</div>
-      ) : !product ? (
+      {!product ? (
         <div className={styles.error}>상품을 찾을 수 없습니다.</div>
       ) : (
         <>

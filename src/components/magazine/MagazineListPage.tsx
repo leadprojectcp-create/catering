@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { getPublishedMagazines } from '@/lib/services/magazineService'
 import type { Magazine } from '@/lib/services/magazineService'
+import { createMagazineSlug } from '@/lib/utils/slug'
+import Loading from '@/components/Loading'
 import styles from './MagazineListPage.module.css'
 
 export default function MagazineListPage() {
@@ -43,6 +45,10 @@ export default function MagazineListPage() {
     return doc.body.textContent || ''
   }
 
+  if (loading) {
+    return <Loading />
+  }
+
   return (
     <div className={styles.container}>
       <div className={styles.header}>
@@ -50,11 +56,7 @@ export default function MagazineListPage() {
         <p className={styles.subtitle}>믿고 맡길 수 있는 단체 주문, 입점 업체들의 배송 노하우</p>
       </div>
 
-      {loading ? (
-        <div className={styles.emptyState}>
-          <p>로딩 중...</p>
-        </div>
-      ) : magazines.length === 0 ? (
+      {magazines.length === 0 ? (
         <div className={styles.emptyState}>
           <p>아직 게시된 매거진이 없습니다.</p>
         </div>
@@ -64,7 +66,7 @@ export default function MagazineListPage() {
             <article
               key={magazine.id}
               className={styles.magazineCard}
-              onClick={() => router.push(`/magazine/${magazine.id}`)}
+              onClick={() => router.push(`/magazine/${createMagazineSlug(magazine.id, magazine.title)}`)}
             >
               {magazine.coverImage && (
                 <div className={styles.coverImage}>
