@@ -75,6 +75,7 @@
   align-items: center;
 }
 
+.dashboardButton,
 .addButton,
 .logButton,
 .logoutButton {
@@ -90,6 +91,15 @@
   white-space: nowrap;
   border: none;
   cursor: pointer;
+}
+
+.dashboardButton {
+  background: #8b5cf6;
+  color: white;
+}
+
+.dashboardButton:hover {
+  background: #7c3aed;
 }
 
 .addButton {
@@ -136,6 +146,7 @@
     gap: 8px;
   }
 
+  .dashboardButton,
   .addButton,
   .logButton,
   .logoutButton {

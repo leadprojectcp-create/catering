@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
-import { Plus, FileText, LogOut } from 'lucide-react'
+import { Plus, FileText, LogOut, LayoutDashboard } from 'lucide-react'
 import styles from './Footer.module.css'
 
 export default function Footer() {
@@ -55,6 +55,10 @@ export default function Footer() {
               <div className={styles.adminButtons}>
                 {isAdmin && (
                   <>
+                    <Link href="/admin/dashboard" className={styles.dashboardButton}>
+                      <LayoutDashboard size={20} />
+                      관리자 대시보드
+                    </Link>
                     <Link href="/add-restaurant" className={styles.addButton}>
                       <Plus size={20} />
                       업체 추가
