@@ -1,14 +1,16 @@
 import { collection, getDocs, query, orderBy, where, updateDoc, doc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 
+import type { Timestamp, FieldValue } from 'firebase/firestore'
+
 export interface User {
   uid: string
   email: string
   name?: string
   phone?: string
   type?: 'partner' | 'user' | 'admin'
-  createdAt?: any
-  lastLoginAt?: any
+  createdAt?: Date | Timestamp | FieldValue
+  lastLoginAt?: Date | Timestamp | FieldValue
   disabled?: boolean
 }
 
