@@ -6,15 +6,13 @@ import Footer from '@/components/Footer'
 import CategoryStoreList from '@/components/category/CategoryStoreList'
 
 export default function CategoryPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params)
-  const decodedCategoryName = decodeURIComponent(id)
+  const resolvedParams = use(params)
+  const decodedCategoryName = decodeURIComponent(resolvedParams.id)
 
   return (
     <>
       <Header />
-      <main style={{ minHeight: '100vh', padding: '20px 0' }}>
-        <CategoryStoreList categoryName={decodedCategoryName} />
-      </main>
+      <CategoryStoreList categoryName={decodedCategoryName} />
       <Footer />
     </>
   )

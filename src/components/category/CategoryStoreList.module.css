@@ -1,0 +1,188 @@
+.container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 32px 0;
+}
+
+.header {
+  margin-bottom: 32px;
+}
+
+.title {
+  font-size: 32px;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.count {
+  font-size: 16px;
+  color: #666;
+}
+
+.storeGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 5px;
+}
+
+@media (max-width: 768px) {
+  .storeGrid {
+    grid-template-columns: repeat(1, 1fr);
+    gap: 12px;
+  }
+
+  .title {
+    font-size: 24px;
+  }
+}
+
+.card {
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  max-width: 400px;
+}
+
+.imageSlider {
+  position: relative;
+  width: 100%;
+  height: 130px;
+  background-color: white;
+  overflow: visible;
+  display: flex;
+  align-items: center;
+}
+
+.storeSwiper {
+  width: 100%;
+  height: 130px;
+}
+
+.storeSwiper :global(.swiper-slide) {
+  width: 130px !important;
+  height: 130px !important;
+}
+
+.imageWrapper {
+  position: relative;
+  width: 130px !important;
+  height: 130px !important;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.cardImage {
+  object-fit: cover;
+  border-radius: 10px;
+}
+
+.placeholderImage {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 48px;
+  background-color: #F5F5F5;
+}
+
+/* Swiper 네비게이션 커스텀 */
+.storeSwiper :global(.swiper-button-prev),
+.storeSwiper :global(.swiper-button-next) {
+  width: 24px;
+  height: 24px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+}
+
+.storeSwiper :global(.swiper-button-prev):after,
+.storeSwiper :global(.swiper-button-next):after {
+  font-size: 12px;
+  color: #333;
+  font-weight: bold;
+}
+
+.storeSwiper :global(.swiper-pagination) {
+  bottom: 4px;
+}
+
+.storeSwiper :global(.swiper-pagination-bullet) {
+  width: 6px;
+  height: 6px;
+  background: white;
+  opacity: 0.7;
+}
+
+.storeSwiper :global(.swiper-pagination-bullet-active) {
+  background: white;
+  opacity: 1;
+}
+
+.cardInfo {
+  padding: 12px 0;
+}
+
+.categoryRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.district {
+  color: #999;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.category {
+  color: #237AF2;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cardTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: #333;
+  margin: 0;
+}
+
+.ratingRow {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.star {
+  font-size: 14px;
+}
+
+.ratingNumber {
+  font-size: 14px;
+  font-weight: 700;
+  color: #333;
+}
+
+.reviewCount {
+  font-size: 14px;
+  color: #999;
+}
+
+.emptyState {
+  grid-column: 1 / -1;
+  text-align: center;
+  color: #6b7280;
+  padding: 48px 0;
+}
