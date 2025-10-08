@@ -1,15 +1,13 @@
 'use client'
 
-import Header from '@/components/Header'
-import Footer from '@/components/Footer'
+import AdminHeader from '@/components/admin/AdminHeader'
 import AdminLogsPage from '@/components/admin/AdminLogsPage'
 
 export default function AdminLogs() {
   return (
     <>
-      <Header />
+      <AdminHeader />
       <AdminLogsPage />
-      <Footer />
     </>
   )
 }
