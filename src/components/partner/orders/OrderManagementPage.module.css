@@ -34,10 +34,6 @@
   white-space: nowrap;
 }
 
-.filterBtn:hover {
-  background: #f5f5f5;
-  border-color: #2c5282;
-}
 
 .filterBtn.active {
   background: #2c5282;
@@ -60,10 +56,6 @@
   border: 1px solid #e9ecef;
 }
 
-.orderCard:hover {
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
-  transform: translateY(-2px);
-}
 
 .cardHeader {
   display: flex;
@@ -245,6 +237,7 @@
   margin-top: 16px;
   padding-top: 16px;
   border-top: 1px solid #e9ecef;
+  justify-content: flex-end;
 }
 
 .statusSelect {
@@ -265,9 +258,6 @@
   box-shadow: 0 0 0 3px rgba(44, 82, 130, 0.1);
 }
 
-.statusSelect:hover {
-  border-color: #2c5282;
-}
 
 .status_pending {
   color: #856404;
@@ -306,24 +296,41 @@
   border-color: #dc3545 !important;
 }
 
-.detailBtn {
+.acceptBtn {
+  flex: 1;
   padding: 10px 20px;
-  background: #6c757d;
+  background: #28a745;
   color: white;
   border: none;
   border-radius: 8px;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
   white-space: nowrap;
 }
 
-.detailBtn:hover {
-  background: #5a6268;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+.rejectBtn {
+  flex: 1;
+  padding: 10px 20px;
+  background: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
 }
+
+.statusBadge {
+  flex: 1;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+}
+
 
 .empty {
   text-align: center;
@@ -365,10 +372,11 @@
   }
 
   .cardFooter {
-    flex-direction: column;
+    flex-direction: row;
   }
 
-  .detailBtn {
-    width: 100%;
+  .acceptBtn,
+  .rejectBtn {
+    flex: 1;
   }
 }

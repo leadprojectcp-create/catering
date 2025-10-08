@@ -316,7 +316,7 @@ export default function PartnerDashboard() {
           <>
             {/* 주요 통계 카드 */}
             <div className={styles.statsGrid}>
-              <div className={styles.statCard}>
+              <a href="/partner/order/history?filter=pending" className={styles.statCard}>
                 <div className={styles.statIcon} style={{ background: '#fee2e2' }}>
                   <AlertCircle size={24} color="#ef4444" />
                 </div>
@@ -327,9 +327,9 @@ export default function PartnerDashboard() {
                     승인 대기 중
                   </span>
                 </div>
-              </div>
+              </a>
 
-              <div className={styles.statCard}>
+              <a href="/partner/order/history" className={styles.statCard}>
                 <div className={styles.statIcon} style={{ background: '#fef3c7' }}>
                   <ShoppingBag size={24} color="#f59e0b" />
                 </div>
@@ -340,7 +340,7 @@ export default function PartnerDashboard() {
                     최근 24시간 이내
                   </span>
                 </div>
-              </div>
+              </a>
 
               <div className={styles.statCard}>
                 <div className={styles.statIcon} style={{ background: '#dbeafe' }}>

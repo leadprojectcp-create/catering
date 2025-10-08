@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { getStoreOrders, updateOrderStatus } from '@/lib/services/orderService'
 import type { Order, OrderStatus } from '@/lib/services/orderService'
 import type { Timestamp, FieldValue } from 'firebase/firestore'
@@ -11,10 +12,19 @@ import styles from './OrderManagementPage.module.css'
 type FilterStatus = 'all' | 'pending' | 'cancelled_rejected' | 'preparing' | 'shipping' | 'delivered'
 
 export default function OrderManagementPage() {
+  const searchParams = useSearchParams()
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<FilterStatus>('all')
   const [storeId, setStoreId] = useState<string>('')
+
+  useEffect(() => {
+    // URL 파라미터에서 filter 값 읽기
+    const filterParam = searchParams.get('filter')
+    if (filterParam && ['all', 'pending', 'cancelled_rejected', 'preparing', 'shipping', 'delivered'].includes(filterParam)) {
+      setFilter(filterParam as FilterStatus)
+    }
+  }, [searchParams])
 
   useEffect(() => {
     // 현재 사용자의 storeId 가져오기 (파트너의 UID를 storeId로 사용)
@@ -236,25 +246,38 @@ export default function OrderManagementPage() {
               </div>
 
               <div className={styles.cardFooter}>
-                <select
-                  className={`${styles.statusSelect} ${styles[`status_${order.orderStatus}`]}`}
-                  value={order.orderStatus}
-                  onChange={(e) => handleStatusChange(order.id || '', e.target.value as OrderStatus)}
-                >
-                  <option value="pending">신규 주문</option>
-                  <option value="accepted">접수됨</option>
-                  <option value="preparing">준비중</option>
-                  <option value="shipping">배송중</option>
-                  <option value="delivered">배송완료</option>
-                  <option value="rejected">거부됨</option>
-                  <option value="cancelled">취소됨</option>
-                </select>
-                <button
-                  className={styles.detailBtn}
-                  onClick={() => alert('주문 상세 기능은 추후 구현 예정입니다.')}
-                >
-                  상세보기
-                </button>
+                {order.orderStatus === 'pending' ? (
+                  <>
+                    <button
+                      className={styles.acceptBtn}
+                      onClick={() => handleStatusChange(order.id || '', 'preparing')}
+                    >
+                      주문접수
+                    </button>
+                    <button
+                      className={styles.rejectBtn}
+                      onClick={() => handleStatusChange(order.id || '', 'rejected')}
+                    >
+                      주문취소
+                    </button>
+                  </>
+                ) : order.orderStatus === 'preparing' ? (
+                  <>
+                    <div className={`${styles.statusBadge} ${styles[`status_${order.orderStatus}`]}`}>
+                      {getStatusLabel(order.orderStatus)}
+                    </div>
+                    <button
+                      className={styles.rejectBtn}
+                      onClick={() => handleStatusChange(order.id || '', 'rejected')}
+                    >
+                      주문취소
+                    </button>
+                  </>
+                ) : (
+                  <div className={`${styles.statusBadge} ${styles[`status_${order.orderStatus}`]}`}>
+                    {getStatusLabel(order.orderStatus)}
+                  </div>
+                )}
               </div>
             </div>
           ))}

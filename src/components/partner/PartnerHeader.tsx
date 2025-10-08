@@ -57,8 +57,20 @@ const partnerMenuItems = [
     ),
     items: [
       { name: '주문내역', path: '/partner/order/history' },
-      { name: '예약현황', path: '/partner/order/reservations' },
       { name: '정산내역', path: '/partner/order/settlements' }
+    ]
+  },
+  {
+    category: '기타',
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="12" y1="8" x2="12" y2="12"></line>
+        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+      </svg>
+    ),
+    items: [
+      { name: '메인 페이지', path: '/' }
     ]
   }
 ]
@@ -158,13 +170,6 @@ export default function PartnerHeader() {
         </nav>
 
         <div className={styles.drawerFooter}>
-          <Link
-            href="/"
-            className={styles.drawerMainButton}
-            onClick={closeDrawer}
-          >
-            메인 페이지
-          </Link>
           <button
             onClick={handleLogout}
             className={styles.drawerLogoutButton}
