@@ -1,4 +1,3 @@
-// 간단한 주문 서비스 - 빌드 문제 해결을 위해 최소화된 버전
 
 export interface OrderItem {
   productId: string
