@@ -318,6 +318,8 @@ export default function OrderPage({ productId, storeId }: OrderPageProps) {
     <div className={styles.container}>
       {loading ? (
         <div className={styles.error}>로딩 중...</div>
+      ) : !product ? (
+        <div className={styles.error}>상품을 찾을 수 없습니다.</div>
       ) : (
         <>
         {/* 왼쪽 영역 */}
