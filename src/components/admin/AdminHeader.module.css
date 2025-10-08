@@ -1,89 +1,17 @@
-/* 상단 헤더 */
-.header {
-  height: 60px;
-  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 1000;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.container {
-  height: 100%;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0 20px;
-}
-
-/* 햄버거 메뉴 버튼 */
-.menuButton {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  width: 24px;
-  height: 18px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 0;
-  margin-right: 20px;
-}
-
-.hamburger {
-  width: 100%;
-  height: 2px;
-  background-color: white;
-  transition: all 0.3s ease;
-}
-
-.menuButton:hover .hamburger {
-  background-color: #fbbf24;
-}
-
-/* 로고 */
-.logoContainer {
-  flex: 1;
-}
-
-.logoText {
-  font-size: 24px;
-  font-weight: 700;
-  color: white;
-  text-decoration: none;
-}
-
-/* 로그아웃 버튼 */
-.logoutButton {
-  padding: 8px 16px;
-  background: rgba(255, 255, 255, 0.2);
-  border: none;
-  border-radius: 6px;
-  color: white;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background 0.3s ease;
-}
-
-.logoutButton:hover {
-  background: rgba(255, 255, 255, 0.3);
-}
-
 /* 왼쪽 사이드바 */
 .sidebar {
   position: fixed;
-  top: 60px;
+  top: 0;
   left: -250px;
   width: 250px;
-  height: calc(100vh - 60px);
+  height: 100vh;
   background: white;
   box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
   transition: left 0.3s ease;
-  z-index: 999;
+  z-index: 1000;
   overflow-y: auto;
+  display: flex;
+  flex-direction: column;
 }
 
 .sidebarOpen {
@@ -94,6 +22,15 @@
   padding: 20px;
   background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
   color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.logoLink {
+  text-decoration: none;
+  flex: 1;
 }
 
 .sidebarTitle {
@@ -103,9 +40,31 @@
   color: white;
 }
 
+/* 햄버거 메뉴 버튼 */
+.menuButton {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: 6px;
+  color: white;
+  font-size: 20px;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+
+.menuButton:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
 /* 사이드바 네비게이션 */
 .sidebarNav {
   padding: 10px 0;
+  flex: 1;
+  overflow-y: auto;
 }
 
 .sidebarMenuItem {
@@ -146,7 +105,48 @@
   flex: 1;
 }
 
+/* 사이드바 푸터 */
+.sidebarFooter {
+  padding: 20px;
+  border-top: 1px solid #e5e7eb;
+  flex-shrink: 0;
+}
+
+.logoutButton {
+  width: 100%;
+  padding: 12px;
+  background-color: #f5f5f5;
+  border: none;
+  border-radius: 8px;
+  color: #333;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.logoutButton:hover {
+  background-color: #ff4444;
+  color: white;
+}
+
 /* 반응형 */
+@media (max-width: 1023px) {
+  .menuButton {
+    display: flex;
+  }
+}
+
+@media (min-width: 1024px) {
+  .sidebar {
+    left: 0;
+  }
+}
+
 @media (max-width: 768px) {
   .sidebar {
     width: 200px;
@@ -161,15 +161,5 @@
   .menuIcon {
     font-size: 18px;
     width: 20px;
-  }
-}
-
-@media (min-width: 1024px) {
-  .sidebar {
-    left: 0;
-  }
-
-  .menuButton {
-    display: none;
   }
 }

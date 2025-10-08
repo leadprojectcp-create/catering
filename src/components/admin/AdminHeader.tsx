@@ -40,37 +40,19 @@ export default function AdminHeader() {
 
   return (
     <>
-      <header className={styles.header}>
-        <div className={styles.container}>
-          {/* 햄버거 메뉴 버튼 */}
-          <button
-            className={styles.menuButton}
-            onClick={toggleSidebar}
-            aria-label="메뉴"
-          >
-            <span className={styles.hamburger}></span>
-            <span className={styles.hamburger}></span>
-            <span className={styles.hamburger}></span>
-          </button>
-
-          {/* 로고 */}
-          <div className={styles.logoContainer}>
-            <Link href="/admin/dashboard">
-              <span className={styles.logoText}>Admin Center</span>
-            </Link>
-          </div>
-
-          {/* 로그아웃 버튼 */}
-          <button onClick={handleLogout} className={styles.logoutButton}>
-            로그아웃
-          </button>
-        </div>
-      </header>
-
       {/* 왼쪽 사이드바 */}
       <div className={`${styles.sidebar} ${isSidebarOpen ? styles.sidebarOpen : ''}`}>
         <div className={styles.sidebarHeader}>
-          <h2 className={styles.sidebarTitle}>관리자</h2>
+          <Link href="/admin/dashboard" className={styles.logoLink}>
+            <h2 className={styles.sidebarTitle}>🎯 Admin Center</h2>
+          </Link>
+          <button
+            className={styles.menuButton}
+            onClick={toggleSidebar}
+            aria-label="메뉴 토글"
+          >
+            ☰
+          </button>
         </div>
 
         <nav className={styles.sidebarNav}>
@@ -85,6 +67,12 @@ export default function AdminHeader() {
             </Link>
           ))}
         </nav>
+
+        <div className={styles.sidebarFooter}>
+          <button onClick={handleLogout} className={styles.logoutButton}>
+            🚪 로그아웃
+          </button>
+        </div>
       </div>
     </>
   )
