@@ -447,17 +447,16 @@ export default function OrderPage({ productId, storeId }: OrderPageProps) {
               </p>
             </div>
           )}
+
+          {/* 모바일 옵션 선택 버튼 */}
+          <button
+            className={styles.mobileOptionButton}
+            onClick={() => setIsModalOpen(true)}
+          >
+            옵션 선택
+          </button>
         </div>
 
-        {/* 모바일 옵션 선택 버튼 */}
-        <button
-          className={styles.mobileOptionButton}
-          onClick={() => setIsModalOpen(true)}
-        >
-          옵션 선택
-        </button>
-
-        </div>
         {/* 오른쪽 영역 - 상품 옵션 */}
         {product.options && product.options.length > 0 && (
           <>
@@ -641,6 +640,8 @@ export default function OrderPage({ productId, storeId }: OrderPageProps) {
               </div>
             )}
           </div>
+          </>
+        )}
         </>
       )}
     </div>
