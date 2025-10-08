@@ -209,21 +209,12 @@ export default function PaymentsPage() {
         storeId: orderData.storeId,
         storeName: orderData.storeName,
         items: orderItems,
-        deliveryMethod: deliveryMethod,
-        orderer: orderInfo.orderer,
-        phone: orderInfo.phone,
-        address: orderInfo.address,
-        detailAddress: orderInfo.email, // email 필드를 detailAddress로 사용
-        recipient: recipient,
-        deliveryDate: orderInfo.deliveryDate,
-        deliveryTime: orderInfo.deliveryTime,
-        request: orderInfo.request,
-        detailedRequest: detailedRequest,
-        totalProductPrice: totalProductPrice,
-        deliveryFee: deliveryFee,
-        totalPrice: totalPrice,
-        orderStatus: 'pending' as const, // 업체 승인 대기
-        paymentStatus: 'unpaid' as const // 결제 미완료
+        totalAmount: totalPrice,
+        status: 'pending' as const,
+        paymentMethod: '결제 대기',
+        deliveryAddress: `${orderInfo.address} ${orderInfo.email}`,
+        phoneNumber: orderInfo.phone,
+        requestNote: `${orderInfo.request}\n배송일시: ${orderInfo.deliveryDate} ${orderInfo.deliveryTime}\n상세요청: ${detailedRequest}`
       }
 
       console.log('=== 주문 생성 디버깅 ===')
