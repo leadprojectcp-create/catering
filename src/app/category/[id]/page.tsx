@@ -1,3 +1,5 @@
+import Header from '@/components/Header'
+import Footer from '@/components/Footer'
 import CategoryStoreList from '@/components/category/CategoryStoreList'
 
 interface CategoryPageProps {
@@ -10,5 +12,13 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
   const { id } = await params
   const decodedCategoryName = decodeURIComponent(id)
 
-  return <CategoryStoreList categoryName={decodedCategoryName} />
+  return (
+    <>
+      <Header />
+      <main style={{ minHeight: '100vh' }}>
+        <CategoryStoreList categoryName={decodedCategoryName} />
+      </main>
+      <Footer />
+    </>
+  )
 }
