@@ -1,7 +1,7 @@
 'use client'
 
 import { use } from 'react'
-import PartnerHeader from '@/components/partner/PartnerHeader'
+// import PartnerHeader from '@/components/partner/PartnerHeader'
 import EditProductPage from '@/components/partner/product/EditProductPage'
 
 export default function EditProduct({ params }: { params: Promise<{ id: string }> }) {
@@ -9,7 +9,7 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
 
   return (
     <>
-      <PartnerHeader />
+      {/* <PartnerHeader /> */}
       <EditProductPage productId={resolvedParams.id} />
     </>
   )

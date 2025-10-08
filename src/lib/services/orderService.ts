@@ -21,8 +21,8 @@ export interface Order {
   deliveryAddress: string
   phoneNumber: string
   requestNote?: string
-  createdAt?: any
-  updatedAt?: any
+  createdAt?: Date | string
+  updatedAt?: Date | string
 }
 
 // 주문번호 생성 함수 (간단한 버전)

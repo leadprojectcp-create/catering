@@ -7,7 +7,7 @@ import Script from 'next/script'
 import { useAuth } from '@/contexts/AuthContext'
 import { doc, getDoc, setDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
-import PartnerHeader from '@/components/partner/PartnerHeader'
+// import PartnerHeader from '@/components/partner/PartnerHeader' // 일시적으로 제거
 import styles from './StoreManagement.module.css'
 
 interface DaumPostcodeData {
@@ -326,7 +326,7 @@ export default function StoreManagement() {
   if (authLoading || loading) {
     return (
       <div className={styles.container}>
-        <PartnerHeader />
+        {/* <PartnerHeader /> */}
         <div className={styles.loading}>로딩 중...</div>
       </div>
     )
@@ -335,7 +335,7 @@ export default function StoreManagement() {
   if (!storeInfo) {
     return (
       <div className={styles.container}>
-        <PartnerHeader />
+        {/* <PartnerHeader /> */}
         <div className={styles.emptyState}>
           <p>등록된 가게 정보가 없습니다.</p>
           <button
@@ -356,7 +356,7 @@ export default function StoreManagement() {
         strategy="afterInteractive"
         onLoad={handlePostcodeLoad}
       />
-      <PartnerHeader />
+      {/* <PartnerHeader /> */}
 
       <div className={styles.header}>
         <h1>가게 관리</h1>
