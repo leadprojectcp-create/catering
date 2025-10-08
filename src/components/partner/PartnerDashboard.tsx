@@ -10,6 +10,25 @@ import Loading from '@/components/Loading'
 import { ShoppingBag, Star, TrendingUp, Clock, AlertCircle, DollarSign, Package, MessageSquare, MessageCircle } from 'lucide-react'
 import styles from './PartnerDashboard.module.css'
 
+interface Order {
+  id: string
+  orderNumber?: string
+  orderer?: string
+  customerName?: string
+  totalPrice?: number
+  totalAmount?: number
+  orderStatus?: string
+  createdAt?: unknown
+}
+
+interface Review {
+  id: string
+  userName?: string
+  rating?: number
+  content?: string
+  createdAt?: unknown
+}
+
 interface DashboardStats {
   todayOrders: number
   pendingOrders: number
@@ -21,8 +40,8 @@ interface DashboardStats {
   avgRating: number
   totalProducts: number
   activeProducts: number
-  recentOrders: any[]
-  recentReviews: any[]
+  recentOrders: Order[]
+  recentReviews: Review[]
 }
 
 export default function PartnerDashboard() {
@@ -239,24 +258,24 @@ export default function PartnerDashboard() {
       })
 
       setStats({
-        todayOrders: todayOrdersSnapshot.size,
-        pendingOrders: pendingOrdersSnapshot.size,
-        newOrders: newOrdersSnapshot.size,
-        newChats: 0, 
+        todayOrders: todayOrdersSnapshot?.size || 0,
+        pendingOrders: pendingOrdersSnapshot?.size || 0,
+        newOrders: newOrdersSnapshot?.size || 0,
+        newChats: 0,
         todaySales,
         monthSales,
-        newReviews: recentReviewsSnapshot.docs.length,
+        newReviews: recentReviewsSnapshot?.docs?.length || 0,
         avgRating: reviewCount > 0 ? totalRating / reviewCount : 0,
-        totalProducts: productsSnapshot.size,
+        totalProducts: productsSnapshot?.size || 0,
         activeProducts,
-        recentOrders: recentOrdersSnapshot.docs.map(doc => ({
+        recentOrders: recentOrdersSnapshot?.docs?.map(doc => ({
           id: doc.id,
           ...doc.data()
-        })),
-        recentReviews: recentReviewsSnapshot.docs.map(doc => ({
+        })) || [],
+        recentReviews: recentReviewsSnapshot?.docs?.map(doc => ({
           id: doc.id,
           ...doc.data()
-        }))
+        })) || []
       })
     } catch (error) {
       console.error('대시보드 데이터 로드 실패:', error)
@@ -269,9 +288,9 @@ export default function PartnerDashboard() {
     return new Intl.NumberFormat('ko-KR').format(num)
   }
 
-  const formatDate = (date: any) => {
+  const formatDate = (date: unknown) => {
     if (!date) return ''
-    const d = date?.toDate ? date.toDate() : new Date(date)
+    const d = (date as { toDate?: () => Date })?.toDate ? (date as { toDate: () => Date }).toDate() : new Date(date as string | number | Date)
     return d.toLocaleDateString('ko-KR', {
       month: '2-digit',
       day: '2-digit',
@@ -434,7 +453,7 @@ export default function PartnerDashboard() {
                               {review.userName || '익명'}
                             </p>
                             <div className={styles.rating}>
-                              {'★'.repeat(review.rating)}{'☆'.repeat(5 - review.rating)}
+                              {'★'.repeat(review.rating || 0)}{'☆'.repeat(5 - (review.rating || 0))}
                             </div>
                           </div>
                           <p className={styles.reviewContent}>
