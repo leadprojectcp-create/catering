@@ -8,6 +8,7 @@ import Image from 'next/image'
 import { Swiper, SwiperSlide } from 'swiper/react'
 import { Navigation } from 'swiper/modules'
 import { generateStoreSlug } from '@/lib/utils/slug'
+import { incrementStoreView } from '@/lib/services/storeService'
 import Loading from '@/components/Loading'
 import 'swiper/css'
 import 'swiper/css/navigation'
@@ -122,10 +123,27 @@ export default function StoreList({ selectedCategory }: StoreListProps) {
               <div
                 key={store.id}
                 className={styles.card}
-                onClick={() => router.push(`/store/${slug}`)}
+                onClick={async () => {
+                  // 조회수 증가
+                  await incrementStoreView(store.id)
+                  // 페이지 이동
+                  router.push(`/store/${slug}`)
+                }}
               >
                 {/* 이미지 슬라이더 */}
-                <div className={styles.imageSlider}>
+                <div
+                  className={styles.imageSlider}
+                  onClick={(e) => {
+                    // 화살표 버튼을 클릭한 경우 이벤트 전파 중지
+                    const target = e.target as HTMLElement
+                    if (target.classList.contains('swiper-button-prev') ||
+                        target.classList.contains('swiper-button-next') ||
+                        target.closest('.swiper-button-prev') ||
+                        target.closest('.swiper-button-next')) {
+                      e.stopPropagation()
+                    }
+                  }}
+                >
                   {images.length > 0 ? (
                     <Swiper
                       modules={[Navigation]}
