@@ -6,9 +6,6 @@ import Image from 'next/image'
 import { doc, getDoc, collection, addDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { useAuth } from '@/contexts/AuthContext'
-import Header from '@/components/Header'
-import Footer from '@/components/Footer'
-import Loading from '@/components/Loading'
 import styles from './OrderPage.module.css'
 
 interface Store {
@@ -309,32 +306,20 @@ export default function OrderPage({ productId, storeId }: OrderPageProps) {
     }, 0)
   }
 
-  if (loading) {
+  if (!product && !loading) {
     return (
-      <>
-        <Header />
-        <Loading />
-        <Footer />
-      </>
-    )
-  }
-
-  if (!product) {
-    return (
-      <>
-        <Header />
-        <div className={styles.container}>
-          <div className={styles.error}>상품을 찾을 수 없습니다.</div>
-        </div>
-        <Footer />
-      </>
+      <div className={styles.container}>
+        <div className={styles.error}>상품을 찾을 수 없습니다.</div>
+      </div>
     )
   }
 
   return (
-    <>
-      <Header />
-      <div className={styles.container}>
+    <div className={styles.container}>
+      {loading ? (
+        <div className={styles.error}>로딩 중...</div>
+      ) : (
+        <>
         {/* 왼쪽 영역 */}
         <div className={styles.leftSection}>
           {/* 상품 정보 카드 */}
@@ -472,6 +457,7 @@ export default function OrderPage({ productId, storeId }: OrderPageProps) {
           옵션 선택
         </button>
 
+        </div>
         {/* 오른쪽 영역 - 상품 옵션 */}
         {product.options && product.options.length > 0 && (
           <>
@@ -654,12 +640,9 @@ export default function OrderPage({ productId, storeId }: OrderPageProps) {
                 </div>
               </div>
             )}
-            </div>
-          </>
-        )}
-
-      </div>
-      <Footer />
-    </>
+          </div>
+        </>
+      )}
+    </div>
   )
 }

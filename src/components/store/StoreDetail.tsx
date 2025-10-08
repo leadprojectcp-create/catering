@@ -10,7 +10,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import Loading from '@/components/Loading'
-import ProductList from '@/components/product/ProductList'
+import ProductList from '@/components/store/ProductList'
 import styles from './StoreDetail.module.css'
 
 interface Store {

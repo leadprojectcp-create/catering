@@ -1,0 +1,237 @@
+'use client'
+
+import React, { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { collection, getDocs, query, where } from 'firebase/firestore'
+import { db } from '@/lib/firebase'
+import Image from 'next/image'
+import Loading from '@/components/Loading'
+import styles from './CategoryProductList.module.css'
+
+interface Product {
+  id: string
+  name: string
+  description?: string
+  price: number
+  discountedPrice?: number
+  discount?: {
+    discountAmount: number
+    discountPercent: number
+  }
+  images?: string[]
+  storeId: string
+  storeName?: string
+  category?: string
+  status?: string
+  minOrderQuantity?: number
+  maxOrderQuantity?: number
+  deliveryMethods?: string[]
+  additionalSettings?: string[]
+}
+
+interface CategoryProductListProps {
+  categoryName: string
+}
+
+export default function CategoryProductList({ categoryName }: CategoryProductListProps) {
+  const router = useRouter()
+  const [products, setProducts] = useState<Product[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        console.log('카테고리:', categoryName)
+
+        // 답례품 카테고리인 경우
+        if (categoryName === '답례품') {
+          const productsQuery = query(
+            collection(db, 'products'),
+            where('additionalSettings', 'array-contains', '답례품'),
+            where('status', '==', 'active')
+          )
+          const productsSnapshot = await getDocs(productsQuery)
+          console.log('답례품 상품 수:', productsSnapshot.docs.length)
+
+          const productData = productsSnapshot.docs.map(doc => {
+            const data = doc.data()
+            console.log('상품 데이터:', data)
+            return {
+              id: doc.id,
+              ...data
+            } as Product
+          })
+
+          setProducts(productData)
+        }
+        // 당일배송 카테고리인 경우
+        else if (categoryName === '당일배송') {
+          const productsQuery = query(
+            collection(db, 'products'),
+            where('additionalSettings', 'array-contains', '당일배송'),
+            where('status', '==', 'active')
+          )
+          const productsSnapshot = await getDocs(productsQuery)
+          console.log('당일배송 상품 수:', productsSnapshot.docs.length)
+
+          const productData = productsSnapshot.docs.map(doc => {
+            const data = doc.data()
+            return {
+              id: doc.id,
+              ...data
+            } as Product
+          })
+
+          setProducts(productData)
+        } else {
+          // 일반 카테고리의 경우: stores에서 해당 카테고리를 가진 가게를 먼저 찾고, 그 가게들의 상품을 가져옴
+          const storesQuery = query(
+            collection(db, 'stores'),
+            where('categories', 'array-contains', categoryName),
+            where('status', '==', 'active')
+          )
+          const storesSnapshot = await getDocs(storesQuery)
+          console.log('해당 카테고리 가게 수:', storesSnapshot.docs.length)
+
+          // 가게 ID들을 수집
+          const storeIds = storesSnapshot.docs.map(doc => doc.id)
+          console.log('가게 IDs:', storeIds)
+
+          if (storeIds.length === 0) {
+            setProducts([])
+            return
+          }
+
+          // 각 가게의 상품들을 가져옴
+          const allProducts: Product[] = []
+
+          for (const storeId of storeIds) {
+            const productsQuery = query(
+              collection(db, 'products'),
+              where('storeId', '==', storeId),
+              where('status', '==', 'active')
+            )
+            const productsSnapshot = await getDocs(productsQuery)
+
+            productsSnapshot.docs.forEach(doc => {
+              const data = doc.data()
+              allProducts.push({
+                id: doc.id,
+                ...data
+              } as Product)
+            })
+          }
+
+          console.log('전체 상품 수:', allProducts.length)
+          setProducts(allProducts)
+        }
+      } catch (error) {
+        console.error('상품 데이터 가져오기 실패:', error)
+        setProducts([])
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchProducts()
+  }, [categoryName])
+
+  if (isLoading) {
+    return <Loading />
+  }
+
+  return (
+    <div className={styles.container}>
+      <h2 className={styles.title}>{categoryName}</h2>
+      <p className={styles.count}>총 {products.length}개의 상품</p>
+
+      <div className={styles.productGrid}>
+        {products.length === 0 ? (
+          <div className={styles.emptyState}>
+            {categoryName} 카테고리에 등록된 상품이 없습니다.
+          </div>
+        ) : (
+          products.map((product) => {
+            const imageUrl = product.images && product.images.length > 0 ? product.images[0] : ''
+
+            return (
+              <div
+                key={product.id}
+                className={styles.card}
+                onClick={() => router.push(`/order/${product.id}`)}
+              >
+                <div className={styles.info}>
+                  <h3 className={styles.productName}>{product.name}</h3>
+
+                  {/* 가격 정보 */}
+                  {product.discount ? (
+                    <>
+                      <span className={styles.originalPrice}>{product.price.toLocaleString()}원</span>
+                      <div className={styles.discountRow}>
+                        <span className={styles.discountedPrice}>{product.discountedPrice?.toLocaleString()}원</span>
+                        <span className={styles.discountPercent}>{product.discount.discountPercent}%</span>
+                      </div>
+                    </>
+                  ) : (
+                    <span className={styles.regularPrice}>{product.price.toLocaleString()}원</span>
+                  )}
+
+                  {/* 주문 가능 수량 */}
+                  {product.minOrderQuantity && product.maxOrderQuantity && (
+                    <div className={styles.orderQuantity}>
+                      주문가능 수량 최소 {product.minOrderQuantity}개 ~ {product.maxOrderQuantity}개
+                    </div>
+                  )}
+
+                  {/* 배송 방법 및 추가 설정 - PC용 */}
+                  <div className={styles.badgeContainerDesktop}>
+                    <div className={styles.badgeRow}>
+                      {product.deliveryMethods?.map((method, idx) => (
+                        <span key={idx} className={styles.deliveryBadge}>{method}</span>
+                      ))}
+                    </div>
+                    <div className={styles.badgeRow}>
+                      {product.additionalSettings?.map((setting, idx) => (
+                        <span key={idx} className={styles.settingBadge}>{setting}</span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className={styles.imageWrapper}>
+                  {imageUrl ? (
+                    <Image
+                      src={imageUrl}
+                      alt={product.name}
+                      fill
+                      className={styles.image}
+                      style={{ objectFit: 'cover' }}
+                    />
+                  ) : (
+                    <div className={styles.placeholderImage}>
+                      <span>이미지 없음</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* 배송 방법 및 추가 설정 - 모바일용 */}
+                <div className={styles.badgeContainerMobile}>
+                  <div className={styles.badgeRow}>
+                    {product.deliveryMethods?.map((method, idx) => (
+                      <span key={idx} className={styles.deliveryBadge}>{method}</span>
+                    ))}
+                  </div>
+                  <div className={styles.badgeRow}>
+                    {product.additionalSettings?.map((setting, idx) => (
+                      <span key={idx} className={styles.settingBadge}>{setting}</span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )
+          })
+        )}
+      </div>
+    </div>
+  )
+}

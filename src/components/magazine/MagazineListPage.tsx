@@ -5,9 +5,6 @@ import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { getPublishedMagazines } from '@/lib/services/magazineService'
 import type { Magazine } from '@/lib/services/magazineService'
-import Header from '@/components/Header'
-import Footer from '@/components/Footer'
-import Loading from '@/components/Loading'
 import styles from './MagazineListPage.module.css'
 
 export default function MagazineListPage() {
@@ -46,26 +43,18 @@ export default function MagazineListPage() {
     return doc.body.textContent || ''
   }
 
-  if (loading) {
-    return (
-      <>
-        <Header />
-        <Loading />
-        <Footer />
-      </>
-    )
-  }
-
   return (
-    <>
-      <Header />
-      <div className={styles.container}>
+    <div className={styles.container}>
       <div className={styles.header}>
         <h1 className={styles.title}>픽투잇 매거진</h1>
         <p className={styles.subtitle}>믿고 맡길 수 있는 단체 주문, 입점 업체들의 배송 노하우</p>
       </div>
 
-      {magazines.length === 0 ? (
+      {loading ? (
+        <div className={styles.emptyState}>
+          <p>로딩 중...</p>
+        </div>
+      ) : magazines.length === 0 ? (
         <div className={styles.emptyState}>
           <p>아직 게시된 매거진이 없습니다.</p>
         </div>
@@ -112,8 +101,6 @@ export default function MagazineListPage() {
           ))}
         </div>
       )}
-      </div>
-      <Footer />
-    </>
+    </div>
   )
 }
