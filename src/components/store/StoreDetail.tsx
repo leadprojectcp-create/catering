@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { doc, getDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
+import { toggleStoreLike, checkUserLiked } from '@/lib/services/storeService'
+import { useAuth } from '@/contexts/AuthContext'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import Loading from '@/components/Loading'
@@ -38,9 +40,12 @@ interface StoreDetailProps {
 
 export default function StoreDetail({ storeId }: StoreDetailProps) {
   const router = useRouter()
+  const { user } = useAuth()
   const [store, setStore] = useState<Store | null>(null)
   const [loading, setLoading] = useState(true)
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
+  const [isLiked, setIsLiked] = useState(false)
+  const [likeCount, setLikeCount] = useState(0)
 
   useEffect(() => {
     const fetchStore = async () => {
@@ -48,10 +53,12 @@ export default function StoreDetail({ storeId }: StoreDetailProps) {
         const storeDoc = await getDoc(doc(db, 'stores', storeId))
 
         if (storeDoc.exists()) {
+          const storeData = storeDoc.data()
           setStore({
             id: storeDoc.id,
-            ...storeDoc.data()
+            ...storeData
           } as Store)
+          setLikeCount(storeData.likeCount || 0)
         }
       } catch (error) {
         console.error('가게 정보 로드 실패:', error)
@@ -61,7 +68,12 @@ export default function StoreDetail({ storeId }: StoreDetailProps) {
     }
 
     fetchStore()
-  }, [storeId])
+
+    // 사용자가 로그인했으면 좋아요 상태 확인
+    if (user) {
+      checkUserLiked(user.uid, storeId).then(setIsLiked)
+    }
+  }, [storeId, user])
 
   if (loading) {
     return (
@@ -86,6 +98,42 @@ export default function StoreDetail({ storeId }: StoreDetailProps) {
   }
 
   const images = store.storeImages && store.storeImages.length > 0 ? store.storeImages : []
+
+  const handleLikeToggle = async () => {
+    // 로그인 체크
+    if (!user) {
+      alert('로그인이 필요한 기능입니다.')
+      router.push('/auth/login')
+      return
+    }
+
+    if (!store) return
+
+    try {
+      const prevLikedState = isLiked
+
+      // 낙관적 업데이트
+      setIsLiked(!isLiked)
+      setLikeCount(prev => !isLiked ? prev + 1 : prev - 1)
+
+      // DB 업데이트
+      const newLikedState = await toggleStoreLike(
+        user.uid,
+        storeId,
+        store.storeName,
+        store.storeImages?.[0]
+      )
+
+      // DB 결과로 상태 동기화
+      setIsLiked(newLikedState)
+    } catch (error) {
+      console.error('좋아요 처리 실패:', error)
+      // 실패 시 원래 상태로 롤백
+      setIsLiked(isLiked)
+      setLikeCount(prev => isLiked ? prev + 1 : prev - 1)
+      alert('좋아요 처리에 실패했습니다.')
+    }
+  }
 
   return (
     <>
@@ -148,9 +196,12 @@ export default function StoreDetail({ storeId }: StoreDetailProps) {
                 <span>{store.address.city}, {store.address.district} | {store.primaryCategory}</span>
               )}
             </div>
-            <button className={styles.likeButton}>
+            <button
+              className={`${styles.likeButton} ${isLiked ? styles.liked : ''}`}
+              onClick={handleLikeToggle}
+            >
               <Image
-                src="/icons/like.png"
+                src={isLiked ? "/icons/heart-filled.svg" : "/icons/heart.svg"}
                 alt="좋아요"
                 width={24}
                 height={24}

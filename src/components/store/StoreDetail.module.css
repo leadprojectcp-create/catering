@@ -125,12 +125,35 @@
   padding: 4px;
   display: flex;
   align-items: center;
+  gap: 4px;
   justify-content: center;
   transition: transform 0.2s;
 }
 
 .likeButton:hover {
   transform: scale(1.1);
+}
+
+.likeButton.liked {
+  animation: likeAnimation 0.3s ease-in-out;
+}
+
+.likeCount {
+  font-size: 14px;
+  font-weight: 600;
+  color: #ff4757;
+}
+
+@keyframes likeAnimation {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
 .nameRatingRow {
