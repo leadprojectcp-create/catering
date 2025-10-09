@@ -92,24 +92,36 @@ export default function OrdersPage() {
   }, [user, router])
 
   const getStatusText = (orderStatus: string, paymentStatus: string) => {
-    if (paymentStatus === 'unpaid') return '결제 대기'
-    if (paymentStatus === 'paid' && orderStatus === 'pending') return '주문 접수'
-    if (orderStatus === 'confirmed') return '주문 확인'
+    // 결제 상태 우선 체크
+    if (paymentStatus === 'unpaid') return '결제 미완료'
+    if (paymentStatus === 'failed') return '결제 실패'
+    if (paymentStatus === 'refunded') return '환불됨'
+
+    // 주문 상태 체크
+    if (orderStatus === 'pending') return '업체 승인 대기'
+    if (orderStatus === 'rejected') return '업체 거부'
     if (orderStatus === 'preparing') return '준비 중'
-    if (orderStatus === 'delivering') return '배송 중'
+    if (orderStatus === 'shipping') return '배송 중'
     if (orderStatus === 'delivered') return '배송 완료'
-    if (orderStatus === 'cancelled') return '주문 취소'
+    if (orderStatus === 'cancelled') return '취소됨'
+
     return '알 수 없음'
   }
 
   const getStatusColor = (orderStatus: string, paymentStatus: string) => {
+    // 결제 상태 우선 체크
     if (paymentStatus === 'unpaid') return '#999'
-    if (paymentStatus === 'paid' && orderStatus === 'pending') return '#2196F3'
-    if (orderStatus === 'confirmed') return '#4CAF50'
+    if (paymentStatus === 'failed') return '#f44336'
+    if (paymentStatus === 'refunded') return '#FF9800'
+
+    // 주문 상태 체크
+    if (orderStatus === 'pending') return '#2196F3'
+    if (orderStatus === 'rejected') return '#f44336'
     if (orderStatus === 'preparing') return '#FF9800'
-    if (orderStatus === 'delivering') return '#9C27B0'
+    if (orderStatus === 'shipping') return '#9C27B0'
     if (orderStatus === 'delivered') return '#4CAF50'
     if (orderStatus === 'cancelled') return '#f44336'
+
     return '#999'
   }
 
