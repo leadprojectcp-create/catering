@@ -40,6 +40,7 @@ interface Order {
   detailedRequest?: string
   paymentId?: string
   transactionId?: string
+  orderNumber?: string
   createdAt: Date
   paidAt?: Date
 }

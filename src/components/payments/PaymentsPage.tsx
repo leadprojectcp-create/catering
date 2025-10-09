@@ -100,16 +100,8 @@ export default function PaymentsPage() {
         console.log('Final orderData:', data)
         setOrderData(data)
 
-        // Firestore에서 저장된 배송지 목록 불러오기 및 사용자 정보 설정
+        // Firestore에서 저장된 배송지 목록 및 사용자 정보 불러오기
         if (user) {
-          // Firebase Auth의 이메일 직접 사용
-          if (user.email) {
-            setOrderInfo(prev => ({
-              ...prev,
-              email: user.email || ''
-            }))
-          }
-
           const userDocRef = doc(db, 'users', user.uid)
           const userDoc = await getDoc(userDocRef)
 
@@ -121,8 +113,8 @@ export default function PaymentsPage() {
               setSavedAddresses(userData.deliveryAddresses)
             }
 
-            // Firestore에 이메일이 있고 Auth 이메일이 없는 경우에만 사용
-            if (!user.email && userData.email) {
+            // Firestore에서 이메일 설정
+            if (userData.email) {
               setOrderInfo(prev => ({
                 ...prev,
                 email: userData.email
@@ -284,8 +276,8 @@ export default function PaymentsPage() {
       console.log('User email verified:', user.emailVerified)
 
       // Firestore에 주문 저장
-      const orderId = await createOrder(order)
-      console.log('주문 생성 완료:', orderId)
+      const { orderId, orderNumber } = await createOrder(order)
+      console.log('주문 생성 완료:', orderId, orderNumber)
 
       console.log('=== 결제 요청 전 orderInfo 확인 ===')
       console.log('orderInfo:', orderInfo)
@@ -339,7 +331,7 @@ export default function PaymentsPage() {
       // 세션 스토리지 클리어
       sessionStorage.removeItem('orderData')
 
-      alert(`결제가 완료되었습니다!\n주문번호: ${orderId}`)
+      alert(`결제가 완료되었습니다!\n주문번호: ${orderNumber}`)
       router.push('/')
     } catch (error) {
       console.error('주문 생성 실패:', error)

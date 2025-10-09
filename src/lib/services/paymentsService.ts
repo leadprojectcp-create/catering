@@ -57,7 +57,7 @@ export const generateOrderNumber = (): string => {
 const COLLECTION_NAME = 'orders'
 
 // 주문 생성
-export const createOrder = async (orderData: Omit<Order, 'id'>): Promise<string> => {
+export const createOrder = async (orderData: Omit<Order, 'id'>): Promise<{ orderId: string; orderNumber: string }> => {
   try {
     const orderNumber = generateOrderNumber()
     const docRef = await addDoc(collection(db, COLLECTION_NAME), {
@@ -67,7 +67,7 @@ export const createOrder = async (orderData: Omit<Order, 'id'>): Promise<string>
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
     })
-    return docRef.id
+    return { orderId: docRef.id, orderNumber }
   } catch (error) {
     console.error('주문 생성 실패:', error)
     throw error

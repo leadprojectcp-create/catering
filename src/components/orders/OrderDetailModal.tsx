@@ -33,6 +33,7 @@ interface Order {
   detailedRequest?: string
   paymentId?: string
   transactionId?: string
+  orderNumber?: string
   createdAt: Date
   paidAt?: Date
 }
@@ -93,7 +94,7 @@ export default function OrderDetailModal({ order, onClose }: OrderDetailModalPro
             <h3>주문 정보</h3>
             <div className={styles.infoRow}>
               <span className={styles.label}>주문번호</span>
-              <span className={styles.value}>{order.id}</span>
+              <span className={styles.value}>{order.orderNumber || order.id}</span>
             </div>
             <div className={styles.infoRow}>
               <span className={styles.label}>주문일시</span>
