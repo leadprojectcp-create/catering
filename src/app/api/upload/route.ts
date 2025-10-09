@@ -13,8 +13,9 @@ export async function POST(request: NextRequest) {
     const userId = formData.get('userId') as string // 사용자 식별자 (이메일 또는 UID)
     const storeId = formData.get('storeId') as string // 스토어 ID
     const productId = formData.get('productId') as string // 상품 ID
+    const reviewId = formData.get('reviewId') as string // 리뷰 ID
 
-    console.log('File received:', file?.name, file?.size, 'Type:', uploadType, 'UserId:', userId, 'StoreId:', storeId, 'ProductId:', productId)
+    console.log('File received:', file?.name, file?.size, 'Type:', uploadType, 'UserId:', userId, 'StoreId:', storeId, 'ProductId:', productId, 'ReviewId:', reviewId)
 
     if (!file) {
       console.log('No file in request')
@@ -41,7 +42,8 @@ export async function POST(request: NextRequest) {
       'business-registration': 'business-registrations',
       'menu': 'menus',
       'profile': 'profiles',
-      'product': 'products'
+      'product': 'products',
+      'review': 'reviews'
     }
 
     const folder = folderMap[uploadType] || 'others'
@@ -54,8 +56,12 @@ export async function POST(request: NextRequest) {
     // 파일 경로 결정
     let fileName: string
 
+    // 리뷰 관련 이미지는 reviewId 구조로 저장
+    if (uploadType === 'review' && reviewId) {
+      fileName = `picktoeat/${folder}/${reviewId}/${timestamp}_${randomId}.${extension}`
+    }
     // 상품 관련 이미지는 storeId/productId 구조로 저장
-    if (uploadType === 'product' && storeId && productId) {
+    else if (uploadType === 'product' && storeId && productId) {
       fileName = `picktoeat/${folder}/${storeId}/${productId}/${timestamp}_${randomId}.${extension}`
     }
     // userId가 있으면 사용자별 폴더에 저장

@@ -11,6 +11,8 @@ import {
   ChatRoom as ChatRoomType,
   ChatMessage
 } from '@/lib/services/chatService'
+import { doc, getDoc } from 'firebase/firestore'
+import { db } from '@/lib/firebase'
 import styles from './ChatRoom.module.css'
 
 interface ChatRoomProps {
@@ -25,6 +27,7 @@ export default function ChatRoom({ roomId, onBack }: ChatRoomProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [inputText, setInputText] = useState('')
   const [loading, setLoading] = useState(true)
+  const [otherUserName, setOtherUserName] = useState<string>('')
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -57,11 +60,35 @@ export default function ChatRoom({ roomId, onBack }: ChatRoomProps) {
   }, [user, roomId])
 
   const loadRoomData = async () => {
+    if (!user) return
+
     try {
       setLoading(true)
       const roomData = await getChatRoom(roomId)
       if (roomData) {
         setRoom(roomData)
+
+        // 상대방 이름 가져오기
+        const otherUserId = roomData.participants.find(id => id !== user.uid)
+        if (otherUserId) {
+          try {
+            const otherUserDoc = await getDoc(doc(db, 'users', otherUserId))
+            if (otherUserDoc.exists()) {
+              const otherUserData = otherUserDoc.data()
+
+              // 상대방이 파트너면 companyName, 일반 사용자면 name
+              const otherUserType = otherUserData.type || 'user'
+              const displayName = otherUserType === 'partner'
+                ? (otherUserData.companyName || otherUserData.storeName || '가게')
+                : (otherUserData.name || '사용자')
+
+              setOtherUserName(displayName)
+            }
+          } catch (error) {
+            console.error('상대방 정보 로드 실패:', error)
+            setOtherUserName(roomData.storeName || '사용자')
+          }
+        }
       } else {
         alert('채팅방을 찾을 수 없습니다.')
         router.push('/chat')
@@ -172,7 +199,7 @@ export default function ChatRoom({ roomId, onBack }: ChatRoomProps) {
         <button className={styles.backButton} onClick={() => router.back()}>
           ←
         </button>
-        <h1 className={styles.title}>{room.storeName}</h1>
+        <h1 className={styles.title}>{otherUserName || room.storeName}</h1>
         {onBack && (
           <button className={styles.listButton} onClick={onBack} title="채팅 목록">
             ☰

@@ -9,7 +9,7 @@ import {
   off,
   update
 } from 'firebase/database'
-import { doc, updateDoc, arrayUnion, getDoc } from 'firebase/firestore'
+import { doc, updateDoc, arrayUnion, getDoc, setDoc } from 'firebase/firestore'
 import { realtimeDb, db } from '@/lib/firebase'
 
 // 채팅 관련 타입 정의
@@ -75,14 +75,27 @@ export const createOrGetChatRoom = async (
     const userRef = doc(db, 'users', userId)
     const storeOwnerRef = doc(db, 'users', storeOwnerId)
 
-    await Promise.all([
-      updateDoc(userRef, {
+    console.log('chatRooms 업데이트 시작:', { userId, storeOwnerId, roomId })
+
+    try {
+      // 현재 사용자의 chatRooms 업데이트
+      await setDoc(userRef, {
         chatRooms: arrayUnion(roomId)
-      }),
-      updateDoc(storeOwnerRef, {
+      }, { merge: true })
+      console.log('현재 사용자 chatRooms 업데이트 성공:', userId)
+    } catch (error) {
+      console.error('현재 사용자 chatRooms 업데이트 실패:', userId, error)
+    }
+
+    try {
+      // 상대방의 chatRooms 업데이트
+      await setDoc(storeOwnerRef, {
         chatRooms: arrayUnion(roomId)
-      })
-    ])
+      }, { merge: true })
+      console.log('상대방 chatRooms 업데이트 성공:', storeOwnerId)
+    } catch (error) {
+      console.error('상대방 chatRooms 업데이트 실패:', storeOwnerId, error)
+    }
 
     return roomId
   } catch (error) {

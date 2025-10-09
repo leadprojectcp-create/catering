@@ -244,7 +244,20 @@ export default function OrdersPage() {
                   <div className={styles.orderTotal}>
                     총 결제금액: <span>{order.totalPrice.toLocaleString()}원</span>
                   </div>
-                  <button className={styles.detailButton}>상세보기</button>
+                  <div className={styles.buttonGroup}>
+                    <button className={styles.detailButton}>상세보기</button>
+                    {order.orderStatus === 'delivered' && (
+                      <button
+                        className={styles.reviewButton}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          router.push(`/reviews/write?orderId=${order.id}`)
+                        }}
+                      >
+                        리뷰 쓰기
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             ))}

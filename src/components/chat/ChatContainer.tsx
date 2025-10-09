@@ -4,14 +4,20 @@ import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { getUserChatRooms, ChatRoom as ChatRoomType } from '@/lib/services/chatService'
+import { doc, getDoc } from 'firebase/firestore'
+import { db } from '@/lib/firebase'
 import ChatRoom from './ChatRoom'
 import styles from './ChatContainer.module.css'
+
+interface ChatRoomWithName extends ChatRoomType {
+  otherUserName?: string
+}
 
 export default function ChatContainer() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { user, loading: authLoading } = useAuth()
-  const [chatRooms, setChatRooms] = useState<ChatRoomType[]>([])
+  const [chatRooms, setChatRooms] = useState<ChatRoomWithName[]>([])
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null)
 
   useEffect(() => {
@@ -39,7 +45,43 @@ export default function ChatContainer() {
 
     try {
       const rooms = await getUserChatRooms(user.uid)
-      setChatRooms(rooms)
+
+      // 각 채팅방의 상대방 이름 가져오기
+      const roomsWithNames = await Promise.all(
+        rooms.map(async (room) => {
+          // 상대방 ID 찾기
+          const otherUserId = room.participants.find(id => id !== user.uid)
+
+          if (otherUserId) {
+            try {
+              const otherUserDoc = await getDoc(doc(db, 'users', otherUserId))
+              if (otherUserDoc.exists()) {
+                const otherUserData = otherUserDoc.data()
+
+                // 상대방이 파트너면 companyName, 일반 사용자면 name
+                const otherUserType = otherUserData.type || 'user'
+                const displayName = otherUserType === 'partner'
+                  ? (otherUserData.companyName || otherUserData.storeName || '가게')
+                  : (otherUserData.name || '사용자')
+
+                return {
+                  ...room,
+                  otherUserName: displayName
+                }
+              }
+            } catch (error) {
+              console.error('사용자 정보 로드 실패:', error)
+            }
+          }
+
+          return {
+            ...room,
+            otherUserName: '사용자'
+          }
+        })
+      )
+
+      setChatRooms(roomsWithNames)
 
       // URL에 roomId가 있으면 그것을 사용, 없으면 첫 번째 채팅방 선택하지 않음
       const urlRoomId = searchParams.get('roomId')
@@ -105,7 +147,7 @@ export default function ChatContainer() {
                 onClick={() => handleRoomClick(room.id)}
               >
                 <div className={styles.roomInfo}>
-                  <h3 className={styles.storeName}>{room.storeName}</h3>
+                  <h3 className={styles.storeName}>{room.otherUserName || room.storeName}</h3>
                   {room.lastMessage && (
                     <p className={styles.lastMessage}>{room.lastMessage}</p>
                   )}

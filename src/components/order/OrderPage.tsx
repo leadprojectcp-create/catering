@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { doc, getDoc, collection, addDoc } from 'firebase/firestore'
+import { doc, getDoc, collection, addDoc, query, where, getDocs, orderBy } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { useAuth } from '@/contexts/AuthContext'
 import Loading from '@/components/Loading'
@@ -59,6 +59,16 @@ interface CartItem {
   quantity: number
 }
 
+interface Review {
+  id: string
+  userId: string
+  userName?: string
+  rating: number
+  content: string
+  images?: string[]
+  createdAt: Date
+}
+
 export default function OrderPage({ productId, storeId }: OrderPageProps) {
   const router = useRouter()
   const { user } = useAuth()
@@ -76,6 +86,8 @@ export default function OrderPage({ productId, storeId }: OrderPageProps) {
   const [isDragging, setIsDragging] = useState(false)
   const [startY, setStartY] = useState(0)
   const [startHeight, setStartHeight] = useState(80)
+  const [reviews, setReviews] = useState<Review[]>([])
+  const [loadingReviews, setLoadingReviews] = useState(true)
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -108,6 +120,68 @@ export default function OrderPage({ productId, storeId }: OrderPageProps) {
     }
 
     fetchProduct()
+  }, [productId])
+
+  useEffect(() => {
+    const fetchReviews = async () => {
+      try {
+        console.log('리뷰 쿼리 시작, productId:', productId)
+        const reviewsQuery = query(
+          collection(db, 'reviews'),
+          where('productId', '==', productId),
+          orderBy('createdAt', 'desc')
+        )
+        console.log('리뷰 쿼리 실행 중...')
+        const reviewsSnapshot = await getDocs(reviewsQuery)
+        console.log('리뷰 개수:', reviewsSnapshot.docs.length)
+
+        const reviewsData: Review[] = []
+        for (const docSnap of reviewsSnapshot.docs) {
+          const data = docSnap.data()
+
+          // 사용자 정보 가져오기
+          let userName = '익명'
+          try {
+            const userDoc = await getDoc(doc(db, 'users', data.userId))
+            if (userDoc.exists()) {
+              const userData = userDoc.data()
+              const rawName = userData.name || '익명'
+
+              // 이름 마스킹 처리 (첫 글자와 마지막 글자만 표시)
+              if (rawName.length > 2) {
+                userName = rawName[0] + '*'.repeat(rawName.length - 2) + rawName[rawName.length - 1]
+              } else if (rawName.length === 2) {
+                userName = rawName[0] + '*'
+              } else {
+                userName = rawName
+              }
+            }
+          } catch (error) {
+            console.error('사용자 정보 로딩 실패:', error)
+          }
+
+          reviewsData.push({
+            id: docSnap.id,
+            userId: data.userId,
+            userName,
+            rating: data.rating,
+            content: data.content,
+            images: data.images || [],
+            createdAt: data.createdAt?.toDate() || new Date(),
+          })
+        }
+
+        setReviews(reviewsData)
+      } catch (error) {
+        console.error('리뷰 로딩 실패:', error)
+      } finally {
+        setLoadingReviews(false)
+      }
+    }
+
+    if (productId) {
+      fetchReviews()
+    }
   }, [productId])
 
   const toggleOption = (groupName: string) => {
@@ -452,6 +526,57 @@ export default function OrderPage({ productId, storeId }: OrderPageProps) {
               </p>
             </div>
           )}
+
+          {/* 리뷰 섹션 */}
+          <div className={styles.reviewSection}>
+            <h3 className={styles.reviewTitle}>리뷰 ({reviews.length})</h3>
+            {loadingReviews ? (
+              <div className={styles.reviewLoading}>리뷰를 불러오는 중...</div>
+            ) : reviews.length === 0 ? (
+              <div className={styles.reviewEmpty}>아직 작성된 리뷰가 없습니다.</div>
+            ) : (
+              <div className={styles.reviewList}>
+                {reviews.map((review) => (
+                  <div key={review.id} className={styles.reviewItem}>
+                    <div className={styles.reviewHeader}>
+                      <div className={styles.reviewUser}>
+                        <span className={styles.reviewUserName}>{review.userName}</span>
+                        <div className={styles.reviewRating}>
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <span
+                              key={star}
+                              className={star <= review.rating ? styles.starFilled : styles.starEmpty}
+                            >
+                              ★
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                      <span className={styles.reviewDate}>
+                        {review.createdAt.toLocaleDateString('ko-KR')}
+                      </span>
+                    </div>
+                    <p className={styles.reviewContent}>{review.content}</p>
+                    {review.images && review.images.length > 0 && (
+                      <div className={styles.reviewImages}>
+                        {review.images.map((imageUrl, index) => (
+                          <div key={index} className={styles.reviewImageItem}>
+                            <Image
+                              src={imageUrl}
+                              alt={`리뷰 이미지 ${index + 1}`}
+                              width={100}
+                              height={100}
+                              className={styles.reviewImage}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
 
           {/* 모바일 옵션 선택 버튼 */}
           <button

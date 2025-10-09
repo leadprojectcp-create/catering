@@ -26,6 +26,13 @@ service cloud.firestore {
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.type == 'partner';
     }
 
+    // 일반 사용자 확인 함수 (type이 user)
+    function isUser() {
+      return isSignedIn() &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.type == 'user';
+    }
+
     // Users collection
     match /users/{userId} {
       // 본인만 읽기/쓰기 가능
@@ -33,6 +40,10 @@ service cloud.firestore {
 
       // 파트너 목록 조회는 모두 가능 (StoreList에서 사용)
       allow read: if true;
+
+      // chatRooms 필드만 업데이트 가능 (채팅방 생성 시)
+      allow update: if isSignedIn() &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['chatRooms']);
     }
 
     // Products collection (상품)
@@ -140,6 +151,57 @@ service cloud.firestore {
 
       // 파트너(type이 partner)만 생성/수정/삭제 가능
       allow create, update, delete: if isPartner();
+    }
+
+    // Reviews collection - 리뷰
+    match /reviews/{reviewId} {
+      // 모든 사용자 읽기 가능 (리뷰는 공개)
+      allow read: if true;
+
+      // 일반 사용자(type이 user)만 리뷰 생성 가능 (자신의 userId로만 생성)
+      allow create: if isUser() &&
+        request.resource.data.userId == request.auth.uid;
+
+      // 본인의 리뷰만 수정/삭제 가능
+      allow update, delete: if isSignedIn() &&
+        resource.data.userId == request.auth.uid;
+    }
+
+    // Chats collection - 채팅방
+    match /chats/{chatId} {
+      // 채팅방 참여자만 읽기 가능
+      allow read: if isSignedIn() &&
+        (request.auth.uid in resource.data.participants);
+
+      // 로그인한 사용자만 채팅방 생성 가능 (본인이 참여자로 포함되어야 함)
+      allow create: if isSignedIn() &&
+        request.auth.uid in request.resource.data.participants;
+
+      // 채팅방 참여자만 업데이트 가능 (마지막 메시지 등)
+      allow update: if isSignedIn() &&
+        request.auth.uid in resource.data.participants;
+
+      // 삭제 불가
+      allow delete: if false;
+
+      // Messages subcollection - 채팅 메시지
+      match /messages/{messageId} {
+        // 채팅방 참여자만 메시지 읽기 가능
+        allow read: if isSignedIn() &&
+          request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participants;
+
+        // 채팅방 참여자만 메시지 생성 가능 (본인의 senderId로만 생성)
+        allow create: if isSignedIn() &&
+          request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participants &&
+          request.resource.data.senderId == request.auth.uid;
+
+        // 본인의 메시지만 업데이트 가능 (읽음 상태 등)
+        allow update: if isSignedIn() &&
+          resource.data.senderId == request.auth.uid;
+
+        // 삭제 불가
+        allow delete: if false;
+      }
     }
   }
 }
