@@ -13,7 +13,6 @@ export default function ChatContainer() {
   const { user, loading: authLoading } = useAuth()
   const [chatRooms, setChatRooms] = useState<ChatRoomType[]>([])
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null)
-  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     // 인증 로딩 중이면 아무것도 하지 않음
@@ -39,7 +38,6 @@ export default function ChatContainer() {
     if (!user) return
 
     try {
-      setLoading(true)
       const rooms = await getUserChatRooms(user.uid)
       setChatRooms(rooms)
 
@@ -50,8 +48,6 @@ export default function ChatContainer() {
       }
     } catch (error) {
       console.error('채팅방 목록 로드 실패:', error)
-    } finally {
-      setLoading(false)
     }
   }
 
@@ -83,8 +79,8 @@ export default function ChatContainer() {
     }
   }
 
-  if (authLoading || loading) {
-    return <div className={styles.loading}>채팅방 목록을 불러오는 중...</div>
+  if (authLoading) {
+    return null
   }
 
   return (
