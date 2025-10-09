@@ -102,6 +102,14 @@ export default function PaymentsPage() {
 
         // Firestore에서 저장된 배송지 목록 불러오기 및 사용자 정보 설정
         if (user) {
+          // Firebase Auth의 이메일 직접 사용
+          if (user.email) {
+            setOrderInfo(prev => ({
+              ...prev,
+              email: user.email || ''
+            }))
+          }
+
           const userDocRef = doc(db, 'users', user.uid)
           const userDoc = await getDoc(userDocRef)
 
@@ -113,8 +121,8 @@ export default function PaymentsPage() {
               setSavedAddresses(userData.deliveryAddresses)
             }
 
-            // 사용자 이메일 자동 설정
-            if (userData.email) {
+            // Firestore에 이메일이 있고 Auth 이메일이 없는 경우에만 사용
+            if (!user.email && userData.email) {
               setOrderInfo(prev => ({
                 ...prev,
                 email: userData.email
