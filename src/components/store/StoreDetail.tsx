@@ -173,7 +173,7 @@ export default function StoreDetail({ storeId }: StoreDetailProps) {
         store.storeName,
         store.partnerId
       )
-      router.push(`/chat/${roomId}`)
+      router.push(`/chat?roomId=${roomId}`)
     } catch (error) {
       console.error('채팅방 생성 실패:', error)
       alert('채팅방 생성에 실패했습니다.')

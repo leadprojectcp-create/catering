@@ -15,11 +15,12 @@ import styles from './ChatRoom.module.css'
 
 interface ChatRoomProps {
   roomId: string
+  onBack?: () => void
 }
 
-export default function ChatRoom({ roomId }: ChatRoomProps) {
+export default function ChatRoom({ roomId, onBack }: ChatRoomProps) {
   const router = useRouter()
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const [room, setRoom] = useState<ChatRoomType | null>(null)
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [inputText, setInputText] = useState('')
@@ -27,13 +28,17 @@ export default function ChatRoom({ roomId }: ChatRoomProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
+    // 인증 로딩 중이면 아무것도 하지 않음
+    if (authLoading) return
+
+    // 인증 완료 후 유저가 없으면 로그인 페이지로
     if (!user) {
       router.push('/login')
       return
     }
 
     loadRoomData()
-  }, [user, roomId, router])
+  }, [user, authLoading, roomId, router])
 
   useEffect(() => {
     if (!user || !roomId) return
@@ -153,7 +158,7 @@ export default function ChatRoom({ roomId }: ChatRoomProps) {
     ))
   }
 
-  if (loading) {
+  if (authLoading || loading) {
     return <div className={styles.loading}>채팅방을 불러오는 중...</div>
   }
 
@@ -168,6 +173,11 @@ export default function ChatRoom({ roomId }: ChatRoomProps) {
           ←
         </button>
         <h1 className={styles.title}>{room.storeName}</h1>
+        {onBack && (
+          <button className={styles.listButton} onClick={onBack} title="채팅 목록">
+            ☰
+          </button>
+        )}
       </div>
 
       <div className={styles.messagesContainer}>

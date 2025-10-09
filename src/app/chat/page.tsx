@@ -1,13 +1,11 @@
-import ChatRoomList from '@/components/chat/ChatRoomList'
+import ChatContainer from '@/components/chat/ChatContainer'
 import Header from '@/components/Header'
-import Footer from '@/components/Footer'
 
 export default function ChatPage() {
   return (
     <>
       <Header />
-      <ChatRoomList />
-      <Footer />
+      <ChatContainer />
     </>
   )
 }

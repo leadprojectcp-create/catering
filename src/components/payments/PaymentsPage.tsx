@@ -15,6 +15,7 @@ import SaveAddressDialog from './SaveAddressDialog'
 import DateTimePicker from './DateTimePicker'
 import { OrderData, DeliveryAddress } from './types'
 import { createOrder } from '@/lib/services/paymentsService'
+import { requestPayment } from '@/lib/services/paymentService'
 import styles from './PaymentsPage.module.css'
 
 interface DaumPostcodeData {
@@ -45,6 +46,7 @@ export default function PaymentsPage() {
     orderer: '',
     phone: '',
     email: '',
+    detailAddress: '',
     address: '',
     deliveryDate: '',
     deliveryTime: '',
@@ -98,15 +100,25 @@ export default function PaymentsPage() {
         console.log('Final orderData:', data)
         setOrderData(data)
 
-        // Firestore에서 저장된 배송지 목록 불러오기
+        // Firestore에서 저장된 배송지 목록 불러오기 및 사용자 정보 설정
         if (user) {
           const userDocRef = doc(db, 'users', user.uid)
           const userDoc = await getDoc(userDocRef)
 
           if (userDoc.exists()) {
             const userData = userDoc.data()
+
+            // 저장된 배송지 불러오기
             if (userData.deliveryAddresses) {
               setSavedAddresses(userData.deliveryAddresses)
+            }
+
+            // 사용자 이메일 자동 설정
+            if (userData.email) {
+              setOrderInfo(prev => ({
+                ...prev,
+                email: userData.email
+              }))
             }
           }
         }
@@ -166,6 +178,34 @@ export default function PaymentsPage() {
       return
     }
 
+    // 이메일이 없으면 user 객체에서 가져오기 시도
+    let userEmail = orderInfo.email
+    if (!userEmail || !userEmail.trim()) {
+      if (user) {
+        const userDocRef = doc(db, 'users', user.uid)
+        const userDoc = await getDoc(userDocRef)
+        if (userDoc.exists()) {
+          userEmail = userDoc.data().email || ''
+        }
+      }
+    }
+
+    // 이메일 검증
+    if (!userEmail || !userEmail.trim()) {
+      alert('이메일 정보를 찾을 수 없습니다. 프로필에서 이메일을 등록해주세요.')
+      return
+    }
+
+    // 이메일 형식 검증
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(userEmail)) {
+      alert(`등록된 이메일 형식이 올바르지 않습니다: ${userEmail}\n프로필에서 올바른 이메일로 변경해주세요.`)
+      return
+    }
+
+    console.log('=== 이메일 검증 완료 ===')
+    console.log('사용할 이메일:', userEmail)
+
     if (!orderInfo.address.trim()) {
       alert('주소를 입력해주세요.')
       return
@@ -218,8 +258,8 @@ export default function PaymentsPage() {
         deliveryDate: orderInfo.deliveryDate,
         deliveryTime: orderInfo.deliveryTime,
         address: orderInfo.address,
-        detailAddress: orderInfo.email,
-        recipient: '수령인',
+        detailAddress: orderInfo.detailAddress,
+        recipient: recipient,
         orderer: user.displayName || user.email || '주문자',
         phone: orderInfo.phone,
         request: orderInfo.request,
@@ -239,15 +279,60 @@ export default function PaymentsPage() {
       const orderId = await createOrder(order)
       console.log('주문 생성 완료:', orderId)
 
-      // TODO: 포트원 결제 연동
-      // 현재는 임시로 주문만 생성하고 완료 처리
-      alert(`주문이 생성되었습니다.\n주문번호: ${orderId}\n\n※ 결제 기능은 추후 포트원 연동 예정입니다.`)
+      console.log('=== 결제 요청 전 orderInfo 확인 ===')
+      console.log('orderInfo:', orderInfo)
+      console.log('userEmail:', userEmail)
+      console.log('orderInfo.orderer:', orderInfo.orderer)
+      console.log('orderInfo.phone:', orderInfo.phone)
+
+      // 포트원 결제 요청
+      const paymentResult = await requestPayment({
+        orderName: `${orderData.productName} ${orderItems.length > 1 ? `외 ${orderItems.length - 1}건` : ''}`,
+        amount: totalPrice,
+        orderId: orderId,
+        customerName: orderInfo.orderer,
+        customerEmail: userEmail,
+        customerPhoneNumber: orderInfo.phone,
+      })
+
+      if (!paymentResult.success) {
+        alert(`결제에 실패했습니다.\n${paymentResult.errorMessage || '알 수 없는 오류'}`)
+        return
+      }
+
+      // 서버에서 결제 검증
+      console.log('결제 검증 시작:', paymentResult.paymentId)
+      const verifyResponse = await fetch('/api/payments/verify', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ paymentId: paymentResult.paymentId }),
+      })
+
+      const verifyData = await verifyResponse.json()
+      console.log('결제 검증 결과:', verifyData)
+
+      if (!verifyData.verified) {
+        alert('결제 검증에 실패했습니다. 고객센터에 문의해주세요.')
+        return
+      }
+
+      // 결제 검증 성공 - 주문 상태 업데이트
+      const orderRef = doc(db, 'orders', orderId)
+      await setDoc(orderRef, {
+        paymentStatus: 'paid',
+        paymentId: paymentResult.paymentId,
+        transactionId: paymentResult.transactionId,
+        paidAt: new Date(),
+        verifiedAt: new Date()
+      }, { merge: true })
 
       // 세션 스토리지 클리어
       sessionStorage.removeItem('orderData')
 
-      // 주문 완료 페이지로 이동 (추후 구현)
-      router.push('/') // 임시로 홈으로 이동
+      alert(`결제가 완료되었습니다!\n주문번호: ${orderId}`)
+      router.push('/')
     } catch (error) {
       console.error('주문 생성 실패:', error)
       alert('주문 생성에 실패했습니다. 다시 시도해주세요.')
@@ -290,6 +375,7 @@ export default function PaymentsPage() {
         phone: orderInfo.phone,
         email: orderInfo.email,
         address: orderInfo.address,
+        detailAddress: orderInfo.detailAddress,
         deliveryDate: orderInfo.deliveryDate,
         deliveryTime: orderInfo.deliveryTime,
         request: orderInfo.request
@@ -318,6 +404,7 @@ export default function PaymentsPage() {
       orderer: address.orderer,
       phone: address.phone,
       email: address.email,
+      detailAddress: address.detailAddress || '',
       address: address.address,
       deliveryDate: address.deliveryDate,
       deliveryTime: address.deliveryTime,
@@ -592,8 +679,8 @@ export default function PaymentsPage() {
                 type="text"
                 className={styles.input}
                 placeholder="상세주소를 입력해주세요"
-                value={orderInfo.email}
-                onChange={(e) => setOrderInfo({...orderInfo, email: e.target.value})}
+                value={orderInfo.detailAddress}
+                onChange={(e) => setOrderInfo({...orderInfo, detailAddress: e.target.value})}
               />
             </div>
             <div className={styles.formRow}>

@@ -84,6 +84,30 @@ env:
       - BUILD
       - RUNTIME
 
+  # PortOne Configuration
+  - variable: NEXT_PUBLIC_PORTONE_STORE_ID
+    value: store-ec72aef6-83e8-4d50-b4c9-a61bd5b3c03b
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: NEXT_PUBLIC_PORTONE_CHANNEL_KEY
+    value: channel-key-865c4c10-14b6-4634-a022-026c47487e8d
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: PORTONE_API_SECRET
+    value: MLbQ2QcAeYRLY2t9RppBGMitSQTfOqMXFQESz49SOfIsKVsqBi2SsBXgd9CEasBl7t9AiilQ22alCRKH
+    availability:
+      - RUNTIME
+  - variable: PORTONE_WEBHOOK_SECRET_1
+    value: whsec_1nh0s0SV+LVJaw7EvB4hwJXRu43GBFOXqPe9sQzHzoI=
+    availability:
+      - RUNTIME
+  - variable: PORTONE_WEBHOOK_SECRET_2
+    value: whsec_7kGOtIc7fJOG1VV8gRiX6HyETcX83eNa50s712Pbogs=
+    availability:
+      - RUNTIME
+
   # Grant access to secrets in Cloud Secret Manager.
   # See https://firebase.google.com/docs/app-hosting/configure#secret-parameters
   # - variable: MY_SECRET

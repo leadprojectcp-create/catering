@@ -22,6 +22,7 @@ export interface DeliveryAddress {
   phone: string
   email: string
   address: string
+  detailAddress?: string
   deliveryDate: string
   deliveryTime: string
   request: string
