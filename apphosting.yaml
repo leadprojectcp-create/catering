@@ -48,6 +48,11 @@ env:
     availability:
       - BUILD
       - RUNTIME
+  - variable: NEXT_PUBLIC_FIREBASE_DATABASE_URL
+    value: https://catering-26952-default-rtdb.asia-southeast1.firebasedatabase.app/
+    availability:
+      - BUILD
+      - RUNTIME
 
   # Firebase Admin SDK Configuration (Server-side only)
   - variable: FIREBASE_PROJECT_ID

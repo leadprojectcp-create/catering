@@ -241,10 +241,14 @@
 }
 
 .sectionTitle {
-  font-size: 20px;
+  display: inline-block;
+  border-radius: 5px;
+  background: #FFF5E9;
+  color: #FF8B00;
+  font-size: 13px;
   font-weight: 700;
-  color: #333;
-  margin: 0 0 20px 0;
+  margin: 0 0 10px 0;
+  padding: 6px 8px;
 }
 
 .detailItem {
@@ -281,6 +285,39 @@
   margin: 0;
 }
 
+.noticeSection {
+  padding: 0 0 24px 0;
+}
+
+.noticeList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.noticeItem {
+  padding: 0;
+  background: transparent;
+  border: none;
+}
+
+.noticeTitle {
+  display: none;
+}
+
+.noticeContent {
+  color: #333;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 150%;
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.noticeDate {
+  display: none;
+}
+
 @media (max-width: 768px) {
   .container {
     padding: 0;
@@ -299,5 +336,9 @@
 
   .storeName {
     font-size: 22px;
+  }
+
+  .noticeSection {
+    padding: 0 16px 24px 16px;
   }
 }

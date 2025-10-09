@@ -125,7 +125,7 @@ export const getPartnerNotices = async (partnerId: string, filterStatus?: string
   }
 }
 
-// 게시된 공지사항만 가져오기
+// 게시된 공지사항만 가져오기 (관리자용 - 모든 파트너)
 export const getPublishedNotices = async (partnerId: string): Promise<Notice[]> => {
   try {
     const q = query(
@@ -143,6 +143,39 @@ export const getPublishedNotices = async (partnerId: string): Promise<Notice[]> 
   } catch (error) {
     console.error('게시된 공지사항 가져오기 중 오류:', error)
     throw error
+  }
+}
+
+// 특정 파트너의 게시된 공지사항만 가져오기 (사용자용)
+export const getPublishedNoticesByPartner = async (partnerId: string): Promise<Notice[]> => {
+  try {
+    const q = query(
+      collection(db, COLLECTION_NAME),
+      where('partnerId', '==', partnerId),
+      where('status', '==', 'published'),
+      orderBy('publishedAt', 'desc')
+    )
+
+    const querySnapshot = await getDocs(q)
+    return querySnapshot.docs.map(doc => {
+      const data = doc.data()
+      return {
+        id: doc.id,
+        title: data.title,
+        content: data.content,
+        author: data.author,
+        authorId: data.authorId,
+        partnerId: data.partnerId,
+        status: data.status,
+        viewCount: data.viewCount || 0,
+        createdAt: data.createdAt?.toDate?.() || new Date(),
+        updatedAt: data.updatedAt?.toDate?.() || new Date(),
+        publishedAt: data.publishedAt?.toDate?.() || null
+      } as Notice
+    })
+  } catch (error) {
+    console.error('파트너 공지사항 가져오기 중 오류:', error)
+    return []
   }
 }
 

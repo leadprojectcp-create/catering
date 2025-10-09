@@ -1,0 +1,83 @@
+.container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding-top: 60px;
+}
+
+.title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #333;
+  padding: 20px 16px;
+  margin: 0;
+}
+
+.loading,
+.empty {
+  text-align: center;
+  padding: 60px 20px;
+  color: #666;
+}
+
+.empty p {
+  margin: 8px 0;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.roomList {
+  display: flex;
+  flex-direction: column;
+}
+
+.roomItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  border-bottom: 1px solid #f0f0f0;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.roomItem:hover {
+  background-color: #f9f9f9;
+}
+
+.roomInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.storeName {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 6px 0;
+}
+
+.lastMessage {
+  font-size: 14px;
+  color: #666;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.time {
+  font-size: 12px;
+  color: #999;
+  flex-shrink: 0;
+  margin-left: 12px;
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding-top: 60px;
+  }
+
+  .title {
+    padding: 16px;
+  }
+}

@@ -6,6 +6,8 @@ import Image from 'next/image'
 import { doc, getDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { toggleStoreLike, checkUserLiked } from '@/lib/services/storeService'
+import { getPublishedNoticesByPartner, Notice } from '@/lib/services/noticeService'
+import { createOrGetChatRoom } from '@/lib/services/chatService'
 import { useAuth } from '@/contexts/AuthContext'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
@@ -32,6 +34,7 @@ interface Store {
   }
   closedDays?: string[]
   openingHours?: string
+  partnerId?: string
 }
 
 interface StoreDetailProps {
@@ -46,6 +49,8 @@ export default function StoreDetail({ storeId }: StoreDetailProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [isLiked, setIsLiked] = useState(false)
   const [likeCount, setLikeCount] = useState(0)
+  const [notices, setNotices] = useState<Notice[]>([])
+  const [noticesLoading, setNoticesLoading] = useState(true)
 
   useEffect(() => {
     const fetchStore = async () => {
@@ -73,6 +78,20 @@ export default function StoreDetail({ storeId }: StoreDetailProps) {
     if (user) {
       checkUserLiked(user.uid, storeId).then(setIsLiked)
     }
+
+    // 공지사항 로드
+    const fetchNotices = async () => {
+      try {
+        const partnerNotices = await getPublishedNoticesByPartner(storeId)
+        setNotices(partnerNotices)
+      } catch (error) {
+        console.error('공지사항 로드 실패:', error)
+      } finally {
+        setNoticesLoading(false)
+      }
+    }
+
+    fetchNotices()
   }, [storeId, user])
 
   if (loading) {
@@ -132,6 +151,32 @@ export default function StoreDetail({ storeId }: StoreDetailProps) {
       setIsLiked(isLiked)
       setLikeCount(prev => isLiked ? prev + 1 : prev - 1)
       alert('좋아요 처리에 실패했습니다.')
+    }
+  }
+
+  const handleChatClick = async () => {
+    if (!user) {
+      alert('로그인이 필요합니다.')
+      router.push('/login')
+      return
+    }
+
+    if (!store?.partnerId) {
+      alert('가게 정보를 불러오는 중입니다.')
+      return
+    }
+
+    try {
+      const roomId = await createOrGetChatRoom(
+        user.uid,
+        storeId,
+        store.storeName,
+        store.partnerId
+      )
+      router.push(`/chat/${roomId}`)
+    } catch (error) {
+      console.error('채팅방 생성 실패:', error)
+      alert('채팅방 생성에 실패했습니다.')
     }
   }
 
@@ -222,7 +267,7 @@ export default function StoreDetail({ storeId }: StoreDetailProps) {
               </div>
             </div>
             <div className={styles.actionButtons}>
-              <button className={styles.chatButton}>
+              <button className={styles.chatButton} onClick={handleChatClick}>
                 <Image src="/icons/chat.png" alt="채팅" width={20} height={20} />
                 <span>채팅</span>
               </button>
@@ -262,7 +307,26 @@ export default function StoreDetail({ storeId }: StoreDetailProps) {
         </div>
       </div>
 
-      <div className={styles.divider}></div>
+      {/* 공지사항 섹션 */}
+      {!noticesLoading && notices.length > 0 && (
+        <>
+          <div className={styles.noticeSection}>
+            <div className={styles.sectionTitle}>사장님 공지사항</div>
+            <div className={styles.noticeList}>
+              {notices.map((notice) => (
+                <div key={notice.id} className={styles.noticeItem}>
+                  <p className={styles.noticeContent}>{notice.content}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className={styles.divider}></div>
+        </>
+      )}
+
+      {!noticesLoading && notices.length === 0 && (
+        <div className={styles.divider}></div>
+      )}
 
       {/* 상품 목록 */}
       <ProductList storeId={storeId} />
