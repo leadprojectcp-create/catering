@@ -1,0 +1,151 @@
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 20px;
+  padding-top: 100px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.backButton {
+  color: #6b7280;
+  cursor: pointer;
+  font-size: 14px;
+  transition: color 0.2s;
+}
+
+.backButton:hover {
+  color: #374151;
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+}
+
+.editButton {
+  padding: 8px 16px;
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.editButton:hover {
+  background-color: #2563eb;
+}
+
+.content {
+  background: white;
+  border-radius: 12px;
+  padding: 40px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.badgeDraft {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.badgePublished {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.badgeArchived {
+  background-color: #e5e7eb;
+  color: #374151;
+}
+
+.title {
+  font-size: 36px;
+  font-weight: 800;
+  color: #111827;
+  margin-bottom: 12px;
+  line-height: 1.2;
+}
+
+.info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #6b7280;
+  font-size: 14px;
+  margin-bottom: 20px;
+}
+
+.divider {
+  width: 100%;
+  height: 1px;
+  background-color: #e5e7eb;
+  margin: 30px 0;
+}
+
+.articleContent {
+  font-size: 16px;
+  line-height: 1.8;
+  color: #374151;
+}
+
+.articleContent h1,
+.articleContent h2,
+.articleContent h3 {
+  margin-top: 30px;
+  margin-bottom: 16px;
+  color: #111827;
+}
+
+.articleContent p {
+  margin-bottom: 16px;
+}
+
+.articleContent ul,
+.articleContent ol {
+  margin-bottom: 16px;
+  padding-left: 24px;
+}
+
+.articleContent li {
+  margin-bottom: 8px;
+}
+
+.articleContent img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin: 20px 0;
+}
+
+@media (max-width: 768px) {
+  .content {
+    padding: 20px;
+  }
+
+  .title {
+    font-size: 28px;
+  }
+}

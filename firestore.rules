@@ -1,0 +1,145 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 사용자 인증 확인 함수
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // 본인 확인 함수
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    // 관리자 확인 함수 (level 10)
+    function isAdmin() {
+      return isSignedIn() &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.level == 10;
+    }
+
+    // 파트너 확인 함수 (type이 partner)
+    function isPartner() {
+      return isSignedIn() &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.type == 'partner';
+    }
+
+    // Users collection
+    match /users/{userId} {
+      // 본인만 읽기/쓰기 가능
+      allow read, write: if isSignedIn() && isOwner(userId);
+
+      // 파트너 목록 조회는 모두 가능 (StoreList에서 사용)
+      allow read: if true;
+    }
+
+    // Products collection (상품)
+    match /products/{productId} {
+      // 모든 사용자 읽기 가능
+      allow read: if true;
+
+      // 로그인한 사용자만 상품 생성 가능
+      allow create: if isSignedIn();
+
+      // 본인 상품만 수정/삭제 가능
+      allow update, delete: if isSignedIn() &&
+        resource.data.partnerId == request.auth.uid;
+    }
+
+    // Stores collection (가게 정보)
+    match /stores/{storeId} {
+      // 모든 사용자 읽기 가능
+      allow read: if true;
+
+      // 본인 가게만 생성/수정/삭제 가능 (storeId는 userId와 동일)
+      allow create, update, delete: if isSignedIn() && isOwner(storeId);
+
+      // 조회수 업데이트는 모든 사용자 가능
+      allow update: if isSignedIn() &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['viewCount', 'lastViewedAt']);
+
+      // likeCount 업데이트는 로그인한 사용자만 가능
+      allow update: if isSignedIn() &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likeCount']);
+    }
+
+    // Likes collection (좋아요)
+    match /likes/{likeId} {
+      // 모든 사용자 읽기 가능
+      allow read: if true;
+
+      // 로그인한 사용자만 자신의 좋아요 생성 가능
+      allow create: if isSignedIn() &&
+        request.resource.data.userId == request.auth.uid;
+
+      // 본인의 좋아요만 삭제 가능
+      allow delete: if isSignedIn() &&
+        resource.data.userId == request.auth.uid;
+
+      // 수정 불가
+      allow update: if false;
+    }
+
+    // Shopping Cart collection (장바구니)
+    match /shoppingCart/{cartId} {
+      // 모든 사용자 읽기/쓰기 가능 (임시로 설정)
+      allow read, write: if true;
+    }
+
+    // Activity logs - 레벨 10 관리자만 읽기 가능
+    match /activity_logs/{logId} {
+      // 관리자만 읽기 가능
+      allow read: if isAdmin();
+
+      // 로그인한 사용자는 로그 작성 가능
+      allow create: if isSignedIn();
+
+      // 수정/삭제 불가
+      allow update, delete: if false;
+    }
+
+    // Magazines collection - 매거진
+    match /magazines/{magazineId} {
+      // 모든 사용자 읽기 가능 (게시된 매거진은 공개)
+      allow read: if true;
+
+      // 관리자(level 10)만 생성/수정/삭제 가능
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Orders collection - 주문
+    match /orders/{orderId} {
+      // 개별 문서 읽기: 로그인한 사용자만 자신의 주문 또는 자신의 스토어 주문 읽기 가능
+      allow get: if request.auth != null &&
+        (resource.data.userId == request.auth.uid ||
+         resource.data.storeId == request.auth.uid);
+
+      // 쿼리 읽기: 로그인한 사용자의 주문 또는 스토어 주문 쿼리 가능
+      allow list: if request.auth != null;
+
+      // 로그인한 사용자만 주문 생성 가능 (자신의 userId로만 생성)
+      allow create: if request.auth != null &&
+        request.resource.data.userId == request.auth.uid;
+
+      // 주문자 본인 또는 해당 스토어 파트너만 주문 상태 업데이트 가능
+      allow update: if request.auth != null &&
+        (resource.data.userId == request.auth.uid ||
+         resource.data.storeId == request.auth.uid);
+
+      // 주문자 본인만 삭제 가능
+      allow delete: if request.auth != null &&
+        resource.data.userId == request.auth.uid;
+    }
+
+    // Notices collection - 공지사항
+    match /notices/{noticeId} {
+      // 모든 사용자 읽기 가능 (게시된 공지사항은 공개)
+      allow read: if true;
+
+      // 파트너(type이 partner)만 생성/수정/삭제 가능
+      allow create, update, delete: if isPartner();
+    }
+  }
+}
