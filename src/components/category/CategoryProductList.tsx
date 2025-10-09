@@ -84,46 +84,28 @@ export default function CategoryProductList({ categoryName }: CategoryProductLis
 
           setProducts(productData)
         } else {
-          // 일반 카테고리의 경우: stores에서 해당 카테고리를 가진 가게를 먼저 찾고, 그 가게들의 상품을 가져옴
-          const storesQuery = query(
-            collection(db, 'stores'),
-            where('categories', 'array-contains', categoryName),
-            where('status', '==', 'active')
+          // 일반 카테고리의 경우: products의 category 필드로 직접 조회
+          const productsQuery = query(
+            collection(db, 'products'),
+            where('category', '==', categoryName)
           )
-          const storesSnapshot = await getDocs(storesQuery)
-          console.log('해당 카테고리 가게 수:', storesSnapshot.docs.length)
+          const productsSnapshot = await getDocs(productsQuery)
+          console.log('해당 카테고리 전체 상품 수:', productsSnapshot.docs.length)
 
-          // 가게 ID들을 수집
-          const storeIds = storesSnapshot.docs.map(doc => doc.id)
-          console.log('가게 IDs:', storeIds)
-
-          if (storeIds.length === 0) {
-            setProducts([])
-            return
-          }
-
-          // 각 가게의 상품들을 가져옴
-          const allProducts: Product[] = []
-
-          for (const storeId of storeIds) {
-            const productsQuery = query(
-              collection(db, 'products'),
-              where('storeId', '==', storeId),
-              where('status', '==', 'active')
-            )
-            const productsSnapshot = await getDocs(productsQuery)
-
-            productsSnapshot.docs.forEach(doc => {
+          // status가 'active'인 것만 필터링
+          const productData = productsSnapshot.docs
+            .map(doc => {
               const data = doc.data()
-              allProducts.push({
+              console.log('상품 데이터:', data)
+              return {
                 id: doc.id,
                 ...data
-              } as Product)
+              } as Product
             })
-          }
+            .filter(product => product.status === 'active')
 
-          console.log('전체 상품 수:', allProducts.length)
-          setProducts(allProducts)
+          console.log('active 상품 수:', productData.length)
+          setProducts(productData)
         }
       } catch (error) {
         console.error('상품 데이터 가져오기 실패:', error)

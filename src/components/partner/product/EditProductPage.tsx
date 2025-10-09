@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { getProduct, updateProduct } from '@/lib/services/productService'
 import CustomEditor from '@/components/common/CustomEditor'
 import styles from './AddProductPage.module.css'
@@ -17,10 +18,26 @@ interface ProductOption {
   values: OptionValue[]
 }
 
+interface CategoryOption {
+  id: string
+  name: string
+  icon: string
+}
+
+const categories: CategoryOption[] = [
+  { id: 'dessert', name: '디저트', icon: '/icons/dessert_box.png' },
+  { id: 'sandwich', name: '샌드위치', icon: '/icons/sandwich_bakery.png' },
+  { id: 'salad', name: '샐러드/과일', icon: '/icons/salad_fruit.png' },
+  { id: 'kimbap', name: '김밥', icon: '/icons/kimbap_korean.png' },
+  { id: 'lunchbox', name: '도시락', icon: '/icons/dosilak.png' },
+  { id: 'traditional', name: '떡/전통한과', icon: '/icons/ricecake_traditional.png' }
+]
+
 interface ProductFormData {
   name: string
   images: string[]
   price: number
+  category: string
   options: ProductOption[]
   description: string
   minOrderQuantity: number
@@ -53,6 +70,7 @@ export default function EditProductPage({ productId }: { productId: string }) {
     name: '',
     images: [],
     price: 0,
+    category: '',
     options: [{ groupName: '', values: [{ name: '', price: 0 }] }],
     description: '',
     minOrderQuantity: 10,
@@ -231,6 +249,7 @@ export default function EditProductPage({ productId }: { productId: string }) {
             name: product.name || '',
             images: product.images || [],
             price: product.price || 0,
+            category: product.category || '',
             options: product.options || [{ groupName: '', values: [{ name: '', price: 0 }] }],
             description: product.description || '',
             minOrderQuantity: product.minOrderQuantity || 10,
@@ -550,10 +569,98 @@ export default function EditProductPage({ productId }: { productId: string }) {
           </div>
         </div>
 
-        {/* 상품 판매가 */}
+        {/* 카테고리 */}
         <div className={styles.section}>
           <div className={styles.titleWithNumber}>
             <span className={styles.numberCircle}>3</span>
+            <span className={styles.sectionTitle}>카테고리</span>
+          </div>
+          <div className={styles.categoryGrid}>
+            <div className={styles.categoryRowTop}>
+              {categories.slice(0, 3).map((category) => {
+                const isSelected = formData.category === category.name
+
+                return (
+                  <button
+                    key={category.id}
+                    type="button"
+                    className={`${styles.categoryCard} ${isSelected ? styles.selected : ''}`}
+                    onClick={() => {
+                      if (formData.category === category.name) {
+                        // 선택 해제
+                        setFormData({
+                          ...formData,
+                          category: ''
+                        })
+                      } else {
+                        // 선택
+                        setFormData({
+                          ...formData,
+                          category: category.name
+                        })
+                      }
+                    }}
+                  >
+                    <div className={styles.categoryIcon}>
+                      <Image
+                        src={category.icon}
+                        alt={category.name}
+                        width={40}
+                        height={40}
+                        quality={100}
+                      />
+                    </div>
+                    <div className={styles.categoryName}>{category.name}</div>
+                  </button>
+                )
+              })}
+            </div>
+            <div className={styles.categoryRowBottom}>
+              {categories.slice(3, 6).map((category) => {
+                const isSelected = formData.category === category.name
+
+                return (
+                  <button
+                    key={category.id}
+                    type="button"
+                    className={`${styles.categoryCard} ${isSelected ? styles.selected : ''}`}
+                    onClick={() => {
+                      if (formData.category === category.name) {
+                        // 선택 해제
+                        setFormData({
+                          ...formData,
+                          category: ''
+                        })
+                      } else {
+                        // 선택
+                        setFormData({
+                          ...formData,
+                          category: category.name
+                        })
+                      }
+                    }}
+                  >
+                    <div className={styles.categoryIcon}>
+                      <Image
+                        src={category.icon}
+                        alt={category.name}
+                        width={40}
+                        height={40}
+                        quality={100}
+                      />
+                    </div>
+                    <div className={styles.categoryName}>{category.name}</div>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* 상품 판매가 */}
+        <div className={styles.section}>
+          <div className={styles.titleWithNumber}>
+            <span className={styles.numberCircle}>4</span>
             <span className={styles.sectionTitle}>상품 판매가</span>
           </div>
           <div className={styles.priceInputRow}>
@@ -741,7 +848,7 @@ export default function EditProductPage({ productId }: { productId: string }) {
         {/* 상품 수량 설정 */}
         <div className={styles.section}>
           <div className={styles.titleWithNumber}>
-            <span className={styles.numberCircle}>4</span>
+            <span className={styles.numberCircle}>5</span>
             <span className={styles.sectionTitle}>상품 수량 설정</span>
           </div>
           <div className={styles.quantityGrid}>
@@ -784,7 +891,7 @@ export default function EditProductPage({ productId }: { productId: string }) {
         {/* 상품 옵션 설정 */}
         <div className={styles.section}>
           <div className={styles.titleWithNumber}>
-            <span className={styles.numberCircle}>5</span>
+            <span className={styles.numberCircle}>6</span>
             <span className={styles.sectionTitle}>상품 옵션 설정</span>
           </div>
           {formData.options.map((option, groupIndex) => (
@@ -875,7 +982,7 @@ export default function EditProductPage({ productId }: { productId: string }) {
         {/* 상품설명 작성 */}
         <div className={styles.section}>
           <div className={styles.titleWithNumber}>
-            <span className={styles.numberCircle}>6</span>
+            <span className={styles.numberCircle}>7</span>
             <span className={styles.sectionTitle}>상품설명 작성</span>
           </div>
           <CustomEditor
@@ -890,7 +997,7 @@ export default function EditProductPage({ productId }: { productId: string }) {
         {/* 원산지 표기 */}
         <div className={styles.section}>
           <div className={styles.titleWithNumber}>
-            <span className={styles.numberCircle}>7</span>
+            <span className={styles.numberCircle}>8</span>
             <span className={styles.sectionTitle}>원산지 표기</span>
           </div>
           <div className={styles.originContainer}>
@@ -971,7 +1078,7 @@ export default function EditProductPage({ productId }: { productId: string }) {
         {/* 상품 배송 설정 */}
         <div className={styles.section}>
           <div className={styles.titleWithNumber}>
-            <span className={styles.numberCircle}>8</span>
+            <span className={styles.numberCircle}>9</span>
             <span className={styles.sectionTitle}>상품 배송 설정</span>
           </div>
           <div className={styles.checkboxGroup}>
@@ -1041,7 +1148,7 @@ export default function EditProductPage({ productId }: { productId: string }) {
         {/* 상품주문 추가설정 */}
         <div className={styles.section}>
           <div className={styles.titleWithNumber}>
-            <span className={styles.numberCircle}>9</span>
+            <span className={styles.numberCircle}>10</span>
             <span className={styles.sectionTitle}>상품주문 추가설정</span>
           </div>
           <div className={styles.checkboxGroup}>

@@ -510,6 +510,73 @@
   background: #E0EFFF;
 }
 
+/* 카테고리 스타일 */
+.categoryGrid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 6px;
+  margin-bottom: 20px;
+}
+
+.categoryRowTop,
+.categoryRowBottom {
+  display: contents;
+}
+
+.categoryCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.categoryCard:hover {
+  opacity: 0.8;
+}
+
+.categoryCard.selected .categoryIcon {
+  border-radius: 20px;
+  border: 2px solid #F79B2C;
+  background: #F9F9F9;
+}
+
+.categoryIcon {
+  width: 60px;
+  height: 60px;
+  flex-shrink: 0;
+  border-radius: 20px;
+  background: #F9F9F9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.categoryName {
+  font-size: 12px;
+  font-weight: 500;
+  text-align: center;
+  color: #374151;
+}
+
+.representativeLabel {
+  position: absolute;
+  top: -5px;
+  left: 5px;
+  background: #F79B2C;
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 8px;
+  z-index: 10;
+}
+
 .addButton {
   background: #3b82f6;
   color: white;
@@ -747,7 +814,7 @@
 
 
   .categoryGrid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(4, 1fr);
   }
 
   .quantityGrid {

@@ -28,26 +28,9 @@ declare global {
   }
 }
 
-interface CategoryOption {
-  id: string
-  name: string
-  icon: string
-}
-
-const categories: CategoryOption[] = [
-  { id: 'dessert', name: '디저트', icon: '/icons/dessert_box.png' },
-  { id: 'sandwich', name: '샌드위치', icon: '/icons/sandwich_bakery.png' },
-  { id: 'salad', name: '샐러드/과일', icon: '/icons/salad_fruit.png' },
-  { id: 'kimbap', name: '김밥', icon: '/icons/kimbap_korean.png' },
-  { id: 'lunchbox', name: '도시락', icon: '/icons/kimbap_korean.png' },
-  { id: 'traditional', name: '떡/전통한과', icon: '/icons/ricecake_traditional.png' }
-]
-
 interface StoreInfo {
   partnerId: string
   storeName: string
-  categories: string[]
-  primaryCategory: string
   businessRegistration: string
   businessRegistrationImage: string
   businessOwner: string
@@ -505,107 +488,6 @@ export default function StoreManagement() {
                 className={styles.editInput}
                 placeholder="전화번호를 입력해주세요"
               />
-            </div>
-          </div>
-
-          {/* 카테고리 */}
-          <div className={styles.infoSection}>
-            <h2 className={styles.sectionTitle}>카테고리</h2>
-            <div className={styles.categoryGrid}>
-              <div className={styles.categoryRowTop}>
-                {categories.slice(0, 3).map((category) => {
-                  const currentCategories = storeInfo.categories || []
-                  const isSelected = currentCategories.includes(category.name)
-                  const isFirstSelection = currentCategories[0] === category.name
-
-                  return (
-                    <button
-                      key={category.id}
-                      type="button"
-                      className={`${styles.categoryCard} ${isSelected ? styles.selected : ''}`}
-                      onClick={() => {
-                        let newCategories
-                        if (currentCategories.includes(category.name)) {
-                          // 선택 해제
-                          newCategories = currentCategories.filter(c => c !== category.name)
-                        } else if (currentCategories.length < 2) {
-                          // 선택 (최대 2개)
-                          newCategories = [...currentCategories, category.name]
-                        } else {
-                          // 이미 2개가 선택되어 있으면 아무것도 하지 않음
-                          return
-                        }
-                        setStoreInfo({
-                          ...storeInfo,
-                          categories: newCategories,
-                          primaryCategory: newCategories[0] || storeInfo.primaryCategory
-                        })
-                        setHasChanges(true)
-                      }}
-                    >
-                      {isFirstSelection && (
-                        <div className={styles.representativeLabel}>대표</div>
-                      )}
-                      <div className={styles.categoryIcon}>
-                        <Image
-                          src={category.icon}
-                          alt={category.name}
-                          width={32}
-                          height={32}
-                        />
-                      </div>
-                      <div className={styles.categoryName}>{category.name}</div>
-                    </button>
-                  )
-                })}
-              </div>
-              <div className={styles.categoryRowBottom}>
-                {categories.slice(3, 6).map((category) => {
-                  const currentCategories = storeInfo.categories || []
-                  const isSelected = currentCategories.includes(category.name)
-                  const isFirstSelection = currentCategories[0] === category.name
-
-                  return (
-                    <button
-                      key={category.id}
-                      type="button"
-                      className={`${styles.categoryCard} ${isSelected ? styles.selected : ''}`}
-                      onClick={() => {
-                        let newCategories
-                        if (currentCategories.includes(category.name)) {
-                          // 선택 해제
-                          newCategories = currentCategories.filter(c => c !== category.name)
-                        } else if (currentCategories.length < 2) {
-                          // 선택 (최대 2개)
-                          newCategories = [...currentCategories, category.name]
-                        } else {
-                          // 이미 2개가 선택되어 있으면 아무것도 하지 않음
-                          return
-                        }
-                        setStoreInfo({
-                          ...storeInfo,
-                          categories: newCategories,
-                          primaryCategory: newCategories[0] || storeInfo.primaryCategory
-                        })
-                        setHasChanges(true)
-                      }}
-                    >
-                      {isFirstSelection && (
-                        <div className={styles.representativeLabel}>대표</div>
-                      )}
-                      <div className={styles.categoryIcon}>
-                        <Image
-                          src={category.icon}
-                          alt={category.name}
-                          width={32}
-                          height={32}
-                        />
-                      </div>
-                      <div className={styles.categoryName}>{category.name}</div>
-                    </button>
-                  )
-                })}
-              </div>
             </div>
           </div>
 
