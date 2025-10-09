@@ -1,11 +1,12 @@
 import PartnerHeader from '@/components/partner/PartnerHeader'
 import NoticeViewPage from '@/components/partner/notice/NoticeViewPage'
 
-export default function NoticeViewPageRoute({ params }: { params: { id: string } }) {
+export default async function NoticeViewPageRoute({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   return (
     <>
       <PartnerHeader />
-      <NoticeViewPage noticeId={params.id} />
+      <NoticeViewPage noticeId={id} />
     </>
   )
 }
