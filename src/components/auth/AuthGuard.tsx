@@ -29,7 +29,16 @@ export default function AuthGuard({
       router.push(redirectTo || '/login')
     } else if (!requireAuth && user && userData?.registrationComplete) {
       // 로그인하면 안 되는 페이지인데 완전히 가입된 사용자인 경우
-      router.push(redirectTo || '/')
+      // 사용자 타입에 맞는 페이지로 리다이렉트
+      if (redirectTo) {
+        router.push(redirectTo)
+      } else if (userData.type === 'partner') {
+        router.push('/partner/dashboard')
+      } else if (userData.type === 'admin') {
+        router.push('/admin/dashboard')
+      } else {
+        router.push('/')
+      }
     } else if (requireAuth && requireCompleteRegistration && user && userData && !userData.registrationComplete) {
       // 로그인되었지만 가입이 완료되지 않은 경우 회원 유형 선택으로 이동
       router.push('/signup/choose-type')

@@ -46,16 +46,20 @@ interface Order {
 
 export default function OrdersPage() {
   const router = useRouter()
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const [loading, setLoading] = useState(true)
   const [orders, setOrders] = useState<Order[]>([])
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
-  const [filterStatus, setFilterStatus] = useState<string>('all')
+  const [filterStatus, setFilterStatus] = useState<'all' | 'pending' | 'cancelled_rejected' | 'preparing' | 'shipping' | 'delivered'>('all')
 
   useEffect(() => {
     const loadOrders = async () => {
+      // 인증 로딩 중이면 대기
+      if (authLoading) return
+
+      // 인증 완료 후 유저가 없으면 로그인 페이지로
       if (!user) {
-        router.push('/auth/login')
+        router.push('/login')
         return
       }
 
@@ -89,7 +93,7 @@ export default function OrdersPage() {
     }
 
     loadOrders()
-  }, [user, router])
+  }, [user, authLoading, router])
 
   const getStatusText = (orderStatus: string, paymentStatus: string) => {
     // 결제 상태 우선 체크
@@ -127,14 +131,11 @@ export default function OrdersPage() {
 
   const filteredOrders = orders.filter((order) => {
     if (filterStatus === 'all') return true
-    if (filterStatus === 'unpaid') return order.paymentStatus === 'unpaid'
-    if (filterStatus === 'paid') return order.paymentStatus === 'paid'
-    if (filterStatus === 'completed') return order.orderStatus === 'delivered'
-    if (filterStatus === 'cancelled') return order.orderStatus === 'cancelled'
-    return true
+    if (filterStatus === 'cancelled_rejected') return order.orderStatus === 'cancelled' || order.orderStatus === 'rejected'
+    return order.orderStatus === filterStatus
   })
 
-  if (loading) {
+  if (authLoading || loading) {
     return <Loading />
   }
 
@@ -149,31 +150,37 @@ export default function OrdersPage() {
             className={filterStatus === 'all' ? styles.filterActive : styles.filterButton}
             onClick={() => setFilterStatus('all')}
           >
-            전체
+            전체 ({orders.length})
           </button>
           <button
-            className={filterStatus === 'unpaid' ? styles.filterActive : styles.filterButton}
-            onClick={() => setFilterStatus('unpaid')}
+            className={filterStatus === 'pending' ? styles.filterActive : styles.filterButton}
+            onClick={() => setFilterStatus('pending')}
           >
-            결제 대기
+            신규 주문 ({orders.filter(o => o.orderStatus === 'pending').length})
           </button>
           <button
-            className={filterStatus === 'paid' ? styles.filterActive : styles.filterButton}
-            onClick={() => setFilterStatus('paid')}
+            className={filterStatus === 'cancelled_rejected' ? styles.filterActive : styles.filterButton}
+            onClick={() => setFilterStatus('cancelled_rejected')}
           >
-            결제 완료
+            주문 취소 ({orders.filter(o => o.orderStatus === 'cancelled' || o.orderStatus === 'rejected').length})
           </button>
           <button
-            className={filterStatus === 'completed' ? styles.filterActive : styles.filterButton}
-            onClick={() => setFilterStatus('completed')}
+            className={filterStatus === 'preparing' ? styles.filterActive : styles.filterButton}
+            onClick={() => setFilterStatus('preparing')}
           >
-            배송 완료
+            준비중 ({orders.filter(o => o.orderStatus === 'preparing').length})
           </button>
           <button
-            className={filterStatus === 'cancelled' ? styles.filterActive : styles.filterButton}
-            onClick={() => setFilterStatus('cancelled')}
+            className={filterStatus === 'shipping' ? styles.filterActive : styles.filterButton}
+            onClick={() => setFilterStatus('shipping')}
           >
-            취소
+            배송중 ({orders.filter(o => o.orderStatus === 'shipping').length})
+          </button>
+          <button
+            className={filterStatus === 'delivered' ? styles.filterActive : styles.filterButton}
+            onClick={() => setFilterStatus('delivered')}
+          >
+            배송완료 ({orders.filter(o => o.orderStatus === 'delivered').length})
           </button>
         </div>
 

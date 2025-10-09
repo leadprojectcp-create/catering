@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { signInWithEmailAndPassword } from 'firebase/auth'
-import { auth } from '@/lib/firebase'
+import { doc, getDoc } from 'firebase/firestore'
+import { auth, db } from '@/lib/firebase'
 import { handleRedirectResult, signInWithGoogle, signInWithKakao } from '@/lib/auth'
 import AuthGuard from './AuthGuard'
 import styles from './LoginPage.module.css'
@@ -28,7 +29,16 @@ export default function LoginPage() {
         if (result) {
           if (result.success) {
             if ('isExistingUser' in result && result.isExistingUser && 'registrationComplete' in result && result.registrationComplete) {
-              router.push('/')
+              // 사용자 타입 확인
+              const user = auth.currentUser
+              if (user) {
+                const userDoc = await getDoc(doc(db, 'users', user.uid))
+                if (userDoc.exists()) {
+                  const userData = userDoc.data()
+
+                  // AuthGuard가 자동으로 타입에 맞는 페이지로 리다이렉트함
+                }
+              }
             } else {
               router.push('/signup/choose-type')
             }
@@ -57,9 +67,17 @@ export default function LoginPage() {
     setIsLoading(true)
 
     try {
-      await signInWithEmailAndPassword(auth, formData.email, formData.password)
-      alert('로그인 성공!')
-      router.push('/')
+      const userCredential = await signInWithEmailAndPassword(auth, formData.email, formData.password)
+      const user = userCredential.user
+
+      // Firestore에서 사용자 타입 확인
+      const userDoc = await getDoc(doc(db, 'users', user.uid))
+      if (userDoc.exists()) {
+        const userData = userDoc.data()
+
+        // AuthGuard가 자동으로 타입에 맞는 페이지로 리다이렉트함
+        // 여기서는 아무것도 하지 않음
+      }
     } catch {
       setError('이메일 또는 비밀번호가 올바르지 않습니다.')
     } finally {
@@ -86,7 +104,16 @@ export default function LoginPage() {
         if ('isRedirecting' in result && result.isRedirecting) {
           return
         } else if ('isExistingUser' in result && result.isExistingUser && 'registrationComplete' in result && result.registrationComplete) {
-          router.push('/')
+          // 사용자 타입 확인
+          const user = auth.currentUser
+          if (user) {
+            const userDoc = await getDoc(doc(db, 'users', user.uid))
+            if (userDoc.exists()) {
+              const userData = userDoc.data()
+
+              // AuthGuard가 자동으로 타입에 맞는 페이지로 리다이렉트함
+            }
+          }
         } else if ('isExistingUser' in result && result.isExistingUser && 'registrationComplete' in result && !result.registrationComplete) {
           // 기존 소셜 사용자지만 가입이 완료되지 않음 - 회원 유형 선택부터 시작
           router.push('/signup/choose-type')
