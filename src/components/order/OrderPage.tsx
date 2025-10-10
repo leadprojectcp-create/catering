@@ -283,6 +283,32 @@ export default function OrderPage({ productId, storeId }: OrderPageProps) {
       return
     }
 
+    // 각 아이템의 옵션별 가격 정보를 포함하여 주문 데이터 생성
+    const itemsWithPrices = cartItems.map(item => {
+      const optionsWithPrices: { [key: string]: { name: string; price: number } } = {}
+
+      Object.entries(item.options).forEach(([groupName, optionName]) => {
+        product.options?.forEach(group => {
+          if (group.groupName === groupName) {
+            const selected = group.values.find(v => v.name === optionName)
+            if (selected) {
+              optionsWithPrices[groupName] = {
+                name: selected.name,
+                price: selected.price
+              }
+            }
+          }
+        })
+      })
+
+      return {
+        options: item.options,
+        optionsWithPrices,
+        quantity: item.quantity,
+        itemPrice: calculateItemPrice(item.options, item.quantity)
+      }
+    })
+
     // 주문 데이터를 세션 스토리지에 저장
     const orderData = {
       storeId: product.storeId,
@@ -291,7 +317,8 @@ export default function OrderPage({ productId, storeId }: OrderPageProps) {
       productName: product.name,
       productPrice: product.discountedPrice || product.price,
       productImage: product.images?.[0] || '',
-      items: cartItems
+      items: itemsWithPrices,
+      totalPrice: calculateTotalPrice()
     }
 
     sessionStorage.setItem('orderData', JSON.stringify(orderData))

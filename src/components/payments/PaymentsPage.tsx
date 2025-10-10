@@ -240,8 +240,10 @@ export default function PaymentsPage() {
         productId: orderData.productId,
         productName: orderData.productName,
         options: item.options,
+        optionsWithPrices: item.optionsWithPrices || {},
         quantity: item.quantity,
-        price: orderData.productPrice
+        price: orderData.productPrice,
+        itemPrice: item.itemPrice || (orderData.productPrice * item.quantity)
       }))
 
       const order = {
@@ -250,7 +252,7 @@ export default function PaymentsPage() {
         storeName: orderData.storeName,
         items: orderItems,
         totalPrice: totalPrice,
-        totalProductPrice: orderData.productPrice * orderItems.reduce((sum, item) => sum + item.quantity, 0),
+        totalProductPrice: totalProductPrice,
         deliveryFee: deliveryFee,
         orderStatus: 'pending' as const,
         paymentStatus: 'unpaid' as const,
@@ -438,7 +440,10 @@ export default function PaymentsPage() {
   // 퀵업체 배송만 25,000원 추가
   const deliveryFee = deliveryMethod === '퀵업체 배송' ? 25000 : 0
   const totalProductPrice = orderData
-    ? orderData.items.reduce((sum, item) => sum + (orderData.productPrice * item.quantity), 0)
+    ? orderData.items.reduce((sum, item) => {
+        // itemPrice가 있으면 그것을 사용, 없으면 기본 가격 * 수량
+        return sum + (item.itemPrice || (orderData.productPrice * item.quantity))
+      }, 0)
     : 0
   const totalPrice = totalProductPrice + deliveryFee
   const totalQuantity = orderData
