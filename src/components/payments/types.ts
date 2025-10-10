@@ -1,7 +1,9 @@
 export interface OrderItem {
   options: { [key: string]: string }
+  optionsWithPrices?: { [key: string]: { name: string; price: number } }
   quantity: number
-  price: number
+  price?: number
+  itemPrice?: number
 }
 
 export interface OrderData {
@@ -13,6 +15,7 @@ export interface OrderData {
   productImage: string
   items: OrderItem[]
   deliveryMethods?: string[]
+  totalPrice?: number
 }
 
 export interface DeliveryAddress {
