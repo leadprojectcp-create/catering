@@ -107,18 +107,20 @@ export default function PartnerDashboard() {
           where('storeId', '==', storeId)
         ))
 
-        // 24시간 이내 주문 필터링
+        // 24시간 이내 주문 필터링 (paymentStatus가 paid인 것만)
         const last24HoursTime = last24HoursTimestamp.toMillis()
         todayOrdersSnapshot = {
           size: allOrdersSnapshot.docs.filter(doc => {
-            const createdAt = doc.data().createdAt
+            const data = doc.data()
+            const createdAt = data.createdAt
             const createdTime = createdAt?.toMillis ? createdAt.toMillis() : 0
-            return createdTime >= last24HoursTime
+            return createdTime >= last24HoursTime && data.paymentStatus === 'paid'
           }).length,
           docs: allOrdersSnapshot.docs.filter(doc => {
-            const createdAt = doc.data().createdAt
+            const data = doc.data()
+            const createdAt = data.createdAt
             const createdTime = createdAt?.toMillis ? createdAt.toMillis() : 0
-            return createdTime >= last24HoursTime
+            return createdTime >= last24HoursTime && data.paymentStatus === 'paid'
           })
         }
         console.log('24시간 이내 주문:', todayOrdersSnapshot.size)
@@ -140,12 +142,22 @@ export default function PartnerDashboard() {
       }
 
       try {
-        // 신규 주문 (orderStatus가 pending인 것만)
-        newOrdersSnapshot = await getDocs(query(
+        // 신규 주문 (orderStatus가 pending이고 paymentStatus가 paid인 것만)
+        const allOrdersSnapshot = await getDocs(query(
           collection(db, 'orders'),
-          where('storeId', '==', storeId),
-          where('orderStatus', '==', 'pending')
+          where('storeId', '==', storeId)
         ))
+
+        newOrdersSnapshot = {
+          size: allOrdersSnapshot.docs.filter(doc => {
+            const data = doc.data()
+            return data.orderStatus === 'pending' && data.paymentStatus === 'paid'
+          }).length,
+          docs: allOrdersSnapshot.docs.filter(doc => {
+            const data = doc.data()
+            return data.orderStatus === 'pending' && data.paymentStatus === 'paid'
+          })
+        }
         console.log('신규 주문:', newOrdersSnapshot.size)
         console.log('신규 주문 데이터:', newOrdersSnapshot.docs.map(d => d.data()))
       } catch (error) {
@@ -179,17 +191,19 @@ export default function PartnerDashboard() {
       }
 
       try {
-        // 최근 주문 5개 (이미 가져온 모든 주문에서 정렬)
+        // 최근 주문 5개 (paymentStatus가 paid인 것만)
         const allOrdersSnapshot = await getDocs(query(
           collection(db, 'orders'),
           where('storeId', '==', storeId)
         ))
 
-        const sortedDocs = allOrdersSnapshot.docs.sort((a, b) => {
-          const aTime = a.data().createdAt?.toMillis ? a.data().createdAt.toMillis() : 0
-          const bTime = b.data().createdAt?.toMillis ? b.data().createdAt.toMillis() : 0
-          return bTime - aTime // 내림차순
-        }).slice(0, 5)
+        const sortedDocs = allOrdersSnapshot.docs
+          .filter(doc => doc.data().paymentStatus === 'paid')
+          .sort((a, b) => {
+            const aTime = a.data().createdAt?.toMillis ? a.data().createdAt.toMillis() : 0
+            const bTime = b.data().createdAt?.toMillis ? b.data().createdAt.toMillis() : 0
+            return bTime - aTime // 내림차순
+          }).slice(0, 5)
 
         recentOrdersSnapshot = { docs: sortedDocs }
       } catch (error) {
