@@ -19,10 +19,9 @@ interface ChatRoomProps {
   roomId: string
   onBack?: () => void
   isPartner?: boolean
-  onMessagesRead?: () => void
 }
 
-export default function ChatRoom({ roomId, onBack, isPartner = false, onMessagesRead }: ChatRoomProps) {
+export default function ChatRoom({ roomId, onBack, isPartner = false }: ChatRoomProps) {
   const router = useRouter()
   const { user, loading: authLoading } = useAuth()
   const [room, setRoom] = useState<ChatRoomType | null>(null)
@@ -54,16 +53,12 @@ export default function ChatRoom({ roomId, onBack, isPartner = false, onMessages
       scrollToBottom()
       // 다른 사용자의 메시지 읽음 처리
       await markMessagesAsRead(roomId, user.uid)
-      // 읽음 처리 후 부모 컴포넌트에 알림
-      if (onMessagesRead) {
-        onMessagesRead()
-      }
     })
 
     return () => {
       unsubscribe()
     }
-  }, [user, roomId, onMessagesRead])
+  }, [user, roomId])
 
   const loadRoomData = async () => {
     if (!user) return

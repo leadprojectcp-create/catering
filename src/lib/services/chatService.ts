@@ -30,6 +30,7 @@ export interface ChatRoom {
   lastMessage?: string
   lastMessageTime?: number
   createdAt: number
+  unreadCount?: { [userId: string]: number } // 각 사용자별 읽지 않은 메시지 수
 }
 
 // 채팅방 생성 또는 기존 채팅방 가져오기
@@ -180,12 +181,29 @@ export const sendMessage = async (
 
     await set(newMessageRef, message)
 
-    // 채팅방의 마지막 메시지 업데이트
+    // 채팅방 정보 가져오기
     const roomRef = ref(realtimeDb, `chatRooms/${roomId}`)
-    await update(roomRef, {
-      lastMessage: text,
-      lastMessageTime: Date.now()
-    })
+    const roomSnapshot = await get(roomRef)
+
+    if (roomSnapshot.exists()) {
+      const roomData = roomSnapshot.val() as ChatRoom
+      const participants = roomData.participants || []
+      const unreadCount = roomData.unreadCount || {}
+
+      // 상대방의 unreadCount 증가
+      participants.forEach((participantId) => {
+        if (participantId !== senderId) {
+          unreadCount[participantId] = (unreadCount[participantId] || 0) + 1
+        }
+      })
+
+      // 채팅방의 마지막 메시지 및 unreadCount 업데이트
+      await update(roomRef, {
+        lastMessage: text,
+        lastMessageTime: Date.now(),
+        unreadCount
+      })
+    }
   } catch (error) {
     console.error('메시지 전송 실패:', error)
     throw error
@@ -243,31 +261,36 @@ export const markMessagesAsRead = async (
         await update(messagesRef, updates)
       }
     }
+
+    // 채팅방의 내 unreadCount를 0으로 리셋
+    const roomRef = ref(realtimeDb, `chatRooms/${roomId}`)
+    const roomSnapshot = await get(roomRef)
+
+    if (roomSnapshot.exists()) {
+      const roomData = roomSnapshot.val() as ChatRoom
+      const unreadCount = roomData.unreadCount || {}
+      unreadCount[userId] = 0
+
+      await update(roomRef, { unreadCount })
+    }
   } catch (error) {
     console.error('메시지 읽음 처리 실패:', error)
     throw error
   }
 }
 
-// 읽지 않은 메시지 개수 가져오기
+// 읽지 않은 메시지 개수 가져오기 (DB에서 직접 읽음)
 export const getUnreadMessageCount = async (roomId: string, userId: string): Promise<number> => {
   try {
-    const messagesRef = ref(realtimeDb, `messages/${roomId}`)
-    const snapshot = await get(messagesRef)
-
-    let unreadCount = 0
+    const roomRef = ref(realtimeDb, `chatRooms/${roomId}`)
+    const snapshot = await get(roomRef)
 
     if (snapshot.exists()) {
-      snapshot.forEach((childSnapshot) => {
-        const message = childSnapshot.val() as ChatMessage
-        // 다른 사용자가 보낸 읽지 않은 메시지만 카운트
-        if (message.senderId !== userId && !message.read) {
-          unreadCount++
-        }
-      })
+      const roomData = snapshot.val() as ChatRoom
+      return roomData.unreadCount?.[userId] || 0
     }
 
-    return unreadCount
+    return 0
   } catch (error) {
     console.error('읽지 않은 메시지 개수 가져오기 실패:', error)
     return 0
@@ -292,56 +315,60 @@ export const getTotalUnreadCount = async (userId: string): Promise<number> => {
   }
 }
 
-// 읽지 않은 메시지 개수 실시간 구독
+// 읽지 않은 메시지 개수 실시간 구독 (모든 채팅방을 한 번에 구독)
 export const subscribeToUnreadCount = (
   userId: string,
   callback: (count: number) => void
 ): (() => void) => {
-  let unsubscribeFunctions: (() => void)[] = []
+  console.log('[subscribeToUnreadCount] 구독 시작:', userId)
 
-  const setupSubscription = async () => {
+  // 모든 채팅방의 unreadCount 변경사항 구독
+  const chatRoomsRef = ref(realtimeDb, 'chatRooms')
+
+  const unsubscribe = onValue(chatRoomsRef, async (snapshot) => {
     try {
-      const chatRooms = await getUserChatRooms(userId)
-      const unreadCounts = new Map<string, number>()
+      console.log('[subscribeToUnreadCount] 데이터 변경 감지:', {
+        exists: snapshot.exists(),
+        userId
+      })
 
-      // 각 채팅방의 메시지 변경 구독
-      const unsubscribes = chatRooms.map(room => {
-        const messagesRef = ref(realtimeDb, `messages/${room.id}`)
+      if (!snapshot.exists()) {
+        console.log('[subscribeToUnreadCount] 채팅방 데이터 없음')
+        callback(0)
+        return
+      }
 
-        return onValue(messagesRef, (snapshot) => {
-          let unreadCount = 0
+      let totalUnread = 0
+      const roomDetails: any[] = []
 
-          if (snapshot.exists()) {
-            snapshot.forEach((childSnapshot) => {
-              const message = childSnapshot.val() as ChatMessage
-              if (message.senderId !== userId && !message.read) {
-                unreadCount++
-              }
-            })
-          }
+      snapshot.forEach((childSnapshot) => {
+        const room = childSnapshot.val() as ChatRoom
+        const roomId = childSnapshot.key
+        const unreadCount = room.unreadCount?.[userId] || 0
+        totalUnread += unreadCount
 
-          unreadCounts.set(room.id, unreadCount)
-
-          // 전체 읽지 않은 메시지 수 계산
-          const totalUnread = Array.from(unreadCounts.values()).reduce((sum, count) => sum + count, 0)
-          callback(totalUnread)
+        roomDetails.push({
+          roomId,
+          participants: room.participants,
+          unreadCountData: room.unreadCount,
+          myUnreadCount: unreadCount
         })
       })
 
-      unsubscribeFunctions = unsubscribes
+      console.log('[subscribeToUnreadCount] 채팅방 상세:', roomDetails)
+      console.log('[subscribeToUnreadCount] 전체 읽지 않은 메시지:', totalUnread)
+      callback(totalUnread)
     } catch (error) {
-      console.error('읽지 않은 메시지 구독 실패:', error)
+      console.error('읽지 않은 메시지 계산 실패:', error)
+      callback(0)
     }
-  }
-
-  setupSubscription()
+  })
 
   // 구독 해제 함수 반환
   return () => {
-    unsubscribeFunctions.forEach(unsubscribe => {
-      if (typeof unsubscribe === 'function') {
-        unsubscribe()
-      }
-    })
+    console.log('[subscribeToUnreadCount] 구독 해제:', userId)
+    if (typeof unsubscribe === 'function') {
+      unsubscribe()
+    }
   }
 }

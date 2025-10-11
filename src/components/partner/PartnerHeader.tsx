@@ -123,12 +123,17 @@ export default function PartnerHeader() {
       return
     }
 
+    console.log('[PartnerHeader] 실시간 구독 시작:', user.uid)
+    console.log('[PartnerHeader] user 객체:', user)
+
     // 실시간 구독 설정
     const unsubscribe = subscribeToUnreadCount(user.uid, (count) => {
+      console.log('[PartnerHeader] unreadCount 업데이트:', count, typeof count)
       setUnreadCount(count)
     })
 
     return () => {
+      console.log('[PartnerHeader] 구독 해제')
       unsubscribe()
     }
   }, [user])

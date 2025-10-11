@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
-import { getUserChatRooms, ChatRoom as ChatRoomType, subscribeToUnreadCount } from '@/lib/services/chatService'
+import { getUserChatRooms, ChatRoom as ChatRoomType, getUnreadMessageCount, subscribeToUnreadCount } from '@/lib/services/chatService'
 import { ref, onValue } from 'firebase/database'
 import { realtimeDb } from '@/lib/firebase'
 import { doc, getDoc } from 'firebase/firestore'
@@ -27,6 +27,7 @@ export default function ChatContainer({ isPartner = false }: ChatContainerProps)
   const [chatRooms, setChatRooms] = useState<ChatRoomWithName[]>([])
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null)
 
+  // 채팅방 목록 로드 (한 번만)
   useEffect(() => {
     // 인증 로딩 중이면 아무것도 하지 않음
     if (authLoading) return
@@ -40,6 +41,7 @@ export default function ChatContainer({ isPartner = false }: ChatContainerProps)
     loadChatRooms()
   }, [user, authLoading, router])
 
+  // URL의 roomId 파라미터 처리
   useEffect(() => {
     const roomId = searchParams.get('roomId')
     if (roomId) {
@@ -47,42 +49,42 @@ export default function ChatContainer({ isPartner = false }: ChatContainerProps)
     }
   }, [searchParams])
 
-  // 실시간으로 각 채팅방의 읽지 않은 메시지 개수 구독
+  // 실시간으로 전체 chatRooms의 unreadCount 구독 (한 번만 설정)
   useEffect(() => {
-    if (!user || chatRooms.length === 0) return
+    if (!user) return
 
-    const unsubscribes: (() => void)[] = []
+    console.log('[ChatContainer] chatRooms 전체 구독 시작')
 
-    chatRooms.forEach((room) => {
-      const messagesRef = ref(realtimeDb, `messages/${room.id}`)
+    const chatRoomsRef = ref(realtimeDb, 'chatRooms')
+    const unsubscribe = onValue(chatRoomsRef, (snapshot) => {
+      if (!snapshot.exists()) return
 
-      const unsubscribe = onValue(messagesRef, (snapshot) => {
-        let unreadCount = 0
+      console.log('[ChatContainer] chatRooms 데이터 변경 감지')
 
-        if (snapshot.exists()) {
-          snapshot.forEach((childSnapshot) => {
-            const message = childSnapshot.val()
-            if (message.senderId !== user.uid && !message.read) {
-              unreadCount++
+      // 현재 chatRooms 상태와 비교하여 unreadCount만 업데이트
+      setChatRooms(prevRooms => {
+        return prevRooms.map(room => {
+          const roomSnapshot = snapshot.child(room.id)
+          if (roomSnapshot.exists()) {
+            const roomData = roomSnapshot.val()
+            const unreadCount = roomData.unreadCount?.[user.uid] || 0
+
+            // unreadCount가 변경된 경우에만 업데이트
+            if (room.unreadCount !== unreadCount) {
+              console.log(`[ChatContainer] 채팅방 ${room.id} unreadCount 업데이트: ${room.unreadCount} -> ${unreadCount}`)
+              return { ...room, unreadCount }
             }
-          })
-        }
-
-        // 채팅방 목록에서 해당 채팅방의 unreadCount 업데이트
-        setChatRooms(prevRooms =>
-          prevRooms.map(r =>
-            r.id === room.id ? { ...r, unreadCount } : r
-          )
-        )
+          }
+          return room
+        })
       })
-
-      unsubscribes.push(unsubscribe)
     })
 
     return () => {
-      unsubscribes.forEach(unsub => unsub())
+      console.log('[ChatContainer] chatRooms 구독 해제')
+      unsubscribe()
     }
-  }, [user, chatRooms.length])
+  }, [user])
 
   const loadChatRooms = async () => {
     if (!user) return
@@ -144,9 +146,6 @@ export default function ChatContainer({ isPartner = false }: ChatContainerProps)
       if (urlRoomId) {
         setSelectedRoomId(urlRoomId)
       }
-
-      // 헤더에 읽지 않은 메시지 개수 업데이트 알림
-      window.dispatchEvent(new CustomEvent('chatUnreadCountChanged'))
     } catch (error) {
       console.error('[ChatContainer] 채팅방 목록 로드 실패:', error)
     }
@@ -234,7 +233,6 @@ export default function ChatContainer({ isPartner = false }: ChatContainerProps)
             roomId={selectedRoomId}
             onBack={() => setSelectedRoomId(null)}
             isPartner={isPartner}
-            onMessagesRead={() => loadChatRooms()}
           />
         ) : (
           <div className={styles.emptyChat}>
