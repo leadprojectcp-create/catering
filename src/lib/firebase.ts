@@ -2,8 +2,8 @@ import { initializeApp, getApps, getApp } from 'firebase/app'
 import { getAuth } from 'firebase/auth'
 import { getFirestore } from 'firebase/firestore'
 import { getStorage } from 'firebase/storage'
-import { getAnalytics, Analytics } from 'firebase/analytics'
 import { getDatabase } from 'firebase/database'
+import type { Analytics } from 'firebase/analytics'
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -35,15 +35,15 @@ export const realtimeDb = getDatabase(app)
 export let analytics: Analytics | null = null
 
 // Analytics를 필요할 때만 초기화하는 함수
-export const initializeAnalyticsIfNeeded = () => {
+export const initializeAnalyticsIfNeeded = async () => {
   if (typeof window !== 'undefined' && !analytics) {
     try {
       // 페이지 로드 후 3초 뒤에 초기화 (installations API 안정화 대기)
-      setTimeout(() => {
-        const { getAnalytics } = require('firebase/analytics')
+      setTimeout(async () => {
+        const { getAnalytics } = await import('firebase/analytics')
         analytics = getAnalytics(app)
       }, 3000)
-    } catch (error) {
+    } catch {
       // Analytics 실패는 무시
     }
   }
