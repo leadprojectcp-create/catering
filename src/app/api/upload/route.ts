@@ -43,7 +43,8 @@ export async function POST(request: NextRequest) {
       'menu': 'menus',
       'profile': 'profiles',
       'product': 'products',
-      'review': 'reviews'
+      'review': 'reviews',
+      'chat': 'chat'
     }
 
     const folder = folderMap[uploadType] || 'others'
@@ -56,8 +57,13 @@ export async function POST(request: NextRequest) {
     // 파일 경로 결정
     let fileName: string
 
+    // 채팅 관련 이미지는 날짜별로 저장
+    if (uploadType === 'chat') {
+      const date = new Date().toISOString().split('T')[0] // YYYY-MM-DD
+      fileName = `picktoeat/${folder}/${date}/${timestamp}_${randomId}.${extension}`
+    }
     // 리뷰 관련 이미지는 reviewId 구조로 저장
-    if (uploadType === 'review' && reviewId) {
+    else if (uploadType === 'review' && reviewId) {
       fileName = `picktoeat/${folder}/${reviewId}/${timestamp}_${randomId}.${extension}`
     }
     // 상품 관련 이미지는 storeId/productId 구조로 저장

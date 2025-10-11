@@ -269,9 +269,13 @@ export const markMessagesAsRead = async (
     if (roomSnapshot.exists()) {
       const roomData = roomSnapshot.val() as ChatRoom
       const unreadCount = roomData.unreadCount || {}
+
+      console.log('[markMessagesAsRead] 이전 unreadCount:', unreadCount)
       unreadCount[userId] = 0
+      console.log('[markMessagesAsRead] 업데이트 후 unreadCount:', unreadCount)
 
       await update(roomRef, { unreadCount })
+      console.log('[markMessagesAsRead] DB 업데이트 완료')
     }
   } catch (error) {
     console.error('메시지 읽음 처리 실패:', error)

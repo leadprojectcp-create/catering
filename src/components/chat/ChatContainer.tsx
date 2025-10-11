@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
-import { getUserChatRooms, ChatRoom as ChatRoomType, getUnreadMessageCount } from '@/lib/services/chatService'
+import { getUserChatRooms, ChatRoom as ChatRoomType } from '@/lib/services/chatService'
 import { ref, onValue } from 'firebase/database'
 import { realtimeDb } from '@/lib/firebase'
 import { doc, getDoc } from 'firebase/firestore'
@@ -104,8 +104,9 @@ export default function ChatContainer({ isPartner = false }: ChatContainerProps)
           // 상대방 ID 찾기
           const otherUserId = room.participants.find(id => id !== user.uid)
 
-          // 읽지 않은 메시지 개수 가져오기
-          const unreadCount = await getUnreadMessageCount(room.id, user.uid)
+          // 읽지 않은 메시지 개수 가져오기 (DB에서 직접)
+          const roomUnreadCount = (room as any).unreadCount as { [key: string]: number } | undefined
+          const unreadCount = roomUnreadCount?.[user.uid] || 0
 
           if (otherUserId) {
             try {
@@ -179,6 +180,16 @@ export default function ChatContainer({ isPartner = false }: ChatContainerProps)
     }
   }
 
+  const formatLastMessage = (text: string) => {
+    if (text.startsWith('[이미지]')) {
+      return '이미지'
+    }
+    if (text.startsWith('[상품]')) {
+      return '상품'
+    }
+    return text
+  }
+
   if (authLoading) {
     return null
   }
@@ -212,7 +223,7 @@ export default function ChatContainer({ isPartner = false }: ChatContainerProps)
                     )}
                   </div>
                   {room.lastMessage && (
-                    <p className={styles.lastMessage}>{room.lastMessage}</p>
+                    <p className={styles.lastMessage}>{formatLastMessage(room.lastMessage)}</p>
                   )}
                 </div>
                 {room.lastMessageTime && (

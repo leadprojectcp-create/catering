@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useLayoutEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import {
@@ -13,6 +13,10 @@ import {
 } from '@/lib/services/chatService'
 import { doc, getDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
+import ChatMessageAttachment from './ChatMessageAttachment'
+import ProductSelectPopup from './ProductSelectPopup'
+import ProductMessageCard from './ProductMessageCard'
+import ImageViewerPopup from './ImageViewerPopup'
 import styles from './ChatRoom.module.css'
 
 interface ChatRoomProps {
@@ -29,7 +33,13 @@ export default function ChatRoom({ roomId, onBack, isPartner = false }: ChatRoom
   const [inputText, setInputText] = useState('')
   const [loading, setLoading] = useState(true)
   const [otherUserName, setOtherUserName] = useState<string>('')
+  const [showAttachmentPopup, setShowAttachmentPopup] = useState(false)
+  const [showProductPopup, setShowProductPopup] = useState(false)
+  const [isUploading, setIsUploading] = useState(false)
+  const [viewerImageUrl, setViewerImageUrl] = useState<string | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const messagesContainerRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     // 인증 로딩 중이면 아무것도 하지 않음
@@ -47,18 +57,58 @@ export default function ChatRoom({ roomId, onBack, isPartner = false }: ChatRoom
   useEffect(() => {
     if (!user || !roomId) return
 
+    console.log('[ChatRoom] 메시지 구독 시작:', roomId)
+
     // 메시지 실시간 구독
-    const unsubscribe = subscribeToMessages(roomId, async (newMessages) => {
+    const unsubscribe = subscribeToMessages(roomId, (newMessages) => {
+      console.log('[ChatRoom] 새 메시지 받음:', newMessages.length, '개')
       setMessages(newMessages)
-      scrollToBottom()
-      // 다른 사용자의 메시지 읽음 처리
-      await markMessagesAsRead(roomId, user.uid)
     })
 
     return () => {
+      console.log('[ChatRoom] 메시지 구독 해제')
       unsubscribe()
     }
   }, [user, roomId])
+
+  // 입력창에 포커스될 때만 읽음 처리
+  const handleInputFocus = async () => {
+    if (!user || !roomId) return
+
+    console.log('[ChatRoom] 입력창 포커스 - 읽음 처리 시작')
+    await markMessagesAsRead(roomId, user.uid)
+    console.log('[ChatRoom] 읽음 처리 완료')
+  }
+
+  // 메시지가 변경될 때마다 스크롤을 맨 아래로 (DOM 렌더링 전에 실행)
+  useLayoutEffect(() => {
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight
+    }
+  }, [messages])
+
+  // 로딩 완료 후 맨 아래로 스크롤
+  useEffect(() => {
+    if (!loading && messagesContainerRef.current) {
+      // 여러 번 시도해서 확실하게 맨 아래로
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight
+      setTimeout(() => {
+        if (messagesContainerRef.current) {
+          messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight
+        }
+      }, 0)
+      setTimeout(() => {
+        if (messagesContainerRef.current) {
+          messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight
+        }
+      }, 50)
+      setTimeout(() => {
+        if (messagesContainerRef.current) {
+          messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight
+        }
+      }, 100)
+    }
+  }, [loading])
 
   const loadRoomData = async () => {
     if (!user) return
@@ -104,7 +154,10 @@ export default function ChatRoom({ roomId, onBack, isPartner = false }: ChatRoom
   }
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    // 스크롤 위치를 직접 설정 (애니메이션 없이 즉시 맨 아래로)
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight
+    }
   }
 
   const handleSendMessage = async (e: React.FormEvent) => {
@@ -118,6 +171,64 @@ export default function ChatRoom({ roomId, onBack, isPartner = false }: ChatRoom
     } catch (error) {
       console.error('메시지 전송 실패:', error)
       alert('메시지 전송에 실패했습니다.')
+    }
+  }
+
+  const handleImageSelect = async (file: File) => {
+    if (!user) return
+
+    setIsUploading(true)
+    try {
+      // FormData 생성
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('type', 'chat')
+
+      // 업로드 API 호출
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData
+      })
+
+      if (!response.ok) {
+        throw new Error('이미지 업로드에 실패했습니다.')
+      }
+
+      const data = await response.json()
+
+      // 이미지 URL을 메시지로 전송
+      await sendMessage(roomId, user.uid, user.displayName || '사용자', `[이미지]${data.url}`)
+
+      console.log('이미지 업로드 및 전송 완료:', data.url)
+    } catch (error) {
+      console.error('이미지 업로드 실패:', error)
+      alert('이미지 업로드에 실패했습니다.')
+    } finally {
+      setIsUploading(false)
+    }
+  }
+
+  const handleProductSelect = () => {
+    setShowProductPopup(true)
+  }
+
+  const handleProductChosen = async (product: { id: string; name: string; price: number; imageUrl?: string }) => {
+    if (!user) return
+
+    try {
+      console.log('[ChatRoom] 선택한 상품:', product)
+
+      // 상품 ID만 전송
+      const productMessage = `[상품]${product.id}`
+      console.log('[ChatRoom] 전송할 메시지:', productMessage)
+
+      await sendMessage(roomId, user.uid, user.displayName || '사용자', productMessage)
+      setShowProductPopup(false)
+
+      console.log('[ChatRoom] 상품 전송 완료:', product.id)
+    } catch (error) {
+      console.error('[ChatRoom] 상품 전송 실패:', error)
+      alert('상품 전송에 실패했습니다.')
     }
   }
 
@@ -150,6 +261,53 @@ export default function ChatRoom({ roomId, onBack, isPartner = false }: ChatRoom
     })
   }
 
+  const formatPrice = (price: number) => {
+    return price.toLocaleString('ko-KR')
+  }
+
+  // 메시지 내용 렌더링 (이미지, 상품 등)
+  const renderMessageContent = (text: string) => {
+    // 이미지 메시지 [이미지]URL
+    if (text.startsWith('[이미지]')) {
+      const imageUrl = text.substring(5).trim()
+      if (imageUrl) {
+        return (
+          <div className={styles.imageMessage} onClick={() => setViewerImageUrl(imageUrl)}>
+            <img src={imageUrl} alt="전송된 이미지" />
+          </div>
+        )
+      }
+    }
+
+    // 상품 메시지 [상품]productId 또는 [상품]{JSON}
+    if (text.startsWith('[상품]')) {
+      const content = text.substring(4).trim()
+
+      // 기존 JSON 형태 처리 (하위 호환성)
+      if (content.startsWith('{')) {
+        try {
+          const product = JSON.parse(content)
+          if (product.id) {
+            return <ProductMessageCard productId={product.id} />
+          }
+        } catch (error) {
+          console.error('[ChatRoom] JSON 파싱 실패:', error)
+        }
+      }
+
+      // 새로운 형태: 상품 ID만 있는 경우
+      if (content && !content.startsWith('{')) {
+        return <ProductMessageCard productId={content} />
+      }
+
+      // 파싱 실패시 원본 텍스트 표시
+      return <div className={styles.textMessage}>{text}</div>
+    }
+
+    // 일반 텍스트 메시지
+    return <div className={styles.textMessage}>{text}</div>
+  }
+
   const renderMessages = () => {
     const messagesByDate: { [key: string]: ChatMessage[] } = {}
 
@@ -177,7 +335,9 @@ export default function ChatRoom({ roomId, onBack, isPartner = false }: ChatRoom
               <span className={styles.senderName}>{message.senderName}</span>
             )}
             <div className={styles.messageContent}>
-              <div className={styles.messageBubble}>{message.text}</div>
+              <div className={styles.messageBubble}>
+                {renderMessageContent(message.text)}
+              </div>
               <span className={styles.messageTime}>{formatTime(message.timestamp)}</span>
             </div>
           </div>
@@ -208,7 +368,7 @@ export default function ChatRoom({ roomId, onBack, isPartner = false }: ChatRoom
         )}
       </div>
 
-      <div className={styles.messagesContainer}>
+      <div className={styles.messagesContainer} ref={messagesContainerRef}>
         {messages.length === 0 ? (
           <div className={styles.emptyMessages}>
             <p>메시지를 보내 대화를 시작해보세요!</p>
@@ -220,21 +380,59 @@ export default function ChatRoom({ roomId, onBack, isPartner = false }: ChatRoom
       </div>
 
       <form className={styles.inputContainer} onSubmit={handleSendMessage}>
+        <button
+          type="button"
+          className={styles.attachButton}
+          onClick={() => setShowAttachmentPopup(true)}
+          disabled={isUploading}
+          title="첨부"
+        >
+          +
+        </button>
         <input
+          ref={inputRef}
           type="text"
           className={styles.input}
-          placeholder="메시지를 입력하세요..."
+          placeholder={isUploading ? '업로드 중...' : '메시지를 입력하세요...'}
           value={inputText}
           onChange={(e) => setInputText(e.target.value)}
+          onFocus={handleInputFocus}
+          disabled={isUploading}
         />
         <button
           type="submit"
           className={styles.sendButton}
-          disabled={!inputText.trim()}
+          disabled={!inputText.trim() || isUploading}
         >
           전송
         </button>
       </form>
+
+      {/* 첨부 팝업 */}
+      {showAttachmentPopup && (
+        <ChatMessageAttachment
+          onImageSelect={handleImageSelect}
+          onProductSelect={handleProductSelect}
+          onClose={() => setShowAttachmentPopup(false)}
+        />
+      )}
+
+      {/* 상품 선택 팝업 */}
+      {showProductPopup && room && (
+        <ProductSelectPopup
+          storeId={room.storeId}
+          onProductSelect={handleProductChosen}
+          onClose={() => setShowProductPopup(false)}
+        />
+      )}
+
+      {/* 이미지 확대 팝업 */}
+      {viewerImageUrl && (
+        <ImageViewerPopup
+          imageUrl={viewerImageUrl}
+          onClose={() => setViewerImageUrl(null)}
+        />
+      )}
     </div>
   )
 }
