@@ -1,9 +1,9 @@
-import { initializeApp, getApps, getApp } from 'firebase/app'
-import { getAuth } from 'firebase/auth'
-import { getFirestore } from 'firebase/firestore'
-import { getStorage } from 'firebase/storage'
-import { getAnalytics } from 'firebase/analytics'
-import { getDatabase } from 'firebase/database'
+import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app'
+import { getAuth, Auth } from 'firebase/auth'
+import { getFirestore, Firestore } from 'firebase/firestore'
+import { getStorage, FirebaseStorage } from 'firebase/storage'
+import { getAnalytics, Analytics } from 'firebase/analytics'
+import { getDatabase, Database } from 'firebase/database'
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -16,31 +16,26 @@ const firebaseConfig = {
   databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL
 }
 
-// 필수 설정 확인
-if (typeof window !== 'undefined' && !firebaseConfig.apiKey) {
-  console.error('Firebase 설정이 없습니다. .env.local 파일을 확인하세요.')
-}
+// Firebase 앱 초기화 (한 번만 실행)
+const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp()
 
-// Initialize Firebase (재사용 가능하도록)
-const app = !getApps().length ? initializeApp(firebaseConfig) : getApp()
-
-// Initialize Firebase services
+// Firebase 서비스 초기화 (앱 인스턴스 재사용)
 export const auth = getAuth(app)
-export const db = getFirestore(app, 'catering')  // Use 'catering' database
+export const db = getFirestore(app, 'catering')
 export const storage = getStorage(app)
 export const realtimeDb = getDatabase(app)
 
-// Initialize Analytics (only in browser)
-let analytics: ReturnType<typeof getAnalytics> | null = null
+// Analytics 초기화 (브라우저에서만, 실패해도 무시)
+export let analytics: Analytics | null = null
 if (typeof window !== 'undefined') {
   try {
     analytics = getAnalytics(app)
   } catch (error) {
-    console.warn('Firebase Analytics 초기화 실패:', error)
-    // Analytics 실패는 치명적이지 않으므로 계속 진행
+    // Analytics 실패는 무시 (installations 에러 방지)
   }
 }
-export { analytics }
+
+export default app
 
 // For development, connect to Firestore emulator if available
 if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
