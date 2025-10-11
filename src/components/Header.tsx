@@ -1,11 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import styles from './Header.module.css'
 import { usePathname } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
+import { getCartItemCount } from '@/lib/services/cartService'
 
 const menuItems = [
   {
@@ -39,7 +40,25 @@ const menuItems = [
 export default function Header() {
   const pathname = usePathname()
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
-  const { userData, logout } = useAuth()
+  const { userData, logout, user } = useAuth()
+  const [cartCount, setCartCount] = useState(0)
+
+  useEffect(() => {
+    const loadCartCount = async () => {
+      if (user) {
+        try {
+          const count = await getCartItemCount(user.uid)
+          setCartCount(count)
+        } catch (error) {
+          console.error('장바구니 개수 로드 실패:', error)
+        }
+      } else {
+        setCartCount(0)
+      }
+    }
+
+    loadCartCount()
+  }, [user, pathname]) // pathname이 변경될 때마다 장바구니 개수 갱신
 
   const toggleDrawer = () => {
     setIsDrawerOpen(!isDrawerOpen)
@@ -82,6 +101,20 @@ export default function Header() {
 
           {/* 오른쪽 메뉴 영역 */}
           <div className={styles.rightSection}>
+            {/* 장바구니 아이콘 (로그인한 사용자만 표시) */}
+            {user && (
+              <Link href="/cart" className={styles.cartIconLink}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="9" cy="21" r="1"></circle>
+                  <circle cx="20" cy="21" r="1"></circle>
+                  <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                </svg>
+                {cartCount > 0 && (
+                  <span className={styles.cartBadge}>{cartCount}</span>
+                )}
+              </Link>
+            )}
+
             {/* 파트너 페이지 링크 (partner일 경우만 표시) */}
             {userData && userData.type === 'partner' && (
               <Link href="/partner/dashboard" className={styles.partnerIconLink}>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import styles from './PartnerHeader.module.css'
@@ -8,6 +8,8 @@ import { usePathname } from 'next/navigation'
 import { auth } from '@/lib/firebase'
 import { signOut } from 'firebase/auth'
 import { useRouter } from 'next/navigation'
+import { useAuth } from '@/contexts/AuthContext'
+import { getUserChatRooms, subscribeToMessages, type ChatRoom } from '@/lib/services/chatService'
 
 const partnerMenuItems = [
   {
@@ -93,7 +95,9 @@ const partnerMenuItems = [
 export default function PartnerHeader() {
   const pathname = usePathname()
   const router = useRouter()
+  const { user } = useAuth()
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
+  const [unreadCount, setUnreadCount] = useState(0)
 
   const handleLogout = async () => {
     try {
@@ -111,6 +115,47 @@ export default function PartnerHeader() {
   const closeDrawer = () => {
     setIsDrawerOpen(false)
   }
+
+  useEffect(() => {
+    if (!user) return
+
+    let unsubscribeFunctions: (() => void)[] = []
+    const unreadCounts = new Map<string, number>()
+
+    const loadUnreadCount = async () => {
+      try {
+        const chatRooms = await getUserChatRooms(user.uid)
+
+        // 각 채팅방의 읽지 않은 메시지 구독
+        const unsubscribes = chatRooms.map(room => {
+          return subscribeToMessages(room.id, (messages) => {
+            // 상대방이 보낸 읽지 않은 메시지 카운트
+            const unreadMessages = messages.filter(
+              msg => msg.senderId !== user.uid && !msg.read
+            )
+
+            // 이 채팅방의 읽지 않은 메시지 수 업데이트
+            unreadCounts.set(room.id, unreadMessages.length)
+
+            // 전체 읽지 않은 메시지 수 계산
+            const totalUnread = Array.from(unreadCounts.values()).reduce((sum, count) => sum + count, 0)
+            setUnreadCount(totalUnread)
+          })
+        })
+
+        unsubscribeFunctions = unsubscribes
+      } catch (error) {
+        console.error('읽지 않은 메시지 수 로드 실패:', error)
+      }
+    }
+
+    loadUnreadCount()
+
+    // 컴포넌트 언마운트 시 구독 해제
+    return () => {
+      unsubscribeFunctions.forEach(unsubscribe => unsubscribe())
+    }
+  }, [user])
 
   return (
     <>
@@ -130,16 +175,28 @@ export default function PartnerHeader() {
             </Link>
           </div>
 
-          {/* 햄버거 상품 버튼 */}
-          <button
-            className={styles.menuButton}
-            onClick={toggleDrawer}
-            aria-label="상품"
-          >
-            <span className={styles.hamburger}></span>
-            <span className={styles.hamburger}></span>
-            <span className={styles.hamburger}></span>
-          </button>
+          <div className={styles.rightSection}>
+            {/* 채팅 아이콘 */}
+            <Link href="/chat" className={styles.chatIconLink}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+              </svg>
+              {unreadCount > 0 && (
+                <span className={styles.chatBadge}>{unreadCount}</span>
+              )}
+            </Link>
+
+            {/* 햄버거 메뉴 버튼 */}
+            <button
+              className={styles.menuButton}
+              onClick={toggleDrawer}
+              aria-label="메뉴"
+            >
+              <span className={styles.hamburger}></span>
+              <span className={styles.hamburger}></span>
+              <span className={styles.hamburger}></span>
+            </button>
+          </div>
         </div>
       </header>
 

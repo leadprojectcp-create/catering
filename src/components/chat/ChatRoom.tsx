@@ -18,9 +18,10 @@ import styles from './ChatRoom.module.css'
 interface ChatRoomProps {
   roomId: string
   onBack?: () => void
+  isPartner?: boolean
 }
 
-export default function ChatRoom({ roomId, onBack }: ChatRoomProps) {
+export default function ChatRoom({ roomId, onBack, isPartner = false }: ChatRoomProps) {
   const router = useRouter()
   const { user, loading: authLoading } = useAuth()
   const [room, setRoom] = useState<ChatRoomType | null>(null)

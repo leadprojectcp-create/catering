@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { doc, getDoc, collection, addDoc, query, where, getDocs, orderBy } from 'firebase/firestore'
+import { doc, getDoc, collection, addDoc, query, where, getDocs, orderBy, updateDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { useAuth } from '@/contexts/AuthContext'
 import Loading from '@/components/Loading'
@@ -88,6 +88,7 @@ export default function OrderPage({ productId, storeId }: OrderPageProps) {
   const [startHeight, setStartHeight] = useState(80)
   const [reviews, setReviews] = useState<Review[]>([])
   const [loadingReviews, setLoadingReviews] = useState(true)
+  const [editingCartItemId, setEditingCartItemId] = useState<string | null>(null)
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -99,7 +100,38 @@ export default function OrderPage({ productId, storeId }: OrderPageProps) {
             ...productDoc.data()
           } as Product
           setProduct(productData)
-          setQuantity(productData.minOrderQuantity || 10)
+
+          // 장바구니에서 수정 중인 아이템 데이터 확인
+          const editCartItemData = sessionStorage.getItem('editCartItem')
+          if (editCartItemData) {
+            try {
+              const editData = JSON.parse(editCartItemData)
+              // 수정 중인 장바구니 아이템 ID 저장
+              if (editData.cartItemId) {
+                setEditingCartItemId(editData.cartItemId)
+              }
+
+              // items 배열 전체를 cartItems에 로드
+              if (editData.items && Array.isArray(editData.items)) {
+                setCartItems(editData.items)
+
+                // 첫 번째 아이템의 옵션과 수량을 기본값으로 설정
+                const firstItem = editData.items[0]
+                if (firstItem) {
+                  setSelectedOptions(firstItem.options)
+                  setQuantity(firstItem.quantity)
+                }
+              }
+
+              // 세션 스토리지 데이터 삭제
+              sessionStorage.removeItem('editCartItem')
+            } catch (error) {
+              console.error('장바구니 수정 데이터 로드 실패:', error)
+            }
+          } else {
+            // 일반적인 경우 기본 수량 설정
+            setQuantity(productData.minOrderQuantity || 10)
+          }
 
           // Fetch store data
           if (productData.storeId) {
@@ -215,6 +247,7 @@ export default function OrderPage({ productId, storeId }: OrderPageProps) {
   const addToCart = () => {
     if (Object.keys(selectedOptions).length === 0) return
 
+    // 수정 모드든 일반 모드든 동일하게 추가
     setCartItems(prev => [...prev, {
       options: { ...selectedOptions },
       quantity: product?.minOrderQuantity || 10
@@ -253,7 +286,43 @@ export default function OrderPage({ productId, storeId }: OrderPageProps) {
     }
 
     try {
-      for (const item of cartItems) {
+      // 모든 cartItems를 items 배열로 변환
+      const items = cartItems.map(item => ({
+        options: item.options,
+        quantity: item.quantity
+      }))
+
+      // 합계 금액 계산
+      const totalPrice = cartItems.reduce((total, item) => {
+        const basePrice = product.discountedPrice || product.price
+        let optionPrice = 0
+
+        // 옵션 가격 계산
+        Object.values(item.options).forEach(optionValue => {
+          product.options?.forEach(group => {
+            const selected = group.values.find(v => v.name === optionValue)
+            if (selected) {
+              optionPrice += selected.price
+            }
+          })
+        })
+
+        return total + (basePrice + optionPrice) * item.quantity
+      }, 0)
+
+      // 수정 모드인 경우: 기존 문서에 items 배열 및 합계 저장
+      if (editingCartItemId) {
+        const cartDocRef = doc(db, 'shoppingCart', editingCartItemId)
+
+        await updateDoc(cartDocRef, {
+          items: items,  // 기존 문서에 items 배열 업데이트
+          totalPrice: totalPrice  // 합계 금액 저장
+        })
+
+        alert('장바구니가 수정되었습니다.')
+        setEditingCartItemId(null)
+      } else {
+        // 일반 모드인 경우 새 문서 생성 (items 배열 구조로)
         await addDoc(collection(db, 'shoppingCart'), {
           uid: user.uid,
           storeId: product.storeId,
@@ -261,16 +330,18 @@ export default function OrderPage({ productId, storeId }: OrderPageProps) {
           productName: product.name,
           productPrice: product.discountedPrice || product.price,
           productImage: product.images?.[0] || '',
-          options: item.options,
-          quantity: item.quantity,
+          items: items,  // items 배열로 저장
+          totalPrice: totalPrice,  // 합계 금액 저장
           createdAt: new Date()
         })
+
+        alert('장바구니에 추가되었습니다.')
       }
-      alert('장바구니에 추가되었습니다.')
-      router.push('/shopping-cart')
+
+      router.push('/cart')
     } catch (error) {
       console.error('장바구니 저장 실패:', error)
-      alert('장바구니 추가에 실패했습니다.')
+      alert('장바구니 저장에 실패했습니다.')
     }
   }
 

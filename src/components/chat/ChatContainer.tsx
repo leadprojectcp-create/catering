@@ -13,7 +13,11 @@ interface ChatRoomWithName extends ChatRoomType {
   otherUserName?: string
 }
 
-export default function ChatContainer() {
+interface ChatContainerProps {
+  isPartner?: boolean
+}
+
+export default function ChatContainer({ isPartner = false }: ChatContainerProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { user, loading: authLoading } = useAuth()
@@ -136,7 +140,7 @@ export default function ChatContainer() {
         {chatRooms.length === 0 ? (
           <div className={styles.emptyRooms}>
             <p>아직 채팅방이 없습니다.</p>
-            <p>가게에 문의하여 채팅을 시작해보세요!</p>
+            <p>{isPartner ? '고객이 문의하면 채팅방이 생성됩니다.' : '가게에 문의하여 채팅을 시작해보세요!'}</p>
           </div>
         ) : (
           <div className={styles.roomList}>
@@ -166,7 +170,7 @@ export default function ChatContainer() {
       {/* 오른쪽: 채팅방 상세 */}
       <div className={`${styles.mainContent} ${selectedRoomId ? styles.active : ''}`}>
         {selectedRoomId ? (
-          <ChatRoom roomId={selectedRoomId} onBack={() => setSelectedRoomId(null)} />
+          <ChatRoom roomId={selectedRoomId} onBack={() => setSelectedRoomId(null)} isPartner={isPartner} />
         ) : (
           <div className={styles.emptyChat}>
             <p>채팅방을 선택해주세요</p>
