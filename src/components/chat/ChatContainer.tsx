@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
-import { getUserChatRooms, ChatRoom as ChatRoomType, getUnreadMessageCount, subscribeToUnreadCount } from '@/lib/services/chatService'
+import { getUserChatRooms, ChatRoom as ChatRoomType, getUnreadMessageCount } from '@/lib/services/chatService'
 import { ref, onValue } from 'firebase/database'
 import { realtimeDb } from '@/lib/firebase'
 import { doc, getDoc } from 'firebase/firestore'
@@ -11,9 +11,9 @@ import { db } from '@/lib/firebase'
 import ChatRoom from './ChatRoom'
 import styles from './ChatContainer.module.css'
 
-interface ChatRoomWithName extends ChatRoomType {
+interface ChatRoomWithName extends Omit<ChatRoomType, 'unreadCount'> {
   otherUserName?: string
-  unreadCount?: number
+  unreadCount?: number // 현재 사용자의 읽지 않은 메시지 수
 }
 
 interface ChatContainerProps {
