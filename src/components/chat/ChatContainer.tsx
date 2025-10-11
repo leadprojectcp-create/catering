@@ -188,7 +188,12 @@ export default function ChatContainer({ isPartner = false }: ChatContainerProps)
       {/* 오른쪽: 채팅방 상세 */}
       <div className={`${styles.mainContent} ${selectedRoomId ? styles.active : ''}`}>
         {selectedRoomId ? (
-          <ChatRoom roomId={selectedRoomId} onBack={() => setSelectedRoomId(null)} isPartner={isPartner} />
+          <ChatRoom
+            roomId={selectedRoomId}
+            onBack={() => setSelectedRoomId(null)}
+            isPartner={isPartner}
+            onMessagesRead={() => loadChatRooms()}
+          />
         ) : (
           <div className={styles.emptyChat}>
             <p>채팅방을 선택해주세요</p>
