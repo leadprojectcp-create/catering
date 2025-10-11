@@ -134,10 +134,20 @@ export default function PartnerHeader() {
 
     loadUnreadCount()
 
+    // 채팅 읽음 상태 변경 이벤트 리스너
+    const handleUnreadCountChange = () => {
+      loadUnreadCount()
+    }
+
+    window.addEventListener('chatUnreadCountChanged', handleUnreadCountChange)
+
     // pathname이 변경될 때마다 읽지 않은 메시지 수 갱신
     const interval = setInterval(loadUnreadCount, 30000) // 30초마다 갱신
 
-    return () => clearInterval(interval)
+    return () => {
+      window.removeEventListener('chatUnreadCountChanged', handleUnreadCountChange)
+      clearInterval(interval)
+    }
   }, [user, pathname])
 
   return (

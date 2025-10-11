@@ -65,6 +65,17 @@ export default function Header() {
     }
 
     loadCounts()
+
+    // 채팅 읽음 상태 변경 이벤트 리스너
+    const handleUnreadCountChange = () => {
+      loadCounts()
+    }
+
+    window.addEventListener('chatUnreadCountChanged', handleUnreadCountChange)
+
+    return () => {
+      window.removeEventListener('chatUnreadCountChanged', handleUnreadCountChange)
+    }
   }, [user, pathname]) // pathname이 변경될 때마다 장바구니 개수 갱신
 
   const toggleDrawer = () => {

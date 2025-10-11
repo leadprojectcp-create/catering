@@ -105,6 +105,9 @@ export default function ChatContainer({ isPartner = false }: ChatContainerProps)
       if (urlRoomId) {
         setSelectedRoomId(urlRoomId)
       }
+
+      // 헤더에 읽지 않은 메시지 개수 업데이트 알림
+      window.dispatchEvent(new CustomEvent('chatUnreadCountChanged'))
     } catch (error) {
       console.error('[ChatContainer] 채팅방 목록 로드 실패:', error)
     }
