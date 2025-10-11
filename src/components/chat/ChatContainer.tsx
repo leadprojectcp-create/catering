@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
-import { getUserChatRooms, ChatRoom as ChatRoomType } from '@/lib/services/chatService'
+import { getUserChatRooms, ChatRoom as ChatRoomType, getUnreadMessageCount } from '@/lib/services/chatService'
 import { doc, getDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import ChatRoom from './ChatRoom'
@@ -11,6 +11,7 @@ import styles from './ChatContainer.module.css'
 
 interface ChatRoomWithName extends ChatRoomType {
   otherUserName?: string
+  unreadCount?: number
 }
 
 interface ChatContainerProps {
@@ -47,14 +48,23 @@ export default function ChatContainer({ isPartner = false }: ChatContainerProps)
   const loadChatRooms = async () => {
     if (!user) return
 
+    console.log('[ChatContainer] loadChatRooms 시작:', {
+      userId: user.uid,
+      isPartner
+    })
+
     try {
       const rooms = await getUserChatRooms(user.uid)
+      console.log('[ChatContainer] 채팅방 목록:', rooms)
 
-      // 각 채팅방의 상대방 이름 가져오기
+      // 각 채팅방의 상대방 이름과 읽지 않은 메시지 개수 가져오기
       const roomsWithNames = await Promise.all(
         rooms.map(async (room) => {
           // 상대방 ID 찾기
           const otherUserId = room.participants.find(id => id !== user.uid)
+
+          // 읽지 않은 메시지 개수 가져오기
+          const unreadCount = await getUnreadMessageCount(room.id, user.uid)
 
           if (otherUserId) {
             try {
@@ -70,7 +80,8 @@ export default function ChatContainer({ isPartner = false }: ChatContainerProps)
 
                 return {
                   ...room,
-                  otherUserName: displayName
+                  otherUserName: displayName,
+                  unreadCount
                 }
               }
             } catch (error) {
@@ -80,11 +91,13 @@ export default function ChatContainer({ isPartner = false }: ChatContainerProps)
 
           return {
             ...room,
-            otherUserName: '사용자'
+            otherUserName: '사용자',
+            unreadCount
           }
         })
       )
 
+      console.log('[ChatContainer] 이름이 추가된 채팅방 목록:', roomsWithNames)
       setChatRooms(roomsWithNames)
 
       // URL에 roomId가 있으면 그것을 사용, 없으면 첫 번째 채팅방 선택하지 않음
@@ -93,7 +106,7 @@ export default function ChatContainer({ isPartner = false }: ChatContainerProps)
         setSelectedRoomId(urlRoomId)
       }
     } catch (error) {
-      console.error('채팅방 목록 로드 실패:', error)
+      console.error('[ChatContainer] 채팅방 목록 로드 실패:', error)
     }
   }
 
@@ -151,7 +164,12 @@ export default function ChatContainer({ isPartner = false }: ChatContainerProps)
                 onClick={() => handleRoomClick(room.id)}
               >
                 <div className={styles.roomInfo}>
-                  <h3 className={styles.storeName}>{room.otherUserName || room.storeName}</h3>
+                  <div className={styles.roomHeader}>
+                    <h3 className={styles.storeName}>{room.otherUserName || room.storeName}</h3>
+                    {room.unreadCount && room.unreadCount > 0 && (
+                      <span className={styles.unreadBadge}>{room.unreadCount}</span>
+                    )}
+                  </div>
                   {room.lastMessage && (
                     <p className={styles.lastMessage}>{room.lastMessage}</p>
                   )}

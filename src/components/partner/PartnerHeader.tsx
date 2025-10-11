@@ -9,7 +9,7 @@ import { auth } from '@/lib/firebase'
 import { signOut } from 'firebase/auth'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
-import { getUserChatRooms, subscribeToMessages, type ChatRoom } from '@/lib/services/chatService'
+import { getTotalUnreadCount } from '@/lib/services/chatService'
 
 const partnerMenuItems = [
   {
@@ -117,45 +117,28 @@ export default function PartnerHeader() {
   }
 
   useEffect(() => {
-    if (!user) return
-
-    let unsubscribeFunctions: (() => void)[] = []
-    const unreadCounts = new Map<string, number>()
-
     const loadUnreadCount = async () => {
+      if (!user) {
+        setUnreadCount(0)
+        return
+      }
+
       try {
-        const chatRooms = await getUserChatRooms(user.uid)
-
-        // 각 채팅방의 읽지 않은 메시지 구독
-        const unsubscribes = chatRooms.map(room => {
-          return subscribeToMessages(room.id, (messages) => {
-            // 상대방이 보낸 읽지 않은 메시지 카운트
-            const unreadMessages = messages.filter(
-              msg => msg.senderId !== user.uid && !msg.read
-            )
-
-            // 이 채팅방의 읽지 않은 메시지 수 업데이트
-            unreadCounts.set(room.id, unreadMessages.length)
-
-            // 전체 읽지 않은 메시지 수 계산
-            const totalUnread = Array.from(unreadCounts.values()).reduce((sum, count) => sum + count, 0)
-            setUnreadCount(totalUnread)
-          })
-        })
-
-        unsubscribeFunctions = unsubscribes
+        const count = await getTotalUnreadCount(user.uid)
+        setUnreadCount(count)
       } catch (error) {
         console.error('읽지 않은 메시지 수 로드 실패:', error)
+        setUnreadCount(0)
       }
     }
 
     loadUnreadCount()
 
-    // 컴포넌트 언마운트 시 구독 해제
-    return () => {
-      unsubscribeFunctions.forEach(unsubscribe => unsubscribe())
-    }
-  }, [user])
+    // pathname이 변경될 때마다 읽지 않은 메시지 수 갱신
+    const interval = setInterval(loadUnreadCount, 30000) // 30초마다 갱신
+
+    return () => clearInterval(interval)
+  }, [user, pathname])
 
   return (
     <>

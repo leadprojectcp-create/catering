@@ -7,6 +7,7 @@ import styles from './Header.module.css'
 import { usePathname } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { getCartItemCount } from '@/lib/services/cartService'
+import { getTotalUnreadCount } from '@/lib/services/chatService'
 
 const menuItems = [
   {
@@ -42,22 +43,28 @@ export default function Header() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
   const { userData, logout, user } = useAuth()
   const [cartCount, setCartCount] = useState(0)
+  const [unreadCount, setUnreadCount] = useState(0)
 
   useEffect(() => {
-    const loadCartCount = async () => {
+    const loadCounts = async () => {
       if (user) {
         try {
-          const count = await getCartItemCount(user.uid)
-          setCartCount(count)
+          const [cartCnt, unreadCnt] = await Promise.all([
+            getCartItemCount(user.uid),
+            getTotalUnreadCount(user.uid)
+          ])
+          setCartCount(cartCnt)
+          setUnreadCount(unreadCnt)
         } catch (error) {
-          console.error('장바구니 개수 로드 실패:', error)
+          console.error('개수 로드 실패:', error)
         }
       } else {
         setCartCount(0)
+        setUnreadCount(0)
       }
     }
 
-    loadCartCount()
+    loadCounts()
   }, [user, pathname]) // pathname이 변경될 때마다 장바구니 개수 갱신
 
   const toggleDrawer = () => {
@@ -101,6 +108,18 @@ export default function Header() {
 
           {/* 오른쪽 메뉴 영역 */}
           <div className={styles.rightSection}>
+            {/* 채팅 아이콘 (로그인한 사용자만 표시) */}
+            {user && (
+              <Link href="/chat" className={styles.chatIconLink}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                </svg>
+                {unreadCount > 0 && (
+                  <span className={styles.chatBadge}>{unreadCount}</span>
+                )}
+              </Link>
+            )}
+
             {/* 장바구니 아이콘 (로그인한 사용자만 표시) */}
             {user && (
               <Link href="/cart" className={styles.cartIconLink}>

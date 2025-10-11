@@ -248,3 +248,46 @@ export const markMessagesAsRead = async (
     throw error
   }
 }
+
+// 읽지 않은 메시지 개수 가져오기
+export const getUnreadMessageCount = async (roomId: string, userId: string): Promise<number> => {
+  try {
+    const messagesRef = ref(realtimeDb, `messages/${roomId}`)
+    const snapshot = await get(messagesRef)
+
+    let unreadCount = 0
+
+    if (snapshot.exists()) {
+      snapshot.forEach((childSnapshot) => {
+        const message = childSnapshot.val() as ChatMessage
+        // 다른 사용자가 보낸 읽지 않은 메시지만 카운트
+        if (message.senderId !== userId && !message.read) {
+          unreadCount++
+        }
+      })
+    }
+
+    return unreadCount
+  } catch (error) {
+    console.error('읽지 않은 메시지 개수 가져오기 실패:', error)
+    return 0
+  }
+}
+
+// 전체 읽지 않은 메시지 개수 가져오기
+export const getTotalUnreadCount = async (userId: string): Promise<number> => {
+  try {
+    const chatRooms = await getUserChatRooms(userId)
+    let totalUnread = 0
+
+    for (const room of chatRooms) {
+      const unreadCount = await getUnreadMessageCount(room.id, userId)
+      totalUnread += unreadCount
+    }
+
+    return totalUnread
+  } catch (error) {
+    console.error('전체 읽지 않은 메시지 개수 가져오기 실패:', error)
+    return 0
+  }
+}
