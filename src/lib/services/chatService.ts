@@ -9,7 +9,7 @@ import {
   off,
   update
 } from 'firebase/database'
-import { doc, updateDoc, arrayUnion, getDoc, setDoc } from 'firebase/firestore'
+import { doc, arrayUnion, getDoc, setDoc } from 'firebase/firestore'
 import { realtimeDb, db } from '@/lib/firebase'
 
 // 채팅 관련 타입 정의
@@ -339,7 +339,12 @@ export const subscribeToUnreadCount = (
       }
 
       let totalUnread = 0
-      const roomDetails: any[] = []
+      const roomDetails: Array<{
+        roomId: string | null
+        participants: string[]
+        unreadCountData: { [userId: string]: number } | undefined
+        myUnreadCount: number
+      }> = []
 
       snapshot.forEach((childSnapshot) => {
         const room = childSnapshot.val() as ChatRoom
