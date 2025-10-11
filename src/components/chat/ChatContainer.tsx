@@ -3,7 +3,9 @@
 import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
-import { getUserChatRooms, ChatRoom as ChatRoomType, getUnreadMessageCount } from '@/lib/services/chatService'
+import { getUserChatRooms, ChatRoom as ChatRoomType, subscribeToUnreadCount } from '@/lib/services/chatService'
+import { ref, onValue } from 'firebase/database'
+import { realtimeDb } from '@/lib/firebase'
 import { doc, getDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import ChatRoom from './ChatRoom'
@@ -44,6 +46,43 @@ export default function ChatContainer({ isPartner = false }: ChatContainerProps)
       setSelectedRoomId(roomId)
     }
   }, [searchParams])
+
+  // 실시간으로 각 채팅방의 읽지 않은 메시지 개수 구독
+  useEffect(() => {
+    if (!user || chatRooms.length === 0) return
+
+    const unsubscribes: (() => void)[] = []
+
+    chatRooms.forEach((room) => {
+      const messagesRef = ref(realtimeDb, `messages/${room.id}`)
+
+      const unsubscribe = onValue(messagesRef, (snapshot) => {
+        let unreadCount = 0
+
+        if (snapshot.exists()) {
+          snapshot.forEach((childSnapshot) => {
+            const message = childSnapshot.val()
+            if (message.senderId !== user.uid && !message.read) {
+              unreadCount++
+            }
+          })
+        }
+
+        // 채팅방 목록에서 해당 채팅방의 unreadCount 업데이트
+        setChatRooms(prevRooms =>
+          prevRooms.map(r =>
+            r.id === room.id ? { ...r, unreadCount } : r
+          )
+        )
+      })
+
+      unsubscribes.push(unsubscribe)
+    })
+
+    return () => {
+      unsubscribes.forEach(unsub => unsub())
+    }
+  }, [user, chatRooms.length])
 
   const loadChatRooms = async () => {
     if (!user) return

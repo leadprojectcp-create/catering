@@ -7,7 +7,7 @@ import styles from './Header.module.css'
 import { usePathname } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { getCartItemCount } from '@/lib/services/cartService'
-import { getTotalUnreadCount } from '@/lib/services/chatService'
+import { subscribeToUnreadCount } from '@/lib/services/chatService'
 
 const menuItems = [
   {
@@ -46,37 +46,38 @@ export default function Header() {
   const [unreadCount, setUnreadCount] = useState(0)
 
   useEffect(() => {
-    const loadCounts = async () => {
+    const loadCartCount = async () => {
       if (user) {
         try {
-          const [cartCnt, unreadCnt] = await Promise.all([
-            getCartItemCount(user.uid),
-            getTotalUnreadCount(user.uid)
-          ])
-          setCartCount(cartCnt)
-          setUnreadCount(unreadCnt)
+          const count = await getCartItemCount(user.uid)
+          setCartCount(count)
         } catch (error) {
-          console.error('개수 로드 실패:', error)
+          console.error('장바구니 개수 로드 실패:', error)
         }
       } else {
         setCartCount(0)
-        setUnreadCount(0)
       }
     }
 
-    loadCounts()
+    loadCartCount()
+  }, [user, pathname])
 
-    // 채팅 읽음 상태 변경 이벤트 리스너
-    const handleUnreadCountChange = () => {
-      loadCounts()
+  // 읽지 않은 메시지 개수 실시간 구독
+  useEffect(() => {
+    if (!user) {
+      setUnreadCount(0)
+      return
     }
 
-    window.addEventListener('chatUnreadCountChanged', handleUnreadCountChange)
+    // 실시간 구독 설정
+    const unsubscribe = subscribeToUnreadCount(user.uid, (count) => {
+      setUnreadCount(count)
+    })
 
     return () => {
-      window.removeEventListener('chatUnreadCountChanged', handleUnreadCountChange)
+      unsubscribe()
     }
-  }, [user, pathname]) // pathname이 변경될 때마다 장바구니 개수 갱신
+  }, [user])
 
   const toggleDrawer = () => {
     setIsDrawerOpen(!isDrawerOpen)

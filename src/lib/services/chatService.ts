@@ -291,3 +291,57 @@ export const getTotalUnreadCount = async (userId: string): Promise<number> => {
     return 0
   }
 }
+
+// 읽지 않은 메시지 개수 실시간 구독
+export const subscribeToUnreadCount = (
+  userId: string,
+  callback: (count: number) => void
+): (() => void) => {
+  let unsubscribeFunctions: (() => void)[] = []
+
+  const setupSubscription = async () => {
+    try {
+      const chatRooms = await getUserChatRooms(userId)
+      const unreadCounts = new Map<string, number>()
+
+      // 각 채팅방의 메시지 변경 구독
+      const unsubscribes = chatRooms.map(room => {
+        const messagesRef = ref(realtimeDb, `messages/${room.id}`)
+
+        return onValue(messagesRef, (snapshot) => {
+          let unreadCount = 0
+
+          if (snapshot.exists()) {
+            snapshot.forEach((childSnapshot) => {
+              const message = childSnapshot.val() as ChatMessage
+              if (message.senderId !== userId && !message.read) {
+                unreadCount++
+              }
+            })
+          }
+
+          unreadCounts.set(room.id, unreadCount)
+
+          // 전체 읽지 않은 메시지 수 계산
+          const totalUnread = Array.from(unreadCounts.values()).reduce((sum, count) => sum + count, 0)
+          callback(totalUnread)
+        })
+      })
+
+      unsubscribeFunctions = unsubscribes
+    } catch (error) {
+      console.error('읽지 않은 메시지 구독 실패:', error)
+    }
+  }
+
+  setupSubscription()
+
+  // 구독 해제 함수 반환
+  return () => {
+    unsubscribeFunctions.forEach(unsubscribe => {
+      if (typeof unsubscribe === 'function') {
+        unsubscribe()
+      }
+    })
+  }
+}

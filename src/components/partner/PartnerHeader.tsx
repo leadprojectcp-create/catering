@@ -9,7 +9,7 @@ import { auth } from '@/lib/firebase'
 import { signOut } from 'firebase/auth'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
-import { getTotalUnreadCount } from '@/lib/services/chatService'
+import { subscribeToUnreadCount } from '@/lib/services/chatService'
 
 const partnerMenuItems = [
   {
@@ -116,39 +116,22 @@ export default function PartnerHeader() {
     setIsDrawerOpen(false)
   }
 
+  // 읽지 않은 메시지 개수 실시간 구독
   useEffect(() => {
-    const loadUnreadCount = async () => {
-      if (!user) {
-        setUnreadCount(0)
-        return
-      }
-
-      try {
-        const count = await getTotalUnreadCount(user.uid)
-        setUnreadCount(count)
-      } catch (error) {
-        console.error('읽지 않은 메시지 수 로드 실패:', error)
-        setUnreadCount(0)
-      }
+    if (!user) {
+      setUnreadCount(0)
+      return
     }
 
-    loadUnreadCount()
-
-    // 채팅 읽음 상태 변경 이벤트 리스너
-    const handleUnreadCountChange = () => {
-      loadUnreadCount()
-    }
-
-    window.addEventListener('chatUnreadCountChanged', handleUnreadCountChange)
-
-    // pathname이 변경될 때마다 읽지 않은 메시지 수 갱신
-    const interval = setInterval(loadUnreadCount, 30000) // 30초마다 갱신
+    // 실시간 구독 설정
+    const unsubscribe = subscribeToUnreadCount(user.uid, (count) => {
+      setUnreadCount(count)
+    })
 
     return () => {
-      window.removeEventListener('chatUnreadCountChanged', handleUnreadCountChange)
-      clearInterval(interval)
+      unsubscribe()
     }
-  }, [user, pathname])
+  }, [user])
 
   return (
     <>
