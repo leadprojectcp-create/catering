@@ -5,8 +5,6 @@ import Link from 'next/link'
 import Image from 'next/image'
 import styles from './PartnerHeader.module.css'
 import { usePathname } from 'next/navigation'
-import { auth } from '@/lib/firebase'
-import { signOut } from 'firebase/auth'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { subscribeToUnreadCount } from '@/lib/services/chatService'
@@ -95,13 +93,13 @@ const partnerMenuItems = [
 export default function PartnerHeader() {
   const pathname = usePathname()
   const router = useRouter()
-  const { user } = useAuth()
+  const { user, logout } = useAuth()
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
 
   const handleLogout = async () => {
     try {
-      await signOut(auth)
+      await logout()
       router.push('/login')
     } catch (error) {
       console.error('로그아웃 실패:', error)
@@ -127,14 +125,26 @@ export default function PartnerHeader() {
     console.log('[PartnerHeader] user 객체:', user)
 
     // 실시간 구독 설정
-    const unsubscribe = subscribeToUnreadCount(user.uid, (count) => {
-      console.log('[PartnerHeader] unreadCount 업데이트:', count, typeof count)
-      setUnreadCount(count)
-    })
+    let unsubscribe: (() => void) | undefined
+    try {
+      unsubscribe = subscribeToUnreadCount(user.uid, (count: number) => {
+        console.log('[PartnerHeader] unreadCount 업데이트:', count, typeof count)
+        setUnreadCount(count)
+      })
+    } catch (error) {
+      console.error('[PartnerHeader] 읽지 않은 메시지 구독 실패:', error)
+      setUnreadCount(0)
+    }
 
     return () => {
       console.log('[PartnerHeader] 구독 해제')
-      unsubscribe()
+      if (unsubscribe) {
+        try {
+          unsubscribe()
+        } catch (error) {
+          console.error('[PartnerHeader] 구독 해제 실패:', error)
+        }
+      }
     }
   }, [user])
 

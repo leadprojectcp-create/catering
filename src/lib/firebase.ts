@@ -1,9 +1,9 @@
-import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app'
-import { getAuth, Auth } from 'firebase/auth'
-import { getFirestore, Firestore } from 'firebase/firestore'
-import { getStorage, FirebaseStorage } from 'firebase/storage'
+import { initializeApp, getApps, getApp } from 'firebase/app'
+import { getAuth } from 'firebase/auth'
+import { getFirestore } from 'firebase/firestore'
+import { getStorage } from 'firebase/storage'
 import { getAnalytics, Analytics } from 'firebase/analytics'
-import { getDatabase, Database } from 'firebase/database'
+import { getDatabase } from 'firebase/database'
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -17,7 +17,13 @@ const firebaseConfig = {
 }
 
 // Firebase 앱 초기화 (한 번만 실행)
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp()
+let app: ReturnType<typeof initializeApp>
+try {
+  app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp()
+} catch (error) {
+  console.error('Firebase 초기화 실패:', error)
+  throw error
+}
 
 // Firebase 서비스 초기화 (앱 인스턴스 재사용)
 export const auth = getAuth(app)
@@ -25,13 +31,21 @@ export const db = getFirestore(app, 'catering')
 export const storage = getStorage(app)
 export const realtimeDb = getDatabase(app)
 
-// Analytics 초기화 (브라우저에서만, 실패해도 무시)
+// Analytics 지연 초기화 (installations 에러 방지)
 export let analytics: Analytics | null = null
-if (typeof window !== 'undefined') {
-  try {
-    analytics = getAnalytics(app)
-  } catch (error) {
-    // Analytics 실패는 무시 (installations 에러 방지)
+
+// Analytics를 필요할 때만 초기화하는 함수
+export const initializeAnalyticsIfNeeded = () => {
+  if (typeof window !== 'undefined' && !analytics) {
+    try {
+      // 페이지 로드 후 3초 뒤에 초기화 (installations API 안정화 대기)
+      setTimeout(() => {
+        const { getAnalytics } = require('firebase/analytics')
+        analytics = getAnalytics(app)
+      }, 3000)
+    } catch (error) {
+      // Analytics 실패는 무시
+    }
   }
 }
 
@@ -40,5 +54,3 @@ export default app
 // For development, connect to Firestore emulator if available
 if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
 }
-
-export default app

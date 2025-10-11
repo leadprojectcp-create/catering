@@ -70,12 +70,24 @@ export default function Header() {
     }
 
     // 실시간 구독 설정
-    const unsubscribe = subscribeToUnreadCount(user.uid, (count) => {
-      setUnreadCount(count)
-    })
+    let unsubscribe: (() => void) | undefined
+    try {
+      unsubscribe = subscribeToUnreadCount(user.uid, (count: number) => {
+        setUnreadCount(count)
+      })
+    } catch (error) {
+      console.error('[Header] 읽지 않은 메시지 구독 실패:', error)
+      setUnreadCount(0)
+    }
 
     return () => {
-      unsubscribe()
+      if (unsubscribe) {
+        try {
+          unsubscribe()
+        } catch (error) {
+          console.error('[Header] 구독 해제 실패:', error)
+        }
+      }
     }
   }, [user])
 
