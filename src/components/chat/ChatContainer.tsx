@@ -169,7 +169,7 @@ export default function ChatContainer({ isPartner = false }: ChatContainerProps)
                 <div className={styles.roomInfo}>
                   <div className={styles.roomHeader}>
                     <h3 className={styles.storeName}>{room.otherUserName || room.storeName}</h3>
-                    {room.unreadCount && room.unreadCount > 0 && (
+                    {(room.unreadCount ?? 0) > 0 && (
                       <span className={styles.unreadBadge}>{room.unreadCount}</span>
                     )}
                   </div>
