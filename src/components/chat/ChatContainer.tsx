@@ -105,8 +105,8 @@ export default function ChatContainer({ isPartner = false }: ChatContainerProps)
           const otherUserId = room.participants.find(id => id !== user.uid)
 
           // 읽지 않은 메시지 개수 가져오기 (DB에서 직접)
-          const roomUnreadCount = (room as any).unreadCount as { [key: string]: number } | undefined
-          const unreadCount = roomUnreadCount?.[user.uid] || 0
+          const roomData = room as ChatRoomType & { unreadCount?: { [key: string]: number } }
+          const unreadCount = roomData.unreadCount?.[user.uid] || 0
 
           if (otherUserId) {
             try {
