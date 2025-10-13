@@ -23,9 +23,11 @@ interface ChatRoomProps {
   roomId: string
   onBack?: () => void
   isPartner?: boolean
+  initialProductId?: string | null
+  initialMessage?: string | null
 }
 
-export default function ChatRoom({ roomId, onBack, isPartner = false }: ChatRoomProps) {
+export default function ChatRoom({ roomId, onBack, isPartner = false, initialProductId, initialMessage }: ChatRoomProps) {
   const router = useRouter()
   const { user, loading: authLoading } = useAuth()
   const [room, setRoom] = useState<ChatRoomType | null>(null)
@@ -37,6 +39,9 @@ export default function ChatRoom({ roomId, onBack, isPartner = false }: ChatRoom
   const [showProductPopup, setShowProductPopup] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
   const [viewerImageUrl, setViewerImageUrl] = useState<string | null>(null)
+  const [showConfirmModal, setShowConfirmModal] = useState(false)
+  const [pendingProductId, setPendingProductId] = useState<string | null>(null)
+  const [pendingMessage, setPendingMessage] = useState<string | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const messagesContainerRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -53,6 +58,29 @@ export default function ChatRoom({ roomId, onBack, isPartner = false }: ChatRoom
 
     loadRoomData()
   }, [user, authLoading, roomId, router])
+
+  // 초기 상품 및 메시지 확인 모달 표시 (한 번만 실행)
+  useEffect(() => {
+    if (!user || !room) return
+    if (!initialProductId && !initialMessage) return
+
+    let isModalShown = false
+
+    const showConfirmationModal = () => {
+      if (isModalShown) return
+      isModalShown = true
+
+      // 모달에 전달할 데이터 설정
+      setPendingProductId(initialProductId || null)
+      setPendingMessage(initialMessage || null)
+      setShowConfirmModal(true)
+
+      console.log('[ChatRoom] 확인 모달 표시:', { initialProductId, initialMessage })
+    }
+
+    showConfirmationModal()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, room, roomId]) // initialProductId, initialMessage를 의존성에서 제외하여 한 번만 실행
 
   useEffect(() => {
     if (!user || !roomId) return
@@ -230,6 +258,41 @@ export default function ChatRoom({ roomId, onBack, isPartner = false }: ChatRoom
       console.error('[ChatRoom] 상품 전송 실패:', error)
       alert('상품 전송에 실패했습니다.')
     }
+  }
+
+  const handleConfirmInquiry = async () => {
+    if (!user) return
+
+    try {
+      // 상품 메시지 전송
+      if (pendingProductId) {
+        await sendMessage(roomId, user.uid, user.displayName || '사용자', `[상품]${pendingProductId}`)
+      }
+
+      // 텍스트 메시지 전송
+      if (pendingMessage) {
+        await sendMessage(roomId, user.uid, user.displayName || '사용자', pendingMessage)
+      }
+
+      console.log('[ChatRoom] 상품 문의 전송 완료')
+
+      // 모달 닫기 및 상태 초기화
+      setShowConfirmModal(false)
+      setPendingProductId(null)
+      setPendingMessage(null)
+    } catch (error) {
+      console.error('[ChatRoom] 상품 문의 전송 실패:', error)
+      alert('메시지 전송에 실패했습니다.')
+    }
+  }
+
+  const handleCancelInquiry = () => {
+    console.log('[ChatRoom] 상품 문의 취소')
+
+    // 모달 닫기 및 상태 초기화
+    setShowConfirmModal(false)
+    setPendingProductId(null)
+    setPendingMessage(null)
   }
 
   const formatTime = (timestamp: number) => {
@@ -432,6 +495,29 @@ export default function ChatRoom({ roomId, onBack, isPartner = false }: ChatRoom
           imageUrl={viewerImageUrl}
           onClose={() => setViewerImageUrl(null)}
         />
+      )}
+
+      {/* 상품 문의 확인 모달 */}
+      {showConfirmModal && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalContent}>
+            <h3 className={styles.modalTitle}>이 상품에 대해서 문의할까요?</h3>
+            <div className={styles.modalButtons}>
+              <button
+                className={styles.cancelButton}
+                onClick={handleCancelInquiry}
+              >
+                취소
+              </button>
+              <button
+                className={styles.confirmButton}
+                onClick={handleConfirmInquiry}
+              >
+                확인
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )

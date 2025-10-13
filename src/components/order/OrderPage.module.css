@@ -86,9 +86,9 @@
   font-weight: 600;
   color: #333;
   margin: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  word-wrap: break-word;
+  word-break: break-word;
+  white-space: normal;
 }
 
 .originalPrice {
@@ -348,6 +348,33 @@
 
 .descriptionSection {
   padding: 20px 0;
+}
+
+.actionButtons {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.actionButton {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  border: 1px solid #F0F0F3;
+  background: white;
+  color: #333;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.actionIcon {
+  width: 20px;
+  height: 20px;
 }
 
 .originSection {
@@ -834,5 +861,9 @@
     gap: 4px;
     width: 100%;
     align-items: flex-start;
+  }
+
+  .actionButton {
+    border-radius: 30px;
   }
 }

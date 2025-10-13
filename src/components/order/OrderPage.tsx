@@ -592,6 +592,30 @@ export default function OrderPage({ productId, storeId }: OrderPageProps) {
                 </div>
               </div>
 
+              {/* 채팅 및 가게 버튼 */}
+              <div className={styles.actionButtons}>
+                <button className={styles.actionButton} onClick={() => {
+                  // 채팅 기능
+                  if (!user) {
+                    alert('로그인이 필요합니다.')
+                    return
+                  }
+                  router.push(`/chat?productId=${product.id}&message=${encodeURIComponent('이 상품에 대해서 궁금합니다.')}`)
+                }}>
+                  <img src="/icons/product_chat.png" alt="채팅" className={styles.actionIcon} />
+                  채팅
+                </button>
+                <button className={styles.actionButton} onClick={() => {
+                  // 가게로 이동
+                  if (product.storeId) {
+                    router.push(`/store/${product.storeId}`)
+                  }
+                }}>
+                  <img src="/icons/product_store.png" alt="가게" className={styles.actionIcon} />
+                  가게
+                </button>
+              </div>
+
               {/* 원산지 표기 */}
               {product.origin && product.origin.length > 0 && (
                 <div className={styles.originSection}>

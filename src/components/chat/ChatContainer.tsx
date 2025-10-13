@@ -3,11 +3,12 @@
 import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
-import { getUserChatRooms, ChatRoom as ChatRoomType } from '@/lib/services/chatService'
+import { getUserChatRooms, ChatRoom as ChatRoomType, createOrGetChatRoom } from '@/lib/services/chatService'
 import { ref, onValue } from 'firebase/database'
 import { realtimeDb } from '@/lib/firebase'
 import { doc, getDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
+import { getProduct } from '@/lib/services/productService'
 import ChatRoom from './ChatRoom'
 import styles from './ChatContainer.module.css'
 
@@ -26,6 +27,8 @@ export default function ChatContainer({ isPartner = false }: ChatContainerProps)
   const { user, loading: authLoading } = useAuth()
   const [chatRooms, setChatRooms] = useState<ChatRoomWithName[]>([])
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null)
+  const [initialProductId, setInitialProductId] = useState<string | null>(null)
+  const [initialMessage, setInitialMessage] = useState<string | null>(null)
 
   // 채팅방 목록 로드 (한 번만)
   useEffect(() => {
@@ -41,13 +44,31 @@ export default function ChatContainer({ isPartner = false }: ChatContainerProps)
     loadChatRooms()
   }, [user, authLoading, router])
 
-  // URL의 roomId 파라미터 처리
+  // URL의 roomId, productId, message 파라미터 처리
   useEffect(() => {
     const roomId = searchParams.get('roomId')
+    const productId = searchParams.get('productId')
+    const message = searchParams.get('message')
+
     if (roomId) {
       setSelectedRoomId(roomId)
     }
-  }, [searchParams])
+
+    // productId가 있으면 해당 상품의 가게 주인과 채팅방 찾기/생성
+    if (productId && user) {
+      findOrCreateChatRoom(productId)
+    }
+
+    // productId와 message가 있으면 상태에 저장
+    if (productId) {
+      setInitialProductId(productId)
+      console.log('[ChatContainer] productId:', productId)
+    }
+    if (message) {
+      setInitialMessage(message)
+      console.log('[ChatContainer] message:', message)
+    }
+  }, [searchParams, user])
 
   // 실시간으로 전체 chatRooms의 unreadCount 구독 (한 번만 설정)
   useEffect(() => {
@@ -152,6 +173,64 @@ export default function ChatContainer({ isPartner = false }: ChatContainerProps)
     }
   }
 
+  const findOrCreateChatRoom = async (productId: string) => {
+    if (!user) return
+
+    console.log('[ChatContainer] findOrCreateChatRoom 시작:', productId)
+
+    try {
+      // 상품 정보 가져오기
+      const product = await getProduct(productId)
+      if (!product) {
+        console.error('[ChatContainer] 상품을 찾을 수 없습니다:', productId)
+        return
+      }
+
+      // 상품의 가게 주인 ID 가져오기
+      const storeOwnerId = product.partnerId
+      if (!storeOwnerId) {
+        console.error('[ChatContainer] 가게 주인 ID를 찾을 수 없습니다')
+        return
+      }
+
+      console.log('[ChatContainer] 가게 주인 ID:', storeOwnerId)
+
+      // 가게 주인 정보 가져오기 (storeName)
+      let storeName = '가게'
+      try {
+        const storeOwnerDoc = await getDoc(doc(db, 'users', storeOwnerId))
+        if (storeOwnerDoc.exists()) {
+          const storeOwnerData = storeOwnerDoc.data()
+          storeName = storeOwnerData.companyName || storeOwnerData.storeName || '가게'
+        }
+      } catch (error) {
+        console.error('[ChatContainer] 가게 주인 정보 로드 실패:', error)
+      }
+
+      // 채팅방 찾기 또는 생성
+      const roomId = await createOrGetChatRoom(user.uid, product.storeId || storeOwnerId, storeName, storeOwnerId)
+      console.log('[ChatContainer] 채팅방 ID:', roomId)
+
+      // 채팅방 목록 다시 로드
+      await loadChatRooms()
+
+      // 채팅방 선택
+      setSelectedRoomId(roomId)
+
+      // URL 업데이트 (productId와 message 유지)
+      const message = searchParams.get('message')
+      const params = new URLSearchParams()
+      params.set('roomId', roomId)
+      params.set('productId', productId)
+      if (message) {
+        params.set('message', message)
+      }
+      router.push(`/chat?${params.toString()}`, { scroll: false })
+    } catch (error) {
+      console.error('[ChatContainer] 채팅방 찾기/생성 실패:', error)
+    }
+  }
+
   const handleRoomClick = (roomId: string) => {
     setSelectedRoomId(roomId)
     router.push(`/chat?roomId=${roomId}`, { scroll: false })
@@ -244,6 +323,8 @@ export default function ChatContainer({ isPartner = false }: ChatContainerProps)
             roomId={selectedRoomId}
             onBack={() => setSelectedRoomId(null)}
             isPartner={isPartner}
+            initialProductId={initialProductId}
+            initialMessage={initialMessage}
           />
         ) : (
           <div className={styles.emptyChat}>

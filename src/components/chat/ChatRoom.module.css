@@ -336,6 +336,72 @@
   cursor: not-allowed;
 }
 
+/* 확인 모달 */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modalContent {
+  background-color: #fff;
+  border-radius: 12px;
+  padding: 24px;
+  max-width: 320px;
+  width: 90%;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.modalTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  text-align: center;
+  margin: 0 0 20px 0;
+}
+
+.modalButtons {
+  display: flex;
+  gap: 8px;
+}
+
+.cancelButton,
+.confirmButton {
+  flex: 1;
+  padding: 12px 16px;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cancelButton {
+  background-color: #f5f5f5;
+  color: #666;
+}
+
+.cancelButton:hover {
+  background-color: #e5e5e5;
+}
+
+.confirmButton {
+  background-color: #FF8B00;
+  color: #fff;
+}
+
+.confirmButton:hover {
+  background-color: #e67d00;
+}
+
 @media (max-width: 768px) {
   .container {
     max-width: 100%;
