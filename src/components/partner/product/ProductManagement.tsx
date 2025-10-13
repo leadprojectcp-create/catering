@@ -22,6 +22,7 @@ interface MenuItem {
   updatedAt: Date
   deliveryMethods?: string[]
   additionalSettings?: string[]
+  productTypes?: string[]
   discountedPrice?: number
   discount?: {
     discountAmount: number
@@ -206,31 +207,38 @@ export default function ProductManagement() {
         ) : (
           filteredItems.map((item) => (
             <div key={item.id} className={styles.menuCard}>
-              <div className={styles.menuTop}>
+              <div className={`${styles.menuTop} ${item.status !== 'active' ? styles.inactive : ''}`}>
+                {item.status !== 'active' && (
+                  <div className={styles.statusOverlay}>
+                    {item.status === 'inactive' ? '숨김' : '심사중'}
+                  </div>
+                )}
                 <div className={styles.menuInfo}>
                   <div className={styles.menuHeader}>
-                    <h3 className={`${styles.menuName} ${item.status === 'inactive' ? styles.inactiveMenuName : ''}`}>
-                      <span>{item.name}</span>
-                      <span className={
-                        item.status === 'active' ? styles.available :
-                        item.status === 'inactive' ? styles.soldOut :
-                        styles.pending
-                      }>
-                        {item.status === 'active' ? '판매중' :
-                         item.status === 'inactive' ? '숨김' :
-                         '심사중'}
-                      </span>
+                    <div className={styles.firstRow}>
+                      {item.productTypes && item.productTypes.length > 0 && (
+                        <span className={styles.productTypesContainer}>
+                          {item.productTypes.map((type, index) => (
+                            <span key={index} className={styles.productTypeBadge}>
+                              {type.replace('상품', '')}
+                            </span>
+                          ))}
+                        </span>
+                      )}
+                    </div>
+                    <h3 className={styles.menuName}>
+                      {item.name}
                     </h3>
                   </div>
 
                   {item.discountedPrice ? (
-                    <>
+                    <div className={styles.priceRow}>
                       <span className={styles.originalPrice}>{item.price.toLocaleString()}원</span>
                       <div className={styles.discountRow}>
                         <span className={styles.discountedPrice}>{item.discountedPrice.toLocaleString()}원</span>
                         <span className={styles.discountPercent}>{item.discount?.discountPercent}%</span>
                       </div>
-                    </>
+                    </div>
                   ) : (
                     <span className={styles.regularPrice}>{item.price.toLocaleString()}원</span>
                   )}
@@ -243,11 +251,6 @@ export default function ProductManagement() {
 
                   <div className={styles.badgeContainerDesktop}>
                     <div className={styles.badgeRow}>
-                      {item.deliveryMethods?.map((method, index) => (
-                        <span key={index} className={styles.deliveryBadge}>{method}</span>
-                      ))}
-                    </div>
-                    <div className={styles.badgeRow}>
                       {item.additionalSettings?.map((setting, index) => (
                         <span key={index} className={styles.settingBadge}>{setting}</span>
                       ))}
@@ -257,16 +260,11 @@ export default function ProductManagement() {
 
                 <div className={styles.imageWrapper}>
                   {item.images && item.images.length > 0 ? (
-                    <>
-                      <img
-                        src={`${item.images[0]}?width=140&height=140`}
-                        alt={item.name}
-                        className={styles.image}
-                      />
-                      {item.status === 'inactive' && (
-                        <div className={styles.imageOverlay}>숨김</div>
-                      )}
-                    </>
+                    <img
+                      src={`${item.images[0]}?width=140&height=140`}
+                      alt={item.name}
+                      className={styles.image}
+                    />
                   ) : (
                     <div className={styles.placeholderImage}>
                       <span>이미지 없음</span>
@@ -275,11 +273,6 @@ export default function ProductManagement() {
                 </div>
 
                 <div className={styles.badgeContainerMobile}>
-                  <div className={styles.badgeRow}>
-                    {item.deliveryMethods?.map((method, index) => (
-                      <span key={index} className={styles.deliveryBadge}>{method}</span>
-                    ))}
-                  </div>
                   <div className={styles.badgeRow}>
                     {item.additionalSettings?.map((setting, index) => (
                       <span key={index} className={styles.settingBadge}>{setting}</span>

@@ -55,6 +55,13 @@
   line-height: 19px;
 }
 
+.optionalLabel {
+  font-size: 12px;
+  font-weight: 400;
+  color: #999;
+  margin-left: 4px;
+}
+
 .numberCircle {
   width: 19px;
   height: 19px;

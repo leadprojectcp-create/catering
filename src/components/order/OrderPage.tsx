@@ -591,6 +591,20 @@ export default function OrderPage({ productId, storeId }: OrderPageProps) {
                   ))}
                 </div>
               </div>
+
+              {/* 원산지 표기 */}
+              {product.origin && product.origin.length > 0 && (
+                <div className={styles.originSection}>
+                  <h3 className={styles.originTitle}>원산지 표기</h3>
+                  <p className={styles.originText}>
+                    {product.origin.map((item, index) => (
+                      <span key={index}>
+                        {item.ingredient}({item.origin}){index < product.origin!.length - 1 ? ', ' : ''}
+                      </span>
+                    ))}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
 
@@ -608,20 +622,6 @@ export default function OrderPage({ productId, storeId }: OrderPageProps) {
               >
                 {isDescriptionExpanded ? '상품 설명 접기' : '상품 설명 펼쳐보기'}
               </button>
-            </div>
-          )}
-
-          {/* 원산지 표기 */}
-          {product.origin && product.origin.length > 0 && (
-            <div className={styles.originSection}>
-              <h3 className={styles.originTitle}>원산지 표기</h3>
-              <p className={styles.originText}>
-                {product.origin.map((item, index) => (
-                  <span key={index}>
-                    {item.ingredient}({item.origin}){index < product.origin!.length - 1 ? ', ' : ''}
-                  </span>
-                ))}
-              </p>
             </div>
           )}
 
@@ -689,12 +689,10 @@ export default function OrderPage({ productId, storeId }: OrderPageProps) {
         {product.options && product.options.length > 0 && (
           <>
             {/* 모달 오버레이 */}
-            {isModalOpen && (
-              <div
-                className={styles.modalOverlay}
-                onClick={() => setIsModalOpen(false)}
-              />
-            )}
+            <div
+              className={`${styles.modalOverlay} ${isModalOpen ? styles.open : ''}`}
+              onClick={() => setIsModalOpen(false)}
+            />
 
             <div
               className={`${styles.rightSection} ${isModalOpen ? styles.modalOpen : ''}`}

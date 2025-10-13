@@ -67,11 +67,29 @@ export default function CustomEditor({ value, onChange, placeholder, storeId, pr
 
       const result = await response.json()
 
-      // Insert image at cursor position
-      const img = `<img src="${result.url}" alt="상품 이미지" style="max-width: 100%; height: auto;" />`
-      execCommand('insertHTML', img)
+      // Insert image directly into editor content
+      if (editorRef.current) {
+        const img = `<img src="${result.url}" alt="상품 이미지" style="max-width: 100%; height: auto;" />`
 
-      handleInput()
+        // Focus the editor first
+        editorRef.current.focus()
+
+        // Try to use execCommand if selection exists, otherwise append to end
+        const selection = window.getSelection()
+        if (selection && selection.rangeCount > 0) {
+          try {
+            document.execCommand('insertHTML', false, img)
+          } catch (error) {
+            // Fallback: append to the end of content
+            editorRef.current.innerHTML += img
+          }
+        } else {
+          // No selection, append to end
+          editorRef.current.innerHTML += img
+        }
+
+        handleInput()
+      }
     } catch (error) {
       console.error('이미지 업로드 오류:', error)
       alert('이미지 업로드 중 오류가 발생했습니다.')

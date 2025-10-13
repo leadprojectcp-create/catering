@@ -185,7 +185,7 @@ export default function Header() {
             {user && (
               <Link href="/wishlist" className={styles.wishlistIconLink}>
                 <Image
-                  src="/menu-icons/heart.png"
+                  src={pathname === '/wishlist' ? '/menu-icons/heart_active.png' : '/menu-icons/heart.png'}
                   alt="찜"
                   width={24}
                   height={24}
@@ -197,13 +197,13 @@ export default function Header() {
             {user && (
               <Link href="/cart" className={styles.cartIconLink}>
                 <Image
-                  src="/menu-icons/shopping_cart.png"
+                  src={pathname === '/cart' ? '/menu-icons/shopping_active.png' : '/menu-icons/shopping.png'}
                   alt="장바구니"
                   width={24}
                   height={24}
                 />
                 {cartCount > 0 && (
-                  <span className={styles.cartBadge}>{cartCount}</span>
+                  <span className={styles.cartBadge}>N</span>
                 )}
               </Link>
             )}
@@ -212,13 +212,13 @@ export default function Header() {
             {user && (
               <Link href="/chat" className={styles.chatIconLink}>
                 <Image
-                  src="/menu-icons/chat.png"
+                  src={pathname === '/chat' || pathname.startsWith('/chat/') ? '/menu-icons/chat_active.png' : '/menu-icons/chat.png'}
                   alt="채팅"
                   width={24}
                   height={24}
                 />
                 {unreadCount > 0 && (
-                  <span className={styles.chatBadge}>{unreadCount}</span>
+                  <span className={styles.chatBadge}>N</span>
                 )}
               </Link>
             )}
@@ -227,7 +227,7 @@ export default function Header() {
             {user && (
               <Link href="/orders" className={styles.ordersIconLink}>
                 <Image
-                  src="/menu-icons/order.png"
+                  src={pathname === '/orders' ? '/menu-icons/order_active.png' : '/menu-icons/order.png'}
                   alt="주문내역"
                   width={24}
                   height={24}

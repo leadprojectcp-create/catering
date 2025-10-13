@@ -85,8 +85,8 @@ export default function BottomNavigator() {
       name: '장바구니',
       path: '/cart',
       badge: cartCount,
-      iconDefault: '/menu-icons/shopping_cart.png',
-      iconActive: '/menu-icons/shopping.png'
+      iconDefault: '/menu-icons/shopping.png',
+      iconActive: '/menu-icons/shopping_active.png'
     },
     {
       name: '주문내역',
@@ -114,7 +114,7 @@ export default function BottomNavigator() {
                 height={24}
               />
               {item.badge !== undefined && item.badge > 0 && (
-                <span className={styles.badge}>{item.badge}</span>
+                <span className={styles.badge}>N</span>
               )}
             </div>
             <span className={styles.label}>{item.name}</span>

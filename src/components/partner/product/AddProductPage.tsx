@@ -40,6 +40,7 @@ interface ProductFormData {
   images: File[]
   price: number
   category: string
+  productTypes: string[]
   options: ProductOption[]
   description: string
   minOrderQuantity: number
@@ -71,6 +72,7 @@ export default function AddProductPage() {
     images: [],
     price: 0,
     category: '',
+    productTypes: [],
     options: [{ groupName: '', values: [{ name: '', price: 0 }] }],
     description: '',
     minOrderQuantity: 10,
@@ -518,18 +520,122 @@ export default function AddProductPage() {
               value={formData.name}
               onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
               placeholder="상품명을 입력하세요"
-              maxLength={100}
+              maxLength={50}
               className={styles.textInput}
               required
             />
-            <span className={styles.inputCounter}>{formData.name.length}/100자</span>
+            <span className={styles.inputCounter}>{formData.name.length}/50자</span>
+          </div>
+        </div>
+
+        {/* 상품 타입 설정 */}
+        <div className={styles.section}>
+          <div className={styles.titleWithNumber}>
+            <span className={styles.numberCircle}>3</span>
+            <span className={styles.sectionTitle}>상품 타입 설정</span>
+            <span className={styles.optionalLabel}>(선택사항, 최대 2개)</span>
+          </div>
+          <div className={styles.checkboxGroup}>
+            <label className={styles.checkboxLabel}>
+              <input
+                type="checkbox"
+                checked={formData.productTypes.includes('대표상품')}
+                onChange={(e) => {
+                  if (e.target.checked) {
+                    if (formData.productTypes.length >= 2) {
+                      alert('상품 타입은 최대 2개까지만 선택 가능합니다.')
+                      return
+                    }
+                    setFormData(prev => ({
+                      ...prev,
+                      productTypes: [...prev.productTypes, '대표상품']
+                    }))
+                  } else {
+                    setFormData(prev => ({
+                      ...prev,
+                      productTypes: prev.productTypes.filter(t => t !== '대표상품')
+                    }))
+                  }
+                }}
+                className={styles.hiddenCheckbox}
+              />
+              <span className={styles.customCheckbox}>
+                <img
+                  src={formData.productTypes.includes('대표상품') ? "/icons/check_active.png" : "/icons/check.png"}
+                  alt="체크박스"
+                />
+              </span>
+              대표상품
+            </label>
+            <label className={styles.checkboxLabel}>
+              <input
+                type="checkbox"
+                checked={formData.productTypes.includes('추천상품')}
+                onChange={(e) => {
+                  if (e.target.checked) {
+                    if (formData.productTypes.length >= 2) {
+                      alert('상품 타입은 최대 2개까지만 선택 가능합니다.')
+                      return
+                    }
+                    setFormData(prev => ({
+                      ...prev,
+                      productTypes: [...prev.productTypes, '추천상품']
+                    }))
+                  } else {
+                    setFormData(prev => ({
+                      ...prev,
+                      productTypes: prev.productTypes.filter(t => t !== '추천상품')
+                    }))
+                  }
+                }}
+                className={styles.hiddenCheckbox}
+              />
+              <span className={styles.customCheckbox}>
+                <img
+                  src={formData.productTypes.includes('추천상품') ? "/icons/check_active.png" : "/icons/check.png"}
+                  alt="체크박스"
+                />
+              </span>
+              추천상품
+            </label>
+            <label className={styles.checkboxLabel}>
+              <input
+                type="checkbox"
+                checked={formData.productTypes.includes('시즌상품')}
+                onChange={(e) => {
+                  if (e.target.checked) {
+                    if (formData.productTypes.length >= 2) {
+                      alert('상품 타입은 최대 2개까지만 선택 가능합니다.')
+                      return
+                    }
+                    setFormData(prev => ({
+                      ...prev,
+                      productTypes: [...prev.productTypes, '시즌상품']
+                    }))
+                  } else {
+                    setFormData(prev => ({
+                      ...prev,
+                      productTypes: prev.productTypes.filter(t => t !== '시즌상품')
+                    }))
+                  }
+                }}
+                className={styles.hiddenCheckbox}
+              />
+              <span className={styles.customCheckbox}>
+                <img
+                  src={formData.productTypes.includes('시즌상품') ? "/icons/check_active.png" : "/icons/check.png"}
+                  alt="체크박스"
+                />
+              </span>
+              시즌상품
+            </label>
           </div>
         </div>
 
         {/* 카테고리 */}
         <div className={styles.section}>
           <div className={styles.titleWithNumber}>
-            <span className={styles.numberCircle}>3</span>
+            <span className={styles.numberCircle}>4</span>
             <span className={styles.sectionTitle}>카테고리</span>
           </div>
           <div className={styles.categoryGrid}>
@@ -617,7 +723,7 @@ export default function AddProductPage() {
         {/* 상품 판매가 */}
         <div className={styles.section}>
           <div className={styles.titleWithNumber}>
-            <span className={styles.numberCircle}>4</span>
+            <span className={styles.numberCircle}>5</span>
             <span className={styles.sectionTitle}>상품 판매가</span>
           </div>
           <div className={styles.priceInputRow}>
@@ -805,7 +911,7 @@ export default function AddProductPage() {
         {/* 상품 수량 설정 */}
         <div className={styles.section}>
           <div className={styles.titleWithNumber}>
-            <span className={styles.numberCircle}>5</span>
+            <span className={styles.numberCircle}>6</span>
             <span className={styles.sectionTitle}>상품 수량 설정</span>
           </div>
           <div className={styles.quantityGrid}>
@@ -848,7 +954,7 @@ export default function AddProductPage() {
         {/* 상품 옵션 설정 */}
         <div className={styles.section}>
           <div className={styles.titleWithNumber}>
-            <span className={styles.numberCircle}>6</span>
+            <span className={styles.numberCircle}>7</span>
             <span className={styles.sectionTitle}>상품 옵션 설정</span>
           </div>
           {formData.options.map((option, groupIndex) => (
@@ -939,7 +1045,7 @@ export default function AddProductPage() {
         {/* 상품설명 작성 */}
         <div className={styles.section}>
           <div className={styles.titleWithNumber}>
-            <span className={styles.numberCircle}>7</span>
+            <span className={styles.numberCircle}>8</span>
             <span className={styles.sectionTitle}>상품설명 작성</span>
           </div>
           <CustomEditor
@@ -954,111 +1060,86 @@ export default function AddProductPage() {
         {/* 원산지 표기 */}
         <div className={styles.section}>
           <div className={styles.titleWithNumber}>
-            <span className={styles.numberCircle}>8</span>
+            <span className={styles.numberCircle}>9</span>
             <span className={styles.sectionTitle}>원산지 표기</span>
           </div>
           <div className={styles.originContainer}>
-            {formData.origin.length === 0 ? (
-              <div className={styles.originRow}>
+            {(formData.origin.length === 0 ? [{ ingredient: '', origin: '' }] : formData.origin).map((item, index) => (
+              <div key={index} className={styles.originRow}>
                 <input
                   type="text"
-                  placeholder="ex) 돼지고기,양배추"
-                  className={styles.textInput}
-                  value=""
+                  placeholder="ex) 돼지고기"
+                  value={item.ingredient}
                   onChange={(e) => {
-                    if (e.target.value) {
+                    const value = e.target.value
+                    if (formData.origin.length === 0) {
                       setFormData(prev => ({
                         ...prev,
-                        origin: [{ ingredient: e.target.value, origin: '' }]
+                        origin: [{ ingredient: value, origin: '' }]
                       }))
+                    } else {
+                      updateCustomOrigin(index, 'ingredient', value)
                     }
                   }}
+                  className={styles.textInput}
                 />
                 <div className={styles.originInputWrapper}>
                   <input
                     type="text"
                     placeholder="ex) 국내산"
+                    value={item.origin}
+                    onChange={(e) => {
+                      const value = e.target.value
+                      if (formData.origin.length === 0) {
+                        setFormData(prev => ({
+                          ...prev,
+                          origin: [{ ingredient: item.ingredient, origin: value }]
+                        }))
+                      } else {
+                        updateCustomOrigin(index, 'origin', value)
+                      }
+                    }}
                     className={styles.textInput}
-                    disabled
+                    disabled={formData.origin.length === 0 && !item.ingredient}
                   />
-                  <button
-                    type="button"
-                    className={styles.addOriginButton}
-                    disabled
-                  >
-                    +
-                  </button>
+                  {formData.origin.length === 0 ? (
+                    <button
+                      type="button"
+                      className={styles.addOriginButton}
+                      disabled
+                    >
+                      +
+                    </button>
+                  ) : index === formData.origin.length - 1 ? (
+                    <button
+                      type="button"
+                      onClick={addCustomOrigin}
+                      className={styles.addOriginButton}
+                    >
+                      +
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => removeCustomOrigin(index)}
+                      className={styles.removeOriginButton}
+                    >
+                      −
+                    </button>
+                  )}
                 </div>
               </div>
-            ) : (
-              formData.origin.map((item, index) => (
-                <div key={index} className={styles.originRow}>
-                  <input
-                    type="text"
-                    placeholder="ex) 돼지고기"
-                    value={item.ingredient}
-                    onChange={(e) => updateCustomOrigin(index, 'ingredient', e.target.value)}
-                    className={styles.textInput}
-                  />
-                  <div className={styles.originInputWrapper}>
-                    <input
-                      type="text"
-                      placeholder="ex) 국내산"
-                      value={item.origin}
-                      onChange={(e) => updateCustomOrigin(index, 'origin', e.target.value)}
-                      className={styles.textInput}
-                    />
-                    {index === formData.origin.length - 1 ? (
-                      <button
-                        type="button"
-                        onClick={addCustomOrigin}
-                        className={styles.addOriginButton}
-                      >
-                        +
-                      </button>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => removeCustomOrigin(index)}
-                        className={styles.removeOriginButton}
-                      >
-                        −
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))
-            )}
+            ))}
           </div>
         </div>
 
         {/* 상품 배송 설정 */}
         <div className={styles.section}>
           <div className={styles.titleWithNumber}>
-            <span className={styles.numberCircle}>9</span>
+            <span className={styles.numberCircle}>10</span>
             <span className={styles.sectionTitle}>상품 배송 설정</span>
           </div>
           <div className={styles.checkboxGroup}>
-            <label className={styles.checkboxLabel}>
-              <input
-                type="checkbox"
-                checked={formData.deliveryMethods.includes('자체 배송')}
-                onChange={(e) => setFormData(prev => ({
-                  ...prev,
-                  deliveryMethods: e.target.checked
-                    ? [...prev.deliveryMethods, '자체 배송']
-                    : prev.deliveryMethods.filter(m => m !== '자체 배송')
-                }))}
-                className={styles.hiddenCheckbox}
-              />
-              <span className={styles.customCheckbox}>
-                <img
-                  src={formData.deliveryMethods.includes('자체 배송') ? "/icons/check_active.png" : "/icons/check.png"}
-                  alt="체크박스"
-                />
-              </span>
-              자체 배송
-            </label>
             <label className={styles.checkboxLabel}>
               <input
                 type="checkbox"
@@ -1105,7 +1186,7 @@ export default function AddProductPage() {
         {/* 상품주문 추가설정 */}
         <div className={styles.section}>
           <div className={styles.titleWithNumber}>
-            <span className={styles.numberCircle}>10</span>
+            <span className={styles.numberCircle}>11</span>
             <span className={styles.sectionTitle}>상품주문 추가설정</span>
           </div>
           <div className={styles.checkboxGroup}>

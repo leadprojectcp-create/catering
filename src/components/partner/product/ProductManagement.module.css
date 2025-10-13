@@ -156,6 +156,32 @@
 .menuTop {
   display: flex;
   justify-content: space-between;
+  position: relative;
+}
+
+.menuTop.inactive::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.statusOverlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #FFF;
+  font-size: 24px;
+  font-weight: 700;
+  z-index: 2;
+  pointer-events: none;
 }
 
 .menuCard:last-child {
@@ -211,7 +237,7 @@
   order: 1;
   display: flex;
   flex-direction: column;
-  justify-content: space-around;
+  justify-content: space-between;
   max-height: 140px;
   min-width: 0;
   padding-right: 16px;
@@ -219,7 +245,15 @@
 
 .menuHeader {
   display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.firstRow {
+  display: flex;
   align-items: center;
+  justify-content: space-between;
+  gap: 8px;
 }
 
 .menuName {
@@ -227,26 +261,32 @@
   font-weight: 600;
   color: #333;
   margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  min-width: 0;
-}
-
-.menuName > span:first-child {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  min-width: 0;
-  flex: 1;
-}
-
-.menuName > span:last-child {
-  flex-shrink: 0;
 }
 
 .inactiveMenuName {
   color: #999;
+}
+
+.productTypesContainer {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.productTypeBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 8px;
+  border-radius: 30px;
+  background: #FFA813;
+  color: #FFF;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
 }
 
 .orderQuantity {
@@ -307,6 +347,12 @@
   color: #333;
   font-size: 16px;
   font-weight: 700;
+}
+
+.priceRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .originalPrice {
