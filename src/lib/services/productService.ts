@@ -7,6 +7,7 @@ export interface ProductData {
   images: string[]
   price: number
   category?: string
+  productTypes?: string[]
   options: {
     groupName: string
     values: {
