@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { collection, getDocs, query, where } from 'firebase/firestore'
+import { collection, getDocs, query, where, doc, getDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import Image from 'next/image'
 import Loading from '@/components/Loading'
@@ -25,7 +25,6 @@ interface Product {
   status?: string
   minOrderQuantity?: number
   maxOrderQuantity?: number
-  deliveryMethods?: string[]
   additionalSettings?: string[]
 }
 
@@ -43,6 +42,8 @@ export default function CategoryProductList({ categoryName }: CategoryProductLis
       try {
         console.log('카테고리:', categoryName)
 
+        let productData: Product[] = []
+
         // 답례품 카테고리인 경우
         if (categoryName === '답례품') {
           const productsQuery = query(
@@ -53,16 +54,14 @@ export default function CategoryProductList({ categoryName }: CategoryProductLis
           const productsSnapshot = await getDocs(productsQuery)
           console.log('답례품 상품 수:', productsSnapshot.docs.length)
 
-          const productData = productsSnapshot.docs.map(doc => {
-            const data = doc.data()
+          productData = productsSnapshot.docs.map(docSnap => {
+            const data = docSnap.data()
             console.log('상품 데이터:', data)
             return {
-              id: doc.id,
+              id: docSnap.id,
               ...data
             } as Product
           })
-
-          setProducts(productData)
         }
         // 당일배송 카테고리인 경우
         else if (categoryName === '당일배송') {
@@ -74,15 +73,13 @@ export default function CategoryProductList({ categoryName }: CategoryProductLis
           const productsSnapshot = await getDocs(productsQuery)
           console.log('당일배송 상품 수:', productsSnapshot.docs.length)
 
-          const productData = productsSnapshot.docs.map(doc => {
-            const data = doc.data()
+          productData = productsSnapshot.docs.map(docSnap => {
+            const data = docSnap.data()
             return {
-              id: doc.id,
+              id: docSnap.id,
               ...data
             } as Product
           })
-
-          setProducts(productData)
         } else {
           // 일반 카테고리의 경우: products의 category 필드로 직접 조회
           const productsQuery = query(
@@ -93,20 +90,41 @@ export default function CategoryProductList({ categoryName }: CategoryProductLis
           console.log('해당 카테고리 전체 상품 수:', productsSnapshot.docs.length)
 
           // status가 'active'인 것만 필터링
-          const productData = productsSnapshot.docs
-            .map(doc => {
-              const data = doc.data()
+          productData = productsSnapshot.docs
+            .map(docSnap => {
+              const data = docSnap.data()
               console.log('상품 데이터:', data)
               return {
-                id: doc.id,
+                id: docSnap.id,
                 ...data
               } as Product
             })
             .filter(product => product.status === 'active')
 
           console.log('active 상품 수:', productData.length)
-          setProducts(productData)
         }
+
+        // 각 상품의 storeId로 storeName 가져오기
+        const productsWithStoreName = await Promise.all(
+          productData.map(async (product) => {
+            if (product.storeId && !product.storeName) {
+              try {
+                const storeDoc = await getDoc(doc(db, 'stores', product.storeId))
+                if (storeDoc.exists()) {
+                  return {
+                    ...product,
+                    storeName: storeDoc.data().storeName || storeDoc.data().name
+                  }
+                }
+              } catch (error) {
+                console.error('가게 정보 가져오기 실패:', error)
+              }
+            }
+            return product
+          })
+        )
+
+        setProducts(productsWithStoreName)
       } catch (error) {
         console.error('상품 데이터 가져오기 실패:', error)
         setProducts([])
@@ -143,6 +161,9 @@ export default function CategoryProductList({ categoryName }: CategoryProductLis
                 onClick={() => router.push(`/order/${product.id}`)}
               >
                 <div className={styles.info}>
+                  {product.storeName && (
+                    <div className={styles.storeName}>{product.storeName}</div>
+                  )}
                   <h3 className={styles.productName}>{product.name}</h3>
 
                   {/* 가격 정보 */}
@@ -165,18 +186,11 @@ export default function CategoryProductList({ categoryName }: CategoryProductLis
                     </div>
                   )}
 
-                  {/* 배송 방법 및 추가 설정 - PC용 */}
+                  {/* 추가 설정 - PC용 */}
                   <div className={styles.badgeContainerDesktop}>
-                    <div className={styles.badgeRow}>
-                      {product.deliveryMethods?.map((method, idx) => (
-                        <span key={idx} className={styles.deliveryBadge}>{method}</span>
-                      ))}
-                    </div>
-                    <div className={styles.badgeRow}>
-                      {product.additionalSettings?.map((setting, idx) => (
-                        <span key={idx} className={styles.settingBadge}>{setting}</span>
-                      ))}
-                    </div>
+                    {product.additionalSettings?.map((setting, idx) => (
+                      <span key={idx} className={styles.settingBadge}>{setting}</span>
+                    ))}
                   </div>
                 </div>
 
@@ -196,18 +210,11 @@ export default function CategoryProductList({ categoryName }: CategoryProductLis
                   )}
                 </div>
 
-                {/* 배송 방법 및 추가 설정 - 모바일용 */}
+                {/* 추가 설정 - 모바일용 */}
                 <div className={styles.badgeContainerMobile}>
-                  <div className={styles.badgeRow}>
-                    {product.deliveryMethods?.map((method, idx) => (
-                      <span key={idx} className={styles.deliveryBadge}>{method}</span>
-                    ))}
-                  </div>
-                  <div className={styles.badgeRow}>
-                    {product.additionalSettings?.map((setting, idx) => (
-                      <span key={idx} className={styles.settingBadge}>{setting}</span>
-                    ))}
-                  </div>
+                  {product.additionalSettings?.map((setting, idx) => (
+                    <span key={idx} className={styles.settingBadge}>{setting}</span>
+                  ))}
                 </div>
               </div>
             )

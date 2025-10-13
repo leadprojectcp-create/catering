@@ -1,0 +1,59 @@
+.container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 32px 20px;
+  margin-top: 60px;
+  min-height: calc(100vh - 200px);
+}
+
+.content {
+  padding: 20px 0;
+}
+
+.title {
+  font-size: 32px;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 32px;
+}
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  text-align: center;
+}
+
+.emptyText {
+  font-size: 18px;
+  font-weight: 600;
+  color: #666;
+  margin: 20px 0 8px 0;
+}
+
+.emptySubtext {
+  font-size: 14px;
+  color: #999;
+  margin: 0;
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 24px 16px;
+    padding-bottom: 80px; /* 바텀 네비게이터 공간 확보 */
+  }
+
+  .title {
+    font-size: 24px;
+  }
+
+  .emptyState {
+    padding: 60px 20px;
+  }
+
+  .emptyText {
+    font-size: 16px;
+  }
+}

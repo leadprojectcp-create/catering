@@ -80,6 +80,13 @@
   padding-right: 16px;
 }
 
+.storeName {
+  color: #999;
+  font-size: 12px;
+  font-weight: 500;
+  margin: 0;
+}
+
 .productName {
   font-size: 16px;
   font-weight: 600;
@@ -138,32 +145,13 @@
 
 .badgeContainerDesktop {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  gap: 6px;
+  flex-wrap: wrap;
   margin: 0;
 }
 
 .badgeContainerMobile {
   display: none;
-}
-
-.badgeRow {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-
-.deliveryBadge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 4px 8px;
-  background: #F5F7F9;
-  color: #999;
-  border-radius: 4px;
-  font-size: 11px;
-  font-weight: 700;
-  line-height: 1;
 }
 
 .settingBadge {
@@ -182,6 +170,7 @@
 @media (max-width: 768px) {
   .container {
     padding: 32px 16px;
+    padding-bottom: 80px; /* 바텀 네비게이터 공간 확보 */
   }
 
   .productGrid {
@@ -204,12 +193,12 @@
 
   .badgeContainerMobile {
     display: flex;
-    flex-direction: column;
     order: 3;
     width: 100%;
     align-items: flex-end;
     margin-top: 8px;
-    gap: 4px;
+    gap: 6px;
+    flex-wrap: wrap;
   }
 
   .imageWrapper {

@@ -19,6 +19,12 @@
   margin: 0 auto;
 }
 
+.leftSection {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
 .logoContainer {
   display: flex;
   align-items: center;
@@ -28,10 +34,69 @@
   object-fit: contain;
 }
 
+.backButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #333;
+}
+
+.pageTitle {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+  margin-left: 12px;
+}
+
 .rightSection {
   display: flex;
   align-items: center;
   gap: 20px;
+}
+
+.wishlistIconLink {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  color: #333;
+  transition: color 0.3s ease;
+}
+
+.wishlistIconLink:hover {
+  color: #EA4335;
+}
+
+@media (max-width: 768px) {
+  .wishlistIconLink {
+    display: none;
+  }
+}
+
+.ordersIconLink {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  color: #333;
+  transition: color 0.3s ease;
+}
+
+.ordersIconLink:hover {
+  color: #025BD9;
+}
+
+@media (max-width: 768px) {
+  .ordersIconLink {
+    display: none;
+  }
 }
 
 .chatIconLink {
@@ -42,11 +107,16 @@
   text-decoration: none;
   color: #333;
   transition: color 0.3s ease;
-  margin-right: 16px;
 }
 
 .chatIconLink:hover {
   color: #FF8B00;
+}
+
+@media (max-width: 768px) {
+  .chatIconLink {
+    display: none;
+  }
 }
 
 .chatBadge {
@@ -77,6 +147,12 @@
 
 .cartIconLink:hover {
   color: #025BD9;
+}
+
+@media (max-width: 768px) {
+  .cartIconLink {
+    display: none;
+  }
 }
 
 .cartBadge {
@@ -300,6 +376,10 @@
 @media (max-width: 768px) {
   .container {
     padding: 0 16px;
+  }
+
+  .pageTitle {
+    font-size: 16px;
   }
 
   .drawer {
