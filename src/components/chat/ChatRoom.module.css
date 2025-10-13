@@ -354,7 +354,7 @@
   background-color: #fff;
   border-radius: 12px;
   padding: 24px;
-  max-width: 320px;
+  max-width: 360px;
   width: 90%;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
@@ -364,7 +364,12 @@
   font-weight: 600;
   color: #333;
   text-align: center;
-  margin: 0 0 20px 0;
+  margin: 0 0 16px 0;
+}
+
+.modalContent .productMessage {
+  margin-bottom: 20px;
+  border: 1px solid #e5e7eb;
 }
 
 .modalButtons {

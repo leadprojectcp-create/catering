@@ -13,6 +13,7 @@ import {
 } from '@/lib/services/chatService'
 import { doc, getDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
+import { getProduct, ProductData } from '@/lib/services/productService'
 import ChatMessageAttachment from './ChatMessageAttachment'
 import ProductSelectPopup from './ProductSelectPopup'
 import ProductMessageCard from './ProductMessageCard'
@@ -42,6 +43,7 @@ export default function ChatRoom({ roomId, onBack, isPartner = false, initialPro
   const [showConfirmModal, setShowConfirmModal] = useState(false)
   const [pendingProductId, setPendingProductId] = useState<string | null>(null)
   const [pendingMessage, setPendingMessage] = useState<string | null>(null)
+  const [pendingProduct, setPendingProduct] = useState<ProductData | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const messagesContainerRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -66,9 +68,21 @@ export default function ChatRoom({ roomId, onBack, isPartner = false, initialPro
 
     let isModalShown = false
 
-    const showConfirmationModal = () => {
+    const showConfirmationModal = async () => {
       if (isModalShown) return
       isModalShown = true
+
+      // 상품 정보 로드
+      if (initialProductId) {
+        try {
+          const product = await getProduct(initialProductId)
+          if (product) {
+            setPendingProduct(product)
+          }
+        } catch (error) {
+          console.error('[ChatRoom] 상품 정보 로드 실패:', error)
+        }
+      }
 
       // 모달에 전달할 데이터 설정
       setPendingProductId(initialProductId || null)
@@ -280,6 +294,7 @@ export default function ChatRoom({ roomId, onBack, isPartner = false, initialPro
       setShowConfirmModal(false)
       setPendingProductId(null)
       setPendingMessage(null)
+      setPendingProduct(null)
     } catch (error) {
       console.error('[ChatRoom] 상품 문의 전송 실패:', error)
       alert('메시지 전송에 실패했습니다.')
@@ -293,6 +308,7 @@ export default function ChatRoom({ roomId, onBack, isPartner = false, initialPro
     setShowConfirmModal(false)
     setPendingProductId(null)
     setPendingMessage(null)
+    setPendingProduct(null)
   }
 
   const formatTime = (timestamp: number) => {
@@ -502,6 +518,29 @@ export default function ChatRoom({ roomId, onBack, isPartner = false, initialPro
         <div className={styles.modalOverlay}>
           <div className={styles.modalContent}>
             <h3 className={styles.modalTitle}>이 상품에 대해서 문의할까요?</h3>
+
+            {/* 상품 카드 표시 */}
+            {pendingProduct && (
+              <div className={styles.productMessage}>
+                <div className={styles.productImage}>
+                  {pendingProduct.images && pendingProduct.images.length > 0 ? (
+                    <img src={pendingProduct.images[0]} alt={pendingProduct.name} />
+                  ) : (
+                    <div style={{ width: '100%', height: '100%', backgroundColor: '#f0f0f0' }} />
+                  )}
+                </div>
+                <div className={styles.productInfo}>
+                  <p className={styles.productName}>{pendingProduct.name}</p>
+                  <p className={styles.productPrice}>
+                    {pendingProduct.discountedPrice
+                      ? `${pendingProduct.discountedPrice.toLocaleString('ko-KR')}원`
+                      : `${pendingProduct.price.toLocaleString('ko-KR')}원`
+                    }
+                  </p>
+                </div>
+              </div>
+            )}
+
             <div className={styles.modalButtons}>
               <button
                 className={styles.cancelButton}
