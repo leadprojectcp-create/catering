@@ -184,20 +184,24 @@ export default function Header() {
             {/* 찜 아이콘 (로그인한 사용자만 표시) */}
             {user && (
               <Link href="/wishlist" className={styles.wishlistIconLink}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                </svg>
+                <Image
+                  src="/menu-icons/heart.png"
+                  alt="찜"
+                  width={24}
+                  height={24}
+                />
               </Link>
             )}
 
             {/* 장바구니 아이콘 (로그인한 사용자만 표시) */}
             {user && (
               <Link href="/cart" className={styles.cartIconLink}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="9" cy="21" r="1"></circle>
-                  <circle cx="20" cy="21" r="1"></circle>
-                  <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
-                </svg>
+                <Image
+                  src="/menu-icons/shopping_cart.png"
+                  alt="장바구니"
+                  width={24}
+                  height={24}
+                />
                 {cartCount > 0 && (
                   <span className={styles.cartBadge}>{cartCount}</span>
                 )}
@@ -207,9 +211,12 @@ export default function Header() {
             {/* 채팅 아이콘 (로그인한 사용자만 표시) */}
             {user && (
               <Link href="/chat" className={styles.chatIconLink}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                </svg>
+                <Image
+                  src="/menu-icons/chat.png"
+                  alt="채팅"
+                  width={24}
+                  height={24}
+                />
                 {unreadCount > 0 && (
                   <span className={styles.chatBadge}>{unreadCount}</span>
                 )}
@@ -219,13 +226,12 @@ export default function Header() {
             {/* 주문내역 아이콘 (로그인한 사용자만 표시) */}
             {user && (
               <Link href="/orders" className={styles.ordersIconLink}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                  <polyline points="14 2 14 8 20 8"></polyline>
-                  <line x1="16" y1="13" x2="8" y2="13"></line>
-                  <line x1="16" y1="17" x2="8" y2="17"></line>
-                  <polyline points="10 9 9 9 8 9"></polyline>
-                </svg>
+                <Image
+                  src="/menu-icons/order.png"
+                  alt="주문내역"
+                  width={24}
+                  height={24}
+                />
               </Link>
             )}
 
