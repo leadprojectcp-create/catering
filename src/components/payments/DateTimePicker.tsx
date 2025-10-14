@@ -107,10 +107,11 @@ export default function DateTimePicker({
   const formatDate = (dateStr: string) => {
     if (!dateStr) return ''
     const date = new Date(dateStr)
+    const year = date.getFullYear()
     const month = date.getMonth() + 1
     const day = date.getDate()
     const dayOfWeek = ['일', '월', '화', '수', '목', '금', '토'][date.getDay()]
-    return `${month}월 ${day}일 (${dayOfWeek})`
+    return `${year}년 ${month}월 ${day}일 (${dayOfWeek})`
   }
 
   const prevMonth = () => {
@@ -230,7 +231,14 @@ export default function DateTimePicker({
                       <div
                         key={idx}
                         className={`${styles.wheelItem} ${selectedHour === hour ? styles.wheelItemSelected : ''}`}
-                        onClick={() => setSelectedHour(hour)}
+                        onClick={() => {
+                          setSelectedHour(hour)
+                          const hourScroll = document.getElementById('hourScroll')
+                          if (hourScroll) {
+                            const itemHeight = 40
+                            hourScroll.scrollTop = idx * itemHeight
+                          }
+                        }}
                       >
                         {String(hour).padStart(2, '0')}
                       </div>
@@ -244,7 +252,14 @@ export default function DateTimePicker({
                       <div
                         key={idx}
                         className={`${styles.wheelItem} ${selectedMinute === minute ? styles.wheelItemSelected : ''}`}
-                        onClick={() => setSelectedMinute(minute)}
+                        onClick={() => {
+                          setSelectedMinute(minute)
+                          const minuteScroll = document.getElementById('minuteScroll')
+                          if (minuteScroll) {
+                            const itemHeight = 40
+                            minuteScroll.scrollTop = idx * itemHeight
+                          }
+                        }}
                       >
                         {String(minute).padStart(2, '0')}
                       </div>

@@ -45,6 +45,11 @@ export default function PaymentsPage() {
   const [isPostcodeLoaded, setIsPostcodeLoaded] = useState(false)
   const [recipient, setRecipient] = useState('')
   const [detailedRequest, setDetailedRequest] = useState('')
+  const [entranceCode, setEntranceCode] = useState('')
+  const [showRequestDropdown, setShowRequestDropdown] = useState(false)
+  const [agreeAll, setAgreeAll] = useState(false)
+  const [usePoint, setUsePoint] = useState(0)
+  const [availablePoint, setAvailablePoint] = useState(0)
 
   useEffect(() => {
     const loadData = async () => {
@@ -99,6 +104,11 @@ export default function PaymentsPage() {
                 ...prev,
                 email: userData.email
               }))
+            }
+
+            // 포인트 설정
+            if (userData.point !== undefined) {
+              setAvailablePoint(userData.point)
             }
           }
         }
@@ -315,7 +325,7 @@ export default function PaymentsPage() {
       sessionStorage.removeItem('orderData')
 
       alert(`결제가 완료되었습니다!\n주문번호: ${orderNumber}`)
-      router.push('/')
+      router.push('/orders')
     } catch (error) {
       console.error('주문 생성 실패:', error)
       alert('주문 생성에 실패했습니다. 다시 시도해주세요.')
@@ -415,7 +425,7 @@ export default function PaymentsPage() {
         return sum + (item.itemPrice || (orderData.productPrice * item.quantity))
       }, 0)
     : 0
-  const totalPrice = totalProductPrice + deliveryFee
+  const totalPrice = totalProductPrice + deliveryFee - usePoint
   const totalQuantity = orderData
     ? orderData.items.reduce((sum, item) => sum + item.quantity, 0)
     : 0
@@ -518,27 +528,89 @@ export default function PaymentsPage() {
 
         {/* 요청사항 */}
         <section className={styles.section}>
-          <h2 className={styles.sectionTitle}>요청사항</h2>
-          <div className={styles.formGroup}>
+          <h2 className={styles.sectionTitle}>배달 요청사항</h2>
+          <div className={styles.requestContainer}>
             <div className={styles.formRow}>
               <label className={styles.label}>요청사항</label>
-              <select
-                className={styles.select}
-                value={orderInfo.request}
-                onChange={(e) => setOrderInfo({...orderInfo, request: e.target.value})}
-              >
-                <option value="">배송 요청사항을 선택해주세요</option>
-                <option value="도착 10분전에 전화주세요.">도착 10분전에 전화주세요.</option>
-                <option value="문앞에 놓고 문자한번만 주세요.">문앞에 놓고 문자한번만 주세요.</option>
-                <option value="1층 로비에 맡겨주세요.">1층 로비에 맡겨주세요.</option>
-                <option value="지정 시간까지 꼭 도착해야 합니다.">지정 시간까지 꼭 도착해야 합니다.</option>
-                <option value="수령인 이름 꼭 확인하고 전달해주세요.">수령인 이름 꼭 확인하고 전달해주세요.</option>
-              </select>
+              <div className={styles.customSelectWrapper}>
+                <div
+                  className={styles.customSelect}
+                  onClick={() => setShowRequestDropdown(!showRequestDropdown)}
+                >
+                  <span>{orderInfo.request || '배송 요청사항을 선택해주세요'}</span>
+                  <Image
+                    src="/icons/arrow.svg"
+                    alt="화살표"
+                    width={20}
+                    height={20}
+                    style={{ transform: showRequestDropdown ? 'rotate(-90deg)' : 'rotate(90deg)' }}
+                  />
+                </div>
+                {showRequestDropdown && (
+                  <div className={styles.customDropdown}>
+                    <div
+                      className={styles.dropdownItem}
+                      onClick={() => {
+                        setOrderInfo({...orderInfo, request: '도착 10분전에 전화주세요.'})
+                        setShowRequestDropdown(false)
+                      }}
+                    >
+                      도착 10분전에 전화주세요.
+                    </div>
+                    <div
+                      className={styles.dropdownItem}
+                      onClick={() => {
+                        setOrderInfo({...orderInfo, request: '문앞에 놓고 문자한번만 주세요.'})
+                        setShowRequestDropdown(false)
+                      }}
+                    >
+                      문앞에 놓고 문자한번만 주세요.
+                    </div>
+                    <div
+                      className={styles.dropdownItem}
+                      onClick={() => {
+                        setOrderInfo({...orderInfo, request: '1층 로비에 맡겨주세요.'})
+                        setShowRequestDropdown(false)
+                      }}
+                    >
+                      1층 로비에 맡겨주세요.
+                    </div>
+                    <div
+                      className={styles.dropdownItem}
+                      onClick={() => {
+                        setOrderInfo({...orderInfo, request: '지정 시간까지 꼭 도착해야 합니다.'})
+                        setShowRequestDropdown(false)
+                      }}
+                    >
+                      지정 시간까지 꼭 도착해야 합니다.
+                    </div>
+                    <div
+                      className={styles.dropdownItem}
+                      onClick={() => {
+                        setOrderInfo({...orderInfo, request: '수령인 이름 꼭 확인하고 전달해주세요.'})
+                        setShowRequestDropdown(false)
+                      }}
+                    >
+                      수령인 이름 꼭 확인하고 전달해주세요.
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
             <div className={styles.formRow}>
-              <label className={styles.label}>상세요청사항</label>
+              <label className={styles.label}>공동현관</label>
+              <input
+                type="text"
+                className={styles.inputFull}
+                placeholder="집, 회사 공동현관 출입번호를 입력해주세요."
+                value={entranceCode}
+                onChange={(e) => setEntranceCode(e.target.value)}
+              />
+            </div>
+            <div className={styles.formRowTop}>
+              <label className={styles.label}>상세요청</label>
               <textarea
-                className={styles.textarea}
+                className={styles.textareaFull}
                 placeholder="판매자에게 필요한 상세 요청사항을 적어주세요."
                 value={detailedRequest}
                 onChange={(e) => setDetailedRequest(e.target.value)}
@@ -550,133 +622,257 @@ export default function PaymentsPage() {
         {/* 배송방법 */}
         <section className={styles.section}>
           <h2 className={styles.sectionTitle}>배송방법</h2>
-          <div className={styles.radioGroup}>
+          <div className={styles.deliveryMethodContainer}>
             {orderData?.deliveryMethods?.includes('자체 배송') && (
-              <label className={styles.radioLabel}>
-                <input
-                  type="radio"
-                  name="deliveryMethod"
-                  value="자체 배송"
-                  checked={deliveryMethod === '자체 배송'}
-                  onChange={(e) => setDeliveryMethod(e.target.value)}
-                />
-                <span>자체 배송</span>
-                <span className={styles.deliveryFee}>+0원</span>
-              </label>
+              <div
+                className={`${styles.deliveryMethodBox} ${deliveryMethod === '자체 배송' ? styles.deliveryMethodBoxSelected : ''}`}
+                onClick={() => setDeliveryMethod('자체 배송')}
+              >
+                <div className={styles.deliveryMethodContent}>
+                  <div>
+                    <span>자체 배송</span>
+                    <div className={styles.deliveryMethodDescription}>자체 배송이 가능한 업체 입니다.</div>
+                  </div>
+                  <span className={styles.deliveryFee}>+0원</span>
+                </div>
+              </div>
             )}
             {orderData?.deliveryMethods?.includes('매장 픽업') && (
-              <label className={styles.radioLabel}>
-                <input
-                  type="radio"
-                  name="deliveryMethod"
-                  value="매장 픽업"
-                  checked={deliveryMethod === '매장 픽업'}
-                  onChange={(e) => setDeliveryMethod(e.target.value)}
-                />
-                <span>매장 픽업</span>
-                <span className={styles.deliveryFee}>+0원</span>
-              </label>
+              <div
+                className={`${styles.deliveryMethodBox} ${deliveryMethod === '매장 픽업' ? styles.deliveryMethodBoxSelected : ''}`}
+                onClick={() => setDeliveryMethod('매장 픽업')}
+              >
+                <div className={styles.deliveryMethodContent}>
+                  <div>
+                    <span>매장 픽업</span>
+                    <div className={styles.deliveryMethodDescription}>매장 픽업이 가능한 업체 입니다.</div>
+                  </div>
+                  <span className={styles.deliveryFee}>+0원</span>
+                </div>
+              </div>
             )}
             {orderData?.deliveryMethods?.includes('퀵업체 배송') && (
-              <label className={styles.radioLabel}>
-                <input
-                  type="radio"
-                  name="deliveryMethod"
-                  value="퀵업체 배송"
-                  checked={deliveryMethod === '퀵업체 배송'}
-                  onChange={(e) => setDeliveryMethod(e.target.value)}
-                />
-                <span>퀵업체 배송</span>
-                <span className={styles.deliveryFee}>+25,000원</span>
-              </label>
+              <div
+                className={`${styles.deliveryMethodBox} ${deliveryMethod === '퀵업체 배송' ? styles.deliveryMethodBoxSelected : ''}`}
+                onClick={() => setDeliveryMethod('퀵업체 배송')}
+              >
+                <div className={styles.deliveryMethodContent}>
+                  <div>
+                    <span>퀵업체 배송</span>
+                    <div className={styles.deliveryMethodDescription}>퀵업체 배송이 가능한 업체 입니다.</div>
+                  </div>
+                  <span className={styles.deliveryFee}>+25,000원</span>
+                </div>
+              </div>
             )}
           </div>
         </section>
 
         {/* 총 결제금액 */}
-        <section className={styles.paymentSection}>
+        <section className={styles.section}>
           <h2 className={styles.sectionTitle}>총 결제금액</h2>
-          <div className={styles.paymentRow}>
-            <span>총 상품금액</span>
-            <span>{totalQuantity}개</span>
-          </div>
-          <div className={styles.paymentRow}>
-            <span>배송비</span>
-            <span>+{deliveryFee.toLocaleString()}원</span>
-          </div>
-          <div className={styles.paymentRow}>
-            <span className={styles.priceLabel}>상품금액</span>
-            <div className={styles.priceValue}>
-              {orderData && orderData.originalPrice && orderData.discount && (
-                <span style={{
-                  textDecoration: 'line-through',
-                  color: '#999',
-                  fontSize: '14px',
-                  fontWeight: '500',
-                  marginRight: '8px'
-                }}>
-                  {orderData.originalPrice.toLocaleString()}원
-                </span>
-              )}
-              <span>{totalProductPrice.toLocaleString()}원</span>
+          <div className={styles.paymentContainer}>
+            <div className={styles.paymentRow}>
+              <span className={styles.paymentLabel}>총 상품금액</span>
+              <span className={styles.paymentValue}>{totalQuantity}개</span>
+            </div>
+            <div className={styles.paymentRow}>
+              <span className={styles.paymentLabel}>총 상품금액</span>
+              <div className={styles.priceValue}>
+                {orderData && orderData.originalPrice && orderData.discount && (
+                  <span style={{
+                    textDecoration: 'line-through',
+                    color: '#999',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    marginRight: '8px'
+                  }}>
+                    {orderData.originalPrice.toLocaleString()}원
+                  </span>
+                )}
+                <span className={styles.paymentValue}>{totalProductPrice.toLocaleString()}원</span>
+              </div>
+            </div>
+            <div className={styles.paymentRow}>
+              <span className={styles.paymentLabel}>배송비</span>
+              <span className={styles.paymentValue}>+{deliveryFee.toLocaleString()}원</span>
+            </div>
+            <div className={styles.paymentRowPoint}>
+              <span className={styles.paymentLabel}>포인트</span>
+              <div className={styles.pointInputContainer}>
+                <div className={styles.pointInputWithPrefix}>
+                  <span className={styles.pointPrefix}>P</span>
+                  <input
+                    type="text"
+                    className={styles.pointInput}
+                    placeholder="0"
+                    value={usePoint ? usePoint.toLocaleString() : ''}
+                    onChange={(e) => {
+                      const value = parseInt(e.target.value.replace(/,/g, '')) || 0
+                      if (value <= availablePoint && value >= 0) {
+                        setUsePoint(value)
+                      } else if (e.target.value === '') {
+                        setUsePoint(0)
+                      }
+                    }}
+                  />
+                </div>
+                <div className={styles.pointBottomRow}>
+                  <span className={styles.availablePoint}>사용 가능 : {availablePoint.toLocaleString()}P</span>
+                  <button
+                    type="button"
+                    className={styles.useAllButton}
+                    onClick={() => setUsePoint(availablePoint)}
+                  >
+                    전액 사용
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div className={styles.paymentTotal}>
+              <span>총 결제금액</span>
+              <span className={styles.finalPrice}>{totalPrice.toLocaleString()}원</span>
             </div>
           </div>
-          <div className={styles.paymentTotal}>
-            <span>총 결제금액</span>
-            <span className={styles.finalPrice}>{totalPrice.toLocaleString()}원</span>
-          </div>
+        </section>
 
-          <div className={styles.agreements}>
-            <h3 className={styles.agreementTitle}>주문내용을 확인 및 결제 동의</h3>
-            <label className={styles.agreementLabel}>
-              <input
-                type="checkbox"
-                checked={agreements.privacy}
-                onChange={(e) => setAgreements({...agreements, privacy: e.target.checked})}
-              />
-              <span>(필수) 개인정보 수집 · 이용 동의</span>
+        {/* 약관 동의 */}
+        <section className={styles.section}>
+          <div className={styles.agreementsContainer}>
+            <label className={styles.agreementLabelAll}>
+              <div className={styles.checkboxTextWrapper}>
+                <div className={styles.checkboxWrapper}>
+                  <input
+                    type="checkbox"
+                    checked={agreeAll}
+                    onChange={(e) => {
+                      const checked = e.target.checked
+                      setAgreeAll(checked)
+                      setAgreements({
+                        privacy: checked,
+                        terms: checked,
+                        refund: checked,
+                        marketing: checked
+                      })
+                    }}
+                  />
+                  <Image
+                    src={agreeAll ? '/icons/check_active.png' : '/icons/check_empty.png'}
+                    alt="체크박스"
+                    width={20}
+                    height={20}
+                    className={styles.checkboxIcon}
+                  />
+                </div>
+                <span className={styles.agreementMainText}>주문내용을 확인 및 결제 동의</span>
+              </div>
             </label>
-            <label className={styles.agreementLabel}>
-              <input
-                type="checkbox"
-                checked={agreements.terms}
-                onChange={(e) => setAgreements({...agreements, terms: e.target.checked})}
-              />
-              <span>(필수) 개인정보 제3자 정보제공 동의</span>
+            <label className={styles.agreementLabelItem}>
+              <div className={styles.checkboxTextWrapper}>
+                <div className={styles.checkboxWrapper}>
+                  <input
+                    type="checkbox"
+                    checked={agreements.privacy}
+                    onChange={(e) => {
+                      setAgreements({...agreements, privacy: e.target.checked})
+                      setAgreeAll(false)
+                    }}
+                  />
+                  <Image
+                    src={agreements.privacy ? '/icons/check_active.png' : '/icons/check_empty.png'}
+                    alt="체크박스"
+                    width={20}
+                    height={20}
+                    className={styles.checkboxIcon}
+                  />
+                </div>
+                <span>(필수) 개인정보 수집 · 이용 동의</span>
+              </div>
             </label>
-            <label className={styles.agreementLabel}>
-              <input
-                type="checkbox"
-                checked={agreements.refund}
-                onChange={(e) => setAgreements({...agreements, refund: e.target.checked})}
-              />
-              <span>(필수) 결제대행 서비스 이용약관 동의</span>
+            <label className={styles.agreementLabelItem}>
+              <div className={styles.checkboxTextWrapper}>
+                <div className={styles.checkboxWrapper}>
+                  <input
+                    type="checkbox"
+                    checked={agreements.terms}
+                    onChange={(e) => {
+                      setAgreements({...agreements, terms: e.target.checked})
+                      setAgreeAll(false)
+                    }}
+                  />
+                  <Image
+                    src={agreements.terms ? '/icons/check_active.png' : '/icons/check_empty.png'}
+                    alt="체크박스"
+                    width={20}
+                    height={20}
+                    className={styles.checkboxIcon}
+                  />
+                </div>
+                <span>(필수) 개인정보 제3자 정보제공 동의</span>
+              </div>
             </label>
-            <label className={styles.agreementLabel}>
-              <input
-                type="checkbox"
-                checked={agreements.marketing}
-                onChange={(e) => setAgreements({...agreements, marketing: e.target.checked})}
-              />
-              <span>(필수) 주문정보 비밀번호 개인정보 수집 · 이용 동의</span>
+            <label className={styles.agreementLabelItem}>
+              <div className={styles.checkboxTextWrapper}>
+                <div className={styles.checkboxWrapper}>
+                  <input
+                    type="checkbox"
+                    checked={agreements.refund}
+                    onChange={(e) => {
+                      setAgreements({...agreements, refund: e.target.checked})
+                      setAgreeAll(false)
+                    }}
+                  />
+                  <Image
+                    src={agreements.refund ? '/icons/check_active.png' : '/icons/check_empty.png'}
+                    alt="체크박스"
+                    width={20}
+                    height={20}
+                    className={styles.checkboxIcon}
+                  />
+                </div>
+                <span>(필수) 결제대행 서비스 이용약관 동의</span>
+              </div>
             </label>
-          </div>
-
-          <div className={styles.buttonGroup}>
-            <button
-              className={styles.cancelButton}
-              onClick={() => router.back()}
-            >
-              취소
-            </button>
-            <button
-              className={styles.payButton}
-              onClick={handlePayment}
-            >
-              결제하기
-            </button>
+            <label className={styles.agreementLabelItem}>
+              <div className={styles.checkboxTextWrapper}>
+                <div className={styles.checkboxWrapper}>
+                  <input
+                    type="checkbox"
+                    checked={agreements.marketing}
+                    onChange={(e) => {
+                      setAgreements({...agreements, marketing: e.target.checked})
+                      setAgreeAll(false)
+                    }}
+                  />
+                  <Image
+                    src={agreements.marketing ? '/icons/check_active.png' : '/icons/check_empty.png'}
+                    alt="체크박스"
+                    width={20}
+                    height={20}
+                    className={styles.checkboxIcon}
+                  />
+                </div>
+                <span>(필수) 주문정보 비밀번호 개인정보 수집 · 이용 동의</span>
+              </div>
+            </label>
           </div>
         </section>
+
+        {/* 버튼 */}
+        <div className={styles.buttonGroup}>
+          <button
+            className={styles.cancelButton}
+            onClick={() => router.back()}
+          >
+            취소
+          </button>
+          <button
+            className={styles.payButton}
+            onClick={handlePayment}
+          >
+            결제하기
+          </button>
+        </div>
       </div>
       <Footer />
     </>

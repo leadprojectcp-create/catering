@@ -2,7 +2,6 @@
   display: flex;
   align-items: center;
   gap: 16px;
-  margin-bottom: 16px;
 }
 
 .label {
@@ -35,9 +34,9 @@
   left: 0;
   right: 0;
   max-width: 320px;
-  background: white;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+  border-radius: 10px;
+  border: 1px solid #F5F5F5;
+  background: #FFF;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   z-index: 100;
 }
@@ -62,8 +61,10 @@
 }
 
 .calendarHeader span {
-  font-size: 14px;
-  font-weight: 600;
+  color: #333;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 24px;
 }
 
 .calendarWeekdays {
@@ -74,7 +75,7 @@
 .weekday {
   text-align: center;
   padding: 8px 0;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 500;
   color: #333;
 }
@@ -93,14 +94,11 @@
   justify-content: center;
   cursor: pointer;
   border-radius: 4px;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 500;
   color: #333;
 }
 
-.calendarDay:hover:not(.disabled):not(.otherMonth) {
-  background-color: #f0f0f0;
-}
 
 .calendarDay.otherMonth {
   color: #ccc;
@@ -113,13 +111,9 @@
   text-decoration: line-through;
 }
 
-.calendarDay.today {
-  background-color: #e8f5e9;
-  font-weight: 600;
-}
-
 .calendarDay.selected {
-  background-color: #4CAF50;
+  border-radius: 99px;
+  background: #0C41FF;
   color: white;
   font-weight: 600;
 }
@@ -143,7 +137,6 @@
   justify-content: space-between;
   align-items: center;
   padding: 8px 12px;
-  border-bottom: 1px solid #eee;
 }
 
 .timeHeader span {
@@ -202,7 +195,7 @@
 }
 
 .wheelItem.wheelItemSelected {
-  color: #333;
+  color: #025BD9;
   font-weight: 600;
   font-size: 20px;
 }
@@ -210,7 +203,7 @@
 .wheelSeparator {
   font-size: 20px;
   font-weight: 600;
-  color: #333;
+  color: #025BD9;
   margin: 0 8px;
   z-index: 2;
 }
@@ -222,9 +215,9 @@
   right: 20px;
   height: 40px;
   margin-top: -25px;
-  border-top: 1px solid #ddd;
-  border-bottom: 1px solid #ddd;
-  background-color: rgba(76, 175, 80, 0.05);
+  border-top: 1px solid #025BD9;
+  border-bottom: 1px solid #025BD9;
+  background-color: rgba(2, 91, 217, 0.05);
   pointer-events: none;
   z-index: 0;
 }
@@ -237,7 +230,7 @@
 .timeFooter button {
   width: 100%;
   padding: 10px;
-  background-color: #4CAF50;
+  background-color: #025BD9;
   color: white;
   border: none;
   border-radius: 4px;
