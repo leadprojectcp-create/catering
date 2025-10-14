@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
 import styles from './DateTimePicker.module.css'
 
 interface DateTimePickerProps {
@@ -145,9 +146,24 @@ export default function DateTimePicker({
           {showDatePicker && (
             <div className={styles.calendarModal}>
               <div className={styles.calendarHeader}>
-                <button onClick={prevMonth}>&lt;</button>
+                <button onClick={prevMonth}>
+                  <Image
+                    src="/icons/arrow.svg"
+                    alt="이전"
+                    width={25}
+                    height={25}
+                    style={{ transform: 'rotate(180deg)' }}
+                  />
+                </button>
                 <span>{currentMonth.getFullYear()}년 {currentMonth.getMonth() + 1}월</span>
-                <button onClick={nextMonth}>&gt;</button>
+                <button onClick={nextMonth}>
+                  <Image
+                    src="/icons/arrow.svg"
+                    alt="다음"
+                    width={25}
+                    height={25}
+                  />
+                </button>
               </div>
               <div className={styles.calendarWeekdays}>
                 {['일', '월', '화', '수', '목', '금', '토'].map(day => (
