@@ -37,6 +37,18 @@ export interface DeliveryAddress {
   request?: string
 }
 
+export interface OrderInfo {
+  address: string
+  detailAddress: string
+  phone: string
+  email: string
+  orderer: string
+  zipCode: string
+  deliveryDate: string
+  deliveryTime: string
+  request: string
+}
+
 export interface DaumPostcodeData {
   roadAddress: string
   jibunAddress: string

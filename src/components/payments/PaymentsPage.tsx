@@ -12,7 +12,7 @@ import Footer from '@/components/Footer'
 import Loading from '@/components/Loading'
 import DeliveryInfo from './DeliveryInfo'
 import DateTimePicker from './DateTimePicker'
-import { OrderData, DeliveryAddress, DaumPostcodeData } from './types'
+import { OrderData, DeliveryAddress, DaumPostcodeData, OrderInfo } from './types'
 import { createOrder } from '@/lib/services/paymentsService'
 import { requestPayment } from '@/lib/services/paymentService'
 import styles from './PaymentsPage.module.css'
@@ -607,7 +607,7 @@ export default function PaymentsPage() {
           <div className={styles.paymentRow}>
             <span className={styles.priceLabel}>상품금액</span>
             <div className={styles.priceValue}>
-              {orderData && (orderData as any).originalPrice && (orderData as any).discount && (
+              {orderData && orderData.originalPrice && orderData.discount && (
                 <span style={{
                   textDecoration: 'line-through',
                   color: '#999',
@@ -615,7 +615,7 @@ export default function PaymentsPage() {
                   fontWeight: '500',
                   marginRight: '8px'
                 }}>
-                  {(orderData as any).originalPrice.toLocaleString()}원
+                  {orderData.originalPrice.toLocaleString()}원
                 </span>
               )}
               <span>{totalProductPrice.toLocaleString()}원</span>

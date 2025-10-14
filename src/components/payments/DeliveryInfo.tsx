@@ -2,22 +2,15 @@
 
 import { useState } from 'react'
 import DeliveryAddressModal from './DeliveryAddressModal'
-import { DeliveryAddress } from './types'
+import { DeliveryAddress, OrderInfo } from './types'
 import styles from './PaymentsPage.module.css'
 
 interface DeliveryInfoProps {
-  orderInfo: {
-    address: string
-    detailAddress: string
-    phone: string
-    email: string
-    orderer: string
-    zipCode?: string
-  }
+  orderInfo: OrderInfo
   recipient: string
   addressName: string
   savedAddresses: DeliveryAddress[]
-  onOrderInfoChange: (info: any) => void
+  onOrderInfoChange: (info: OrderInfo) => void
   onRecipientChange: (recipient: string) => void
   onAddressNameChange: (name: string) => void
   onAddressSave: () => Promise<void>
