@@ -12,6 +12,11 @@ export interface OrderData {
   productId: string
   productName: string
   productPrice: number
+  originalPrice?: number
+  discount?: {
+    discountAmount: number
+    discountPercent: number
+  }
   productImage: string
   items: OrderItem[]
   deliveryMethods?: string[]
@@ -26,7 +31,27 @@ export interface DeliveryAddress {
   email: string
   address: string
   detailAddress?: string
-  deliveryDate: string
-  deliveryTime: string
-  request: string
+  zipCode?: string
+  deliveryDate?: string
+  deliveryTime?: string
+  request?: string
+}
+
+export interface DaumPostcodeData {
+  roadAddress: string
+  jibunAddress: string
+  userSelectedType: 'R' | 'J'
+  zonecode: string
+}
+
+export interface DaumPostcode {
+  new(options: { oncomplete: (data: DaumPostcodeData) => void }): { open: () => void }
+}
+
+declare global {
+  interface Window {
+    daum?: {
+      Postcode: DaumPostcode
+    }
+  }
 }

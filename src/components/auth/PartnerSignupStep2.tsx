@@ -1,29 +1,12 @@
 'use client'
 
-interface DaumPostcodeData {
-  roadAddress: string;
-  jibunAddress: string;
-  userSelectedType: 'R' | 'J';
-}
-
-interface DaumPostcode {
-  new(options: { oncomplete: (data: DaumPostcodeData) => void }): { open: () => void };
-}
-
-declare global {
-  interface Window {
-    daum?: {
-      Postcode: DaumPostcode;
-    };
-  }
-}
-
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import Script from 'next/script'
 import AuthGuard from './AuthGuard'
+import { DaumPostcodeData } from '@/components/payments/types'
 import styles from './SignupPage.module.css'
 
 interface CategoryOption {

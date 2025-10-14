@@ -8,25 +8,8 @@ import { useAuth } from '@/contexts/AuthContext'
 import { doc, getDoc, setDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import PartnerHeader from '@/components/partner/PartnerHeader'
+import { DaumPostcodeData } from '@/components/payments/types'
 import styles from './StoreManagement.module.css'
-
-interface DaumPostcodeData {
-  roadAddress: string;
-  jibunAddress: string;
-  userSelectedType: 'R' | 'J';
-}
-
-interface DaumPostcode {
-  new(options: { oncomplete: (data: DaumPostcodeData) => void }): { open: () => void };
-}
-
-declare global {
-  interface Window {
-    daum?: {
-      Postcode: DaumPostcode;
-    };
-  }
-}
 
 interface StoreInfo {
   partnerId: string

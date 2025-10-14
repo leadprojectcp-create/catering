@@ -10,31 +10,12 @@ import { useAuth } from '@/contexts/AuthContext'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import Loading from '@/components/Loading'
-import DeliveryAddressModal from './DeliveryAddressModal'
-import SaveAddressDialog from './SaveAddressDialog'
+import DeliveryInfo from './DeliveryInfo'
 import DateTimePicker from './DateTimePicker'
-import { OrderData, DeliveryAddress } from './types'
+import { OrderData, DeliveryAddress, DaumPostcodeData } from './types'
 import { createOrder } from '@/lib/services/paymentsService'
 import { requestPayment } from '@/lib/services/paymentService'
 import styles from './PaymentsPage.module.css'
-
-interface DaumPostcodeData {
-  roadAddress: string;
-  jibunAddress: string;
-  userSelectedType: 'R' | 'J';
-}
-
-interface DaumPostcode {
-  new(options: { oncomplete: (data: DaumPostcodeData) => void }): { open: () => void };
-}
-
-declare global {
-  interface Window {
-    daum?: {
-      Postcode: DaumPostcode;
-    };
-  }
-}
 
 export default function PaymentsPage() {
   const router = useRouter()
@@ -48,6 +29,7 @@ export default function PaymentsPage() {
     email: '',
     detailAddress: '',
     address: '',
+    zipCode: '',
     deliveryDate: '',
     deliveryTime: '',
     request: ''
@@ -59,9 +41,7 @@ export default function PaymentsPage() {
     marketing: false
   })
   const [savedAddresses, setSavedAddresses] = useState<DeliveryAddress[]>([])
-  const [showAddressList, setShowAddressList] = useState(false)
   const [addressName, setAddressName] = useState('')
-  const [showSaveDialog, setShowSaveDialog] = useState(false)
   const [isPostcodeLoaded, setIsPostcodeLoaded] = useState(false)
   const [recipient, setRecipient] = useState('')
   const [detailedRequest, setDetailedRequest] = useState('')
@@ -140,7 +120,8 @@ export default function PaymentsPage() {
           const addr = data.userSelectedType === 'R' ? data.roadAddress : data.jibunAddress;
           setOrderInfo({
             ...orderInfo,
-            address: addr
+            address: addr,
+            zipCode: data.zonecode
           });
         }
       }).open();
@@ -343,15 +324,6 @@ export default function PaymentsPage() {
     }
   }
 
-  // 배송지 저장 다이얼로그 열기
-  const openSaveDialog = () => {
-    if (!orderInfo.address.trim()) {
-      alert('주소를 먼저 입력해주세요.');
-      return;
-    }
-    setShowSaveDialog(true)
-  }
-
   // 배송지 정보 저장 함수
   const saveDeliveryInfo = async () => {
     if (!user) {
@@ -373,14 +345,12 @@ export default function PaymentsPage() {
       const newAddress: DeliveryAddress = {
         id: Date.now().toString(),
         name: addressName,
-        orderer: orderInfo.orderer,
+        orderer: recipient || orderInfo.orderer,
         phone: orderInfo.phone,
         email: orderInfo.email,
         address: orderInfo.address,
         detailAddress: orderInfo.detailAddress,
-        deliveryDate: orderInfo.deliveryDate,
-        deliveryTime: orderInfo.deliveryTime,
-        request: orderInfo.request
+        zipCode: orderInfo.zipCode
       }
 
       const updatedAddresses = [...savedAddresses, newAddress]
@@ -391,8 +361,6 @@ export default function PaymentsPage() {
       }, { merge: true })
 
       setSavedAddresses(updatedAddresses)
-      setAddressName('')
-      setShowSaveDialog(false)
       alert('배송지 정보가 저장되었습니다.')
     } catch (error) {
       console.error('배송지 정보 저장 실패:', error)
@@ -408,11 +376,13 @@ export default function PaymentsPage() {
       email: address.email,
       detailAddress: address.detailAddress || '',
       address: address.address,
-      deliveryDate: address.deliveryDate,
-      deliveryTime: address.deliveryTime,
-      request: address.request
+      zipCode: address.zipCode || '',
+      deliveryDate: '',
+      deliveryTime: '',
+      request: ''
     })
-    setShowAddressList(false)
+    setRecipient(address.orderer)
+    setAddressName(address.name)
   }
 
   // 배송지 삭제
@@ -491,29 +461,88 @@ export default function PaymentsPage() {
                     )}
                     <div className={styles.productInfo}>
                       <div className={styles.productName}>{orderData.productName}</div>
-                      {Object.entries(item.options).map(([key, value]) => (
-                        <div key={key} className={styles.productOption}>
-                          {key}: {value}
-                        </div>
-                      ))}
-                      <div className={styles.productQuantity}>상품수 : {item.quantity}개</div>
+                      {Object.entries(item.options).map(([key, value]) => {
+                        // 옵션 가격 찾기
+                        let optionPrice = 0
+                        if (item.optionsWithPrices && item.optionsWithPrices[key]) {
+                          optionPrice = item.optionsWithPrices[key].price
+                        }
+                        return (
+                          <div key={key} className={styles.productOptionWrapper}>
+                            <div className={styles.productOptionGroup}>[{key}]</div>
+                            <div className={styles.productOption}>
+                              {value} +{optionPrice.toLocaleString()}원
+                            </div>
+                          </div>
+                        )
+                      })}
                     </div>
+                    <div className={styles.productQuantity}>{item.quantity}개</div>
                   </div>
                 ))}
               </div>
             )}
 
-            <div className={styles.priceRow}>
-              <span>상품금액</span>
-              <span>{totalProductPrice.toLocaleString()}원</span>
+          </div>
+        </section>
+
+        {/* 배송지 설정 */}
+        <DeliveryInfo
+          orderInfo={orderInfo}
+          recipient={recipient}
+          addressName={addressName}
+          savedAddresses={savedAddresses}
+          onOrderInfoChange={setOrderInfo}
+          onRecipientChange={setRecipient}
+          onAddressNameChange={setAddressName}
+          onAddressSave={saveDeliveryInfo}
+          onAddressLoad={loadAddress}
+          onAddressDelete={deleteAddress}
+          onAddressSearch={handleAddressSearch}
+        />
+
+        {/* 배송날짜 및 시간설정 */}
+        <section className={styles.section}>
+          <h2 className={styles.sectionTitle}>배송날짜 및 시간설정</h2>
+          <div className={styles.deliveryContainer}>
+            <div className={styles.formGroup}>
+              <DateTimePicker
+                deliveryDate={orderInfo.deliveryDate}
+                deliveryTime={orderInfo.deliveryTime}
+                onDateChange={(date) => setOrderInfo({...orderInfo, deliveryDate: date})}
+                onTimeChange={(time) => setOrderInfo({...orderInfo, deliveryTime: time})}
+              />
             </div>
-            <div className={styles.priceRow}>
-              <span>포인트 사용</span>
-              <span className={styles.discount}>-0원</span>
+          </div>
+        </section>
+
+        {/* 요청사항 */}
+        <section className={styles.section}>
+          <h2 className={styles.sectionTitle}>요청사항</h2>
+          <div className={styles.formGroup}>
+            <div className={styles.formRow}>
+              <label className={styles.label}>요청사항</label>
+              <select
+                className={styles.select}
+                value={orderInfo.request}
+                onChange={(e) => setOrderInfo({...orderInfo, request: e.target.value})}
+              >
+                <option value="">배송 요청사항을 선택해주세요</option>
+                <option value="도착 10분전에 전화주세요.">도착 10분전에 전화주세요.</option>
+                <option value="문앞에 놓고 문자한번만 주세요.">문앞에 놓고 문자한번만 주세요.</option>
+                <option value="1층 로비에 맡겨주세요.">1층 로비에 맡겨주세요.</option>
+                <option value="지정 시간까지 꼭 도착해야 합니다.">지정 시간까지 꼭 도착해야 합니다.</option>
+                <option value="수령인 이름 꼭 확인하고 전달해주세요.">수령인 이름 꼭 확인하고 전달해주세요.</option>
+              </select>
             </div>
-            <div className={styles.totalRow}>
-              <span>최종 상품금액</span>
-              <span className={styles.totalPrice}>{totalProductPrice.toLocaleString()}원</span>
+            <div className={styles.formRow}>
+              <label className={styles.label}>상세요청사항</label>
+              <textarea
+                className={styles.textarea}
+                placeholder="판매자에게 필요한 상세 요청사항을 적어주세요."
+                value={detailedRequest}
+                onChange={(e) => setDetailedRequest(e.target.value)}
+              />
             </div>
           </div>
         </section>
@@ -564,187 +593,6 @@ export default function PaymentsPage() {
           </div>
         </section>
 
-        {/* 배송지 정보 */}
-        <section className={styles.section}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-            <h2 className={styles.sectionTitle}>
-              배송지 정보
-              <span className={styles.required}>*모든 항목은 필수 입니다.</span>
-            </h2>
-            <div style={{ display: 'flex', gap: '10px' }}>
-              {savedAddresses.length > 0 && (
-                <button
-                  type="button"
-                  onClick={() => setShowAddressList(!showAddressList)}
-                  style={{
-                    padding: '8px 16px',
-                    backgroundColor: '#2196F3',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    fontSize: '14px'
-                  }}
-                >
-                  배송지 목록 ({savedAddresses.length})
-                </button>
-              )}
-              <button
-                type="button"
-                onClick={openSaveDialog}
-                style={{
-                  padding: '8px 16px',
-                  backgroundColor: '#4CAF50',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  fontSize: '14px'
-                }}
-              >
-                배송지 저장
-              </button>
-            </div>
-          </div>
-
-          {/* 배송지 목록 모달 */}
-          <DeliveryAddressModal
-            show={showAddressList}
-            addresses={savedAddresses}
-            onClose={() => setShowAddressList(false)}
-            onLoadAddress={loadAddress}
-            onDeleteAddress={deleteAddress}
-          />
-
-          {/* 배송지 저장 다이얼로그 */}
-          <SaveAddressDialog
-            show={showSaveDialog}
-            addressName={addressName}
-            onAddressNameChange={setAddressName}
-            onSave={saveDeliveryInfo}
-            onClose={() => {
-              setShowSaveDialog(false)
-              setAddressName('')
-            }}
-          />
-
-          <div className={styles.formGroup}>
-            <div className={styles.formRow}>
-              <label className={styles.label}>주문자</label>
-              <input
-                type="text"
-                className={styles.input}
-                placeholder="주문자 이름을 입력해주세요."
-                value={orderInfo.orderer}
-                onChange={(e) => setOrderInfo({...orderInfo, orderer: e.target.value})}
-              />
-            </div>
-            <div className={styles.formRow}>
-              <label className={styles.label}>연락처</label>
-              <input
-                type="text"
-                className={styles.input}
-                placeholder="연락처를 입력해주세요"
-                value={orderInfo.phone}
-                onChange={(e) => setOrderInfo({...orderInfo, phone: e.target.value})}
-              />
-            </div>
-            <div className={styles.formRow}>
-              <label className={styles.label}>주소</label>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <input
-                  type="text"
-                  className={styles.input}
-                  placeholder="주소를 검색해주세요"
-                  value={orderInfo.address}
-                  readOnly
-                  style={{ flex: 1 }}
-                />
-                <button
-                  type="button"
-                  onClick={handleAddressSearch}
-                  style={{
-                    padding: '8px 16px',
-                    backgroundColor: '#2196F3',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    fontSize: '14px',
-                    whiteSpace: 'nowrap'
-                  }}
-                >
-                  주소 검색
-                </button>
-              </div>
-            </div>
-            <div className={styles.formRow}>
-              <label className={styles.label}>상세주소</label>
-              <input
-                type="text"
-                className={styles.input}
-                placeholder="상세주소를 입력해주세요"
-                value={orderInfo.detailAddress}
-                onChange={(e) => setOrderInfo({...orderInfo, detailAddress: e.target.value})}
-              />
-            </div>
-            <div className={styles.formRow}>
-              <label className={styles.label}>수령인</label>
-              <input
-                type="text"
-                className={styles.input}
-                placeholder="수령인 이름을 입력해주세요."
-                value={recipient}
-                onChange={(e) => setRecipient(e.target.value)}
-              />
-            </div>
-          </div>
-        </section>
-
-        {/* 배송날짜 및 시간설정 */}
-        <section className={styles.section}>
-          <h2 className={styles.sectionTitle}>배송날짜 및 시간설정</h2>
-          <div className={styles.formGroup}>
-            <DateTimePicker
-              deliveryDate={orderInfo.deliveryDate}
-              deliveryTime={orderInfo.deliveryTime}
-              onDateChange={(date) => setOrderInfo({...orderInfo, deliveryDate: date})}
-              onTimeChange={(time) => setOrderInfo({...orderInfo, deliveryTime: time})}
-            />
-          </div>
-        </section>
-
-        {/* 요청사항 */}
-        <section className={styles.section}>
-          <h2 className={styles.sectionTitle}>요청사항</h2>
-          <div className={styles.formGroup}>
-            <div className={styles.formRow}>
-              <label className={styles.label}>요청사항</label>
-              <select
-                className={styles.select}
-                value={orderInfo.request}
-                onChange={(e) => setOrderInfo({...orderInfo, request: e.target.value})}
-              >
-                <option value="">배송 요청사항을 선택해주세요</option>
-                <option value="도착 10분전에 전화주세요.">도착 10분전에 전화주세요.</option>
-                <option value="문앞에 놓고 문자한번만 주세요.">문앞에 놓고 문자한번만 주세요.</option>
-                <option value="1층 로비에 맡겨주세요.">1층 로비에 맡겨주세요.</option>
-                <option value="지정 시간까지 꼭 도착해야 합니다.">지정 시간까지 꼭 도착해야 합니다.</option>
-                <option value="수령인 이름 꼭 확인하고 전달해주세요.">수령인 이름 꼭 확인하고 전달해주세요.</option>
-              </select>
-            </div>
-            <div className={styles.formRow}>
-              <label className={styles.label}>상세요청사항</label>
-              <textarea
-                className={styles.textarea}
-                placeholder="판매자에게 필요한 상세 요청사항을 적어주세요."
-                value={detailedRequest}
-                onChange={(e) => setDetailedRequest(e.target.value)}
-              />
-            </div>
-          </div>
-        </section>
-
         {/* 총 결제금액 */}
         <section className={styles.paymentSection}>
           <h2 className={styles.sectionTitle}>총 결제금액</h2>
@@ -755,6 +603,23 @@ export default function PaymentsPage() {
           <div className={styles.paymentRow}>
             <span>배송비</span>
             <span>+{deliveryFee.toLocaleString()}원</span>
+          </div>
+          <div className={styles.paymentRow}>
+            <span className={styles.priceLabel}>상품금액</span>
+            <div className={styles.priceValue}>
+              {orderData && (orderData as any).originalPrice && (orderData as any).discount && (
+                <span style={{
+                  textDecoration: 'line-through',
+                  color: '#999',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  marginRight: '8px'
+                }}>
+                  {(orderData as any).originalPrice.toLocaleString()}원
+                </span>
+              )}
+              <span>{totalProductPrice.toLocaleString()}원</span>
+            </div>
           </div>
           <div className={styles.paymentTotal}>
             <span>총 결제금액</span>
