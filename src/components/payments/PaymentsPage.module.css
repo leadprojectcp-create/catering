@@ -16,7 +16,6 @@
 .section {
   margin-bottom: 32px;
   padding-bottom: 24px;
-  border-bottom: 1px solid #F5F5F5;
 }
 
 .sectionTitle {
@@ -35,16 +34,62 @@
   color: #999;
 }
 
-.productContainer {
+.addressButton {
+  padding: 8px 16px;
+  border-radius: 30px;
+  border: 1px solid #D9D9D9;
+  background: white;
+  color: #333;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.deliveryContainer {
+  border-radius: 20px;
+  border: 1px solid #F4F4F4;
+  padding: 16px;
+}
+
+.addressInputWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  flex: 1;
+}
+
+.addressInput {
+  width: 100%;
+  padding: 12px;
+  padding-right: 40px;
   border: 1px solid #E5E5E5;
-  border-radius: 8px;
+  border-radius: 5px;
+  background: #FAFAFA;
+  font-size: 14px;
+  outline: none;
+  cursor: pointer;
+}
+
+.addressInput::placeholder {
+  color: #999;
+}
+
+.addressInputWrapper svg {
+  position: absolute;
+  right: 12px;
+  pointer-events: none;
+}
+
+.productContainer {
+  border: 1px solid #F4F4F4;
+  border-radius: 20px;
   padding: 16px;
 }
 
 .productList {
-  margin-bottom: 16px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid #F5F5F5;
+  margin-bottom: 0;
+  padding-bottom: 0;
 }
 
 .storeName {
@@ -58,6 +103,7 @@
   display: flex;
   gap: 12px;
   margin-bottom: 12px;
+  align-items: flex-start;
 }
 
 .productImage {
@@ -65,36 +111,63 @@
   height: 100px;
   border-radius: 8px;
   object-fit: cover;
+  flex-shrink: 0;
 }
 
 .productInfo {
   flex: 1;
+  min-width: 0;
 }
 
 .productName {
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 700;
   color: #333;
   margin-bottom: 4px;
 }
 
-.productOption {
-  font-size: 13px;
-  color: #666;
+.productOptionWrapper {
+  margin-bottom: 8px;
+}
+
+.productOptionGroup {
+  font-size: 14px;
+  font-weight: 500;
+  color: #999;
   margin-bottom: 2px;
 }
 
+.productOption {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+}
+
 .productQuantity {
-  font-size: 13px;
-  color: #999;
+  font-size: 14px;
+  font-weight: 700;
+  color: #333;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .priceRow {
   display: flex;
   justify-content: space-between;
-  font-size: 14px;
-  color: #666;
+  align-items: center;
   margin-bottom: 8px;
+}
+
+.priceLabel {
+  font-size: 14px;
+  font-weight: 500;
+  color: #999;
+}
+
+.priceValue {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
 }
 
 .discount {
@@ -171,17 +244,21 @@
 
 .formRow {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
+  flex-direction: row;
+  align-items: center;
+  gap: 16px;
 }
 
 .label {
   font-size: 14px;
   font-weight: 600;
   color: #333;
+  min-width: 60px;
+  flex-shrink: 0;
 }
 
 .input {
+  flex: 1;
   padding: 12px;
   border: 1px solid #E5E5E5;
   border-radius: 8px;
@@ -242,7 +319,6 @@
   color: #333;
   margin-top: 16px;
   padding-top: 16px;
-  border-top: 1px solid #E5E5E5;
 }
 
 .finalPrice {

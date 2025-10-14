@@ -520,11 +520,11 @@ export default function AddProductPage() {
               value={formData.name}
               onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
               placeholder="상품명을 입력하세요"
-              maxLength={50}
+              maxLength={30}
               className={styles.textInput}
               required
             />
-            <span className={styles.inputCounter}>{formData.name.length}/50자</span>
+            <span className={styles.inputCounter}>{formData.name.length}/30자</span>
           </div>
         </div>
 

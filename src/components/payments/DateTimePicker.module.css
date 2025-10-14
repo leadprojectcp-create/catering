@@ -1,12 +1,14 @@
 .formRow {
   display: flex;
   align-items: center;
+  gap: 16px;
   margin-bottom: 16px;
 }
 
 .label {
-  width: 120px;
-  font-weight: 500;
+  min-width: 60px;
+  flex-shrink: 0;
+  font-weight: 600;
   font-size: 14px;
   color: #333;
 }

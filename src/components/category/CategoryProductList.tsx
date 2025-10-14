@@ -168,13 +168,11 @@ export default function CategoryProductList({ categoryName }: CategoryProductLis
 
                   {/* 가격 정보 */}
                   {product.discount ? (
-                    <>
+                    <div className={styles.priceSection}>
                       <span className={styles.originalPrice}>{product.price.toLocaleString()}원</span>
-                      <div className={styles.discountRow}>
-                        <span className={styles.discountedPrice}>{product.discountedPrice?.toLocaleString()}원</span>
-                        <span className={styles.discountPercent}>{product.discount.discountPercent}%</span>
-                      </div>
-                    </>
+                      <span className={styles.discountedPrice}>{product.discountedPrice?.toLocaleString()}원</span>
+                      <span className={styles.discountPercent}>{product.discount.discountPercent}%</span>
+                    </div>
                   ) : (
                     <span className={styles.regularPrice}>{product.price.toLocaleString()}원</span>
                   )}

@@ -43,6 +43,7 @@ interface Product {
   additionalSettings?: string[]
   origin?: { ingredient: string; origin: string }[]
   storeId: string
+  productTypes?: string[]
   options?: {
     groupName: string
     values: { name: string; price: number }[]
@@ -89,6 +90,7 @@ export default function OrderPage({ productId, storeId }: OrderPageProps) {
   const [reviews, setReviews] = useState<Review[]>([])
   const [loadingReviews, setLoadingReviews] = useState(true)
   const [editingCartItemId, setEditingCartItemId] = useState<string | null>(null)
+  const [storeRequest, setStoreRequest] = useState('')
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -387,9 +389,12 @@ export default function OrderPage({ productId, storeId }: OrderPageProps) {
       productId: productId,
       productName: product.name,
       productPrice: product.discountedPrice || product.price,
+      originalPrice: product.price,
+      discount: product.discount,
       productImage: product.images?.[0] || '',
       items: itemsWithPrices,
-      totalPrice: calculateTotalPrice()
+      totalPrice: calculateTotalPrice(),
+      storeRequest: storeRequest
     }
 
     sessionStorage.setItem('orderData', JSON.stringify(orderData))
@@ -542,17 +547,24 @@ export default function OrderPage({ productId, storeId }: OrderPageProps) {
             </div>
 
             <div className={styles.productInfo}>
+              {product.productTypes && product.productTypes.length > 0 && (
+                <div className={styles.productTypesContainer}>
+                  {product.productTypes.map((type, index) => (
+                    <span key={index} className={styles.productTypeBadge}>
+                      {type.replace('상품', '')}
+                    </span>
+                  ))}
+                </div>
+              )}
               <h1 className={styles.productName}>{product.name}</h1>
 
               {/* 가격 정보 */}
               {product.discount ? (
-                <>
+                <div className={styles.priceSection}>
                   <span className={styles.originalPrice}>{product.price.toLocaleString()}원</span>
-                  <div className={styles.discountRow}>
-                    <span className={styles.discountedPrice}>{product.discountedPrice?.toLocaleString()}원</span>
-                    <span className={styles.discountPercent}>{product.discount.discountPercent}%</span>
-                  </div>
-                </>
+                  <span className={styles.discountedPrice}>{product.discountedPrice?.toLocaleString()}원</span>
+                  <span className={styles.discountPercent}>{product.discount.discountPercent}%</span>
+                </div>
               ) : (
                 <span className={styles.regularPrice}>{product.price.toLocaleString()}원</span>
               )}
@@ -719,7 +731,7 @@ export default function OrderPage({ productId, storeId }: OrderPageProps) {
             />
 
             <div
-              className={`${styles.rightSection} ${isModalOpen ? styles.modalOpen : ''}`}
+              className={`${styles.bottomModal} ${isModalOpen ? styles.open : ''}`}
               style={{ maxHeight: `${modalHeight}vh` }}
             >
               {/* 드래그 핸들 */}
@@ -798,8 +810,8 @@ export default function OrderPage({ productId, storeId }: OrderPageProps) {
             {/* 장바구니 */}
             {cartItems.length > 0 && (
               <div className={styles.selectedSection}>
+                <h3 className={styles.selectedTitle}>선택된 상품</h3>
                 <div className={styles.selectedItem}>
-                  <h3 className={styles.selectedTitle}>선택된 상품</h3>
                   {cartItems.map((item, index) => (
                     <div key={index} className={styles.cartItemWrapper}>
                       <div className={styles.selectedHeader}>
@@ -865,6 +877,21 @@ export default function OrderPage({ productId, storeId }: OrderPageProps) {
                       </div>
                     </div>
                   ))}
+                </div>
+
+                {/* 매장 요청사항 */}
+                <div className={styles.requestSection}>
+                  <h3 className={styles.requestTitle}>매장 요청사항</h3>
+                  <textarea
+                    className={styles.requestTextarea}
+                    placeholder="매장에 전달할 요청사항을 입력해주세요"
+                    value={storeRequest}
+                    onChange={(e) => setStoreRequest(e.target.value)}
+                    maxLength={500}
+                  />
+                  <div className={styles.requestCount}>
+                    {storeRequest.length}/500
+                  </div>
                 </div>
 
                 {/* 결제 정보 */}
