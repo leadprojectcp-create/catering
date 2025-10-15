@@ -172,7 +172,7 @@ export default function Header() {
                     className={styles.logo}
                     quality={100}
                     priority
-                    style={{ height: 'auto' }}
+                    style={{ width: 'auto', height: 'auto' }}
                   />
                 </Link>
               </div>

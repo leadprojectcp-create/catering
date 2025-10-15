@@ -28,10 +28,13 @@
 .logoContainer {
   display: flex;
   align-items: center;
+  height: 100%;
+  padding: 8px 0;
 }
 
 .logo {
   object-fit: contain;
+  max-height: 44px;
 }
 
 .backButton {
