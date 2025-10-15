@@ -485,7 +485,8 @@ export default function OrderPage({ productId }: OrderPageProps) {
         totalQuantity: totalQuantity,
         deliveryMethod: deliveryMethod,
         request: storeRequest,
-        status: 'pending',
+        orderStatus: 'pending',
+        paymentStatus: 'unpaid',
         createdAt: new Date(),
         updatedAt: new Date()
       })

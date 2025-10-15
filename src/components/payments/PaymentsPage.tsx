@@ -308,6 +308,7 @@ export default function PaymentsPage() {
         partnerId: storeData?.partnerId,
         partnerPhone: storeData?.phone,
         totalPrice: totalPrice,
+        totalProductPrice: totalProductPrice,
         deliveryFee: deliveryFee,
         deliveryMethod: deliveryMethod,
         deliveryDate: orderInfo.deliveryDate,
@@ -319,6 +320,8 @@ export default function PaymentsPage() {
         phone: orderInfo.phone,
         detailedRequest: detailedRequest,
         orderNumber: orderNumber,
+        orderStatus: 'pending',
+        paymentStatus: 'unpaid',
         updatedAt: new Date()
       })
 

@@ -280,37 +280,37 @@ export default function OrdersPage() {
             className={filterStatus === 'all' ? styles.filterActive : styles.filterButton}
             onClick={() => setFilterStatus('all')}
           >
-            전체 ({orders.length})
+            전체 {orders.length > 0 && <span className={styles.filterCount}>{orders.length}</span>}
           </button>
           <button
             className={filterStatus === 'pending' ? styles.filterActive : styles.filterButton}
             onClick={() => setFilterStatus('pending')}
           >
-            주문확인대기 ({orders.filter(o => o.orderStatus === 'pending').length})
+            주문확인대기 {orders.filter(o => o.orderStatus === 'pending').length > 0 && <span className={styles.filterCount}>{orders.filter(o => o.orderStatus === 'pending').length}</span>}
           </button>
           <button
             className={filterStatus === 'preparing' ? styles.filterActive : styles.filterButton}
             onClick={() => setFilterStatus('preparing')}
           >
-            준비중 ({orders.filter(o => o.orderStatus === 'preparing').length})
+            준비중 {orders.filter(o => o.orderStatus === 'preparing').length > 0 && <span className={styles.filterCount}>{orders.filter(o => o.orderStatus === 'preparing').length}</span>}
           </button>
           <button
             className={filterStatus === 'shipping' ? styles.filterActive : styles.filterButton}
             onClick={() => setFilterStatus('shipping')}
           >
-            배송중 ({orders.filter(o => o.orderStatus === 'shipping').length})
+            배송중 {orders.filter(o => o.orderStatus === 'shipping').length > 0 && <span className={styles.filterCount}>{orders.filter(o => o.orderStatus === 'shipping').length}</span>}
           </button>
           <button
             className={filterStatus === 'delivered' ? styles.filterActive : styles.filterButton}
             onClick={() => setFilterStatus('delivered')}
           >
-            배송완료 ({orders.filter(o => o.orderStatus === 'delivered').length})
+            배송완료 {orders.filter(o => o.orderStatus === 'delivered').length > 0 && <span className={styles.filterCount}>{orders.filter(o => o.orderStatus === 'delivered').length}</span>}
           </button>
           <button
             className={filterStatus === 'cancelled' ? styles.filterActive : styles.filterButton}
             onClick={() => setFilterStatus('cancelled')}
           >
-            주문취소 ({orders.filter(o => o.orderStatus === 'cancelled' || o.orderStatus === 'rejected').length})
+            주문취소 {orders.filter(o => o.orderStatus === 'cancelled' || o.orderStatus === 'rejected').length > 0 && <span className={styles.filterCount}>{orders.filter(o => o.orderStatus === 'cancelled' || o.orderStatus === 'rejected').length}</span>}
           </button>
         </div>
 
@@ -359,7 +359,7 @@ export default function OrdersPage() {
                   })} 주문
                 </div>
 
-                <div className={styles.orderNumber}>{order.orderNumber}</div>
+                <div className={styles.orderNumber}>주문번호 {order.orderNumber}</div>
 
                 <div className={styles.orderItems}>
                   {order.items.slice(0, 1).map((item, index) => (
@@ -384,17 +384,17 @@ export default function OrdersPage() {
                         <div className={`${styles.deliveryMethod} ${
                           order.deliveryMethod === '퀵업체 배송'
                             ? styles.deliveryMethodQuick
-                            : order.deliveryMethod === '매장픽업'
+                            : order.deliveryMethod === '매장 픽업'
                             ? styles.deliveryMethodPickup
                             : ''
                         }`}>
                           {order.deliveryMethod}
                         </div>
                         <div className={`${styles.orderTotal} ${order.paymentStatus === 'failed' ? styles.orderTotalFailed : ''}`}>
-                          {order.paymentStatus === 'unpaid' && `결제 미완료 ${order.totalPrice.toLocaleString()}원`}
-                          {order.paymentStatus === 'paid' && `결제 완료 ${order.totalPrice.toLocaleString()}원`}
-                          {order.paymentStatus === 'refunded' && `환불됨 ${order.totalPrice.toLocaleString()}원`}
-                          {order.paymentStatus === 'failed' && `결제 실패 ${order.totalPrice.toLocaleString()}원`}
+                          {(!order.paymentStatus || order.paymentStatus === 'unpaid') && `결제 미완료 ${(order.totalPrice || order.totalProductPrice || 0).toLocaleString()}원`}
+                          {order.paymentStatus === 'paid' && `결제 완료 ${(order.totalPrice || order.totalProductPrice || 0).toLocaleString()}원`}
+                          {order.paymentStatus === 'refunded' && `환불됨 ${(order.totalPrice || order.totalProductPrice || 0).toLocaleString()}원`}
+                          {order.paymentStatus === 'failed' && `결제 실패 ${(order.totalPrice || order.totalProductPrice || 0).toLocaleString()}원`}
                         </div>
                       </div>
                     </div>

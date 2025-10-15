@@ -49,6 +49,7 @@ const getPageTitle = (path: string): string => {
   if (path === '/chat') return '채팅'
   if (path.startsWith('/chat/')) return '채팅'
   if (path === '/orders') return '주문/배송내역'
+  if (path.startsWith('/orders/')) return '주문상세'
   if (path === '/notices') return '공지사항'
   if (path === '/faq') return '자주묻는질문'
   if (path === '/contact') return '문의하기'
@@ -181,6 +182,16 @@ export default function Header() {
 
           {/* 오른쪽 메뉴 영역 */}
           <div className={styles.rightSection}>
+            {/* 홈 아이콘 */}
+            <Link href="/" className={styles.homeIconLink}>
+              <Image
+                src={pathname === '/' ? '/menu-icons/home_active.svg' : '/menu-icons/home.svg'}
+                alt="홈"
+                width={24}
+                height={24}
+              />
+            </Link>
+
             {/* 찜 아이콘 (로그인한 사용자만 표시) */}
             {user && (
               <Link href="/wishlist" className={styles.wishlistIconLink}>

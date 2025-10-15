@@ -32,15 +32,23 @@
 
 .filterButton,
 .filterActive {
-  padding: 10px 20px;
-  border: 1px solid #ddd;
+  padding: 6px 14px;
+  border-radius: 30px;
+  border: 1px solid #F0F0F3;
   background-color: white;
-  border-radius: 20px;
   cursor: pointer;
-  font-size: 14px;
   transition: all 0.3s;
   white-space: nowrap;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.filterButton {
+  color: #4E5968;
+  font-size: 14px;
+  font-weight: 500;
 }
 
 .filterButton:hover {
@@ -48,9 +56,30 @@
 }
 
 .filterActive {
-  background-color: #2196F3;
+  border-radius: 30px;
+  background: #025BD9;
   color: white;
-  border-color: #2196F3;
+  border-color: #025BD9;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.filterButton .filterCount {
+  border-radius: 30px;
+  background: #025BD9;
+  color: #FFF;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 2px 8px;
+}
+
+.filterActive .filterCount {
+  border-radius: 30px;
+  background: #FFF;
+  color: #025BD9;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 2px 8px;
 }
 
 .emptyState {
@@ -70,8 +99,8 @@
   flex-direction: column;
   gap: 4px;
   background: white;
-  border: 1px solid #e0e0e0;
-  border-radius: 12px;
+  border-radius: 20px;
+  border: 1px solid #F4F4F4;
   padding: 20px;
 }
 
@@ -202,7 +231,7 @@
 
 .deliveryMethodPickup {
   background: #FCF4FF;
-  color: #7911FF;
+  color: #5911FF;
 }
 
 .deliveryDate {
