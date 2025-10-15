@@ -1,23 +1,33 @@
 .container {
-  max-width: 1200px;
-  margin: 100px auto 60px;
-  padding: 20px;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0;
+  padding-top: 80px;
+  padding-bottom: 100px;
   min-height: calc(100vh - 200px);
 }
 
 .title {
-  font-size: 28px;
-  font-weight: bold;
+  font-size: 24px;
+  font-weight: 600;
+  color: #333;
   margin-bottom: 30px;
-  text-align: center;
+  text-align: left;
 }
 
 .filters {
   display: flex;
-  gap: 10px;
+  gap: 12px;
   margin-bottom: 30px;
-  flex-wrap: wrap;
-  justify-content: center;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.filters::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
 }
 
 .filterButton,
@@ -29,6 +39,8 @@
   cursor: pointer;
   font-size: 14px;
   transition: all 0.3s;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .filterButton:hover {
@@ -54,56 +66,104 @@
 }
 
 .orderCard {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
   background: white;
   border: 1px solid #e0e0e0;
   border-radius: 12px;
   padding: 20px;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-.orderCard:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  transform: translateY(-2px);
 }
 
 .orderHeader {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 15px;
-  padding-bottom: 15px;
-  border-bottom: 1px solid #f0f0f0;
 }
 
 .orderDate {
-  font-size: 14px;
-  color: #666;
+  color: #999;
+  font-size: 12px;
+  font-weight: 500;
 }
 
 .orderStatus {
-  font-size: 14px;
-  font-weight: bold;
+  color: #333;
+  font-size: 16px;
+  font-weight: 700;
 }
 
-.orderBody {
-  margin-bottom: 15px;
+.headerActions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
 }
 
-.storeName {
+.chatButton,
+.phoneButton {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 8px;
+  border-radius: 30px;
+  border: 1px solid #F0F0F3;
+  background: #fff;
+  cursor: pointer;
+  flex-shrink: 0;
+  text-decoration: none;
+}
+
+.chatButton span,
+.phoneButton span {
+  color: #333;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.orderNumber {
   font-size: 18px;
   font-weight: bold;
-  margin-bottom: 10px;
 }
 
 .orderItems {
-  margin-bottom: 10px;
+  display: flex;
+  flex-direction: column;
 }
 
 .orderItem {
-  font-size: 14px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.productImage {
+  width: 100px;
+  height: 100px;
+  border-radius: 8px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.itemInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.productName {
   color: #333;
-  margin-bottom: 5px;
+  font-size: 16px;
+  font-weight: 700;
+  word-break: break-word;
+  line-height: 1.4;
+}
+
+.reservationDateTime {
+  color: #999;
+  font-size: 13px;
+  font-weight: 500;
 }
 
 .orderOptions {
@@ -125,9 +185,9 @@
 }
 
 .deliveryMethod {
-  padding: 4px 8px;
-  background-color: #f5f5f5;
-  border-radius: 4px;
+  color: #999;
+  font-size: 13px;
+  font-weight: 500;
 }
 
 .deliveryDate {
@@ -141,52 +201,58 @@
   justify-content: space-between;
   align-items: center;
   padding-top: 15px;
-  border-top: 1px solid #f0f0f0;
 }
 
 .orderTotal {
-  font-size: 16px;
-  color: #333;
+  color: #025BD9;
+  font-size: 13px;
+  font-weight: 500;
 }
 
-.orderTotal span {
-  font-weight: bold;
-  color: #2196F3;
+.orderTotalFailed {
+  color: #FF4C4C;
 }
 
 .buttonGroup {
   display: flex;
   gap: 10px;
+  width: 100%;
 }
 
 .detailButton {
+  flex: 1;
   padding: 8px 16px;
-  background-color: #2196F3;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
+  border-radius: 10px;
+  border: 1px solid #E4E4E4;
+  background-color: white;
+  color: #333;
   font-size: 14px;
-  transition: background-color 0.3s;
+  font-weight: 600;
+  cursor: pointer;
 }
 
-.detailButton:hover {
-  background-color: #1976D2;
+.cancelButton {
+  flex: 1;
+  padding: 8px 16px;
+  border-radius: 10px;
+  border: 1px solid #E4E4E4;
+  background-color: white;
+  color: #333;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
 }
 
 .reviewButton {
+  flex: 1;
   padding: 8px 16px;
-  background-color: #4CAF50;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
+  border-radius: 10px;
+  border: 1px solid #025BD9;
+  background-color: white;
+  color: #025BD9;
   font-size: 14px;
-  transition: background-color 0.3s;
-}
-
-.reviewButton:hover {
-  background-color: #45a049;
+  font-weight: 600;
+  cursor: pointer;
 }
 
 @media (max-width: 768px) {
@@ -203,8 +269,13 @@
     padding: 15px;
   }
 
-  .storeName {
+  .orderNumber {
     font-size: 16px;
+  }
+
+  .productImage {
+    width: 70px;
+    height: 70px;
   }
 
   .orderFooter {

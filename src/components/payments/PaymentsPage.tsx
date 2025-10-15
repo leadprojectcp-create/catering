@@ -226,6 +226,10 @@ export default function PaymentsPage() {
     try {
       setLoading(true)
 
+      // 가게 정보 가져오기 (partnerId와 partnerPhone을 위해)
+      const storeDoc = await getDoc(doc(db, 'stores', orderData.storeId))
+      const storeData = storeDoc.exists() ? storeDoc.data() : null
+
       // 주문 데이터 생성
       const orderItems = orderData.items.map(item => ({
         productId: orderData.productId,
@@ -241,6 +245,8 @@ export default function PaymentsPage() {
         userId: user.uid,
         storeId: orderData.storeId,
         storeName: orderData.storeName,
+        partnerId: storeData?.partnerId,
+        partnerPhone: storeData?.phone,
         items: orderItems,
         totalPrice: totalPrice,
         totalProductPrice: totalProductPrice,

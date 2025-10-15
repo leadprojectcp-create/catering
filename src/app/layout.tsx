@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "픽투잇",
-  description: "픽투잇은 푸드 단체 주문 메타 플랫폼입니다.",
+  title: "단모",
+  description: "단모는 단체주문 메타 플랫폼입니다.",
 };
 
 export default function RootLayout({

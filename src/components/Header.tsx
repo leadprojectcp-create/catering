@@ -48,7 +48,7 @@ const getPageTitle = (path: string): string => {
   if (path === '/wishlist') return '찜'
   if (path === '/chat') return '채팅'
   if (path.startsWith('/chat/')) return '채팅'
-  if (path === '/orders') return '주문내역'
+  if (path === '/orders') return '주문/배송내역'
   if (path === '/notices') return '공지사항'
   if (path === '/faq') return '자주묻는질문'
   if (path === '/contact') return '문의하기'

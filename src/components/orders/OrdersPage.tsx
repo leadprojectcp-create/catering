@@ -2,11 +2,15 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { collection, query, where, orderBy, getDocs } from 'firebase/firestore'
+import Image from 'next/image'
+import { collection, query, where, orderBy, getDocs, doc, getDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { useAuth } from '@/contexts/AuthContext'
+import { createOrGetChatRoom } from '@/lib/services/chatService'
+import { addCartItem } from '@/lib/services/cartService'
 import Loading from '@/components/Loading'
 import OrderDetailModal from './OrderDetailModal'
+import OrderCancelModal from './OrderCancelModal'
 import styles from './OrdersPage.module.css'
 
 interface OrderItem {
@@ -15,6 +19,7 @@ interface OrderItem {
   options: { [key: string]: string }
   quantity: number
   price: number
+  productImage?: string
 }
 
 interface Order {
@@ -22,6 +27,8 @@ interface Order {
   userId: string
   storeId: string
   storeName: string
+  partnerId?: string
+  partnerPhone?: string
   items: OrderItem[]
   totalPrice: number
   totalProductPrice: number
@@ -51,7 +58,8 @@ export default function OrdersPage() {
   const [loading, setLoading] = useState(true)
   const [orders, setOrders] = useState<Order[]>([])
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
-  const [filterStatus, setFilterStatus] = useState<'all' | 'pending' | 'cancelled_rejected' | 'preparing' | 'shipping' | 'delivered'>('all')
+  const [cancelOrderId, setCancelOrderId] = useState<string | null>(null)
+  const [filterStatus, setFilterStatus] = useState<'all' | 'pending' | 'preparing' | 'shipping' | 'delivered' | 'cancelled'>('all')
 
   useEffect(() => {
     const loadOrders = async () => {
@@ -74,15 +82,58 @@ export default function OrdersPage() {
         const querySnapshot = await getDocs(q)
 
         const ordersData: Order[] = []
-        querySnapshot.forEach((doc) => {
-          const data = doc.data()
+
+        // 각 주문에 대해 가게 정보를 가져와서 전화번호와 partnerId 추가
+        for (const docSnapshot of querySnapshot.docs) {
+          const data = docSnapshot.data()
+
+          // storeId로 가게 정보 가져오기
+          let storePhone = data.partnerPhone
+          let partnerId = data.partnerId
+          if (data.storeId && (!storePhone || !partnerId)) {
+            try {
+              const storeDoc = await getDoc(doc(db, 'stores', data.storeId))
+              if (storeDoc.exists()) {
+                const storeData = storeDoc.data()
+                if (!storePhone) storePhone = storeData.phone
+                if (!partnerId) partnerId = storeData.partnerId
+              }
+            } catch (error) {
+              console.error('가게 정보 로드 실패:', error)
+            }
+          }
+
+          // 각 상품의 이미지 가져오기
+          const itemsWithImages = await Promise.all(
+            (data.items || []).map(async (item: OrderItem) => {
+              if (item.productId && !item.productImage) {
+                try {
+                  const productDoc = await getDoc(doc(db, 'products', item.productId))
+                  if (productDoc.exists()) {
+                    const productData = productDoc.data()
+                    return {
+                      ...item,
+                      productImage: productData.images?.[0] || null
+                    }
+                  }
+                } catch (error) {
+                  console.error('상품 이미지 로드 실패:', error)
+                }
+              }
+              return item
+            })
+          )
+
           ordersData.push({
-            id: doc.id,
+            id: docSnapshot.id,
             ...data,
+            partnerId: partnerId,
+            partnerPhone: storePhone,
+            items: itemsWithImages,
             createdAt: data.createdAt?.toDate() || new Date(),
             paidAt: data.paidAt?.toDate(),
           } as Order)
-        })
+        }
 
         setOrders(ordersData)
       } catch (error) {
@@ -103,12 +154,12 @@ export default function OrdersPage() {
     if (paymentStatus === 'refunded') return '환불됨'
 
     // 주문 상태 체크
-    if (orderStatus === 'pending') return '업체 승인 대기'
+    if (orderStatus === 'pending') return '주문 확인 대기'
     if (orderStatus === 'rejected') return '업체 거부'
     if (orderStatus === 'preparing') return '준비 중'
     if (orderStatus === 'shipping') return '배송 중'
     if (orderStatus === 'delivered') return '배송 완료'
-    if (orderStatus === 'cancelled') return '취소됨'
+    if (orderStatus === 'cancelled') return '취소요청'
 
     return '알 수 없음'
   }
@@ -121,6 +172,7 @@ export default function OrdersPage() {
 
     // 주문 상태 체크
     if (orderStatus === 'pending') return '#2196F3'
+    if (orderStatus === 'accepted') return '#4CAF50'
     if (orderStatus === 'rejected') return '#f44336'
     if (orderStatus === 'preparing') return '#FF9800'
     if (orderStatus === 'shipping') return '#9C27B0'
@@ -132,9 +184,73 @@ export default function OrdersPage() {
 
   const filteredOrders = orders.filter((order) => {
     if (filterStatus === 'all') return true
-    if (filterStatus === 'cancelled_rejected') return order.orderStatus === 'cancelled' || order.orderStatus === 'rejected'
+    if (filterStatus === 'cancelled') return order.orderStatus === 'cancelled' || order.orderStatus === 'rejected'
     return order.orderStatus === filterStatus
   })
+
+  const handleChatClick = async (order: Order, e: React.MouseEvent) => {
+    e.stopPropagation()
+
+    if (!user) {
+      alert('로그인이 필요합니다.')
+      router.push('/login')
+      return
+    }
+
+    if (!order.partnerId) {
+      alert('가게 정보를 불러오는 중입니다.')
+      return
+    }
+
+    try {
+      const roomId = await createOrGetChatRoom(
+        user.uid,
+        order.storeId,
+        order.storeName,
+        order.partnerId
+      )
+      router.push(`/chat?roomId=${roomId}`)
+    } catch (error) {
+      console.error('채팅방 생성 실패:', error)
+      alert('채팅방 생성에 실패했습니다.')
+    }
+  }
+
+  const handleAddToCart = async (order: Order, e: React.MouseEvent) => {
+    e.stopPropagation()
+
+    if (!user) {
+      alert('로그인이 필요합니다.')
+      router.push('/login')
+      return
+    }
+
+    try {
+      // 주문의 첫 번째 상품을 장바구니에 추가
+      const firstItem = order.items[0]
+
+      await addCartItem({
+        uid: user.uid,
+        storeId: order.storeId,
+        productId: firstItem.productId,
+        productName: firstItem.productName,
+        productPrice: firstItem.price,
+        productImage: firstItem.productImage || '',
+        items: order.items.map(item => ({
+          options: item.options,
+          quantity: item.quantity
+        })),
+        totalPrice: order.totalPrice,
+        createdAt: new Date()
+      })
+
+      alert('장바구니에 담았습니다.')
+      router.push('/cart')
+    } catch (error) {
+      console.error('장바구니 담기 실패:', error)
+      alert('장바구니 담기에 실패했습니다.')
+    }
+  }
 
   if (authLoading || loading) {
     return <Loading />
@@ -143,7 +259,7 @@ export default function OrdersPage() {
   return (
     <>
       <div className={styles.container}>
-        <h1 className={styles.title}>주문 목록</h1>
+        <h1 className={styles.title}>주문/배송내역</h1>
 
         {/* 필터 */}
         <div className={styles.filters}>
@@ -157,13 +273,7 @@ export default function OrdersPage() {
             className={filterStatus === 'pending' ? styles.filterActive : styles.filterButton}
             onClick={() => setFilterStatus('pending')}
           >
-            신규 주문 ({orders.filter(o => o.orderStatus === 'pending').length})
-          </button>
-          <button
-            className={filterStatus === 'cancelled_rejected' ? styles.filterActive : styles.filterButton}
-            onClick={() => setFilterStatus('cancelled_rejected')}
-          >
-            주문 취소 ({orders.filter(o => o.orderStatus === 'cancelled' || o.orderStatus === 'rejected').length})
+            주문확인대기 ({orders.filter(o => o.orderStatus === 'pending').length})
           </button>
           <button
             className={filterStatus === 'preparing' ? styles.filterActive : styles.filterButton}
@@ -183,6 +293,12 @@ export default function OrdersPage() {
           >
             배송완료 ({orders.filter(o => o.orderStatus === 'delivered').length})
           </button>
+          <button
+            className={filterStatus === 'cancelled' ? styles.filterActive : styles.filterButton}
+            onClick={() => setFilterStatus('cancelled')}
+          >
+            주문취소 ({orders.filter(o => o.orderStatus === 'cancelled' || o.orderStatus === 'rejected').length})
+          </button>
         </div>
 
         {/* 주문 목록 */}
@@ -196,57 +312,83 @@ export default function OrdersPage() {
               <div
                 key={order.id}
                 className={styles.orderCard}
-                onClick={() => setSelectedOrder(order)}
               >
                 <div className={styles.orderHeader}>
-                  <div className={styles.orderDate}>
-                    {order.createdAt.toLocaleDateString('ko-KR', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric',
-                    })}
-                  </div>
-                  <div
-                    className={styles.orderStatus}
-                    style={{
-                      color: getStatusColor(order.orderStatus, order.paymentStatus),
-                    }}
-                  >
+                  <div className={styles.orderStatus}>
                     {getStatusText(order.orderStatus, order.paymentStatus)}
                   </div>
+                  <div className={styles.headerActions}>
+                    <button
+                      className={styles.chatButton}
+                      onClick={(e) => handleChatClick(order, e)}
+                    >
+                      <Image src="/icons/chat.png" alt="채팅" width={20} height={20} />
+                      <span>채팅</span>
+                    </button>
+                    {order.partnerPhone && (
+                      <a
+                        href={`tel:${order.partnerPhone}`}
+                        className={styles.phoneButton}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <Image src="/icons/phone.png" alt="전화" width={20} height={20} />
+                        <span>전화</span>
+                      </a>
+                    )}
+                  </div>
                 </div>
 
-                <div className={styles.orderBody}>
-                  <div className={styles.storeName}>{order.storeName}</div>
-                  <div className={styles.orderItems}>
-                    {order.items.map((item, index) => (
-                      <div key={index} className={styles.orderItem}>
-                        {item.productName}
-                        {Object.entries(item.options).length > 0 && (
-                          <span className={styles.orderOptions}>
-                            {' '}
-                            ({Object.values(item.options).join(', ')})
-                          </span>
-                        )}
-                        <span className={styles.orderQuantity}> x {item.quantity}</span>
+                <div className={styles.orderDate}>
+                  {order.createdAt.toLocaleDateString('ko-KR', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                  })} 주문
+                </div>
+
+                <div className={styles.orderNumber}>{order.orderNumber}</div>
+
+                <div className={styles.orderItems}>
+                  {order.items.slice(0, 1).map((item, index) => (
+                    <div key={index} className={styles.orderItem}>
+                      {item.productImage && (
+                        <Image
+                          src={item.productImage}
+                          alt={item.productName}
+                          width={100}
+                          height={100}
+                          className={styles.productImage}
+                        />
+                      )}
+                      <div className={styles.itemInfo}>
+                        <div className={styles.productName}>
+                          {item.productName}
+                          {order.items.length > 1 && ` 외 ${order.items.length - 1}개`}
+                        </div>
+                        <div className={styles.reservationDateTime}>
+                          예약날짜 {order.deliveryDate} {order.deliveryTime}
+                        </div>
+                        <div className={styles.deliveryMethod}>{order.deliveryMethod}</div>
+                        <div className={`${styles.orderTotal} ${order.paymentStatus === 'failed' ? styles.orderTotalFailed : ''}`}>
+                          {order.paymentStatus === 'unpaid' && `결제 미완료 ${order.totalPrice.toLocaleString()}원`}
+                          {order.paymentStatus === 'paid' && `결제 완료 ${order.totalPrice.toLocaleString()}원`}
+                          {order.paymentStatus === 'refunded' && `환불됨 ${order.totalPrice.toLocaleString()}원`}
+                          {order.paymentStatus === 'failed' && `결제 실패 ${order.totalPrice.toLocaleString()}원`}
+                        </div>
                       </div>
-                    ))}
-                  </div>
-                  <div className={styles.deliveryInfo}>
-                    <span className={styles.deliveryMethod}>{order.deliveryMethod}</span>
-                    <span className={styles.deliveryDate}>
-                      {order.deliveryDate} {order.deliveryTime}
-                    </span>
-                  </div>
+                    </div>
+                  ))}
                 </div>
 
-                <div className={styles.orderFooter}>
-                  <div className={styles.orderTotal}>
-                    총 결제금액: <span>{order.totalPrice.toLocaleString()}원</span>
-                  </div>
-                  <div className={styles.buttonGroup}>
-                    <button className={styles.detailButton}>상세보기</button>
-                    {order.orderStatus === 'delivered' && (
+                <div className={styles.buttonGroup}>
+                  {order.orderStatus === 'delivered' ? (
+                    <>
+                      <button
+                        className={styles.detailButton}
+                        onClick={(e) => handleAddToCart(order, e)}
+                      >
+                        장바구니 담기
+                      </button>
                       <button
                         className={styles.reviewButton}
                         onClick={(e) => {
@@ -254,10 +396,33 @@ export default function OrdersPage() {
                           router.push(`/reviews/write?orderId=${order.id}`)
                         }}
                       >
-                        리뷰 쓰기
+                        리뷰작성
                       </button>
-                    )}
-                  </div>
+                    </>
+                  ) : (
+                    <>
+                      {(order.orderStatus === 'pending' || order.orderStatus === 'preparing') && (
+                        <button
+                          className={styles.cancelButton}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setCancelOrderId(order.id)
+                          }}
+                        >
+                          주문취소
+                        </button>
+                      )}
+                      <button
+                        className={styles.detailButton}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setSelectedOrder(order)
+                        }}
+                      >
+                        주문상세
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
             ))}
@@ -270,6 +435,18 @@ export default function OrdersPage() {
         <OrderDetailModal
           order={selectedOrder}
           onClose={() => setSelectedOrder(null)}
+        />
+      )}
+
+      {/* 주문 취소 모달 */}
+      {cancelOrderId && (
+        <OrderCancelModal
+          orderId={cancelOrderId}
+          onClose={() => setCancelOrderId(null)}
+          onCancel={() => {
+            // 주문 목록 새로고침
+            window.location.reload()
+          }}
         />
       )}
     </>

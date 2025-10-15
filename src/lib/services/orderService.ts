@@ -17,6 +17,8 @@ export interface Order {
   userId: string
   storeId: string
   storeName: string
+  partnerId?: string
+  partnerPhone?: string
   items: OrderItem[]
   totalPrice: number
   totalProductPrice: number
