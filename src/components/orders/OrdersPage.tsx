@@ -366,7 +366,15 @@ export default function OrdersPage() {
                         <div className={styles.reservationDateTime}>
                           예약날짜 {order.deliveryDate} {order.deliveryTime}
                         </div>
-                        <div className={styles.deliveryMethod}>{order.deliveryMethod}</div>
+                        <div className={`${styles.deliveryMethod} ${
+                          order.deliveryMethod === '퀵업체 배송'
+                            ? styles.deliveryMethodQuick
+                            : order.deliveryMethod === '매장픽업'
+                            ? styles.deliveryMethodPickup
+                            : ''
+                        }`}>
+                          {order.deliveryMethod}
+                        </div>
                         <div className={`${styles.orderTotal} ${order.paymentStatus === 'failed' ? styles.orderTotalFailed : ''}`}>
                           {order.paymentStatus === 'unpaid' && `결제 미완료 ${order.totalPrice.toLocaleString()}원`}
                           {order.paymentStatus === 'paid' && `결제 완료 ${order.totalPrice.toLocaleString()}원`}

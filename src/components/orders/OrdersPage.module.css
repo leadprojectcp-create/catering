@@ -121,8 +121,9 @@
 }
 
 .orderNumber {
-  font-size: 18px;
-  font-weight: bold;
+  color: #4E5968;
+  font-size: 14px;
+  font-weight: 500;
 }
 
 .orderItems {
@@ -185,9 +186,23 @@
 }
 
 .deliveryMethod {
-  color: #999;
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 6px;
+  border-radius: 3px;
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 600;
+  width: fit-content;
+}
+
+.deliveryMethodQuick {
+  background: #EFF7FF;
+  color: #025BD9;
+}
+
+.deliveryMethodPickup {
+  background: #FCF4FF;
+  color: #7911FF;
 }
 
 .deliveryDate {
@@ -205,8 +220,8 @@
 
 .orderTotal {
   color: #025BD9;
-  font-size: 13px;
-  font-weight: 500;
+  font-size: 15px;
+  font-weight: 700;
 }
 
 .orderTotalFailed {

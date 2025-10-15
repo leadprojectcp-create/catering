@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "단모",
+  title: "단모 - 단체의 모-든것",
   description: "단모는 단체주문 메타 플랫폼입니다.",
 };
 
