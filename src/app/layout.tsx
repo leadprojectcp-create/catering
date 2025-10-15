@@ -31,9 +31,12 @@ export default function RootLayout({
           name="viewport"
           content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0, viewport-fit=cover"
         />
-        <script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js"
+        <script
+          src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js"
           integrity="sha384-TiCUE00h+gjGhDVZGOyEjGKFf1SnQ4oBXSqDvPSvzxG4tVxLl6d0KmB1tPQJFGlq"
-          crossOrigin="anonymous"></script>
+          crossOrigin="anonymous"
+          async
+        ></script>
         <script
           dangerouslySetInnerHTML={{
             __html: `
