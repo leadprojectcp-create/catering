@@ -7,7 +7,7 @@ export default function PrivacyPolicy1() {
       <div style={{ lineHeight: '1.6', fontSize: '14px' }}>
         <h3>1. 개인정보 수집 목적</h3>
         <p>
-          픽투잇은 다음의 목적을 위하여 개인정보를 수집 및 이용합니다.
+          단모은 다음의 목적을 위하여 개인정보를 수집 및 이용합니다.
         </p>
         <ul>
           <li>회원 가입 및 관리</li>

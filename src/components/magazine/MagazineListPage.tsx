@@ -52,7 +52,7 @@ export default function MagazineListPage() {
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <h1 className={styles.title}>픽투잇 매거진</h1>
+        <h1 className={styles.title}>단모 매거진</h1>
         <p className={styles.subtitle}>믿고 맡길 수 있는 단체 주문, 입점 업체들의 배송 노하우</p>
       </div>
 

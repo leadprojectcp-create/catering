@@ -13,6 +13,9 @@ import DeliveryInfo from './DeliveryInfo'
 import DateTimePicker from './DateTimePicker'
 import { OrderData, DeliveryAddress, DaumPostcodeData, OrderInfo } from './types'
 import { createOrder } from '@/lib/services/paymentsService'
+import PrivacyPolicy from '@/components/terms/PrivacyPolicy'
+import RefundPolicy from '@/components/terms/RefundPolicy'
+import PaymentTerms from './PaymentTerms'
 import { requestPayment } from '@/lib/services/paymentService'
 import styles from './PaymentsPage.module.css'
 
@@ -47,6 +50,8 @@ export default function PaymentsPage() {
   const [entranceCode, setEntranceCode] = useState('')
   const [showRequestDropdown, setShowRequestDropdown] = useState(false)
   const [agreeAll, setAgreeAll] = useState(false)
+  const [showDateInfoModal, setShowDateInfoModal] = useState(false)
+  const [showTermsModal, setShowTermsModal] = useState<string | null>(null)
   const [usePoint, setUsePoint] = useState(0)
   const [availablePoint, setAvailablePoint] = useState(0)
 
@@ -517,7 +522,21 @@ export default function PaymentsPage() {
 
         {/* 배송날짜 및 시간설정 */}
         <section className={styles.section}>
-          <h2 className={styles.sectionTitle}>배송날짜 및 시간설정</h2>
+          <h2 className={styles.sectionTitle}>
+            배송날짜 및 시간설정
+            <button
+              className={styles.infoButton}
+              onClick={() => setShowDateInfoModal(true)}
+              type="button"
+            >
+              <Image
+                src="/icons/info.svg"
+                alt="정보"
+                width={16}
+                height={16}
+              />
+            </button>
+          </h2>
           <div className={styles.deliveryContainer}>
             <div className={styles.formGroup}>
               <DateTimePicker
@@ -682,20 +701,7 @@ export default function PaymentsPage() {
             </div>
             <div className={styles.paymentRow}>
               <span className={styles.paymentLabel}>총 상품금액</span>
-              <div className={styles.priceValue}>
-                {orderData && orderData.originalPrice && orderData.discount && (
-                  <span style={{
-                    textDecoration: 'line-through',
-                    color: '#999',
-                    fontSize: '14px',
-                    fontWeight: '500',
-                    marginRight: '8px'
-                  }}>
-                    {orderData.originalPrice.toLocaleString()}원
-                  </span>
-                )}
-                <span className={styles.paymentValue}>{totalProductPrice.toLocaleString()}원</span>
-              </div>
+              <span className={styles.paymentValue}>{totalProductPrice.toLocaleString()}원</span>
             </div>
             <div className={styles.paymentRow}>
               <span className={styles.paymentLabel}>배송비</span>
@@ -771,38 +777,27 @@ export default function PaymentsPage() {
                 <span className={styles.agreementMainText}>주문내용을 확인 및 결제 동의</span>
               </div>
             </label>
-            <label className={styles.agreementLabelItem}>
+            <label
+              className={styles.agreementLabelItem}
+              onClick={(e) => {
+                const target = e.target as HTMLElement
+                if (!target.closest('input') && !target.closest('.checkboxWrapper')) {
+                  e.preventDefault()
+                  setShowTermsModal('privacy')
+                }
+              }}
+            >
               <div className={styles.checkboxTextWrapper}>
-                <div className={styles.checkboxWrapper}>
-                  <input
-                    type="checkbox"
-                    checked={agreements.privacy}
-                    onChange={(e) => {
-                      setAgreements({...agreements, privacy: e.target.checked})
-                      setAgreeAll(false)
-                    }}
-                  />
-                  <Image
-                    src={agreements.privacy ? '/icons/check_active.png' : '/icons/check_empty.png'}
-                    alt="체크박스"
-                    width={20}
-                    height={20}
-                    className={styles.checkboxIcon}
-                  />
-                </div>
-                <span>(필수) 개인정보 수집 · 이용 동의</span>
-              </div>
-            </label>
-            <label className={styles.agreementLabelItem}>
-              <div className={styles.checkboxTextWrapper}>
-                <div className={styles.checkboxWrapper}>
+                <div className={`${styles.checkboxWrapper} checkboxWrapper`}>
                   <input
                     type="checkbox"
                     checked={agreements.terms}
                     onChange={(e) => {
+                      e.stopPropagation()
                       setAgreements({...agreements, terms: e.target.checked})
                       setAgreeAll(false)
                     }}
+                    onClick={(e) => e.stopPropagation()}
                   />
                   <Image
                     src={agreements.terms ? '/icons/check_active.png' : '/icons/check_empty.png'}
@@ -815,16 +810,27 @@ export default function PaymentsPage() {
                 <span>(필수) 개인정보 제3자 정보제공 동의</span>
               </div>
             </label>
-            <label className={styles.agreementLabelItem}>
+            <label
+              className={styles.agreementLabelItem}
+              onClick={(e) => {
+                const target = e.target as HTMLElement
+                if (!target.closest('input') && !target.closest('.checkboxWrapper')) {
+                  e.preventDefault()
+                  setShowTermsModal('payment')
+                }
+              }}
+            >
               <div className={styles.checkboxTextWrapper}>
-                <div className={styles.checkboxWrapper}>
+                <div className={`${styles.checkboxWrapper} checkboxWrapper`}>
                   <input
                     type="checkbox"
                     checked={agreements.refund}
                     onChange={(e) => {
+                      e.stopPropagation()
                       setAgreements({...agreements, refund: e.target.checked})
                       setAgreeAll(false)
                     }}
+                    onClick={(e) => e.stopPropagation()}
                   />
                   <Image
                     src={agreements.refund ? '/icons/check_active.png' : '/icons/check_empty.png'}
@@ -837,16 +843,27 @@ export default function PaymentsPage() {
                 <span>(필수) 결제대행 서비스 이용약관 동의</span>
               </div>
             </label>
-            <label className={styles.agreementLabelItem}>
+            <label
+              className={styles.agreementLabelItem}
+              onClick={(e) => {
+                const target = e.target as HTMLElement
+                if (!target.closest('input') && !target.closest('.checkboxWrapper')) {
+                  e.preventDefault()
+                  setShowTermsModal('refund')
+                }
+              }}
+            >
               <div className={styles.checkboxTextWrapper}>
-                <div className={styles.checkboxWrapper}>
+                <div className={`${styles.checkboxWrapper} checkboxWrapper`}>
                   <input
                     type="checkbox"
                     checked={agreements.marketing}
                     onChange={(e) => {
+                      e.stopPropagation()
                       setAgreements({...agreements, marketing: e.target.checked})
                       setAgreeAll(false)
                     }}
+                    onClick={(e) => e.stopPropagation()}
                   />
                   <Image
                     src={agreements.marketing ? '/icons/check_active.png' : '/icons/check_empty.png'}
@@ -856,7 +873,7 @@ export default function PaymentsPage() {
                     className={styles.checkboxIcon}
                   />
                 </div>
-                <span>(필수) 주문정보 비밀번호 개인정보 수집 · 이용 동의</span>
+                <span>(필수) 교환 및 반품 안내약관 동의</span>
               </div>
             </label>
           </div>
@@ -878,6 +895,68 @@ export default function PaymentsPage() {
           </button>
         </div>
       </div>
+
+      {/* 배송 날짜 정보 모달 */}
+      {showDateInfoModal && (
+        <div className={styles.modalOverlay} onClick={() => setShowDateInfoModal(false)}>
+          <div className={styles.infoModal} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.infoModalHeader}>
+              <h3>배송 날짜 안내</h3>
+              <button
+                className={styles.closeButton}
+                onClick={() => setShowDateInfoModal(false)}
+              >
+                ✕
+              </button>
+            </div>
+            <div className={styles.infoModalContent}>
+              <p>배송 날짜는 <strong>현재일 기준으로 최대 1개월(30일) 이내</strong>만 주문할 수 있습니다.</p>
+              <ul>
+                <li>오늘 날짜부터 선택 가능합니다.</li>
+                <li>30일 이후의 날짜는 선택할 수 없습니다.</li>
+                <li>정확한 배송 일정을 위해 미리 계획하여 주문해 주세요.</li>
+              </ul>
+            </div>
+            <div className={styles.infoModalFooter}>
+              <button
+                className={styles.confirmButton}
+                onClick={() => setShowDateInfoModal(false)}
+              >
+                확인
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 약관 모달 */}
+      {showTermsModal && (
+        <div className={styles.modalOverlay} onClick={() => setShowTermsModal(null)}>
+          <div className={styles.termsModal} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.termsModalHeader}>
+              <button
+                className={styles.closeButton}
+                onClick={() => setShowTermsModal(null)}
+              >
+                ✕
+              </button>
+            </div>
+            <div className={styles.termsModalContent}>
+              {showTermsModal === 'privacy' && <PrivacyPolicy />}
+              {showTermsModal === 'payment' && <PaymentTerms />}
+              {showTermsModal === 'refund' && <RefundPolicy />}
+            </div>
+            <div className={styles.termsModalFooter}>
+              <button
+                className={styles.confirmButton}
+                onClick={() => setShowTermsModal(null)}
+              >
+                확인
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   )
 }

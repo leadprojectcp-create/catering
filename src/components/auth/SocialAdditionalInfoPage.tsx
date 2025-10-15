@@ -170,7 +170,7 @@ export default function SocialAdditionalInfoPage() {
                     value={formData.companyName}
                     onChange={handleChange}
                     className={styles.inputNoIcon}
-                    placeholder="픽투잇 케이터링"
+                    placeholder="단모 케이터링"
                   />
                 </div>
               )}

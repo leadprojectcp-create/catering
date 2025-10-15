@@ -20,7 +20,7 @@ const categories: CategoryOption[] = [
   { id: 'gift', name: '답례품', icon: '/icons/gift.png' },
   { id: 'delivery', name: '당일배송', icon: '/icons/delivery.png' },
   // { id: 'ai', name: 'AI추천', icon: '/icons/ai_recommendation.png' }, // 데이터 축적 후 활성화 예정
-  { id: 'magazine', name: '픽투잇 매거진', icon: '/icons/magazine.png' }
+  { id: 'magazine', name: '단모 매거진', icon: '/icons/magazine.png' }
 ]
 
 interface CategorySelectorProps {

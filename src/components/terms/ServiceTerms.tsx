@@ -7,7 +7,7 @@ export default function ServiceTerms() {
       <div style={{ lineHeight: '1.6', fontSize: '14px' }}>
         <h3>제1조 (목적)</h3>
         <p>
-          이 약관은 픽투잇(이하 &quot;회사&quot;)이 제공하는 케이터링 중개 서비스(이하 &quot;서비스&quot;)의 이용과 관련하여
+          이 약관은 단모(이하 &quot;회사&quot;)이 제공하는 케이터링 중개 서비스(이하 &quot;서비스&quot;)의 이용과 관련하여
           회사와 이용자간의 권리, 의무 및 책임사항, 기타 필요한 사항을 규정함을 목적으로 합니다.
         </p>
 

@@ -83,6 +83,11 @@ export default function DateTimePicker({
     const today = new Date()
     today.setHours(0, 0, 0, 0)
 
+    // 최대 선택 가능 날짜 (오늘부터 30일 후)
+    const maxDate = new Date(today)
+    maxDate.setDate(maxDate.getDate() + 30)
+    maxDate.setHours(0, 0, 0, 0)
+
     for (let i = 0; i < 42; i++) {
       const date = new Date(startDate)
       date.setDate(startDate.getDate() + i)
@@ -90,12 +95,13 @@ export default function DateTimePicker({
       const isCurrentMonth = date.getMonth() === month
       const isPast = date < today
       const isToday = date.getTime() === today.getTime()
+      const isBeyondMaxDate = date > maxDate
 
       days.push({
         date: date,
         day: date.getDate(),
         isCurrentMonth,
-        isPast,
+        isPast: isPast || isBeyondMaxDate, // 과거 날짜 또는 30일 이후 날짜 모두 비활성화
         isToday,
         value: `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
       })

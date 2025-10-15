@@ -46,33 +46,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser) {
-        setUser(firebaseUser)
+      try {
+        if (firebaseUser) {
+          setUser(firebaseUser)
 
-        // Firestore에서 사용자 데이터 가져오기
-        try {
-          const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid))
-          if (userDoc.exists()) {
-            const data = userDoc.data()
-            setUserData({
-              uid: firebaseUser.uid,
-              email: data.email,
-              name: data.name,
-              level: data.level || 1, // 기본 레벨 1
-              type: data.type,
-              companyName: data.companyName,
-              phone: data.phone,
-              registrationComplete: data.registrationComplete || false
-            })
+          // Firestore에서 사용자 데이터 가져오기
+          try {
+            const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid))
+            if (userDoc.exists()) {
+              const data = userDoc.data()
+              setUserData({
+                uid: firebaseUser.uid,
+                email: data.email,
+                name: data.name,
+                level: data.level || 1, // 기본 레벨 1
+                type: data.type,
+                companyName: data.companyName,
+                phone: data.phone,
+                registrationComplete: data.registrationComplete || false
+              })
+            } else {
+              // 사용자 문서가 없으면 null로 설정
+              setUserData(null)
+            }
+          } catch (error) {
+            console.error('사용자 데이터 로드 오류:', error)
+            setUserData(null)
           }
-        } catch (error) {
-          console.error('사용자 데이터 로드 오류:', error)
+        } else {
+          setUser(null)
+          setUserData(null)
         }
-      } else {
-        setUser(null)
-        setUserData(null)
+      } finally {
+        // 모든 경우에 로딩 완료
+        setLoading(false)
       }
-      setLoading(false)
     })
 
     return () => unsubscribe()

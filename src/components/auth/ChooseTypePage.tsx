@@ -26,7 +26,7 @@ export default function ChooseTypePage() {
       <div className={styles.content}>
         <div className={styles.header}>
           <h1 className={styles.title}>
-            픽투잇에서 어떤 서비스를<br />
+            단모에서 어떤 서비스를<br />
             이용하고 싶으세요?
           </h1>
           <p className={styles.subtitle}>

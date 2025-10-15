@@ -81,7 +81,7 @@ export default function PartnerSignupStep3() {
             </div>
 
             <h1 className={styles.title}>
-              픽투잇 파트너<br />
+              단모 파트너<br />
               회원가입이 완료되었어요!
             </h1>
           </div>
@@ -110,7 +110,7 @@ export default function PartnerSignupStep3() {
             <div className={styles.warningTitle}>잠시만요! 알려드릴게 있어요.</div>
             <div className={styles.warningText}>
               파트너 활동을 활성화 하기 위해선 [내 가게 관리]에서 영업시간 등록 및 메뉴등록<br />
-              절차가 필요해요. 필수 항목 입력 후, 픽투잇 검수가 끝난뒤 파트너 등록이 완료되요!
+              절차가 필요해요. 필수 항목 입력 후, 단모 검수가 끝난뒤 파트너 등록이 완료되요!
             </div>
           </div>
 

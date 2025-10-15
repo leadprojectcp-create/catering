@@ -506,7 +506,7 @@
 
 .pointInput {
   width: 100%;
-  padding: 8px 16px 8px 35px;
+  padding: 4px 16px 8px 35px;
   border: 1px solid #E5E5E5;
   border-radius: 8px;
   color: #333;
@@ -682,5 +682,250 @@
 
   .sectionTitle {
     font-size: 16px;
+  }
+}
+
+/* 정보 아이콘 버튼 */
+.infoButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  margin-left: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.2s;
+}
+
+.infoButton:hover {
+  opacity: 0.7;
+}
+
+/* 정보 모달 */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.infoModal {
+  background: white;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 400px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.infoModalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.infoModalHeader h3 {
+  font-size: 18px;
+  font-weight: 700;
+  color: #333;
+  margin: 0;
+}
+
+.closeButton {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #999;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+}
+
+.closeButton:hover {
+  background-color: #f5f5f5;
+}
+
+.infoModalContent {
+  padding: 24px;
+  color: #333;
+  line-height: 1.6;
+}
+
+.infoModalContent p {
+  margin: 0 0 16px 0;
+  font-size: 15px;
+}
+
+.infoModalContent strong {
+  color: #0066FF;
+  font-weight: 600;
+}
+
+.infoModalContent ul {
+  margin: 0;
+  padding-left: 20px;
+  list-style: disc;
+}
+
+.infoModalContent li {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 8px;
+}
+
+.infoModalContent li:last-child {
+  margin-bottom: 0;
+}
+
+.infoModalFooter {
+  padding: 16px 24px;
+  border-top: 1px solid #f0f0f0;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.confirmButton {
+  padding: 10px 24px;
+  background-color: #0066FF;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.confirmButton:hover {
+  background-color: #0052CC;
+}
+
+@media (max-width: 768px) {
+  .infoModal {
+    width: 95%;
+    max-width: none;
+    margin: 0 10px;
+  }
+
+  .infoModalHeader {
+    padding: 16px 20px;
+  }
+
+  .infoModalHeader h3 {
+    font-size: 16px;
+  }
+
+  .infoModalContent {
+    padding: 20px;
+  }
+
+  .infoModalContent p {
+    font-size: 14px;
+  }
+
+  .infoModalContent li {
+    font-size: 13px;
+  }
+}
+
+/* 약관 모달 */
+.termsModal {
+  background: white;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 600px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.termsModalHeader {
+  display: flex;
+  justify-content: flex-end;
+  padding: 16px 20px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.termsModalContent {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+}
+
+.termsModalContent h2 {
+  font-size: 20px;
+  font-weight: 700;
+  color: #333;
+  margin: 0 0 20px 0;
+}
+
+.termsModalContent h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  margin: 20px 0 12px 0;
+}
+
+.termsModalContent p {
+  margin: 8px 0;
+  color: #666;
+  line-height: 1.6;
+}
+
+.termsModalContent ul,
+.termsModalContent ol {
+  margin: 8px 0;
+  padding-left: 24px;
+  color: #666;
+}
+
+.termsModalContent li {
+  margin: 6px 0;
+  line-height: 1.6;
+}
+
+.termsModalFooter {
+  padding: 16px 24px;
+  border-top: 1px solid #f0f0f0;
+  display: flex;
+  justify-content: center;
+}
+
+@media (max-width: 768px) {
+  .termsModal {
+    width: 95%;
+    max-height: 90vh;
+  }
+
+  .termsModalContent {
+    padding: 20px;
+  }
+
+  .termsModalContent h2 {
+    font-size: 18px;
+  }
+
+  .termsModalContent h3 {
+    font-size: 15px;
+  }
+
+  .termsModalContent p,
+  .termsModalContent li {
+    font-size: 13px;
   }
 }

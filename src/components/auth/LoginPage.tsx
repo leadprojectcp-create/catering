@@ -148,7 +148,7 @@ export default function LoginPage() {
             />
           </div>
           <div className={styles.subtitle}>
-            단체주문 고민하지말고 픽투잇에서!
+            단체주문 고민하지말고 단모에서!
           </div>
           <div className={styles.description}>
             간식거리부터 식사까지<br />
