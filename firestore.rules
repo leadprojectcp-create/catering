@@ -128,22 +128,24 @@ service cloud.firestore {
 
     // Orders collection - 주문
     match /orders/{orderId} {
-      // 개별 문서 읽기: 로그인한 사용자만 자신의 주문 또는 자신의 스토어 주문 읽기 가능
+      // 개별 문서 읽기: 로그인한 사용자만 자신의 주문 또는 파트너 주문 읽기 가능
       allow get: if request.auth != null &&
         (resource.data.userId == request.auth.uid ||
-         resource.data.storeId == request.auth.uid);
+         resource.data.storeId == request.auth.uid ||
+         resource.data.partnerId == request.auth.uid);
 
-      // 쿼리 읽기: 로그인한 사용자의 주문 또는 스토어 주문 쿼리 가능
+      // 쿼리 읽기: 로그인한 사용자의 주문 쿼리 가능
       allow list: if request.auth != null;
 
       // 로그인한 사용자만 주문 생성 가능 (자신의 userId로만 생성)
       allow create: if request.auth != null &&
         request.resource.data.userId == request.auth.uid;
 
-      // 주문자 본인 또는 해당 스토어 파트너만 주문 상태 업데이트 가능
+      // 주문자 본인 또는 해당 파트너만 주문 업데이트 가능
       allow update: if request.auth != null &&
         (resource.data.userId == request.auth.uid ||
-         resource.data.storeId == request.auth.uid);
+         resource.data.storeId == request.auth.uid ||
+         resource.data.partnerId == request.auth.uid);
 
       // 주문자 본인만 삭제 가능
       allow delete: if request.auth != null &&

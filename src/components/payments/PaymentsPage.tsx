@@ -48,6 +48,7 @@ export default function PaymentsPage() {
   const [addressName, setAddressName] = useState('')
   const [isPostcodeLoaded, setIsPostcodeLoaded] = useState(false)
   const [recipient, setRecipient] = useState('')
+  const [deliveryRequest, setDeliveryRequest] = useState('')
   const [detailedRequest, setDetailedRequest] = useState('')
   const [entranceCode, setEntranceCode] = useState('')
   const [showRequestDropdown, setShowRequestDropdown] = useState(false)
@@ -314,11 +315,13 @@ export default function PaymentsPage() {
         deliveryDate: orderInfo.deliveryDate,
         deliveryTime: orderInfo.deliveryTime,
         address: orderInfo.address,
-        detailAddress: orderInfo.detailAddress,
+        detailAddress: `${orderInfo.detailAddress}${entranceCode ? ` (${entranceCode})` : ''}`,
         recipient: recipient,
         orderer: orderInfo.orderer,
         phone: orderInfo.phone,
-        detailedRequest: detailedRequest,
+        // request는 OrderPage에서 저장한 매장 요청사항이므로 유지
+        deliveryRequest: deliveryRequest, // 배달 요청사항 (드롭다운)
+        detailedRequest: detailedRequest, // 상세요청
         orderNumber: orderNumber,
         orderStatus: 'pending',
         paymentStatus: 'unpaid',
@@ -675,7 +678,7 @@ export default function PaymentsPage() {
                       className={styles.customSelect}
                       onClick={() => setShowRequestDropdown(!showRequestDropdown)}
                     >
-                      <span>{orderInfo.request || '배송 요청사항을 선택해주세요'}</span>
+                      <span>{deliveryRequest || '배송 요청사항을 선택해주세요'}</span>
                       <Image
                         src="/icons/arrow.svg"
                         alt="화살표"
@@ -689,7 +692,7 @@ export default function PaymentsPage() {
                         <div
                           className={styles.dropdownItem}
                           onClick={() => {
-                            setOrderInfo({...orderInfo, request: '도착 10분전에 전화주세요.'})
+                            setDeliveryRequest('도착 10분전에 전화주세요.')
                             setShowRequestDropdown(false)
                           }}
                         >
@@ -698,7 +701,7 @@ export default function PaymentsPage() {
                         <div
                           className={styles.dropdownItem}
                           onClick={() => {
-                            setOrderInfo({...orderInfo, request: '문앞에 놓고 문자한번만 주세요.'})
+                            setDeliveryRequest('문앞에 놓고 문자한번만 주세요.')
                             setShowRequestDropdown(false)
                           }}
                         >
@@ -707,7 +710,7 @@ export default function PaymentsPage() {
                         <div
                           className={styles.dropdownItem}
                           onClick={() => {
-                            setOrderInfo({...orderInfo, request: '1층 로비에 맡겨주세요.'})
+                            setDeliveryRequest('1층 로비에 맡겨주세요.')
                             setShowRequestDropdown(false)
                           }}
                         >
@@ -716,7 +719,7 @@ export default function PaymentsPage() {
                         <div
                           className={styles.dropdownItem}
                           onClick={() => {
-                            setOrderInfo({...orderInfo, request: '지정 시간까지 꼭 도착해야 합니다.'})
+                            setDeliveryRequest('지정 시간까지 꼭 도착해야 합니다.')
                             setShowRequestDropdown(false)
                           }}
                         >
@@ -725,7 +728,7 @@ export default function PaymentsPage() {
                         <div
                           className={styles.dropdownItem}
                           onClick={() => {
-                            setOrderInfo({...orderInfo, request: '수령인 이름 꼭 확인하고 전달해주세요.'})
+                            setDeliveryRequest('수령인 이름 꼭 확인하고 전달해주세요.')
                             setShowRequestDropdown(false)
                           }}
                         >

@@ -3,7 +3,7 @@
   margin: 0 auto;
   padding: 20px;
   padding-top: 80px;
-  padding-bottom: 100px;
+  padding-bottom: 20px;
 }
 
 .content {
@@ -41,16 +41,35 @@
   gap: 8px;
 }
 
-.orderDateTime {
+.statusText {
   color: #333;
   font-size: 16px;
-  font-weight: 500;
+  font-weight: 700;
+  margin-bottom: 4px;
 }
 
-.orderNumberText {
-  color: #4E5968;
+.orderInfoRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.orderInfoLabel {
+  color: #666;
   font-size: 14px;
   font-weight: 500;
+  min-width: 80px;
+  flex-shrink: 0;
+}
+
+.orderInfoValue {
+  color: #333;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: right;
+  flex: 1;
+  word-break: break-word;
 }
 
 .storeHeader {
@@ -92,24 +111,6 @@
   width: 100%;
   height: 1px;
   background: #F0F0F3;
-}
-
-.statusInfo {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.statusText {
-  color: #333;
-  font-size: 16px;
-  font-weight: 700;
-}
-
-.reservationInfo {
-  color: #999;
-  font-size: 13px;
-  font-weight: 500;
 }
 
 .paymentInfo {
@@ -193,6 +194,7 @@
   color: #666;
   font-size: 14px;
   font-weight: 500;
+  padding-left: 12px;
 }
 
 .deliverySection {
@@ -212,9 +214,23 @@
 }
 
 .deliveryMethodLabel {
-  color: #333;
-  font-size: 16px;
-  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 15px;
+  font-weight: 600;
+  width: fit-content;
+}
+
+.deliveryMethodQuick {
+  background: #EFF7FF;
+  color: #025BD9;
+}
+
+.deliveryMethodPickup {
+  background: #FCF4FF;
+  color: #5911FF;
 }
 
 .deliveryInfoSection {
@@ -276,252 +292,74 @@
   text-align: right;
 }
 
-.actionButtons {
+.buttonGroup {
   display: flex;
-  justify-content: flex-end;
-  gap: 12px;
+  gap: 10px;
+  width: 100%;
   margin-top: 20px;
 }
 
-.printButton,
-.shareButton {
-  padding: 12px 24px;
-  border-radius: 8px;
+.detailButton {
+  flex: 1;
+  padding: 12px 16px;
+  border-radius: 10px;
+  border: 1px solid #E4E4E4;
+  background-color: white;
+  color: #333;
   font-size: 15px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s;
 }
 
-.printButton {
-  background: white;
+.detailButton:hover {
+  background-color: #f5f5f5;
+}
+
+.cancelButton {
+  flex: 1;
+  padding: 12px 16px;
+  border-radius: 10px;
   border: 1px solid #E4E4E4;
+  background-color: white;
   color: #333;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
 }
 
-.printButton:hover {
-  background: #f5f5f5;
+.cancelButton:hover {
+  background-color: #f5f5f5;
 }
 
-.shareButton {
-  background: #025BD9;
+.reviewButton {
+  flex: 1;
+  padding: 12px 16px;
+  border-radius: 10px;
   border: 1px solid #025BD9;
-  color: white;
+  background-color: white;
+  color: #025BD9;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
 }
 
-.shareButton:hover {
-  background: #014ba8;
+.reviewButton:hover {
+  background-color: #f0f7ff;
 }
 
 @media print {
-  .actionButtons {
+  .buttonGroup {
     display: none;
   }
 }
 
-.modalOverlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  z-index: 1000;
-}
-
-.shareModal {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: white;
-  border-radius: 20px 20px 0 0;
-  padding: 24px;
-  z-index: 1001;
-  animation: slideUp 0.3s ease-out;
-}
-
-@keyframes slideUp {
-  from {
-    transform: translateY(100%);
-  }
-  to {
-    transform: translateY(0);
+@media (max-width: 768px) {
+  .buttonGroup {
+    flex-direction: column;
   }
 }
 
-.modalTitle {
-  font-size: 18px;
-  font-weight: 700;
-  color: #333;
-  margin: 0 0 20px 0;
-  text-align: center;
-}
-
-.shareOptions {
-  display: flex;
-  gap: 16px;
-  margin-bottom: 20px;
-}
-
-.shareOption {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  padding: 20px;
-  border: 1px solid #E4E4E4;
-  border-radius: 12px;
-  background: white;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-.shareOption:hover {
-  background: #f5f5f5;
-  border-color: #025BD9;
-}
-
-.shareIconWrapper {
-  width: 48px;
-  height: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.kakaoIcon {
-  width: 40px;
-  height: 40px;
-}
-
-.smsIcon {
-  width: 40px;
-  height: 40px;
-  color: #333;
-}
-
-.shareOption span {
-  font-size: 14px;
-  font-weight: 600;
-  color: #333;
-}
-
-.modalCloseButton {
-  width: 100%;
-  padding: 14px;
-  border: none;
-  border-radius: 8px;
-  background: #f5f5f5;
-  color: #333;
-  font-size: 15px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-.modalCloseButton:hover {
-  background: #e5e5e5;
-}
-
-.section {
-  margin-bottom: 30px;
-}
-
-.section:last-child {
-  margin-bottom: 0;
-}
-
-.section h3 {
-  font-size: 18px;
-  font-weight: bold;
-  margin-bottom: 15px;
-  padding-bottom: 10px;
-  border-bottom: 2px solid #2196F3;
-}
-
-.infoRow {
-  display: flex;
-  justify-content: space-between;
-  padding: 12px 0;
-  border-bottom: 1px solid #f0f0f0;
-}
-
-.infoRow:last-child {
-  border-bottom: none;
-}
-
-.label {
-  font-size: 14px;
-  color: #666;
-  font-weight: 500;
-  min-width: 120px;
-}
-
-.value {
-  font-size: 14px;
-  color: #333;
-  text-align: right;
-  flex: 1;
-  margin-left: 20px;
-}
-
-.storeName {
-  font-size: 16px;
-  font-weight: bold;
-  margin-bottom: 15px;
-  color: #2196F3;
-}
-
-.productItem {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  padding: 12px 0;
-  border-bottom: 1px solid #f0f0f0;
-}
-
-.productItem:last-child {
-  border-bottom: none;
-}
-
-.productInfo {
-  flex: 1;
-}
-
-
-.productOptions {
-  font-size: 13px;
-  color: #666;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
-.productPrice {
-  font-size: 14px;
-  color: #333;
-  white-space: nowrap;
-  margin-left: 15px;
-}
-
-.priceRow {
-  display: flex;
-  justify-content: space-between;
-  padding: 10px 0;
-  font-size: 15px;
-  color: #333;
-}
-
-.totalRow {
-  display: flex;
-  justify-content: space-between;
-  padding: 15px 0;
-  font-size: 18px;
-  font-weight: bold;
-  color: #2196F3;
-  border-top: 2px solid #e0e0e0;
-  margin-top: 10px;
-}
 

@@ -6,7 +6,9 @@ import Image from 'next/image'
 import { doc, getDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { useAuth } from '@/contexts/AuthContext'
+import { addCartItem } from '@/lib/services/cartService'
 import Loading from '@/components/Loading'
+import OrderCancelModal from './OrderCancelModal'
 import styles from './OrderDetailPage.module.css'
 
 interface KakaoShareOptions {
@@ -74,6 +76,7 @@ interface Order {
   orderer: string
   phone: string
   request?: string
+  deliveryRequest?: string
   detailedRequest?: string
   paymentId?: string
   transactionId?: string
@@ -92,7 +95,7 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
   const { user, loading: authLoading } = useAuth()
   const [order, setOrder] = useState<Order | null>(null)
   const [loading, setLoading] = useState(true)
-  const [showShareModal, setShowShareModal] = useState(false)
+  const [cancelOrderId, setCancelOrderId] = useState<string | null>(null)
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -193,94 +196,33 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
     return '#999'
   }
 
-  const handlePrint = () => {
-    window.print()
-  }
+  const handleAddToCart = async () => {
+    if (!user || !order) return
 
-  const handleShare = () => {
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
-
-    if (isMobile) {
-      // 모바일: 모달 표시
-      setShowShareModal(true)
-    } else {
-      // PC: 링크 복사
-      handleCopyLink()
-    }
-  }
-
-  const handleCopyLink = async () => {
-    const currentUrl = window.location.href
     try {
-      await navigator.clipboard.writeText(currentUrl)
-      alert('링크가 복사되었습니다!')
+      const firstItem = order.items[0]
+
+      await addCartItem({
+        uid: user.uid,
+        storeId: order.storeId,
+        productId: firstItem.productId,
+        productName: firstItem.productName,
+        productPrice: firstItem.price,
+        productImage: firstItem.productImage || '',
+        items: order.items.map(item => ({
+          options: item.options,
+          quantity: item.quantity
+        })),
+        totalPrice: order.totalPrice,
+        createdAt: new Date()
+      })
+
+      alert('장바구니에 담았습니다.')
+      router.push('/cart')
     } catch (error) {
-      console.error('링크 복사 실패:', error)
-      alert('링크 복사에 실패했습니다.')
+      console.error('장바구니 담기 실패:', error)
+      alert('장바구니 담기에 실패했습니다.')
     }
-  }
-
-  const handleKakaoShare = () => {
-    if (!order) return
-
-    const currentUrl = window.location.href
-
-    // Kakao SDK 초기화 확인
-    if (!window.Kakao) {
-      alert('카카오톡 SDK가 로드되지 않았습니다. 페이지를 새로고침해주세요.')
-      return
-    }
-
-    if (!window.Kakao.isInitialized()) {
-      const kakaoKey = process.env.NEXT_PUBLIC_KAKAO_JS_KEY
-      if (!kakaoKey) {
-        alert('카카오톡 앱 키가 설정되지 않았습니다.')
-        console.error('NEXT_PUBLIC_KAKAO_JS_KEY가 설정되지 않았습니다.')
-        return
-      }
-      window.Kakao.init(kakaoKey)
-    }
-
-    if (window.Kakao.Share) {
-      try {
-        window.Kakao.Share.sendDefault({
-          objectType: 'feed',
-          content: {
-            title: `${order.storeName} 주문 상세`,
-            description: `주문번호: ${order.orderNumber || order.id}\n총 ${order.totalPrice.toLocaleString()}원`,
-            imageUrl: order.items[0]?.productImage || 'https://via.placeholder.com/300x200?text=No+Image',
-            link: {
-              mobileWebUrl: currentUrl,
-              webUrl: currentUrl,
-            },
-          },
-          buttons: [
-            {
-              title: '주문 확인하기',
-              link: {
-                mobileWebUrl: currentUrl,
-                webUrl: currentUrl,
-              },
-            },
-          ],
-        })
-        setShowShareModal(false)
-      } catch (error) {
-        console.error('카카오톡 공유 실패:', error)
-        alert('카카오톡 공유에 실패했습니다. 다시 시도해주세요.')
-      }
-    } else {
-      alert('카카오톡 공유 기능을 사용할 수 없습니다.')
-    }
-  }
-
-  const handleSmsShare = () => {
-    if (!order) return
-
-    const currentUrl = window.location.href
-    const message = `주문 상세 확인\n주문번호: ${order.orderNumber || order.id}\n${currentUrl}`
-    window.location.href = `sms:?body=${encodeURIComponent(message)}`
-    setShowShareModal(false)
   }
 
   if (authLoading || loading) {
@@ -315,45 +257,38 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
 
           <div className={styles.divider}></div>
 
-          {/* 주문 일시 및 번호 */}
+          {/* 주문 상태 및 정보 */}
           <div className={styles.orderBasicInfo}>
-            <div className={styles.orderDateTime}>
-              {order.createdAt.toLocaleString('ko-KR', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-                weekday: 'short',
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit',
-                hour12: true
-              })} 주문
-            </div>
-            <div className={styles.orderNumberText}>
-              주문번호 {order.orderNumber || order.id}
-            </div>
-          </div>
-
-          <div className={styles.divider}></div>
-
-          {/* 주문 상태 정보 */}
-          <div className={styles.statusInfo}>
             <div className={styles.statusText}>
               {getStatusText(order.orderStatus, order.paymentStatus)}
             </div>
-            <div className={styles.reservationInfo}>
-              예약날짜 {order.createdAt.toLocaleString('ko-KR', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-                weekday: 'short',
-                hour: 'numeric',
-                minute: 'numeric',
-                hour12: true
-              })}
+            <div className={styles.orderInfoRow}>
+              <span className={styles.orderInfoLabel}>주문번호</span>
+              <span className={styles.orderInfoValue}>{order.orderNumber || order.id}</span>
             </div>
-            <div className={styles.paymentInfo}>
-              {order.paymentStatus === 'paid' ? '결제완료' : '결제 미완료'} {order.totalPrice.toLocaleString()}원
+            <div className={styles.orderInfoRow}>
+              <span className={styles.orderInfoLabel}>주문날짜</span>
+              <span className={styles.orderInfoValue}>
+                {order.createdAt.toLocaleString('ko-KR', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                  weekday: 'short',
+                  hour: 'numeric',
+                  minute: 'numeric',
+                  hour12: true
+                })}
+              </span>
+            </div>
+            <div className={styles.orderInfoRow}>
+              <span className={styles.orderInfoLabel}>예약날짜</span>
+              <span className={styles.orderInfoValue}>{order.deliveryDate} {order.deliveryTime}</span>
+            </div>
+            <div className={styles.orderInfoRow}>
+              <span className={styles.orderInfoLabel}>결제상태</span>
+              <span className={styles.paymentInfo}>
+                {order.paymentStatus === 'paid' ? '결제완료' : '결제 미완료'} {order.totalPrice.toLocaleString()}원
+              </span>
             </div>
           </div>
 
@@ -392,7 +327,7 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
             <>
               <div className={styles.divider}></div>
               <div className={styles.requestSection}>
-                <div className={styles.requestLabel}>가게 요청사항</div>
+                <div className={styles.requestLabel}>매장 요청사항</div>
                 <div className={styles.requestValue}>{order.request}</div>
               </div>
             </>
@@ -407,7 +342,15 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
           </h2>
           <section className={styles.deliverySection}>
           <div className={styles.deliveryHeader}>
-            <div className={styles.deliveryMethodLabel}>{order.deliveryMethod}</div>
+            <div className={`${styles.deliveryMethodLabel} ${
+              order.deliveryMethod === '퀵업체 배송'
+                ? styles.deliveryMethodQuick
+                : order.deliveryMethod === '매장 픽업'
+                ? styles.deliveryMethodPickup
+                : ''
+            }`}>
+              {order.deliveryMethod}
+            </div>
             {order.deliveryMethod === '퀵업체 배송' && (
               <button className={styles.actionButton}>
                 <Image src="/icons/phone.png" alt="전화" width={20} height={20} />
@@ -419,44 +362,45 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
           <div className={styles.divider}></div>
 
           <div className={styles.deliveryInfoSection}>
-            <div className={styles.deliveryInfoTitle}>배송정보</div>
-
             <div className={styles.infoRow}>
               <span className={styles.infoLabel}>수령인</span>
               <span className={styles.infoValue}>{order.recipient}</span>
             </div>
-
             <div className={styles.infoRow}>
               <span className={styles.infoLabel}>연락처</span>
               <span className={styles.infoValue}>{order.phone}</span>
             </div>
-
             {order.deliveryMethod === '퀵업체 배송' && (
-              <>
-                <div className={styles.infoRow}>
-                  <span className={styles.infoLabel}>주소</span>
-                  <span className={styles.infoValue}>
-                    {order.address}
-                    {order.detailAddress && ` ${order.detailAddress}`}
-                  </span>
-                </div>
-              </>
-            )}
-
-            <div className={styles.infoRow}>
-              <span className={styles.infoLabel}>{order.deliveryMethod === '매장 픽업' ? '픽업날짜' : '배송날짜'}</span>
-              <span className={styles.infoValue}>
-                {order.deliveryDate} {order.deliveryTime}
-              </span>
-            </div>
-
-            {order.detailedRequest && order.deliveryMethod === '퀵업체 배송' && (
               <div className={styles.infoRow}>
-                <span className={styles.infoLabel}>배달 요청사항</span>
-                <span className={styles.infoValue}>{order.detailedRequest}</span>
+                <span className={styles.infoLabel}>주소</span>
+                <span className={styles.infoValue}>
+                  {order.address}
+                  {order.detailAddress && ` ${order.detailAddress}`}
+                </span>
+              </div>
+            )}
+            {order.deliveryMethod === '매장 픽업' && (
+              <div className={styles.infoRow}>
+                <span className={styles.infoLabel}>픽업날짜</span>
+                <span className={styles.infoValue}>
+                  {order.deliveryDate} {order.deliveryTime}
+                </span>
               </div>
             )}
           </div>
+
+          {(order.deliveryRequest || order.detailedRequest) && order.deliveryMethod === '퀵업체 배송' && (
+            <>
+              <div className={styles.divider}></div>
+              <div className={styles.requestSection}>
+                <div className={styles.requestLabel}>배송 요청사항</div>
+                <div className={styles.requestValue}>
+                  {order.deliveryRequest && <div>{order.deliveryRequest}</div>}
+                  {order.detailedRequest && <div>{order.detailedRequest}</div>}
+                </div>
+              </div>
+            </>
+          )}
           </section>
         </div>
 
@@ -481,45 +425,43 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
         </div>
 
         {/* 하단 버튼 */}
-        <div className={styles.actionButtons}>
-          <button className={styles.printButton} onClick={handlePrint}>
-            인쇄하기
-          </button>
-          <button className={styles.shareButton} onClick={handleShare}>
-            공유하기
-          </button>
+        <div className={styles.buttonGroup}>
+          {order.orderStatus === 'delivered' ? (
+            <>
+              <button className={styles.detailButton} onClick={handleAddToCart}>
+                장바구니 담기
+              </button>
+              <button
+                className={styles.reviewButton}
+                onClick={() => router.push(`/reviews/write?orderId=${order.id}`)}
+              >
+                리뷰작성
+              </button>
+            </>
+          ) : (
+            <>
+              {(order.orderStatus === 'pending' || order.orderStatus === 'preparing') && (
+                <button
+                  className={styles.cancelButton}
+                  onClick={() => setCancelOrderId(order.id)}
+                >
+                  주문취소
+                </button>
+              )}
+            </>
+          )}
         </div>
       </div>
 
-      {/* 공유 모달 */}
-      {showShareModal && (
-        <>
-          <div className={styles.modalOverlay} onClick={() => setShowShareModal(false)}></div>
-          <div className={styles.shareModal}>
-            <h3 className={styles.modalTitle}>공유하기</h3>
-            <div className={styles.shareOptions}>
-              <button className={styles.shareOption} onClick={handleKakaoShare}>
-                <div className={styles.shareIconWrapper}>
-                  <svg className={styles.kakaoIcon} viewBox="0 0 24 24" fill="#000000">
-                    <path d="M12 3c5.799 0 10.5 3.664 10.5 8.185 0 4.52-4.701 8.184-10.5 8.184a13.5 13.5 0 0 1-1.727-.11l-4.408 2.883c-.501.265-.678.236-.472-.413l.892-3.678c-2.88-1.46-4.785-3.99-4.785-6.866C1.5 6.665 6.201 3 12 3z"/>
-                  </svg>
-                </div>
-                <span>카카오톡</span>
-              </button>
-              <button className={styles.shareOption} onClick={handleSmsShare}>
-                <div className={styles.shareIconWrapper}>
-                  <svg className={styles.smsIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-                  </svg>
-                </div>
-                <span>문자</span>
-              </button>
-            </div>
-            <button className={styles.modalCloseButton} onClick={() => setShowShareModal(false)}>
-              닫기
-            </button>
-          </div>
-        </>
+      {/* 주문 취소 모달 */}
+      {cancelOrderId && (
+        <OrderCancelModal
+          orderId={cancelOrderId}
+          onClose={() => setCancelOrderId(null)}
+          onCancel={() => {
+            router.push('/orders')
+          }}
+        />
       )}
     </div>
   )
