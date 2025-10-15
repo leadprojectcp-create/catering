@@ -125,11 +125,18 @@
 }
 
 .productImage {
-  width: 80px;
-  height: 80px;
+  width: 100px;
+  height: 100px;
   border-radius: 8px;
   object-fit: cover;
   flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .productImage {
+    width: 70px;
+    height: 70px;
+  }
 }
 
 .productInfo {
@@ -143,7 +150,6 @@
   color: #333;
   font-size: 16px;
   font-weight: 700;
-  margin-bottom: 0;
 }
 
 .productOptions {
@@ -270,6 +276,155 @@
   text-align: right;
 }
 
+.actionButtons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.printButton,
+.shareButton {
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.printButton {
+  background: white;
+  border: 1px solid #E4E4E4;
+  color: #333;
+}
+
+.printButton:hover {
+  background: #f5f5f5;
+}
+
+.shareButton {
+  background: #025BD9;
+  border: 1px solid #025BD9;
+  color: white;
+}
+
+.shareButton:hover {
+  background: #014ba8;
+}
+
+@media print {
+  .actionButtons {
+    display: none;
+  }
+}
+
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+}
+
+.shareModal {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  border-radius: 20px 20px 0 0;
+  padding: 24px;
+  z-index: 1001;
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.modalTitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: #333;
+  margin: 0 0 20px 0;
+  text-align: center;
+}
+
+.shareOptions {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.shareOption {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 20px;
+  border: 1px solid #E4E4E4;
+  border-radius: 12px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.shareOption:hover {
+  background: #f5f5f5;
+  border-color: #025BD9;
+}
+
+.shareIconWrapper {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.kakaoIcon {
+  width: 40px;
+  height: 40px;
+}
+
+.smsIcon {
+  width: 40px;
+  height: 40px;
+  color: #333;
+}
+
+.shareOption span {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+}
+
+.modalCloseButton {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 8px;
+  background: #f5f5f5;
+  color: #333;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.modalCloseButton:hover {
+  background: #e5e5e5;
+}
+
 .section {
   margin-bottom: 30px;
 }
@@ -335,11 +490,6 @@
   flex: 1;
 }
 
-.productName {
-  font-size: 15px;
-  font-weight: 500;
-  margin-bottom: 5px;
-}
 
 .productOptions {
   font-size: 13px;
@@ -375,47 +525,3 @@
   margin-top: 10px;
 }
 
-@media (max-width: 768px) {
-  .container {
-    padding: 15px;
-  }
-
-  .header {
-    margin-bottom: 20px;
-  }
-
-  .header h1 {
-    font-size: 20px;
-  }
-
-  .content {
-    padding: 20px;
-  }
-
-  .section h3 {
-    font-size: 16px;
-  }
-
-  .infoRow {
-    flex-direction: column;
-    gap: 5px;
-  }
-
-  .label {
-    min-width: auto;
-  }
-
-  .value {
-    text-align: left;
-    margin-left: 0;
-  }
-
-  .productItem {
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .productPrice {
-    margin-left: 0;
-  }
-}

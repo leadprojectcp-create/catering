@@ -9,6 +9,12 @@ import { useAuth } from '@/contexts/AuthContext'
 import Loading from '@/components/Loading'
 import styles from './OrderDetailPage.module.css'
 
+declare global {
+  interface Window {
+    Kakao: any
+  }
+}
+
 interface OrderItem {
   productId: string
   productName: string
@@ -56,6 +62,7 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
   const { user, loading: authLoading } = useAuth()
   const [order, setOrder] = useState<Order | null>(null)
   const [loading, setLoading] = useState(true)
+  const [showShareModal, setShowShareModal] = useState(false)
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -156,6 +163,66 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
     return '#999'
   }
 
+  const handlePrint = () => {
+    window.print()
+  }
+
+  const handleShare = () => {
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
+
+    if (isMobile) {
+      // 모바일: 모달 표시
+      setShowShareModal(true)
+    } else {
+      // PC: 링크 복사
+      handleCopyLink()
+    }
+  }
+
+  const handleCopyLink = async () => {
+    const currentUrl = window.location.href
+    try {
+      await navigator.clipboard.writeText(currentUrl)
+      alert('링크가 복사되었습니다!')
+    } catch (error) {
+      console.error('링크 복사 실패:', error)
+      alert('링크 복사에 실패했습니다.')
+    }
+  }
+
+  const handleKakaoShare = () => {
+    if (!order) return
+
+    const currentUrl = window.location.href
+
+    if (window.Kakao && window.Kakao.Share) {
+      window.Kakao.Share.sendDefault({
+        objectType: 'feed',
+        content: {
+          title: '주문 상세',
+          description: `주문번호: ${order.orderNumber || order.id}`,
+          imageUrl: order.items[0]?.productImage || '',
+          link: {
+            mobileWebUrl: currentUrl,
+            webUrl: currentUrl,
+          },
+        },
+      })
+      setShowShareModal(false)
+    } else {
+      alert('카카오톡 공유를 사용할 수 없습니다.')
+    }
+  }
+
+  const handleSmsShare = () => {
+    if (!order) return
+
+    const currentUrl = window.location.href
+    const message = `주문 상세 확인\n주문번호: ${order.orderNumber || order.id}\n${currentUrl}`
+    window.location.href = `sms:?body=${encodeURIComponent(message)}`
+    setShowShareModal(false)
+  }
+
   if (authLoading || loading) {
     return <Loading />
   }
@@ -239,8 +306,9 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
                 <Image
                   src={item.productImage}
                   alt={item.productName}
-                  width={80}
-                  height={80}
+                  width={100}
+                  height={100}
+                  quality={100}
                   className={styles.productImage}
                 />
               )}
@@ -351,7 +419,48 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
             </div>
           </section>
         </div>
+
+        {/* 하단 버튼 */}
+        <div className={styles.actionButtons}>
+          <button className={styles.printButton} onClick={handlePrint}>
+            인쇄하기
+          </button>
+          <button className={styles.shareButton} onClick={handleShare}>
+            공유하기
+          </button>
+        </div>
       </div>
+
+      {/* 공유 모달 */}
+      {showShareModal && (
+        <>
+          <div className={styles.modalOverlay} onClick={() => setShowShareModal(false)}></div>
+          <div className={styles.shareModal}>
+            <h3 className={styles.modalTitle}>공유하기</h3>
+            <div className={styles.shareOptions}>
+              <button className={styles.shareOption} onClick={handleKakaoShare}>
+                <div className={styles.shareIconWrapper}>
+                  <svg className={styles.kakaoIcon} viewBox="0 0 24 24" fill="#000000">
+                    <path d="M12 3c5.799 0 10.5 3.664 10.5 8.185 0 4.52-4.701 8.184-10.5 8.184a13.5 13.5 0 0 1-1.727-.11l-4.408 2.883c-.501.265-.678.236-.472-.413l.892-3.678c-2.88-1.46-4.785-3.99-4.785-6.866C1.5 6.665 6.201 3 12 3z"/>
+                  </svg>
+                </div>
+                <span>카카오톡</span>
+              </button>
+              <button className={styles.shareOption} onClick={handleSmsShare}>
+                <div className={styles.shareIconWrapper}>
+                  <svg className={styles.smsIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                  </svg>
+                </div>
+                <span>문자</span>
+              </button>
+            </div>
+            <button className={styles.modalCloseButton} onClick={() => setShowShareModal(false)}>
+              닫기
+            </button>
+          </div>
+        </>
+      )}
     </div>
   )
 }
