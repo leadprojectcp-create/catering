@@ -18,25 +18,18 @@ export default function Footer() {
       <div className={styles.container}>
         <div className={styles.content}>
           <div className={styles.leftContent}>
-            <div className={styles.companyName}>Pick to Eat</div>
+            <div className={styles.companyName}>단모</div>
             <div className={styles.companyInfo}>
-              (주)리프컴퍼니 | CEO 박상호 | 사업자 등록번호 413-87-02826
+              (주)리프컴퍼니 | CEO 박상호, CTO 배철응, CDD 정윤우 | 사업자 등록번호 413-87-02826 | 통신판매업 신고번호 2024-서울광진-1870
             </div>
-            <div className={styles.address}>
-              서울특별시 광진구 아차산로62길 14-12(구의동, 대영트윈,투)
+            <div className={styles.companyInfo}>
+              서울특별시 광진구 아차산로62길 14-12(구의동, 대영트윈,투) | 대표번호 1666-5157
             </div>
-            <div className={styles.inquiryLink}>
-              <a
-                href="https://open.kakao.com/o/sMuPjBTh"
-                target="_blank"
-                rel="noopener noreferrer"
-                className={styles.inquiryText}
-              >
-                입점 문의
-              </a>
+            <div className={styles.disclaimer}>
+              (주)리프컴퍼니는 통신판매중개자로서 통신판매의 당사자가 아니며 상품 거래정보 및 거래 등에 대해 책임을 지지 않습니다.
             </div>
             <div className={styles.copyright}>
-              © 2025 Leapcompany. All rights reserved.
+              © 2025 leadproject.cp. All rights reserved.
             </div>
           </div>
 

@@ -8,7 +8,6 @@ import { doc, getDoc, setDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { useAuth } from '@/contexts/AuthContext'
 import Header from '@/components/Header'
-import Footer from '@/components/Footer'
 import Loading from '@/components/Loading'
 import DeliveryInfo from './DeliveryInfo'
 import DateTimePicker from './DateTimePicker'
@@ -441,7 +440,6 @@ export default function PaymentsPage() {
       <>
         <Header />
         <Loading />
-        <Footer />
       </>
     )
   }
@@ -880,7 +878,6 @@ export default function PaymentsPage() {
           </button>
         </div>
       </div>
-      <Footer />
     </>
   )
 }

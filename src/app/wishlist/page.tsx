@@ -1,5 +1,4 @@
 import Header from '@/components/Header'
-import Footer from '@/components/Footer'
 import Wishlist from '@/components/wishlist/Wishlist'
 
 export default function WishlistPage() {
@@ -7,7 +6,6 @@ export default function WishlistPage() {
     <>
       <Header />
       <Wishlist />
-      <Footer />
     </>
   )
 }

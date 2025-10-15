@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import Header from './Header'
-import Footer from './Footer'
 import MainTitle from './home/MainTitle'
 import Banner from './home/Banner'
 import StoreList from './home/StoreList'
@@ -49,8 +48,6 @@ export default function MainPage() {
           <StoreList selectedCategory="전체" />
         </div>
       </main>
-
-      <Footer />
     </div>
   )
 }

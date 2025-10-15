@@ -10,7 +10,6 @@ import { getPublishedNoticesByPartner, Notice } from '@/lib/services/noticeServi
 import { createOrGetChatRoom } from '@/lib/services/chatService'
 import { useAuth } from '@/contexts/AuthContext'
 import Header from '@/components/Header'
-import Footer from '@/components/Footer'
 import Loading from '@/components/Loading'
 import ProductList from '@/components/store/ProductList'
 import styles from './StoreDetail.module.css'
@@ -99,7 +98,6 @@ export default function StoreDetail({ storeId }: StoreDetailProps) {
       <>
         <Header />
         <Loading />
-        <Footer />
       </>
     )
   }
@@ -111,7 +109,6 @@ export default function StoreDetail({ storeId }: StoreDetailProps) {
         <div className={styles.container}>
           <div className={styles.error}>가게를 찾을 수 없습니다.</div>
         </div>
-        <Footer />
       </>
     )
   }
@@ -331,7 +328,6 @@ export default function StoreDetail({ storeId }: StoreDetailProps) {
       {/* 상품 목록 */}
       <ProductList storeId={storeId} />
       </div>
-      <Footer />
     </>
   )
 }

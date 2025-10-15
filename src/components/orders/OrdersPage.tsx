@@ -9,7 +9,6 @@ import { useAuth } from '@/contexts/AuthContext'
 import { createOrGetChatRoom } from '@/lib/services/chatService'
 import { addCartItem } from '@/lib/services/cartService'
 import Loading from '@/components/Loading'
-import OrderDetailModal from './OrderDetailModal'
 import OrderCancelModal from './OrderCancelModal'
 import styles from './OrdersPage.module.css'
 
@@ -57,7 +56,6 @@ export default function OrdersPage() {
   const { user, loading: authLoading } = useAuth()
   const [loading, setLoading] = useState(true)
   const [orders, setOrders] = useState<Order[]>([])
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
   const [cancelOrderId, setCancelOrderId] = useState<string | null>(null)
   const [filterStatus, setFilterStatus] = useState<'all' | 'pending' | 'preparing' | 'shipping' | 'delivered' | 'cancelled'>('all')
 
@@ -416,7 +414,7 @@ export default function OrdersPage() {
                         className={styles.detailButton}
                         onClick={(e) => {
                           e.stopPropagation()
-                          setSelectedOrder(order)
+                          router.push(`/orders/${order.id}`)
                         }}
                       >
                         주문상세
@@ -429,14 +427,6 @@ export default function OrdersPage() {
           </div>
         )}
       </div>
-
-      {/* 주문 상세 모달 */}
-      {selectedOrder && (
-        <OrderDetailModal
-          order={selectedOrder}
-          onClose={() => setSelectedOrder(null)}
-        />
-      )}
 
       {/* 주문 취소 모달 */}
       {cancelOrderId && (

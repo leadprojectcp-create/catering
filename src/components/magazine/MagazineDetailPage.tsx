@@ -6,7 +6,6 @@ import Image from 'next/image'
 import { getMagazine, incrementViewCount, toggleLike } from '@/lib/services/magazineService'
 import type { Magazine } from '@/lib/services/magazineService'
 import Header from '@/components/Header'
-import Footer from '@/components/Footer'
 import Loading from '@/components/Loading'
 import styles from './MagazineDetailPage.module.css'
 
@@ -88,7 +87,6 @@ export default function MagazineDetailPage({ magazineId }: MagazineDetailPagePro
       <>
         <Header />
         <Loading />
-        <Footer />
       </>
     )
   }
@@ -98,7 +96,6 @@ export default function MagazineDetailPage({ magazineId }: MagazineDetailPagePro
       <>
         <Header />
         <div>매거진을 찾을 수 없습니다.</div>
-        <Footer />
       </>
     )
   }
@@ -189,7 +186,6 @@ export default function MagazineDetailPage({ magazineId }: MagazineDetailPagePro
         </div>
       </article>
       </div>
-      <Footer />
     </>
   )
 }

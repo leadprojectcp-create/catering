@@ -2,7 +2,6 @@
 
 import { use } from 'react'
 import Header from '@/components/Header'
-import Footer from '@/components/Footer'
 import CategoryProductList from '@/components/category/CategoryProductList'
 
 export default function CategoryPage({ params }: { params: Promise<{ id: string }> }) {
@@ -13,7 +12,6 @@ export default function CategoryPage({ params }: { params: Promise<{ id: string 
     <>
       <Header />
       <CategoryProductList categoryName={decodedCategoryName} />
-      <Footer />
     </>
   )
 }
