@@ -250,9 +250,12 @@ export default function PaymentsPage() {
     console.log('=== 이메일 검증 완료 ===')
     console.log('사용할 이메일:', userEmail)
 
-    if (!orderInfo.address.trim()) {
-      alert('주소를 입력해주세요.')
-      return
+    // 퀵업체 배송일 때만 주소 검증
+    if (deliveryMethod === '퀵업체 배송') {
+      if (!orderInfo.address.trim()) {
+        alert('주소를 입력해주세요.')
+        return
+      }
     }
 
     if (!recipient.trim()) {
