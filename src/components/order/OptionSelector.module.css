@@ -1,0 +1,103 @@
+/* 옵션 선택 관련 스타일 */
+.optionSection {
+  border-radius: 20px;
+  background: #FFF;
+}
+
+.optionSectionTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: #333;
+  margin: 0 0 12px 0;
+  padding: 20px 20px 0 20px;
+}
+
+.optionGroup {
+  border-bottom: 1px solid #F5F5F5;
+}
+
+.optionGroupExpanded {
+  border-bottom: 1px solid #F5F5F5;
+  padding: 0 4px;
+}
+
+.optionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  padding: 15px 20px;
+  background: #F5F7F9;
+}
+
+.optionList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.optionItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 15px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+}
+
+.optionItem input[type="radio"] {
+  display: none;
+}
+
+.optionItem span:first-of-type {
+  flex: 1;
+}
+
+.optionPrice {
+  color: #333;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.selectionButtonGroup {
+  display: flex;
+  gap: 12px;
+  padding: 20px;
+  justify-content: space-between;
+}
+
+.resetButton {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #237AF2;
+  cursor: pointer;
+  background: none;
+  border: none;
+}
+
+.addToCartButton {
+  padding: 12px 24px;
+  background: #025BD9;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+  cursor: pointer;
+  min-width: 120px;
+}
+
+.addToCartButton:hover {
+  background: #0147A3;
+}

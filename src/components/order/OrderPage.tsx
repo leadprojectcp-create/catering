@@ -2,14 +2,21 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import Image from 'next/image'
-import { doc, getDoc, collection, addDoc, query, where, getDocs, orderBy, updateDoc } from 'firebase/firestore'
+import { collection, addDoc, updateDoc, doc, getDoc, query, where, getDocs, orderBy } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { useAuth } from '@/contexts/AuthContext'
 import Loading from '@/components/Loading'
+import ProductCard from './ProductCard'
+import ReviewSection from './ReviewSection'
+import OptionSelector from './OptionSelector'
+import SelectedItems from './SelectedItems'
+import BottomModal from './BottomModal'
+import DeliveryMethodSelector from './DeliveryMethodSelector'
 import styles from './OrderPage.module.css'
+import modalStyles from './BottomModal.module.css'
 
-interface Store {
+// Types
+export interface Store {
   id: string
   storeName: string
   address?: {
@@ -26,7 +33,7 @@ interface Store {
   categories?: string[]
 }
 
-interface Product {
+export interface Product {
   id: string
   name: string
   price: number
@@ -50,17 +57,12 @@ interface Product {
   }[]
 }
 
-interface OrderPageProps {
-  productId: string
-  storeId: string
-}
-
-interface CartItem {
+export interface CartItem {
   options: { [key: string]: string }
   quantity: number
 }
 
-interface Review {
+export interface Review {
   id: string
   userId: string
   userName?: string
@@ -70,7 +72,169 @@ interface Review {
   createdAt: Date
 }
 
-export default function OrderPage({ productId, storeId }: OrderPageProps) {
+interface OrderPageProps {
+  productId: string
+  storeId: string
+}
+
+// Helper Functions
+const calculateItemPrice = (
+  product: Product | null,
+  options: { [key: string]: string },
+  qty: number
+): number => {
+  if (!product) return 0
+  const basePrice = product.discountedPrice || product.price
+  let optionPrice = 0
+
+  Object.values(options).forEach(optionValue => {
+    product.options?.forEach(group => {
+      const selected = group.values.find(v => v.name === optionValue)
+      if (selected) {
+        optionPrice += selected.price
+      }
+    })
+  })
+
+  return (basePrice + optionPrice) * qty
+}
+
+const calculateTotalPrice = (
+  product: Product | null,
+  cartItems: CartItem[]
+): number => {
+  return cartItems.reduce((total, item) => {
+    return total + calculateItemPrice(product, item.options, item.quantity)
+  }, 0)
+}
+
+const createOptionsWithPrices = (
+  product: Product,
+  options: { [key: string]: string }
+): { [key: string]: { name: string; price: number } } => {
+  const optionsWithPrices: { [key: string]: { name: string; price: number } } = {}
+
+  Object.entries(options).forEach(([groupName, optionName]) => {
+    product.options?.forEach(group => {
+      if (group.groupName === groupName) {
+        const selected = group.values.find(v => v.name === optionName)
+        if (selected) {
+          optionsWithPrices[groupName] = {
+            name: selected.name,
+            price: selected.price
+          }
+        }
+      }
+    })
+  })
+
+  return optionsWithPrices
+}
+
+export const getOptionPrice = (
+  product: Product,
+  groupName: string,
+  optionValue: string
+): number => {
+  let optionPrice = 0
+  product.options?.forEach(group => {
+    if (group.groupName === groupName) {
+      const selected = group.values.find(v => v.name === optionValue)
+      if (selected) {
+        optionPrice = selected.price
+      }
+    }
+  })
+  return optionPrice
+}
+
+const maskUserName = (name: string): string => {
+  if (name.length > 2) {
+    return name[0] + '*'.repeat(name.length - 2) + name[name.length - 1]
+  } else if (name.length === 2) {
+    return name[0] + '*'
+  } else {
+    return name
+  }
+}
+
+// Data Fetchers
+const fetchProduct = async (productId: string): Promise<Product | null> => {
+  try {
+    const productDoc = await getDoc(doc(db, 'products', productId))
+    if (productDoc.exists()) {
+      return {
+        id: productDoc.id,
+        ...productDoc.data()
+      } as Product
+    }
+    return null
+  } catch (error) {
+    console.error('상품 로드 실패:', error)
+    return null
+  }
+}
+
+const fetchStore = async (storeId: string): Promise<Store | null> => {
+  try {
+    const storeDoc = await getDoc(doc(db, 'stores', storeId))
+    if (storeDoc.exists()) {
+      return {
+        id: storeDoc.id,
+        ...storeDoc.data()
+      } as Store
+    }
+    return null
+  } catch (error) {
+    console.error('가게 로드 실패:', error)
+    return null
+  }
+}
+
+const fetchReviews = async (productId: string): Promise<Review[]> => {
+  try {
+    const reviewsQuery = query(
+      collection(db, 'reviews'),
+      where('productId', '==', productId),
+      orderBy('createdAt', 'desc')
+    )
+    const reviewsSnapshot = await getDocs(reviewsQuery)
+
+    const reviewsData: Review[] = []
+    for (const docSnap of reviewsSnapshot.docs) {
+      const data = docSnap.data()
+
+      let userName = '익명'
+      try {
+        const userDoc = await getDoc(doc(db, 'users', data.userId))
+        if (userDoc.exists()) {
+          const userData = userDoc.data()
+          const rawName = userData.name || '익명'
+          userName = maskUserName(rawName)
+        }
+      } catch (error) {
+        console.error('사용자 정보 로딩 실패:', error)
+      }
+
+      reviewsData.push({
+        id: docSnap.id,
+        userId: data.userId,
+        userName,
+        rating: data.rating,
+        content: data.content,
+        images: data.images || [],
+        createdAt: data.createdAt?.toDate() || new Date(),
+      })
+    }
+
+    return reviewsData
+  } catch (error) {
+    console.error('리뷰 로딩 실패:', error)
+    return []
+  }
+}
+
+export default function OrderPage({ productId }: OrderPageProps) {
   const router = useRouter()
   const { user } = useAuth()
   const [product, setProduct] = useState<Product | null>(null)
@@ -91,16 +255,13 @@ export default function OrderPage({ productId, storeId }: OrderPageProps) {
   const [loadingReviews, setLoadingReviews] = useState(true)
   const [editingCartItemId, setEditingCartItemId] = useState<string | null>(null)
   const [storeRequest, setStoreRequest] = useState('')
+  const [deliveryMethod, setDeliveryMethod] = useState('')
 
   useEffect(() => {
-    const fetchProduct = async () => {
+    const loadProduct = async () => {
       try {
-        const productDoc = await getDoc(doc(db, 'products', productId))
-        if (productDoc.exists()) {
-          const productData = {
-            id: productDoc.id,
-            ...productDoc.data()
-          } as Product
+        const productData = await fetchProduct(productId)
+        if (productData) {
           setProduct(productData)
 
           // 장바구니에서 수정 중인 아이템 데이터 확인
@@ -108,16 +269,13 @@ export default function OrderPage({ productId, storeId }: OrderPageProps) {
           if (editCartItemData) {
             try {
               const editData = JSON.parse(editCartItemData)
-              // 수정 중인 장바구니 아이템 ID 저장
               if (editData.cartItemId) {
                 setEditingCartItemId(editData.cartItemId)
               }
 
-              // items 배열 전체를 cartItems에 로드
               if (editData.items && Array.isArray(editData.items)) {
                 setCartItems(editData.items)
 
-                // 첫 번째 아이템의 옵션과 수량을 기본값으로 설정
                 const firstItem = editData.items[0]
                 if (firstItem) {
                   setSelectedOptions(firstItem.options)
@@ -125,24 +283,24 @@ export default function OrderPage({ productId, storeId }: OrderPageProps) {
                 }
               }
 
-              // 세션 스토리지 데이터 삭제
               sessionStorage.removeItem('editCartItem')
             } catch (error) {
               console.error('장바구니 수정 데이터 로드 실패:', error)
             }
           } else {
-            // 일반적인 경우 기본 수량 설정
             setQuantity(productData.minOrderQuantity || 10)
+          }
+
+          // 배송방법 초기화 (첫 번째 배송방법 선택)
+          if (productData.deliveryMethods && productData.deliveryMethods.length > 0) {
+            setDeliveryMethod(productData.deliveryMethods[0])
           }
 
           // Fetch store data
           if (productData.storeId) {
-            const storeDoc = await getDoc(doc(db, 'stores', productData.storeId))
-            if (storeDoc.exists()) {
-              setStore({
-                id: storeDoc.id,
-                ...storeDoc.data()
-              } as Store)
+            const storeData = await fetchStore(productData.storeId)
+            if (storeData) {
+              setStore(storeData)
             }
           }
         }
@@ -153,58 +311,13 @@ export default function OrderPage({ productId, storeId }: OrderPageProps) {
       }
     }
 
-    fetchProduct()
+    loadProduct()
   }, [productId])
 
   useEffect(() => {
-    const fetchReviews = async () => {
+    const loadReviews = async () => {
       try {
-        console.log('리뷰 쿼리 시작, productId:', productId)
-        const reviewsQuery = query(
-          collection(db, 'reviews'),
-          where('productId', '==', productId),
-          orderBy('createdAt', 'desc')
-        )
-        console.log('리뷰 쿼리 실행 중...')
-        const reviewsSnapshot = await getDocs(reviewsQuery)
-        console.log('리뷰 개수:', reviewsSnapshot.docs.length)
-
-        const reviewsData: Review[] = []
-        for (const docSnap of reviewsSnapshot.docs) {
-          const data = docSnap.data()
-
-          // 사용자 정보 가져오기
-          let userName = '익명'
-          try {
-            const userDoc = await getDoc(doc(db, 'users', data.userId))
-            if (userDoc.exists()) {
-              const userData = userDoc.data()
-              const rawName = userData.name || '익명'
-
-              // 이름 마스킹 처리 (첫 글자와 마지막 글자만 표시)
-              if (rawName.length > 2) {
-                userName = rawName[0] + '*'.repeat(rawName.length - 2) + rawName[rawName.length - 1]
-              } else if (rawName.length === 2) {
-                userName = rawName[0] + '*'
-              } else {
-                userName = rawName
-              }
-            }
-          } catch (error) {
-            console.error('사용자 정보 로딩 실패:', error)
-          }
-
-          reviewsData.push({
-            id: docSnap.id,
-            userId: data.userId,
-            userName,
-            rating: data.rating,
-            content: data.content,
-            images: data.images || [],
-            createdAt: data.createdAt?.toDate() || new Date(),
-          })
-        }
-
+        const reviewsData = await fetchReviews(productId)
         setReviews(reviewsData)
       } catch (error) {
         console.error('리뷰 로딩 실패:', error)
@@ -214,7 +327,7 @@ export default function OrderPage({ productId, storeId }: OrderPageProps) {
     }
 
     if (productId) {
-      fetchReviews()
+      loadReviews()
     }
   }, [productId])
 
@@ -227,7 +340,6 @@ export default function OrderPage({ productId, storeId }: OrderPageProps) {
 
   const handleOptionSelect = (groupName: string, optionName: string) => {
     setSelectedOptions(prev => {
-      // 이미 선택된 옵션을 다시 클릭하면 해제
       if (prev[groupName] === optionName) {
         const newOptions = { ...prev }
         delete newOptions[groupName]
@@ -249,13 +361,11 @@ export default function OrderPage({ productId, storeId }: OrderPageProps) {
   const addToCart = () => {
     if (Object.keys(selectedOptions).length === 0) return
 
-    // 수정 모드든 일반 모드든 동일하게 추가
     setCartItems(prev => [...prev, {
       options: { ...selectedOptions },
       quantity: product?.minOrderQuantity || 10
     }])
 
-    // 옵션 초기화
     setSelectedOptions({})
   }
 
@@ -288,43 +398,24 @@ export default function OrderPage({ productId, storeId }: OrderPageProps) {
     }
 
     try {
-      // 모든 cartItems를 items 배열로 변환
       const items = cartItems.map(item => ({
         options: item.options,
         quantity: item.quantity
       }))
 
-      // 합계 금액 계산
-      const totalPrice = cartItems.reduce((total, item) => {
-        const basePrice = product.discountedPrice || product.price
-        let optionPrice = 0
+      const totalPrice = calculateTotalPrice(product, cartItems)
 
-        // 옵션 가격 계산
-        Object.values(item.options).forEach(optionValue => {
-          product.options?.forEach(group => {
-            const selected = group.values.find(v => v.name === optionValue)
-            if (selected) {
-              optionPrice += selected.price
-            }
-          })
-        })
-
-        return total + (basePrice + optionPrice) * item.quantity
-      }, 0)
-
-      // 수정 모드인 경우: 기존 문서에 items 배열 및 합계 저장
       if (editingCartItemId) {
         const cartDocRef = doc(db, 'shoppingCart', editingCartItemId)
 
         await updateDoc(cartDocRef, {
-          items: items,  // 기존 문서에 items 배열 업데이트
-          totalPrice: totalPrice  // 합계 금액 저장
+          items: items,
+          totalPrice: totalPrice
         })
 
         alert('장바구니가 수정되었습니다.')
         setEditingCartItemId(null)
       } else {
-        // 일반 모드인 경우 새 문서 생성 (items 배열 구조로)
         await addDoc(collection(db, 'shoppingCart'), {
           uid: user.uid,
           storeId: product.storeId,
@@ -332,8 +423,8 @@ export default function OrderPage({ productId, storeId }: OrderPageProps) {
           productName: product.name,
           productPrice: product.discountedPrice || product.price,
           productImage: product.images?.[0] || '',
-          items: items,  // items 배열로 저장
-          totalPrice: totalPrice,  // 합계 금액 저장
+          items: items,
+          totalPrice: totalPrice,
           createdAt: new Date()
         })
 
@@ -347,8 +438,11 @@ export default function OrderPage({ productId, storeId }: OrderPageProps) {
     }
   }
 
-  const handleOrder = () => {
-    if (!product || cartItems.length === 0) return
+  const handleOrder = async () => {
+    if (!product || cartItems.length === 0) {
+      alert('상품을 선택해주세요.')
+      return
+    }
 
     if (!user) {
       alert('로그인이 필요합니다.')
@@ -356,49 +450,52 @@ export default function OrderPage({ productId, storeId }: OrderPageProps) {
       return
     }
 
-    // 각 아이템의 옵션별 가격 정보를 포함하여 주문 데이터 생성
-    const itemsWithPrices = cartItems.map(item => {
-      const optionsWithPrices: { [key: string]: { name: string; price: number } } = {}
-
-      Object.entries(item.options).forEach(([groupName, optionName]) => {
-        product.options?.forEach(group => {
-          if (group.groupName === groupName) {
-            const selected = group.values.find(v => v.name === optionName)
-            if (selected) {
-              optionsWithPrices[groupName] = {
-                name: selected.name,
-                price: selected.price
-              }
-            }
-          }
-        })
-      })
-
-      return {
-        options: item.options,
-        optionsWithPrices,
-        quantity: item.quantity,
-        itemPrice: calculateItemPrice(item.options, item.quantity)
-      }
-    })
-
-    // 주문 데이터를 세션 스토리지에 저장
-    const orderData = {
-      storeId: product.storeId,
-      storeName: store?.storeName || '',
-      productId: productId,
-      productName: product.name,
-      productPrice: product.discountedPrice || product.price,
-      originalPrice: product.price,
-      discount: product.discount,
-      productImage: product.images?.[0] || '',
-      items: itemsWithPrices,
-      totalPrice: calculateTotalPrice(),
-      storeRequest: storeRequest
+    if (!deliveryMethod) {
+      alert('배송방법을 선택해주세요.')
+      return
     }
 
-    sessionStorage.setItem('orderData', JSON.stringify(orderData))
-    router.push('/payments')
+    try {
+      const totalPrice = calculateTotalPrice(product, cartItems)
+      const totalQuantity = cartItems.reduce((total, item) => total + item.quantity, 0)
+
+      // Firestore에 저장할 주문 항목 데이터
+      const orderItems = cartItems.map(item => {
+        const optionsWithPrices = createOptionsWithPrices(product, item.options)
+
+        return {
+          productId: productId,
+          productName: product.name,
+          price: product.discountedPrice || product.price,
+          quantity: item.quantity,
+          options: item.options, // 옵션명만 저장 { groupName: optionName }
+          optionsWithPrices: optionsWithPrices, // 가격 포함 정보 { groupName: { name, price } }
+          itemPrice: calculateItemPrice(product, item.options, item.quantity)
+        }
+      })
+
+      // orders 컬렉션에 주문 생성
+      const orderDoc = await addDoc(collection(db, 'orders'), {
+        userId: user.uid,
+        uid: user.uid,
+        storeId: product.storeId,
+        storeName: store?.storeName || '',
+        items: orderItems,
+        totalProductPrice: totalPrice,
+        totalQuantity: totalQuantity,
+        deliveryMethod: deliveryMethod,
+        request: storeRequest,
+        status: 'pending',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      })
+
+      // 생성된 orderId로 payments 페이지로 이동
+      router.push(`/payments?orderId=${orderDoc.id}`)
+    } catch (error) {
+      console.error('주문 생성 실패:', error)
+      alert('주문 생성에 실패했습니다.')
+    }
   }
 
   const handlePrevImage = () => {
@@ -430,14 +527,13 @@ export default function OrderPage({ productId, storeId }: OrderPageProps) {
   const handleDragEnd = () => {
     setIsDragging(false)
 
-    // 20% 이하로 내리면 모달 닫기
     if (modalHeight < 30) {
       setIsModalOpen(false)
       setModalHeight(80)
     } else if (modalHeight < 50) {
-      setModalHeight(40) // 중간 높이로 스냅
+      setModalHeight(40)
     } else {
-      setModalHeight(80) // 기본 높이로 스냅
+      setModalHeight(80)
     }
   }
 
@@ -460,28 +556,12 @@ export default function OrderPage({ productId, storeId }: OrderPageProps) {
     }
   }, [isDragging, startY, startHeight, modalHeight])
 
-  const calculateItemPrice = (options: { [key: string]: string }, qty: number) => {
-    if (!product) return 0
-    const basePrice = product.discountedPrice || product.price
-    let optionPrice = 0
-
-    // 옵션 가격 계산
-    Object.values(options).forEach(optionValue => {
-      product.options?.forEach(group => {
-        const selected = group.values.find(v => v.name === optionValue)
-        if (selected) {
-          optionPrice += selected.price
-        }
-      })
-    })
-
-    return (basePrice + optionPrice) * qty
+  const getItemPrice = (options: { [key: string]: string }, qty: number) => {
+    return calculateItemPrice(product, options, qty)
   }
 
-  const calculateTotalPrice = () => {
-    return cartItems.reduce((total, item) => {
-      return total + calculateItemPrice(item.options, item.quantity)
-    }, 0)
+  const getTotalPrice = () => {
+    return calculateTotalPrice(product, cartItems)
   }
 
   if (!product && !loading) {
@@ -502,423 +582,75 @@ export default function OrderPage({ productId, storeId }: OrderPageProps) {
         <div className={styles.error}>상품을 찾을 수 없습니다.</div>
       ) : (
         <>
-        {/* 왼쪽 영역 */}
-        <div className={styles.leftSection}>
-          {/* 상품 정보 카드 */}
-          <div className={styles.productCard}>
-            {/* 상품 이미지 */}
-            <div className={styles.imageWrapper}>
-              {product.images && product.images.length > 0 ? (
-                <>
-                  <Image
-                    src={product.images[currentImageIndex]}
-                    alt={product.name}
-                    fill
-                    className={styles.productImage}
-                    style={{ objectFit: 'cover' }}
-                  />
-                  {product.images.length > 1 && (
-                    <>
-                      <button
-                        className={styles.prevButton}
-                        onClick={handlePrevImage}
-                        aria-label="이전 이미지"
-                      >
-                        ‹
-                      </button>
-                      <button
-                        className={styles.nextButton}
-                        onClick={handleNextImage}
-                        aria-label="다음 이미지"
-                      >
-                        ›
-                      </button>
-                      <div className={styles.imageIndicator}>
-                        {currentImageIndex + 1} / {product.images.length}
-                      </div>
-                    </>
-                  )}
-                </>
-              ) : (
-                <div className={styles.placeholderImage}>
-                  <span>이미지 없음</span>
-                </div>
-              )}
-            </div>
-
-            <div className={styles.productInfo}>
-              {product.productTypes && product.productTypes.length > 0 && (
-                <div className={styles.productTypesContainer}>
-                  {product.productTypes.map((type, index) => (
-                    <span key={index} className={styles.productTypeBadge}>
-                      {type.replace('상품', '')}
-                    </span>
-                  ))}
-                </div>
-              )}
-              <h1 className={styles.productName}>{product.name}</h1>
-
-              {/* 가격 정보 */}
-              {product.discount ? (
-                <div className={styles.priceSection}>
-                  <span className={styles.originalPrice}>{product.price.toLocaleString()}원</span>
-                  <span className={styles.discountedPrice}>{product.discountedPrice?.toLocaleString()}원</span>
-                  <span className={styles.discountPercent}>{product.discount.discountPercent}%</span>
-                </div>
-              ) : (
-                <span className={styles.regularPrice}>{product.price.toLocaleString()}원</span>
-              )}
-
-              {/* 주문 가능 수량 */}
-              {product.minOrderQuantity && product.maxOrderQuantity && (
-                <div className={styles.orderQuantity}>
-                  주문가능 수량 최소 {product.minOrderQuantity}개 ~ 최대 {product.maxOrderQuantity}개
-                </div>
-              )}
-
-              {/* 배송 방법 및 추가 설정 - PC용 */}
-              <div className={styles.badgeContainerDesktop}>
-                <div className={styles.badgeRow}>
-                  {product.deliveryMethods?.map((method, index) => (
-                    <span key={index} className={styles.deliveryBadge}>{method}</span>
-                  ))}
-                </div>
-                <div className={styles.badgeRow}>
-                  {product.additionalSettings?.map((setting, index) => (
-                    <span key={index} className={styles.settingBadge}>{setting}</span>
-                  ))}
-                </div>
-              </div>
-
-              {/* 배송 방법 및 추가 설정 - 모바일용 */}
-              <div className={styles.badgeContainerMobile}>
-                <div className={styles.badgeRow}>
-                  {product.deliveryMethods?.map((method, index) => (
-                    <span key={index} className={styles.deliveryBadge}>{method}</span>
-                  ))}
-                </div>
-                <div className={styles.badgeRow}>
-                  {product.additionalSettings?.map((setting, index) => (
-                    <span key={index} className={styles.settingBadge}>{setting}</span>
-                  ))}
-                </div>
-              </div>
-
-              {/* 채팅 및 가게 버튼 */}
-              <div className={styles.actionButtons}>
-                <button className={styles.actionButton} onClick={() => {
-                  // 채팅 기능
-                  if (!user) {
-                    alert('로그인이 필요합니다.')
-                    return
-                  }
-                  router.push(`/chat?productId=${product.id}&message=${encodeURIComponent('이 상품에 대해서 궁금합니다.')}`)
-                }}>
-                  <img src="/icons/product_chat.png" alt="채팅" className={styles.actionIcon} />
-                  채팅
-                </button>
-                <button className={styles.actionButton} onClick={() => {
-                  // 가게로 이동
-                  if (product.storeId) {
-                    router.push(`/store/${product.storeId}`)
-                  }
-                }}>
-                  <img src="/icons/product_store.png" alt="가게" className={styles.actionIcon} />
-                  가게
-                </button>
-              </div>
-
-              {/* 원산지 표기 */}
-              {product.origin && product.origin.length > 0 && (
-                <div className={styles.originSection}>
-                  <h3 className={styles.originTitle}>원산지 표기</h3>
-                  <p className={styles.originText}>
-                    {product.origin.map((item, index) => (
-                      <span key={index}>
-                        {item.ingredient}({item.origin}){index < product.origin!.length - 1 ? ', ' : ''}
-                      </span>
-                    ))}
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* 상품 상세 설명 */}
-          {product.description && (
-            <div className={styles.descriptionSection}>
-              <h3 className={styles.descriptionSectionTitle}>상품 설명</h3>
-              <div
-                className={`${styles.descriptionText} ${isDescriptionExpanded ? styles.expanded : ''}`}
-                dangerouslySetInnerHTML={{ __html: product.description }}
-              />
-              <button
-                className={styles.expandButton}
-                onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
-              >
-                {isDescriptionExpanded ? '상품 설명 접기' : '상품 설명 펼쳐보기'}
-              </button>
-            </div>
-          )}
-
-          {/* 리뷰 섹션 */}
-          <div className={styles.reviewSection}>
-            <h3 className={styles.reviewTitle}>리뷰 ({reviews.length})</h3>
-            {loadingReviews ? (
-              <div className={styles.reviewLoading}>리뷰를 불러오는 중...</div>
-            ) : reviews.length === 0 ? (
-              <div className={styles.reviewEmpty}>아직 작성된 리뷰가 없습니다.</div>
-            ) : (
-              <div className={styles.reviewList}>
-                {reviews.map((review) => (
-                  <div key={review.id} className={styles.reviewItem}>
-                    <div className={styles.reviewHeader}>
-                      <div className={styles.reviewUser}>
-                        <span className={styles.reviewUserName}>{review.userName}</span>
-                        <div className={styles.reviewRating}>
-                          {[1, 2, 3, 4, 5].map((star) => (
-                            <span
-                              key={star}
-                              className={star <= review.rating ? styles.starFilled : styles.starEmpty}
-                            >
-                              ★
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                      <span className={styles.reviewDate}>
-                        {review.createdAt.toLocaleDateString('ko-KR')}
-                      </span>
-                    </div>
-                    <p className={styles.reviewContent}>{review.content}</p>
-                    {review.images && review.images.length > 0 && (
-                      <div className={styles.reviewImages}>
-                        {review.images.map((imageUrl, index) => (
-                          <div key={index} className={styles.reviewImageItem}>
-                            <Image
-                              src={imageUrl}
-                              alt={`리뷰 이미지 ${index + 1}`}
-                              width={100}
-                              height={100}
-                              className={styles.reviewImage}
-                            />
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* 모바일 옵션 선택 버튼 */}
-          <button
-            className={styles.mobileOptionButton}
-            onClick={() => setIsModalOpen(true)}
-          >
-            옵션 선택
-          </button>
-        </div>
-
-        {/* 오른쪽 영역 - 상품 옵션 */}
-        {product.options && product.options.length > 0 && (
-          <>
-            {/* 모달 오버레이 */}
-            <div
-              className={`${styles.modalOverlay} ${isModalOpen ? styles.open : ''}`}
-              onClick={() => setIsModalOpen(false)}
+          <div className={styles.leftSection}>
+            <ProductCard
+              product={product}
+              store={store}
+              user={user}
+              currentImageIndex={currentImageIndex}
+              isDescriptionExpanded={isDescriptionExpanded}
+              onPrevImage={handlePrevImage}
+              onNextImage={handleNextImage}
+              onToggleDescription={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
             />
 
-            <div
-              className={`${styles.bottomModal} ${isModalOpen ? styles.open : ''}`}
-              style={{ maxHeight: `${modalHeight}vh` }}
+            <ReviewSection
+              reviews={reviews}
+              loadingReviews={loadingReviews}
+            />
+
+            {/* 모바일 옵션 선택 버튼 */}
+            <button
+              className={modalStyles.mobileOptionButton}
+              onClick={() => setIsModalOpen(true)}
             >
-              {/* 드래그 핸들 */}
-              <div
-                className={styles.dragHandle}
-                onTouchStart={handleDragStart}
-                onMouseDown={handleDragStart}
-              >
-                <div className={styles.dragBar}></div>
-              </div>
-
-            <div className={styles.optionSection}>
-              <h2 className={styles.optionSectionTitle}>상품 옵션</h2>
-
-              {product.options.map((option, index) => {
-                const isExpanded = expandedOptions[option.groupName]
-
-                return (
-                  <div key={index} className={isExpanded ? styles.optionGroupExpanded : styles.optionGroup}>
-                    <div
-                      className={styles.optionHeader}
-                      onClick={() => toggleOption(option.groupName)}
-                    >
-                      <span>{option.groupName}</span>
-                      <Image
-                        src={isExpanded ? '/icons/chevron-up.svg' : '/icons/chevron-down.svg'}
-                        alt={isExpanded ? '접기' : '펼치기'}
-                        width={24}
-                        height={24}
-                      />
-                    </div>
-
-                    {isExpanded && (
-                      <div className={styles.optionList}>
-                        {option.values.map((value, valueIndex) => (
-                          <div
-                            key={valueIndex}
-                            className={styles.optionItem}
-                            onClick={() => handleOptionSelect(option.groupName, value.name)}
-                          >
-                            <Image
-                              src={selectedOptions[option.groupName] === value.name ? '/icons/check_active.png' : '/icons/check_empty.png'}
-                              alt="checkbox"
-                              width={20}
-                              height={20}
-                            />
-                            <span>{value.name}</span>
-                            <span className={styles.optionPrice}>
-                              + {value.price.toLocaleString()}원
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )
-              })}
-
-              {/* 초기화 및 담기 버튼 */}
-              <div className={styles.selectionButtonGroup}>
-                <button className={styles.resetButton} onClick={resetOptions}>
-                  <Image
-                    src="/icons/reset.svg"
-                    alt="초기화"
-                    width={24}
-                    height={24}
-                  />
-                  초기화
-                </button>
-                <button className={styles.addToCartButton} onClick={addToCart}>
-                  담기
-                </button>
-              </div>
-            </div>
-
-            {/* 장바구니 */}
-            {cartItems.length > 0 && (
-              <div className={styles.selectedSection}>
-                <h3 className={styles.selectedTitle}>선택된 상품</h3>
-                <div className={styles.selectedItem}>
-                  {cartItems.map((item, index) => (
-                    <div key={index} className={styles.cartItemWrapper}>
-                      <div className={styles.selectedHeader}>
-                        <div className={styles.selectedName}>{product.name}</div>
-                        <button
-                          onClick={() => removeFromCart(index)}
-                          className={styles.removeButton}
-                        >
-                          <Image
-                            src="/icons/trash.svg"
-                            alt="삭제"
-                            width={16}
-                            height={16}
-                          />
-                        </button>
-                      </div>
-                      {Object.entries(item.options).map(([groupName, optionValue]) => {
-                        // 옵션 가격 계산
-                        let optionPrice = 0
-                        product.options?.forEach(group => {
-                          if (group.groupName === groupName) {
-                            const selected = group.values.find(v => v.name === optionValue)
-                            if (selected) {
-                              optionPrice = selected.price
-                            }
-                          }
-                        })
-
-                        return (
-                          <div key={groupName} className={styles.selectedOption}>
-                            <div>
-                              <span className={styles.optionGroupName}>[{groupName}]</span>
-                              <span>{optionValue}</span>
-                            </div>
-                            <span className={styles.optionPrice}>+{optionPrice.toLocaleString()}원</span>
-                          </div>
-                        )
-                      })}
-                      <div className={styles.quantityControl}>
-                        <button
-                          onClick={() => updateCartQuantity(index, item.quantity - 1)}
-                          className={styles.quantityButton}
-                        >
-                          -
-                        </button>
-                        <input
-                          type="number"
-                          value={item.quantity}
-                          onChange={(e) => handleQuantityInputChange(index, e.target.value)}
-                          className={styles.quantityValue}
-                          min={product.minOrderQuantity || 1}
-                          max={product.maxOrderQuantity || 999}
-                        />
-                        <button
-                          onClick={() => updateCartQuantity(index, item.quantity + 1)}
-                          className={styles.quantityButton}
-                        >
-                          +
-                        </button>
-                      </div>
-                      <div className={styles.itemPrice}>
-                        {calculateItemPrice(item.options, item.quantity).toLocaleString()}원
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* 매장 요청사항 */}
-                <div className={styles.requestSection}>
-                  <h3 className={styles.requestTitle}>매장 요청사항</h3>
-                  <textarea
-                    className={styles.requestTextarea}
-                    placeholder="매장에 전달할 요청사항을 입력해주세요"
-                    value={storeRequest}
-                    onChange={(e) => setStoreRequest(e.target.value)}
-                    maxLength={500}
-                  />
-                  <div className={styles.requestCount}>
-                    {storeRequest.length}/500
-                  </div>
-                </div>
-
-                {/* 결제 정보 */}
-                <div className={styles.paymentSection}>
-                  <h3 className={styles.paymentTitle}>결제 정보</h3>
-                  <div className={styles.paymentRow}>
-                    <span>총 주문 개수</span>
-                    <span>{cartItems.reduce((total, item) => total + item.quantity, 0)}개</span>
-                  </div>
-                  <div className={styles.paymentTotal}>
-                    <span>총 결제금액</span>
-                    <span className={styles.totalPrice}>{calculateTotalPrice().toLocaleString()}원</span>
-                  </div>
-                  <div className={styles.buttonGroup}>
-                    <button className={styles.cartButton} onClick={saveToShoppingCart}>
-                      장바구니
-                    </button>
-                    <button className={styles.orderButton} onClick={handleOrder}>
-                      주문하기
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
+              옵션 선택
+            </button>
           </div>
-          </>
-        )}
+
+          {/* 오른쪽 영역 - 상품 옵션 */}
+          {product.options && product.options.length > 0 && (
+            <BottomModal
+              isOpen={isModalOpen}
+              modalHeight={modalHeight}
+              onClose={() => setIsModalOpen(false)}
+              onDragStart={handleDragStart}
+            >
+              <OptionSelector
+                product={product}
+                expandedOptions={expandedOptions}
+                selectedOptions={selectedOptions}
+                onToggleOption={toggleOption}
+                onSelectOption={handleOptionSelect}
+                onReset={resetOptions}
+                onAddToCart={addToCart}
+              />
+
+              {cartItems.length > 0 && (
+                <>
+                  <DeliveryMethodSelector
+                    deliveryMethods={product.deliveryMethods}
+                    selectedMethod={deliveryMethod}
+                    onMethodChange={setDeliveryMethod}
+                  />
+
+                  <SelectedItems
+                    product={product}
+                    cartItems={cartItems}
+                    storeRequest={storeRequest}
+                    onRemoveItem={removeFromCart}
+                    onUpdateQuantity={updateCartQuantity}
+                    onQuantityInputChange={handleQuantityInputChange}
+                    onStoreRequestChange={setStoreRequest}
+                    onSaveToCart={saveToShoppingCart}
+                    onOrder={handleOrder}
+                    calculateItemPrice={getItemPrice}
+                    calculateTotalPrice={getTotalPrice}
+                  />
+                </>
+              )}
+            </BottomModal>
+          )}
         </>
       )}
     </div>

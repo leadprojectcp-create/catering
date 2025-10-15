@@ -186,6 +186,21 @@ export default function OrdersPage() {
     return order.orderStatus === filterStatus
   })
 
+  const formatReservationDateTime = (dateStr: string, timeStr: string) => {
+    try {
+      // dateStr이 "2025-01-15" 형식이라고 가정
+      const [year, month, day] = dateStr.split('-').map(Number)
+      const date = new Date(year, month - 1, day)
+
+      const weekdays = ['일', '월', '화', '수', '목', '금', '토']
+      const weekday = weekdays[date.getDay()]
+
+      return `${year}년 ${month}월 ${day}일 (${weekday}) ${timeStr}`
+    } catch (error) {
+      return `${dateStr} ${timeStr}`
+    }
+  }
+
   const handleChatClick = async (order: Order, e: React.MouseEvent) => {
     e.stopPropagation()
 
@@ -364,7 +379,7 @@ export default function OrdersPage() {
                           {order.items.length > 1 && ` 외 ${order.items.length - 1}개`}
                         </div>
                         <div className={styles.reservationDateTime}>
-                          예약날짜 {order.deliveryDate} {order.deliveryTime}
+                          {formatReservationDateTime(order.deliveryDate, order.deliveryTime)}
                         </div>
                         <div className={`${styles.deliveryMethod} ${
                           order.deliveryMethod === '퀵업체 배송'

@@ -1,10 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 import Script from 'next/script'
-import { doc, getDoc, setDoc } from 'firebase/firestore'
+import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { useAuth } from '@/contexts/AuthContext'
 import Header from '@/components/Header'
@@ -21,8 +21,10 @@ import styles from './PaymentsPage.module.css'
 
 export default function PaymentsPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { user } = useAuth()
   const [loading, setLoading] = useState(true)
+  const [orderId, setOrderId] = useState<string | null>(null)
   const [orderData, setOrderData] = useState<OrderData | null>(null)
   const [deliveryMethod, setDeliveryMethod] = useState('pickup')
   const [orderInfo, setOrderInfo] = useState({
@@ -57,36 +59,66 @@ export default function PaymentsPage() {
 
   useEffect(() => {
     const loadData = async () => {
-      // 세션 스토리지에서 주문 데이터 가져오기
-      const savedOrderData = sessionStorage.getItem('orderData')
+      // URL에서 orderId 가져오기
+      const orderIdParam = searchParams.get('orderId')
 
-      if (!savedOrderData) {
-        console.log('주문 정보가 없습니다.')
-        setLoading(false)
+      if (!orderIdParam) {
+        alert('주문 정보가 없습니다.')
+        router.push('/')
         return
       }
 
-      try {
-        const data = JSON.parse(savedOrderData) as OrderData
+      setOrderId(orderIdParam)
 
-        // 상품의 deliveryMethods 가져오기
-        if (data.productId) {
-          const productDoc = await getDoc(doc(db, 'products', data.productId))
-          if (productDoc.exists()) {
-            const productData = productDoc.data()
-            console.log('Product data:', productData)
-            console.log('Product deliveryMethods:', productData.deliveryMethods)
-            if (productData.deliveryMethods && productData.deliveryMethods.length > 0) {
-              // orderData에 deliveryMethods 추가
-              data.deliveryMethods = productData.deliveryMethods
-              console.log('Updated orderData with deliveryMethods:', data.deliveryMethods)
-              // 첫 번째 배송방법을 기본값으로 설정
-              setDeliveryMethod(productData.deliveryMethods[0])
-            }
+      try {
+        // Firestore에서 주문 정보 가져오기
+        const orderDoc = await getDoc(doc(db, 'orders', orderIdParam))
+
+        if (!orderDoc.exists()) {
+          alert('주문 정보를 찾을 수 없습니다.')
+          router.push('/')
+          return
+        }
+
+        const orderDocData = orderDoc.data()
+
+        // 상품 정보 가져오기 (첫 번째 상품 기준)
+        const firstItem = orderDocData.items[0]
+        const productDoc = await getDoc(doc(db, 'products', firstItem.productId))
+
+        let deliveryMethods: string[] = []
+        let productImage = ''
+        if (productDoc.exists()) {
+          const productData = productDoc.data()
+          deliveryMethods = productData.deliveryMethods || []
+
+          // products 컬렉션에서 이미지 가져오기
+          if (productData.images && productData.images.length > 0) {
+            productImage = productData.images[0]
+          }
+
+          // orderDocData에서 저장된 배송방법 확인
+          if (orderDocData.deliveryMethod) {
+            setDeliveryMethod(orderDocData.deliveryMethod)
+          } else if (deliveryMethods.length > 0) {
+            setDeliveryMethod(deliveryMethods[0])
           }
         }
 
-        console.log('Final orderData:', data)
+        // OrderData 형식으로 변환
+        const data: OrderData = {
+          storeId: orderDocData.storeId,
+          storeName: orderDocData.storeName,
+          productId: firstItem.productId,
+          productName: firstItem.productName,
+          productPrice: firstItem.price,
+          productImage: productImage,
+          items: orderDocData.items,
+          totalPrice: orderDocData.totalProductPrice,
+          storeRequest: orderDocData.request || '',
+          deliveryMethods: deliveryMethods
+        }
+
         setOrderData(data)
 
         // Firestore에서 저장된 배송지 목록 및 사용자 정보 불러오기
@@ -102,11 +134,24 @@ export default function PaymentsPage() {
               setSavedAddresses(userData.deliveryAddresses)
             }
 
-            // Firestore에서 이메일 설정
+            // Firestore에서 사용자 정보 설정
             if (userData.email) {
               setOrderInfo(prev => ({
                 ...prev,
                 email: userData.email
+              }))
+            }
+
+            // 사용자 이름 설정 (수령인)
+            if (userData.name) {
+              setRecipient(userData.name)
+            }
+
+            // 사용자 전화번호 설정 (연락처)
+            if (userData.phone) {
+              setOrderInfo(prev => ({
+                ...prev,
+                phone: userData.phone
               }))
             }
 
@@ -124,7 +169,7 @@ export default function PaymentsPage() {
     }
 
     loadData()
-  }, [user])
+  }, [user, searchParams, router])
 
   // 주소 검색 핸들러
   const handleAddressSearch = () => {
@@ -230,57 +275,47 @@ export default function PaymentsPage() {
     try {
       setLoading(true)
 
+      if (!orderId) {
+        alert('주문 정보가 없습니다.')
+        return
+      }
+
       // 가게 정보 가져오기 (partnerId와 partnerPhone을 위해)
       const storeDoc = await getDoc(doc(db, 'stores', orderData.storeId))
       const storeData = storeDoc.exists() ? storeDoc.data() : null
 
-      // 주문 데이터 생성
-      const orderItems = orderData.items.map(item => ({
-        productId: orderData.productId,
-        productName: orderData.productName,
-        options: item.options,
-        optionsWithPrices: item.optionsWithPrices || {},
-        quantity: item.quantity,
-        price: orderData.productPrice,
-        itemPrice: item.itemPrice || (orderData.productPrice * item.quantity)
-      }))
+      // 기존 주문 문서 가져오기
+      const orderDocRef = doc(db, 'orders', orderId)
+      const orderDocSnap = await getDoc(orderDocRef)
 
-      const order = {
-        userId: user.uid,
-        storeId: orderData.storeId,
-        storeName: orderData.storeName,
+      if (!orderDocSnap.exists()) {
+        alert('주문 정보를 찾을 수 없습니다.')
+        return
+      }
+
+      // 주문번호 생성
+      const orderNumber = `ORD${Date.now()}`
+
+      // 주문 문서 업데이트 (배송 정보 추가)
+      await updateDoc(orderDocRef, {
         partnerId: storeData?.partnerId,
         partnerPhone: storeData?.phone,
-        items: orderItems,
         totalPrice: totalPrice,
-        totalProductPrice: totalProductPrice,
         deliveryFee: deliveryFee,
-        orderStatus: 'pending' as const,
-        paymentStatus: 'unpaid' as const,
         deliveryMethod: deliveryMethod,
         deliveryDate: orderInfo.deliveryDate,
         deliveryTime: orderInfo.deliveryTime,
         address: orderInfo.address,
         detailAddress: orderInfo.detailAddress,
         recipient: recipient,
-        orderer: user.displayName || user.email || '주문자',
+        orderer: orderInfo.orderer,
         phone: orderInfo.phone,
-        request: orderInfo.request,
-        detailedRequest: detailedRequest
-      }
+        detailedRequest: detailedRequest,
+        orderNumber: orderNumber,
+        updatedAt: new Date()
+      })
 
-      console.log('=== 주문 생성 디버깅 ===')
-      console.log('User UID:', user.uid)
-      console.log('Order data:', order)
-      console.log('Order userId:', order.userId)
-      console.log('User UID match:', order.userId === user.uid)
-      console.log('User object:', user)
-      console.log('User email:', user.email)
-      console.log('User email verified:', user.emailVerified)
-
-      // Firestore에 주문 저장
-      const { orderId, orderNumber } = await createOrder(order)
-      console.log('주문 생성 완료:', orderId, orderNumber)
+      console.log('주문 업데이트 완료:', orderId, orderNumber)
 
       console.log('=== 결제 요청 전 orderInfo 확인 ===')
       console.log('orderInfo:', orderInfo)
@@ -290,7 +325,7 @@ export default function PaymentsPage() {
 
       // 포트원 결제 요청
       const paymentResult = await requestPayment({
-        orderName: `${orderData.productName} ${orderItems.length > 1 ? `외 ${orderItems.length - 1}건` : ''}`,
+        orderName: `${orderData.productName} ${orderData.items.length > 1 ? `외 ${orderData.items.length - 1}건` : ''}`,
         amount: totalPrice,
         orderId: orderId,
         customerName: orderInfo.orderer,
@@ -468,7 +503,7 @@ export default function PaymentsPage() {
                 {orderData.storeName && <div className={styles.storeName}>{orderData.storeName}</div>}
                 {orderData.items.map((item, index) => (
                   <div key={index} className={styles.productItem}>
-                    {orderData.productImage && (
+                    {orderData.productImage && orderData.productImage.trim() !== '' ? (
                       <Image
                         src={orderData.productImage}
                         alt={orderData.productName}
@@ -477,6 +512,10 @@ export default function PaymentsPage() {
                         quality={100}
                         className={styles.productImage}
                       />
+                    ) : (
+                      <div className={styles.productImage} style={{ background: '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <span style={{ color: '#999', fontSize: '12px' }}>이미지 없음</span>
+                      </div>
                     )}
                     <div className={styles.productInfo}>
                       <div className={styles.productName}>{orderData.productName}</div>
@@ -505,191 +544,210 @@ export default function PaymentsPage() {
           </div>
         </section>
 
-        {/* 배송지 설정 */}
-        <DeliveryInfo
-          orderInfo={orderInfo}
-          recipient={recipient}
-          addressName={addressName}
-          savedAddresses={savedAddresses}
-          onOrderInfoChange={setOrderInfo}
-          onRecipientChange={setRecipient}
-          onAddressNameChange={setAddressName}
-          onAddressSave={saveDeliveryInfo}
-          onAddressLoad={loadAddress}
-          onAddressDelete={deleteAddress}
-          onAddressSearch={handleAddressSearch}
-        />
+        {/* 매장 픽업 - 수령인 정보 */}
+        {deliveryMethod === '매장 픽업' && (
+          <>
+            {/* 수령인 정보 */}
+            <section className={styles.section}>
+              <h2 className={styles.sectionTitle}>수령인 정보</h2>
+              <div className={styles.deliveryContainer}>
+                <div className={styles.formGroup}>
+                  <div className={styles.formRow}>
+                    <label className={styles.label}>수령인</label>
+                    <input
+                      type="text"
+                      className={styles.inputFull}
+                      placeholder="수령인 이름을 입력해주세요"
+                      value={recipient}
+                      onChange={(e) => setRecipient(e.target.value)}
+                    />
+                  </div>
+                  <div className={styles.formRow}>
+                    <label className={styles.label}>연락처</label>
+                    <input
+                      type="tel"
+                      className={styles.inputFull}
+                      placeholder="연락처를 입력해주세요"
+                      value={orderInfo.phone}
+                      onChange={(e) => setOrderInfo({...orderInfo, phone: e.target.value})}
+                    />
+                  </div>
+                </div>
+              </div>
+            </section>
 
-        {/* 배송날짜 및 시간설정 */}
-        <section className={styles.section}>
-          <h2 className={styles.sectionTitle}>
-            배송날짜 및 시간설정
-            <button
-              className={styles.infoButton}
-              onClick={() => setShowDateInfoModal(true)}
-              type="button"
-            >
-              <Image
-                src="/icons/info.svg"
-                alt="정보"
-                width={16}
-                height={16}
-              />
-            </button>
-          </h2>
-          <div className={styles.deliveryContainer}>
-            <div className={styles.formGroup}>
-              <DateTimePicker
-                deliveryDate={orderInfo.deliveryDate}
-                deliveryTime={orderInfo.deliveryTime}
-                onDateChange={(date) => setOrderInfo({...orderInfo, deliveryDate: date})}
-                onTimeChange={(time) => setOrderInfo({...orderInfo, deliveryTime: time})}
-              />
-            </div>
-          </div>
-        </section>
-
-        {/* 요청사항 */}
-        <section className={styles.section}>
-          <h2 className={styles.sectionTitle}>배달 요청사항</h2>
-          <div className={styles.requestContainer}>
-            <div className={styles.formRow}>
-              <label className={styles.label}>요청사항</label>
-              <div className={styles.customSelectWrapper}>
-                <div
-                  className={styles.customSelect}
-                  onClick={() => setShowRequestDropdown(!showRequestDropdown)}
+            {/* 픽업날짜 및 시간설정 */}
+            <section className={styles.section}>
+              <h2 className={styles.sectionTitle}>
+                픽업날짜 및 시간설정
+                <button
+                  className={styles.infoButton}
+                  onClick={() => setShowDateInfoModal(true)}
+                  type="button"
                 >
-                  <span>{orderInfo.request || '배송 요청사항을 선택해주세요'}</span>
                   <Image
-                    src="/icons/arrow.svg"
-                    alt="화살표"
-                    width={20}
-                    height={20}
-                    style={{ transform: showRequestDropdown ? 'rotate(-90deg)' : 'rotate(90deg)' }}
+                    src="/icons/info.svg"
+                    alt="정보"
+                    width={16}
+                    height={16}
+                  />
+                </button>
+              </h2>
+              <div className={styles.deliveryContainer}>
+                <div className={styles.formGroup}>
+                  <DateTimePicker
+                    deliveryDate={orderInfo.deliveryDate}
+                    deliveryTime={orderInfo.deliveryTime}
+                    onDateChange={(date) => setOrderInfo({...orderInfo, deliveryDate: date})}
+                    onTimeChange={(time) => setOrderInfo({...orderInfo, deliveryTime: time})}
                   />
                 </div>
-                {showRequestDropdown && (
-                  <div className={styles.customDropdown}>
-                    <div
-                      className={styles.dropdownItem}
-                      onClick={() => {
-                        setOrderInfo({...orderInfo, request: '도착 10분전에 전화주세요.'})
-                        setShowRequestDropdown(false)
-                      }}
-                    >
-                      도착 10분전에 전화주세요.
-                    </div>
-                    <div
-                      className={styles.dropdownItem}
-                      onClick={() => {
-                        setOrderInfo({...orderInfo, request: '문앞에 놓고 문자한번만 주세요.'})
-                        setShowRequestDropdown(false)
-                      }}
-                    >
-                      문앞에 놓고 문자한번만 주세요.
-                    </div>
-                    <div
-                      className={styles.dropdownItem}
-                      onClick={() => {
-                        setOrderInfo({...orderInfo, request: '1층 로비에 맡겨주세요.'})
-                        setShowRequestDropdown(false)
-                      }}
-                    >
-                      1층 로비에 맡겨주세요.
-                    </div>
-                    <div
-                      className={styles.dropdownItem}
-                      onClick={() => {
-                        setOrderInfo({...orderInfo, request: '지정 시간까지 꼭 도착해야 합니다.'})
-                        setShowRequestDropdown(false)
-                      }}
-                    >
-                      지정 시간까지 꼭 도착해야 합니다.
-                    </div>
-                    <div
-                      className={styles.dropdownItem}
-                      onClick={() => {
-                        setOrderInfo({...orderInfo, request: '수령인 이름 꼭 확인하고 전달해주세요.'})
-                        setShowRequestDropdown(false)
-                      }}
-                    >
-                      수령인 이름 꼭 확인하고 전달해주세요.
-                    </div>
-                  </div>
-                )}
               </div>
-            </div>
-            <div className={styles.formRow}>
-              <label className={styles.label}>공동현관</label>
-              <input
-                type="text"
-                className={styles.inputFull}
-                placeholder="집, 회사 공동현관 출입번호를 입력해주세요."
-                value={entranceCode}
-                onChange={(e) => setEntranceCode(e.target.value)}
-              />
-            </div>
-            <div className={styles.formRowTop}>
-              <label className={styles.label}>상세요청</label>
-              <textarea
-                className={styles.textareaFull}
-                placeholder="판매자에게 필요한 상세 요청사항을 적어주세요."
-                value={detailedRequest}
-                onChange={(e) => setDetailedRequest(e.target.value)}
-              />
-            </div>
-          </div>
-        </section>
+            </section>
+          </>
+        )}
 
-        {/* 배송방법 */}
-        <section className={styles.section}>
-          <h2 className={styles.sectionTitle}>배송방법</h2>
-          <div className={styles.deliveryMethodContainer}>
-            {orderData?.deliveryMethods?.includes('자체 배송') && (
-              <div
-                className={`${styles.deliveryMethodBox} ${deliveryMethod === '자체 배송' ? styles.deliveryMethodBoxSelected : ''}`}
-                onClick={() => setDeliveryMethod('자체 배송')}
-              >
-                <div className={styles.deliveryMethodContent}>
-                  <div>
-                    <span>자체 배송</span>
-                    <div className={styles.deliveryMethodDescription}>자체 배송이 가능한 업체 입니다.</div>
-                  </div>
-                  <span className={styles.deliveryFee}>+0원</span>
+        {/* 퀵업체 배송 선택시 배송지 설정 표시 */}
+        {deliveryMethod === '퀵업체 배송' && (
+          <>
+            {/* 배송지 설정 */}
+            <DeliveryInfo
+              orderInfo={orderInfo}
+              recipient={recipient}
+              addressName={addressName}
+              savedAddresses={savedAddresses}
+              onOrderInfoChange={setOrderInfo}
+              onRecipientChange={setRecipient}
+              onAddressNameChange={setAddressName}
+              onAddressSave={saveDeliveryInfo}
+              onAddressLoad={loadAddress}
+              onAddressDelete={deleteAddress}
+              onAddressSearch={handleAddressSearch}
+            />
+
+            {/* 배송날짜 및 시간설정 */}
+            <section className={styles.section}>
+              <h2 className={styles.sectionTitle}>
+                배송날짜 및 시간설정
+                <button
+                  className={styles.infoButton}
+                  onClick={() => setShowDateInfoModal(true)}
+                  type="button"
+                >
+                  <Image
+                    src="/icons/info.svg"
+                    alt="정보"
+                    width={16}
+                    height={16}
+                  />
+                </button>
+              </h2>
+              <div className={styles.deliveryContainer}>
+                <div className={styles.formGroup}>
+                  <DateTimePicker
+                    deliveryDate={orderInfo.deliveryDate}
+                    deliveryTime={orderInfo.deliveryTime}
+                    onDateChange={(date) => setOrderInfo({...orderInfo, deliveryDate: date})}
+                    onTimeChange={(time) => setOrderInfo({...orderInfo, deliveryTime: time})}
+                  />
                 </div>
               </div>
-            )}
-            {orderData?.deliveryMethods?.includes('매장 픽업') && (
-              <div
-                className={`${styles.deliveryMethodBox} ${deliveryMethod === '매장 픽업' ? styles.deliveryMethodBoxSelected : ''}`}
-                onClick={() => setDeliveryMethod('매장 픽업')}
-              >
-                <div className={styles.deliveryMethodContent}>
-                  <div>
-                    <span>매장 픽업</span>
-                    <div className={styles.deliveryMethodDescription}>매장 픽업이 가능한 업체 입니다.</div>
+            </section>
+
+            {/* 요청사항 */}
+            <section className={styles.section}>
+              <h2 className={styles.sectionTitle}>배달 요청사항</h2>
+              <div className={styles.requestContainer}>
+                <div className={styles.formRow}>
+                  <label className={styles.label}>요청사항</label>
+                  <div className={styles.customSelectWrapper}>
+                    <div
+                      className={styles.customSelect}
+                      onClick={() => setShowRequestDropdown(!showRequestDropdown)}
+                    >
+                      <span>{orderInfo.request || '배송 요청사항을 선택해주세요'}</span>
+                      <Image
+                        src="/icons/arrow.svg"
+                        alt="화살표"
+                        width={20}
+                        height={20}
+                        style={{ transform: showRequestDropdown ? 'rotate(-90deg)' : 'rotate(90deg)' }}
+                      />
+                    </div>
+                    {showRequestDropdown && (
+                      <div className={styles.customDropdown}>
+                        <div
+                          className={styles.dropdownItem}
+                          onClick={() => {
+                            setOrderInfo({...orderInfo, request: '도착 10분전에 전화주세요.'})
+                            setShowRequestDropdown(false)
+                          }}
+                        >
+                          도착 10분전에 전화주세요.
+                        </div>
+                        <div
+                          className={styles.dropdownItem}
+                          onClick={() => {
+                            setOrderInfo({...orderInfo, request: '문앞에 놓고 문자한번만 주세요.'})
+                            setShowRequestDropdown(false)
+                          }}
+                        >
+                          문앞에 놓고 문자한번만 주세요.
+                        </div>
+                        <div
+                          className={styles.dropdownItem}
+                          onClick={() => {
+                            setOrderInfo({...orderInfo, request: '1층 로비에 맡겨주세요.'})
+                            setShowRequestDropdown(false)
+                          }}
+                        >
+                          1층 로비에 맡겨주세요.
+                        </div>
+                        <div
+                          className={styles.dropdownItem}
+                          onClick={() => {
+                            setOrderInfo({...orderInfo, request: '지정 시간까지 꼭 도착해야 합니다.'})
+                            setShowRequestDropdown(false)
+                          }}
+                        >
+                          지정 시간까지 꼭 도착해야 합니다.
+                        </div>
+                        <div
+                          className={styles.dropdownItem}
+                          onClick={() => {
+                            setOrderInfo({...orderInfo, request: '수령인 이름 꼭 확인하고 전달해주세요.'})
+                            setShowRequestDropdown(false)
+                          }}
+                        >
+                          수령인 이름 꼭 확인하고 전달해주세요.
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  <span className={styles.deliveryFee}>+0원</span>
+                </div>
+                <div className={styles.formRow}>
+                  <label className={styles.label}>공동현관</label>
+                  <input
+                    type="text"
+                    className={styles.inputFull}
+                    placeholder="집, 회사 공동현관 출입번호를 입력해주세요."
+                    value={entranceCode}
+                    onChange={(e) => setEntranceCode(e.target.value)}
+                  />
+                </div>
+                <div className={styles.formRowTop}>
+                  <label className={styles.label}>상세요청</label>
+                  <textarea
+                    className={styles.textareaFull}
+                    placeholder="판매자에게 필요한 상세 요청사항을 적어주세요."
+                    value={detailedRequest}
+                    onChange={(e) => setDetailedRequest(e.target.value)}
+                  />
                 </div>
               </div>
-            )}
-            {orderData?.deliveryMethods?.includes('퀵업체 배송') && (
-              <div
-                className={`${styles.deliveryMethodBox} ${deliveryMethod === '퀵업체 배송' ? styles.deliveryMethodBoxSelected : ''}`}
-                onClick={() => setDeliveryMethod('퀵업체 배송')}
-              >
-                <div className={styles.deliveryMethodContent}>
-                  <div>
-                    <span>퀵업체 배송</span>
-                    <div className={styles.deliveryMethodDescription}>퀵업체 배송이 가능한 업체 입니다.</div>
-                  </div>
-                  <span className={styles.deliveryFee}>+25,000원</span>
-                </div>
-              </div>
-            )}
-          </div>
-        </section>
+            </section>
+          </>
+        )}
 
         {/* 총 결제금액 */}
         <section className={styles.section}>

@@ -20,7 +20,9 @@ export interface OrderData {
   productImage: string
   items: OrderItem[]
   deliveryMethods?: string[]
+  deliveryMethod?: string
   totalPrice?: number
+  storeRequest?: string
 }
 
 export interface DeliveryAddress {

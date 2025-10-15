@@ -1,0 +1,102 @@
+/* 리뷰 섹션 스타일 */
+.reviewSection {
+  padding: 20px 0;
+  border-top: 1px solid #F5F5F5;
+  margin-top: 20px;
+}
+
+.reviewTitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: #333;
+  margin: 0 0 16px 0;
+}
+
+.reviewLoading,
+.reviewEmpty {
+  text-align: center;
+  padding: 40px;
+  color: #999;
+  font-size: 14px;
+}
+
+.reviewList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.reviewItem {
+  padding: 16px;
+  background: #F5F7F9;
+  border-radius: 8px;
+}
+
+.reviewHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.reviewUser {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.reviewUserName {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+}
+
+.reviewRating {
+  display: flex;
+  gap: 2px;
+}
+
+.starFilled {
+  color: #FFD700;
+  font-size: 16px;
+}
+
+.starEmpty {
+  color: #E0E0E0;
+  font-size: 16px;
+}
+
+.reviewDate {
+  font-size: 12px;
+  color: #999;
+}
+
+.reviewContent {
+  font-size: 14px;
+  color: #666;
+  line-height: 1.6;
+  margin: 0 0 12px 0;
+  white-space: pre-wrap;
+}
+
+.reviewImages {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.reviewImageItem {
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #e0e0e0;
+}
+
+.reviewImage {
+  object-fit: cover;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.reviewImage:hover {
+  transform: scale(1.05);
+}

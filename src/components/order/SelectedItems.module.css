@@ -1,0 +1,262 @@
+/* 선택된 상품 */
+.selectedSection {
+  margin-top: 24px;
+}
+
+.selectedTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: #333;
+  margin: 0 0 12px 0;
+  padding: 0 20px;
+}
+
+.selectedItem {
+  padding: 20px 20px;
+  border-radius: 20px;
+  background: #F9F9F9;
+  margin-bottom: 16px;
+  margin-left: 20px;
+  margin-right: 20px;
+}
+
+.cartItemWrapper {
+  padding-bottom: 16px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid #dcd9d9;
+}
+
+.cartItemWrapper:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.selectedHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  min-width: 0;
+}
+
+.selectedName {
+  font-size: 15px;
+  font-weight: 600;
+  color: #333;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+  max-width: 250px;
+}
+
+.optionGroupName {
+  color: #999;
+  font-size: 14px;
+  font-weight: 500;
+  margin-right: 6px;
+}
+
+.selectedOption {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #333;
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 8px;
+  gap: 8px;
+}
+
+.optionPrice {
+  color: #333;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.quantityControl {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.quantityButton {
+  width: 34px;
+  height: 34px;
+  border: 1px solid #E5E5E5;
+  border-radius: 4px;
+  background: #fff;
+  font-size: 16px;
+  color: #333;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.quantityValue {
+  min-width: 30px;
+  width: 50px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  border: 1px solid #E0E0E0;
+  border-radius: 4px;
+  background: white;
+  outline: none;
+  -moz-appearance: textfield;
+  flex-shrink: 0;
+  padding: 4px;
+}
+
+.quantityValue::-webkit-outer-spin-button,
+.quantityValue::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.removeButton {
+  padding: 0;
+  background: none;
+  border: none;
+  font-size: 14px;
+  font-weight: 500;
+  color: #999;
+  cursor: pointer;
+}
+
+.removeButton:hover {
+  color: #666;
+}
+
+.itemPrice {
+  margin-top: 12px;
+  text-align: right;
+  font-size: 16px;
+  font-weight: 700;
+  color: #333;
+  width: auto;
+  margin-left: auto;
+  display: block;
+}
+
+/* 매장 요청사항 */
+.requestSection {
+  padding: 20px;
+  border-radius: 20px;
+  background: #FFF;
+  margin-bottom: 16px;
+}
+
+.requestTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: #333;
+  margin: 0 0 12px 0;
+}
+
+.requestTextarea {
+  width: 100%;
+  min-height: 100px;
+  padding: 12px;
+  border: 1px solid #E0E0E0;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #333;
+  background: #F9F9F9;
+  resize: vertical;
+  font-family: inherit;
+  line-height: 1.5;
+}
+
+.requestTextarea::placeholder {
+  color: #999;
+}
+
+.requestTextarea:focus {
+  outline: none;
+  border-color: #025BD9;
+}
+
+.requestCount {
+  text-align: right;
+  font-size: 12px;
+  color: #999;
+  margin-top: 8px;
+}
+
+/* 결제 정보 */
+.paymentSection {
+  padding: 20px;
+  border-radius: 20px;
+  background: #FFF;
+}
+
+.paymentTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: #333;
+  margin: 0 0 12px 0;
+}
+
+.paymentRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  font-size: 14px;
+  color: #666;
+}
+
+.paymentTotal {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0 12px 0;
+  border-top: 1px solid #F0F0F0;
+  font-size: 15px;
+  font-weight: 600;
+  color: #333;
+}
+
+.totalPrice {
+  font-size: 18px;
+  font-weight: 700;
+  color: #025BD9;
+}
+
+.buttonGroup {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.cartButton {
+  width: 100%;
+  padding: 12px;
+  background: #fff;
+  border: 1px solid #025BD9;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #025BD9;
+  cursor: pointer;
+}
+
+.orderButton {
+  width: 100%;
+  padding: 12px;
+  background: #025BD9;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+  cursor: pointer;
+}
