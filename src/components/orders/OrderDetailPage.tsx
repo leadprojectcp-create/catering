@@ -20,17 +20,28 @@ interface KakaoShareOptions {
       webUrl: string
     }
   }
+  buttons?: Array<{
+    title: string
+    link: {
+      mobileWebUrl: string
+      webUrl: string
+    }
+  }>
 }
 
 interface KakaoShare {
   sendDefault: (options: KakaoShareOptions) => void
 }
 
+interface Kakao {
+  isInitialized: () => boolean
+  init: (appKey: string) => void
+  Share?: KakaoShare
+}
+
 declare global {
   interface Window {
-    Kakao?: {
-      Share?: KakaoShare
-    }
+    Kakao?: Kakao
   }
 }
 
@@ -214,22 +225,52 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
 
     const currentUrl = window.location.href
 
-    if (window.Kakao && window.Kakao.Share) {
-      window.Kakao.Share.sendDefault({
-        objectType: 'feed',
-        content: {
-          title: '주문 상세',
-          description: `주문번호: ${order.orderNumber || order.id}`,
-          imageUrl: order.items[0]?.productImage || '',
-          link: {
-            mobileWebUrl: currentUrl,
-            webUrl: currentUrl,
+    // Kakao SDK 초기화 확인
+    if (!window.Kakao) {
+      alert('카카오톡 SDK가 로드되지 않았습니다. 페이지를 새로고침해주세요.')
+      return
+    }
+
+    if (!window.Kakao.isInitialized()) {
+      const kakaoKey = process.env.NEXT_PUBLIC_KAKAO_JS_KEY
+      if (!kakaoKey) {
+        alert('카카오톡 앱 키가 설정되지 않았습니다.')
+        console.error('NEXT_PUBLIC_KAKAO_JS_KEY가 설정되지 않았습니다.')
+        return
+      }
+      window.Kakao.init(kakaoKey)
+    }
+
+    if (window.Kakao.Share) {
+      try {
+        window.Kakao.Share.sendDefault({
+          objectType: 'feed',
+          content: {
+            title: `${order.storeName} 주문 상세`,
+            description: `주문번호: ${order.orderNumber || order.id}\n총 ${order.totalPrice.toLocaleString()}원`,
+            imageUrl: order.items[0]?.productImage || 'https://via.placeholder.com/300x200?text=No+Image',
+            link: {
+              mobileWebUrl: currentUrl,
+              webUrl: currentUrl,
+            },
           },
-        },
-      })
-      setShowShareModal(false)
+          buttons: [
+            {
+              title: '주문 확인하기',
+              link: {
+                mobileWebUrl: currentUrl,
+                webUrl: currentUrl,
+              },
+            },
+          ],
+        })
+        setShowShareModal(false)
+      } catch (error) {
+        console.error('카카오톡 공유 실패:', error)
+        alert('카카오톡 공유에 실패했습니다. 다시 시도해주세요.')
+      }
     } else {
-      alert('카카오톡 공유를 사용할 수 없습니다.')
+      alert('카카오톡 공유 기능을 사용할 수 없습니다.')
     }
   }
 
