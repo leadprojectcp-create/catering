@@ -36,6 +36,7 @@
 
 ### 2. 환경 변수 설정
 
+#### 로컬 개발 환경
 `.env.local` 파일에 JavaScript 키를 추가:
 
 ```bash
@@ -43,10 +44,23 @@
 NEXT_PUBLIC_KAKAO_JS_KEY=여기에_JavaScript_키_입력
 ```
 
+#### Firebase App Hosting (배포 환경)
+`apphosting.yaml` 파일에서 Kakao 키를 업데이트:
+
+```yaml
+# Kakao Configuration
+- variable: NEXT_PUBLIC_KAKAO_JS_KEY
+  value: 여기에_JavaScript_키_입력
+  availability:
+    - BUILD
+    - RUNTIME
+```
+
 **주의사항:**
 - `NEXT_PUBLIC_` 접두사가 있어야 클라이언트에서 사용 가능합니다
 - JavaScript 키를 입력하세요 (REST API 키가 아닙니다)
-- 키 입력 후 개발 서버를 재시작하세요
+- 로컬: 키 입력 후 개발 서버를 재시작하세요
+- 배포: `apphosting.yaml` 수정 후 다시 배포하세요
 
 ### 3. 개발 서버 재시작
 

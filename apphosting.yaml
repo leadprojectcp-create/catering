@@ -108,6 +108,14 @@ env:
     availability:
       - RUNTIME
 
+  # Kakao Configuration
+  # TODO: Replace with your actual Kakao JavaScript Key from https://developers.kakao.com/console
+  - variable: NEXT_PUBLIC_KAKAO_JS_KEY
+    value: d2912bec2eddf602d23ee87b3d05d068
+    availability:
+      - BUILD
+      - RUNTIME
+
   # Grant access to secrets in Cloud Secret Manager.
   # See https://firebase.google.com/docs/app-hosting/configure#secret-parameters
   # - variable: MY_SECRET
