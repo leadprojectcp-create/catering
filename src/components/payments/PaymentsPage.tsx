@@ -142,9 +142,13 @@ export default function PaymentsPage() {
               }))
             }
 
-            // 사용자 이름 설정 (수령인)
+            // 사용자 이름 설정 (수령인 및 주문자)
             if (userData.name) {
               setRecipient(userData.name)
+              setOrderInfo(prev => ({
+                ...prev,
+                orderer: userData.name
+              }))
             }
 
             // 사용자 전화번호 설정 (연락처)
