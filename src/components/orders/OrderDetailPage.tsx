@@ -9,9 +9,28 @@ import { useAuth } from '@/contexts/AuthContext'
 import Loading from '@/components/Loading'
 import styles from './OrderDetailPage.module.css'
 
+interface KakaoShareOptions {
+  objectType: string
+  content: {
+    title: string
+    description: string
+    imageUrl: string
+    link: {
+      mobileWebUrl: string
+      webUrl: string
+    }
+  }
+}
+
+interface KakaoShare {
+  sendDefault: (options: KakaoShareOptions) => void
+}
+
 declare global {
   interface Window {
-    Kakao: any
+    Kakao?: {
+      Share?: KakaoShare
+    }
   }
 }
 
