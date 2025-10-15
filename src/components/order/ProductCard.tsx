@@ -8,7 +8,7 @@ import styles from './ProductCard.module.css'
 interface ProductCardProps {
   product: Product
   store: Store | null
-  user: any
+  user: { uid: string } | null
   currentImageIndex: number
   isDescriptionExpanded: boolean
   onPrevImage: () => void
@@ -18,7 +18,6 @@ interface ProductCardProps {
 
 export default function ProductCard({
   product,
-  store,
   user,
   currentImageIndex,
   isDescriptionExpanded,
