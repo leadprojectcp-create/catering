@@ -155,12 +155,17 @@
   gap: 12px;
   padding: 12px;
   max-width: 400px;
-  background-color: #fff;
-  border-radius: 12px;
+  background-color: #fff !important;
+  border-radius: 12px !important;
+  border: 1px solid #e5e7eb;
 }
 
 .myMessage .productMessage {
-  background-color: rgba(255, 255, 255, 0.95);
+  background-color: #fff !important;
+}
+
+.otherMessage .productMessage {
+  background-color: #fff !important;
 }
 
 .productImage {
@@ -197,9 +202,9 @@
 }
 
 .productPrice {
-  font-size: 15px;
-  font-weight: 600;
-  color: #FF8B00;
+  font-size: 16px;
+  font-weight: 700;
+  color: #333;
   margin: 0;
 }
 

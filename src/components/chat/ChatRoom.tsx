@@ -431,24 +431,36 @@ export default function ChatRoom({ roomId, onBack, isPartner = false, initialPro
         <div className={styles.dateDivider}>
           {formatDate(msgs[0].timestamp)}
         </div>
-        {msgs.map((message) => (
-          <div
-            key={message.id}
-            className={`${styles.messageItem} ${
-              message.senderId === user?.uid ? styles.myMessage : styles.otherMessage
-            }`}
-          >
-            {message.senderId !== user?.uid && (
-              <span className={styles.senderName}>{otherUserName || message.senderName}</span>
-            )}
-            <div className={styles.messageContent}>
-              <div className={styles.messageBubble}>
-                {renderMessageContent(message.text)}
+        {msgs.map((message) => {
+          const isProductMessage = message.text.startsWith('[상품]')
+          return (
+            <div
+              key={message.id}
+              className={`${styles.messageItem} ${
+                message.senderId === user?.uid ? styles.myMessage : styles.otherMessage
+              }`}
+            >
+              {message.senderId !== user?.uid && (
+                <span className={styles.senderName}>{otherUserName || message.senderName}</span>
+              )}
+              <div className={styles.messageContent}>
+                {isProductMessage ? (
+                  <>
+                    {renderMessageContent(message.text)}
+                    <span className={styles.messageTime}>{formatTime(message.timestamp)}</span>
+                  </>
+                ) : (
+                  <>
+                    <div className={styles.messageBubble}>
+                      {renderMessageContent(message.text)}
+                    </div>
+                    <span className={styles.messageTime}>{formatTime(message.timestamp)}</span>
+                  </>
+                )}
               </div>
-              <span className={styles.messageTime}>{formatTime(message.timestamp)}</span>
             </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
     ))
   }

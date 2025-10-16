@@ -17,6 +17,7 @@ export default function ChatRoomHeader({ roomId }: ChatRoomHeaderProps) {
   const router = useRouter()
   const { user, userData } = useAuth()
   const [otherUserName, setOtherUserName] = useState<string>('')
+  const [otherUserPhone, setOtherUserPhone] = useState<string>('')
   const isPartner = userData?.type === 'partner'
 
   useEffect(() => {
@@ -26,18 +27,24 @@ export default function ChatRoomHeader({ roomId }: ChatRoomHeaderProps) {
       try {
         const roomData = await getChatRoom(roomId)
         if (roomData) {
-          // 상대방 이름 가져오기
+          // 상대방 이름과 전화번호 가져오기
           const otherUserId = roomData.participants.find(id => id !== user.uid)
           if (otherUserId) {
             try {
               const otherUserDoc = await getDoc(doc(db, 'users', otherUserId))
               if (otherUserDoc.exists()) {
                 const otherUserData = otherUserDoc.data()
+
                 const otherUserType = otherUserData.type || 'user'
                 const displayName = otherUserType === 'partner'
                   ? (otherUserData.companyName || otherUserData.storeName || '가게')
                   : (otherUserData.name || '사용자')
                 setOtherUserName(displayName)
+
+                // 전화번호 저장
+                if (otherUserData.phone) {
+                  setOtherUserPhone(otherUserData.phone)
+                }
               }
             } catch (error) {
               console.error('상대방 정보 로드 실패:', error)
@@ -57,8 +64,8 @@ export default function ChatRoomHeader({ roomId }: ChatRoomHeaderProps) {
   const title = otherUserName || ' '
 
   if (isPartner) {
-    return <PartnerHeader chatRoomTitle={title} />
+    return <PartnerHeader chatRoomTitle={title} chatRoomPhone={otherUserPhone} />
   }
 
-  return <Header chatRoomTitle={title} />
+  return <Header chatRoomTitle={title} chatRoomPhone={otherUserPhone} />
 }

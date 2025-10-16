@@ -64,9 +64,10 @@ const getPageTitle = (path: string): string => {
 
 interface HeaderProps {
   chatRoomTitle?: string
+  chatRoomPhone?: string
 }
 
-export default function Header({ chatRoomTitle }: HeaderProps = {}) {
+export default function Header({ chatRoomTitle, chatRoomPhone }: HeaderProps = {}) {
   const pathname = usePathname()
   const router = useRouter()
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
@@ -217,63 +218,91 @@ export default function Header({ chatRoomTitle }: HeaderProps = {}) {
           <div className={styles.rightSection}>
             {user ? (
               <>
-                {/* 로그인 상태 - 메뉴 아이콘들 표시 */}
-                {/* 찜 아이콘 */}
-                <Link href="/wishlist" className={styles.wishlistIconLink}>
-                  <Image
-                    src={pathname === '/wishlist' ? '/menu-icons/heart_active.png' : '/menu-icons/heart.png'}
-                    alt="찜"
-                    width={24}
-                    height={24}
-                  />
-                </Link>
+                {/* 모바일 채팅룸일 때는 전화 버튼만 표시 */}
+                {isMobile && chatRoomTitle ? (
+                  <a
+                    href={chatRoomPhone ? `tel:${chatRoomPhone}` : '#'}
+                    className={styles.phoneButton}
+                    onClick={(e) => {
+                      if (!chatRoomPhone) {
+                        e.preventDefault()
+                        alert('전화번호가 없습니다.')
+                      }
+                    }}
+                  >
+                    <span className={styles.phoneIcon}>
+                      <Image
+                        src="/icons/phone.png"
+                        alt="전화"
+                        width={20}
+                        height={20}
+                        quality={100}
+                        unoptimized
+                      />
+                    </span>
+                    <span>전화</span>
+                  </a>
+                ) : (
+                  <>
+                    {/* 로그인 상태 - 메뉴 아이콘들 표시 */}
+                    {/* 찜 아이콘 */}
+                    <Link href="/wishlist" className={styles.wishlistIconLink}>
+                      <Image
+                        src={pathname === '/wishlist' ? '/menu-icons/heart_active.png' : '/menu-icons/heart.png'}
+                        alt="찜"
+                        width={24}
+                        height={24}
+                      />
+                    </Link>
 
-                {/* 장바구니 아이콘 */}
-                <Link href="/cart" className={styles.cartIconLink}>
-                  <Image
-                    src={pathname === '/cart' ? '/menu-icons/shopping_active.png' : '/menu-icons/shopping.png'}
-                    alt="장바구니"
-                    width={24}
-                    height={24}
-                  />
-                  {cartCount > 0 && (
-                    <span className={styles.cartBadge}>N</span>
-                  )}
-                </Link>
+                    {/* 장바구니 아이콘 */}
+                    <Link href="/cart" className={styles.cartIconLink}>
+                      <Image
+                        src={pathname === '/cart' ? '/menu-icons/shopping_active.png' : '/menu-icons/shopping.png'}
+                        alt="장바구니"
+                        width={24}
+                        height={24}
+                      />
+                      {cartCount > 0 && (
+                        <span className={styles.cartBadge}>N</span>
+                      )}
+                    </Link>
 
-                {/* 채팅 아이콘 */}
-                <Link href="/chat" className={styles.chatIconLink}>
-                  <Image
-                    src={pathname === '/chat' || pathname.startsWith('/chat/') ? '/menu-icons/chat_active.png' : '/menu-icons/chat.png'}
-                    alt="채팅"
-                    width={24}
-                    height={24}
-                  />
-                  {unreadCount > 0 && (
-                    <span className={styles.chatBadge}>N</span>
-                  )}
-                </Link>
+                    {/* 채팅 아이콘 */}
+                    <Link href="/chat" className={styles.chatIconLink}>
+                      <Image
+                        src={pathname === '/chat' || pathname.startsWith('/chat/') ? '/menu-icons/chat_active.png' : '/menu-icons/chat.png'}
+                        alt="채팅"
+                        width={24}
+                        height={24}
+                      />
+                      {unreadCount > 0 && (
+                        <span className={styles.chatBadge}>N</span>
+                      )}
+                    </Link>
 
-                {/* 주문내역 아이콘 */}
-                <Link href="/orders" className={styles.ordersIconLink}>
-                  <Image
-                    src={pathname === '/orders' ? '/menu-icons/order_active.png' : '/menu-icons/order.png'}
-                    alt="주문내역"
-                    width={24}
-                    height={24}
-                  />
-                </Link>
+                    {/* 주문내역 아이콘 */}
+                    <Link href="/orders" className={styles.ordersIconLink}>
+                      <Image
+                        src={pathname === '/orders' ? '/menu-icons/order_active.png' : '/menu-icons/order.png'}
+                        alt="주문내역"
+                        width={24}
+                        height={24}
+                      />
+                    </Link>
 
-                {/* 햄버거 메뉴 버튼 */}
-                <button
-                  className={styles.menuButton}
-                  onClick={toggleDrawer}
-                  aria-label="메뉴"
-                >
-                  <span className={styles.hamburger}></span>
-                  <span className={styles.hamburger}></span>
-                  <span className={styles.hamburger}></span>
-                </button>
+                    {/* 햄버거 메뉴 버튼 */}
+                    <button
+                      className={styles.menuButton}
+                      onClick={toggleDrawer}
+                      aria-label="메뉴"
+                    >
+                      <span className={styles.hamburger}></span>
+                      <span className={styles.hamburger}></span>
+                      <span className={styles.hamburger}></span>
+                    </button>
+                  </>
+                )}
               </>
             ) : (
               <>

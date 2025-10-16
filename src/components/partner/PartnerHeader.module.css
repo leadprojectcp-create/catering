@@ -57,7 +57,6 @@
   font-weight: 600;
   color: #333;
   margin: 0;
-  margin-left: 12px;
 }
 
 .rightSection {
@@ -129,6 +128,39 @@
 
 .loginButton:hover {
   background-color: #f0f7ff;
+}
+
+/* 전화 버튼 (모바일 채팅룸용) */
+.phoneButton {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 30px;
+  border: 1px solid #F0F0F3;
+  background: white;
+  cursor: pointer;
+  color: #333;
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.phoneButton:hover {
+  background-color: #f9f9f9;
+}
+
+.phoneButton:active {
+  transform: scale(0.98);
+}
+
+.phoneIcon {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* 햄버거 메뉴 버튼 */

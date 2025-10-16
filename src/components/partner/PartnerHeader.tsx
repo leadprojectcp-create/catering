@@ -110,9 +110,10 @@ const partnerMenuItems = [
 
 interface PartnerHeaderProps {
   chatRoomTitle?: string
+  chatRoomPhone?: string
 }
 
-export default function PartnerHeader({ chatRoomTitle }: PartnerHeaderProps = {}) {
+export default function PartnerHeader({ chatRoomTitle, chatRoomPhone }: PartnerHeaderProps = {}) {
   const pathname = usePathname()
   const router = useRouter()
   const { user, logout, loading } = useAuth()
@@ -246,68 +247,96 @@ export default function PartnerHeader({ chatRoomTitle }: PartnerHeaderProps = {}
           <div className={styles.rightSection}>
             {user ? (
               <>
-                {/* 로그인 상태 - 메뉴 아이콘들 표시 */}
-                {/* 리뷰관리 아이콘 */}
-                <Link href="/partner/reviews" className={styles.iconLink}>
-                  <Image
-                    src={pathname.startsWith('/partner/reviews') ? '/partner-menu-icons/review_active.png' : '/partner-menu-icons/review.png'}
-                    alt="리뷰관리"
-                    width={24}
-                    height={24}
-                    quality={100}
-                    unoptimized
-                  />
-                </Link>
+                {/* 모바일 채팅룸일 때는 전화 버튼만 표시 */}
+                {isMobile && chatRoomTitle ? (
+                  <a
+                    href={chatRoomPhone ? `tel:${chatRoomPhone}` : '#'}
+                    className={styles.phoneButton}
+                    onClick={(e) => {
+                      if (!chatRoomPhone) {
+                        e.preventDefault()
+                        alert('전화번호가 없습니다.')
+                      }
+                    }}
+                  >
+                    <span className={styles.phoneIcon}>
+                      <Image
+                        src="/icons/phone.png"
+                        alt="전화"
+                        width={20}
+                        height={20}
+                        quality={100}
+                        unoptimized
+                      />
+                    </span>
+                    <span>전화</span>
+                  </a>
+                ) : (
+                  <>
+                    {/* 로그인 상태 - 메뉴 아이콘들 표시 */}
+                    {/* 리뷰관리 아이콘 */}
+                    <Link href="/partner/reviews" className={styles.iconLink}>
+                      <Image
+                        src={pathname.startsWith('/partner/reviews') ? '/partner-menu-icons/review_active.png' : '/partner-menu-icons/review.png'}
+                        alt="리뷰관리"
+                        width={24}
+                        height={24}
+                        quality={100}
+                        unoptimized
+                      />
+                    </Link>
 
-                {/* 채팅 아이콘 */}
-                <Link href="/chat" className={styles.iconLink}>
-                  <Image
-                    src={pathname === '/chat' ? '/partner-menu-icons/chat_active.png' : '/partner-menu-icons/chat.png'}
-                    alt="채팅"
-                    width={24}
-                    height={24}
-                    quality={100}
-                    unoptimized
-                  />
-                  {unreadCount > 0 && (
-                    <span className={styles.chatBadge}>{unreadCount}</span>
-                  )}
-                </Link>
+                    {/* 채팅 아이콘 */}
+                    <Link href="/chat" className={styles.iconLink}>
+                      <Image
+                        src={pathname === '/chat' ? '/partner-menu-icons/chat_active.png' : '/partner-menu-icons/chat.png'}
+                        alt="채팅"
+                        width={24}
+                        height={24}
+                        quality={100}
+                        unoptimized
+                      />
+                      {unreadCount > 0 && (
+                        <span className={styles.chatBadge}>{unreadCount}</span>
+                      )}
+                    </Link>
 
-                {/* 상품관리 아이콘 */}
-                <Link href="/partner/product/management" className={styles.iconLink}>
-                  <Image
-                    src={pathname.startsWith('/partner/product') ? '/partner-menu-icons/goods_active.png' : '/partner-menu-icons/goods.png'}
-                    alt="상품관리"
-                    width={24}
-                    height={24}
-                    quality={100}
-                    unoptimized
-                  />
-                </Link>
+                    {/* 상품관리 아이콘 */}
+                    <Link href="/partner/product/management" className={styles.iconLink}>
+                      <Image
+                        src={pathname.startsWith('/partner/product') ? '/partner-menu-icons/goods_active.png' : '/partner-menu-icons/goods.png'}
+                        alt="상품관리"
+                        width={24}
+                        height={24}
+                        quality={100}
+                        unoptimized
+                      />
+                    </Link>
 
-                {/* 주문관리 아이콘 */}
-                <Link href="/partner/order/history" className={styles.iconLink}>
-                  <Image
-                    src={pathname.startsWith('/partner/order') ? '/partner-menu-icons/order_active.png' : '/partner-menu-icons/order.png'}
-                    alt="주문관리"
-                    width={24}
-                    height={24}
-                    quality={100}
-                    unoptimized
-                  />
-                </Link>
+                    {/* 주문관리 아이콘 */}
+                    <Link href="/partner/order/history" className={styles.iconLink}>
+                      <Image
+                        src={pathname.startsWith('/partner/order') ? '/partner-menu-icons/order_active.png' : '/partner-menu-icons/order.png'}
+                        alt="주문관리"
+                        width={24}
+                        height={24}
+                        quality={100}
+                        unoptimized
+                      />
+                    </Link>
 
-                {/* 햄버거 메뉴 버튼 */}
-                <button
-                  className={styles.menuButton}
-                  onClick={toggleDrawer}
-                  aria-label="메뉴"
-                >
-                  <span className={styles.hamburger}></span>
-                  <span className={styles.hamburger}></span>
-                  <span className={styles.hamburger}></span>
-                </button>
+                    {/* 햄버거 메뉴 버튼 */}
+                    <button
+                      className={styles.menuButton}
+                      onClick={toggleDrawer}
+                      aria-label="메뉴"
+                    >
+                      <span className={styles.hamburger}></span>
+                      <span className={styles.hamburger}></span>
+                      <span className={styles.hamburger}></span>
+                    </button>
+                  </>
+                )}
               </>
             ) : (
               <>
