@@ -249,7 +249,7 @@
 }
 
 .replyCancelButton {
-  padding: 12px 24px;
+  padding: 6px 24px;
   border-radius: 5px;
   background: #F0F0F3;
   color: #333;
@@ -264,7 +264,7 @@
 }
 
 .replySubmitButton {
-  padding: 12px 24px;
+  padding: 6px 24px;
   border-radius: 5px;
   background: #237AF2;
   color: #FFF;

@@ -256,7 +256,7 @@ export default function PartnerHeader() {
                 </Link>
 
                 {/* 상품관리 아이콘 */}
-                <Link href="/partner/products" className={styles.iconLink}>
+                <Link href="/partner/product/management" className={styles.iconLink}>
                   <Image
                     src={pathname.startsWith('/partner/product') ? '/partner-menu-icons/goods_active.png' : '/partner-menu-icons/goods.png'}
                     alt="상품관리"
@@ -268,7 +268,7 @@ export default function PartnerHeader() {
                 </Link>
 
                 {/* 주문관리 아이콘 */}
-                <Link href="/partner/orders" className={styles.iconLink}>
+                <Link href="/partner/order/history" className={styles.iconLink}>
                   <Image
                     src={pathname.startsWith('/partner/order') ? '/partner-menu-icons/order_active.png' : '/partner-menu-icons/order.png'}
                     alt="주문관리"
