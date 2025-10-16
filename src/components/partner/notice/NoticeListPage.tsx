@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { getPartnerNotices, deleteNotice } from '@/lib/services/noticeService'
+import { getPartnerNotices, deleteNotice, updateNotice } from '@/lib/services/noticeService'
 import { useAuth } from '@/contexts/AuthContext'
 import type { Notice } from '@/lib/services/noticeService'
 import Loading from '@/components/Loading'
@@ -27,7 +27,13 @@ export default function NoticeListPage() {
     try {
       setLoading(true)
       const data = await getPartnerNotices(user.uid, filterStatus)
-      setNotices(data)
+      // isVisible이 true인 것을 맨 위로 정렬
+      const sortedData = data.sort((a, b) => {
+        if (a.isVisible && !b.isVisible) return -1
+        if (!a.isVisible && b.isVisible) return 1
+        return 0
+      })
+      setNotices(sortedData)
     } catch (error) {
       console.error('공지사항 로드 실패:', error)
       alert('공지사항을 불러오는데 실패했습니다.')
@@ -49,16 +55,41 @@ export default function NoticeListPage() {
     }
   }
 
+  const handleHide = async (id: string) => {
+    if (confirm('공지사항을 내리시겠습니까?')) {
+      try {
+        await updateNotice(id, { isVisible: false })
+        alert('공지사항이 내려졌습니다.')
+        fetchNotices()
+      } catch (error) {
+        console.error('공지사항 숨김 실패:', error)
+        alert('공지사항 숨김에 실패했습니다.')
+      }
+    }
+  }
+
+  const handleShow = async (id: string) => {
+    if (confirm('이 공지사항을 공지하시겠습니까? 기존에 노출된 공지사항은 자동으로 내려갑니다.')) {
+      try {
+        await updateNotice(id, { isVisible: true })
+        alert('공지사항이 공지되었습니다.')
+        fetchNotices()
+      } catch (error) {
+        console.error('공지사항 노출 실패:', error)
+        alert('공지사항 노출에 실패했습니다.')
+      }
+    }
+  }
+
   const formatDate = (date: unknown) => {
     if (!date) return '-'
     const d = (date as { toDate?: () => Date })?.toDate ? (date as { toDate: () => Date }).toDate() : new Date(date as string | number | Date)
-    return d.toLocaleDateString('ko-KR', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
+    const year = d.getFullYear()
+    const month = String(d.getMonth() + 1).padStart(2, '0')
+    const day = String(d.getDate()).padStart(2, '0')
+    const hour = String(d.getHours()).padStart(2, '0')
+    const minute = String(d.getMinutes()).padStart(2, '0')
+    return `${year}-${month}-${day} ${hour}:${minute}`
   }
 
   const getStatusBadge = (status: string) => {
@@ -81,21 +112,8 @@ export default function NoticeListPage() {
           className={styles.addButton}
           onClick={() => router.push('/partner/notice/write')}
         >
-          새 공지사항 작성
+          공지사항 작성하기
         </button>
-      </div>
-
-      <div className={styles.filterSection}>
-        <select
-          className={styles.filterSelect}
-          value={filterStatus}
-          onChange={(e) => setFilterStatus(e.target.value)}
-        >
-          <option value="all">전체</option>
-          <option value="draft">임시저장</option>
-          <option value="published">게시됨</option>
-          <option value="archived">보관됨</option>
-        </select>
       </div>
 
       {notices.length === 0 ? (
@@ -103,54 +121,52 @@ export default function NoticeListPage() {
           등록된 공지사항이 없습니다.
         </div>
       ) : (
-        <div className={styles.tableContainer}>
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                <th>제목</th>
-                <th>상태</th>
-                <th>조회수</th>
-                <th>게시일</th>
-                <th>작업</th>
-              </tr>
-            </thead>
-            <tbody>
-              {notices.map((notice) => (
-                <tr key={notice.id}>
-                  <td>
-                    <div className={styles.titleCell}>
-                      <div className={styles.noticeTitle}>{notice.title}</div>
-                    </div>
-                  </td>
-                  <td>{getStatusBadge(notice.status)}</td>
-                  <td>{notice.viewCount || 0}</td>
-                  <td>{formatDate(notice.publishedAt)}</td>
-                  <td>
-                    <div className={styles.actions}>
-                      <button
-                        className={styles.editButton}
-                        onClick={() => router.push(`/partner/notice/edit/${notice.id}`)}
-                      >
-                        수정
-                      </button>
-                      <button
-                        className={styles.viewButton}
-                        onClick={() => router.push(`/partner/notice/view/${notice.id}`)}
-                      >
-                        보기
-                      </button>
-                      <button
-                        className={styles.deleteButton}
-                        onClick={() => handleDelete(notice.id!)}
-                      >
-                        삭제
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className={styles.noticeList}>
+          {notices.map((notice) => (
+            <div key={notice.id} className={styles.noticeCard}>
+              {notice.isVisible && (
+                <div className={styles.noticeHeader}>
+                  <span className={styles.currentBadge}>현재 공지사항</span>
+                </div>
+              )}
+              <div className={styles.noticeDate}>
+                작성일 {formatDate(notice.createdAt)} 작성
+              </div>
+              <div className={styles.noticeTitle}>{notice.title}</div>
+              <div className={styles.noticeContent}>{notice.content}</div>
+              <div className={styles.noticeActions}>
+                {notice.isVisible ? (
+                  <button
+                    className={styles.hideButton}
+                    onClick={() => handleHide(notice.id!)}
+                  >
+                    내리기
+                  </button>
+                ) : (
+                  <button
+                    className={styles.showButton}
+                    onClick={() => handleShow(notice.id!)}
+                  >
+                    공지하기
+                  </button>
+                )}
+                <div className={styles.rightActions}>
+                  <button
+                    className={styles.deleteButton}
+                    onClick={() => handleDelete(notice.id!)}
+                  >
+                    삭제
+                  </button>
+                  <button
+                    className={styles.editButton}
+                    onClick={() => router.push(`/partner/notice/edit/${notice.id}`)}
+                  >
+                    수정
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </div>

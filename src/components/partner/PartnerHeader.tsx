@@ -14,7 +14,6 @@ const getPageTitle = (path: string): string => {
   if (path === '/partner/dashboard') return ''
   if (path === '/partner/store/management') return '가게관리'
   if (path === '/partner/reviews') return '리뷰관리'
-  if (path === '/partner/review/management') return '리뷰관리'
   if (path === '/partner/notice/management') return '공지사항 관리'
   if (path === '/partner/notice/write') return '공지사항 작성'
   if (path === '/partner/product/add') return '상품등록'
@@ -49,7 +48,7 @@ const partnerMenuItems = [
       </svg>
     ),
     items: [
-      { name: '리뷰관리', path: '/partner/review/management' }
+      { name: '리뷰관리', path: '/partner/reviews' }
     ]
   },
   {

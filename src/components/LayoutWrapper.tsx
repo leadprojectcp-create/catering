@@ -20,9 +20,14 @@ export default function LayoutWrapper() {
     return null
   }
 
-  // 파트너 페이지에서는 파트너용 바텀 네비게이터 표시
+  // 파트너 페이지에서는 파트너용 바텀 네비게이터와 Footer 표시
   if (isPartnerPage) {
-    return <PartnerBottomNav />
+    return (
+      <>
+        <Footer />
+        <PartnerBottomNav />
+      </>
+    )
   }
 
   // 일반 사용자 페이지에서는 일반 바텀 네비게이터와 Footer 표시

@@ -1,0 +1,390 @@
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 32px 0;
+  margin-top: 60px;
+}
+
+.title {
+  color: #333;
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 20px;
+}
+
+.statsContainer {
+  border-radius: 20px;
+  border: 1px solid #F4F4F4;
+  background: #FFF;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.stat {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.statLabel {
+  color: #333;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.statValue {
+  color: #333;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.starRating {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.starIcon {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+}
+
+.reviewList {
+  border-radius: 20px;
+  border: 1px solid #F4F4F4;
+  background: #FFF;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.reviewCard {
+  display: flex;
+  flex-direction: column;
+}
+
+.reviewBody {
+  padding: 0 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.reviewHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.reviewUser {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.userInfo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.userName {
+  color: #333;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.rating {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.ratingText {
+  color: #333;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.starIcon {
+  width: 16px;
+  height: 16px;
+}
+
+.reviewDate {
+  color: #4E5968;
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.reviewContent {
+  color: #333;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 150%;
+}
+
+.replyButton {
+  padding: 6px 12px;
+  border-radius: 5px;
+  background: #237AF2;
+  color: #FFF;
+  font-size: 14px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  align-self: flex-start;
+}
+
+.replyButton:hover {
+  background: #1a63cc;
+}
+
+.replyDisplay {
+  border-radius: 20px;
+  background: #F5F7F9;
+  padding: 16px;
+}
+
+.replyHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.replyDate {
+  color: #4E5968;
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.replyActions {
+  display: flex;
+  gap: 12px;
+}
+
+.replyEditButton {
+  background: none;
+  border: none;
+  color: #237AF2;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.replyEditButton img {
+  filter: brightness(0) saturate(100%) invert(37%) sepia(97%) saturate(2576%) hue-rotate(203deg) brightness(97%) contrast(96%);
+}
+
+.replyEditButton:hover {
+  opacity: 0.8;
+}
+
+.replyDeleteButton {
+  background: none;
+  border: none;
+  color: #4E5968;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.replyDeleteButton img {
+  filter: brightness(0) saturate(100%) invert(36%) sepia(6%) saturate(1016%) hue-rotate(178deg) brightness(95%) contrast(90%);
+}
+
+.replyDeleteButton:hover {
+  opacity: 0.8;
+}
+
+.replyContent {
+  color: #333;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 150%;
+}
+
+.replySection {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.replyTextarea {
+  width: 100%;
+  padding: 12px;
+  border-radius: 5px;
+  border: 1px solid #F0F0F3;
+  background: #FFF;
+  color: #333;
+  font-size: 14px;
+  font-weight: 500;
+  resize: vertical;
+  outline: none;
+  font-family: inherit;
+}
+
+.replyTextarea:focus {
+  border-color: #237AF2;
+}
+
+.replyActions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.replyCancelButton {
+  padding: 12px 24px;
+  border-radius: 5px;
+  background: #F0F0F3;
+  color: #333;
+  font-size: 14px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+}
+
+.replyCancelButton:hover {
+  background: #E0E0E3;
+}
+
+.replySubmitButton {
+  padding: 12px 24px;
+  border-radius: 5px;
+  background: #237AF2;
+  color: #FFF;
+  font-size: 14px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+}
+
+.replySubmitButton:hover {
+  background: #1a63cc;
+}
+
+.reviewImages {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.imageWrapper {
+  width: 100px;
+  height: 100px;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.reviewImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.filterContainer {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.reviewCount {
+  color: #333;
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+.sortSelect {
+  flex: 0 0 auto;
+  width: 140px;
+}
+
+.productSelect {
+  flex: 1;
+  min-width: 150px;
+}
+
+.dateFilter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dateInput {
+  padding: 12px;
+  border-radius: 5px;
+  border: 1px solid #F0F0F3;
+  background: #FFF;
+  color: #333;
+  font-size: 14px;
+  font-weight: 500;
+  outline: none;
+  cursor: pointer;
+}
+
+.dateInput:focus {
+  border-color: #FF7A00;
+}
+
+.dateSeparator {
+  color: #999;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.emptyState {
+  text-align: center;
+  padding: 60px 20px;
+  color: #6b7280;
+  font-size: 16px;
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 32px 16px;
+  }
+
+  .reviewCard {
+    padding: 12px;
+  }
+
+  .statsContainer {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .filterContainer {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .sortSelect {
+    width: 100%;
+  }
+
+  .productSelect {
+    width: 100%;
+    min-width: auto;
+  }
+
+  .reviewBody {
+    padding: 0;
+  }
+}

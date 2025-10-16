@@ -173,6 +173,10 @@ service cloud.firestore {
       // 본인의 리뷰만 수정/삭제 가능
       allow update, delete: if isSignedIn() &&
         resource.data.userId == request.auth.uid;
+
+      // 파트너는 답글(reply) 필드만 업데이트 가능
+      allow update: if isPartner() &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reply']);
     }
 
     // Chats collection - 채팅방

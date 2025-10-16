@@ -19,7 +19,8 @@ export default function NoticeEditPage({ noticeId }: NoticeEditPageProps) {
   const [formData, setFormData] = useState({
     title: '',
     content: '',
-    status: 'draft' as 'draft' | 'published' | 'archived'
+    status: 'draft' as 'draft' | 'published' | 'archived',
+    isVisible: true
   })
 
   useEffect(() => {
@@ -33,7 +34,8 @@ export default function NoticeEditPage({ noticeId }: NoticeEditPageProps) {
         setFormData({
           title: notice.title,
           content: notice.content,
-          status: notice.status
+          status: notice.status,
+          isVisible: notice.isVisible ?? true
         })
       }
     } catch (error) {
@@ -62,7 +64,8 @@ export default function NoticeEditPage({ noticeId }: NoticeEditPageProps) {
       await updateNotice(noticeId, {
         title: formData.title,
         content: formData.content,
-        status
+        status,
+        isVisible: formData.isVisible
       })
 
       alert('공지사항이 수정되었습니다.')
@@ -81,17 +84,11 @@ export default function NoticeEditPage({ noticeId }: NoticeEditPageProps) {
     <div className={styles.container}>
       <div className={styles.header}>
         <h1 className={styles.title}>공지사항 수정</h1>
-        <button
-          className={styles.cancelButton}
-          onClick={() => router.push('/partner/notice/management')}
-        >
-          취소
-        </button>
       </div>
 
       <div className={styles.formContainer}>
         <div className={styles.formGroup}>
-          <label className={styles.label}>제목 *</label>
+          <label className={styles.label}>제목</label>
           <input
             type="text"
             className={styles.input}
@@ -102,23 +99,35 @@ export default function NoticeEditPage({ noticeId }: NoticeEditPageProps) {
         </div>
 
         <div className={styles.formGroup}>
-          <label className={styles.label}>내용 *</label>
+          <label className={styles.label}>내용</label>
           <textarea
             className={styles.textarea}
             value={formData.content}
             onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
             placeholder="공지사항 내용을 입력하세요"
-            rows={15}
+            rows={8}
           />
+        </div>
+
+        <div className={styles.formGroup}>
+          <label className={styles.checkboxLabel}>
+            <input
+              type="checkbox"
+              className={styles.checkbox}
+              checked={formData.isVisible}
+              onChange={(e) => setFormData(prev => ({ ...prev, isVisible: e.target.checked }))}
+            />
+            <span className={styles.checkboxText}>공지사항 노출</span>
+          </label>
         </div>
 
         <div className={styles.buttonGroup}>
           <button
-            className={styles.saveDraftButton}
-            onClick={() => handleSubmit('draft')}
+            className={styles.cancelButton}
+            onClick={() => router.push('/partner/notice/management')}
             disabled={saving}
           >
-            임시 저장
+            취소하기
           </button>
           <button
             className={styles.publishButton}
@@ -126,13 +135,6 @@ export default function NoticeEditPage({ noticeId }: NoticeEditPageProps) {
             disabled={saving}
           >
             게시하기
-          </button>
-          <button
-            className={styles.archiveButton}
-            onClick={() => handleSubmit('archived')}
-            disabled={saving}
-          >
-            보관하기
           </button>
         </div>
       </div>

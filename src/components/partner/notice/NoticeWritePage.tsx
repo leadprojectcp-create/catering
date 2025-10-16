@@ -14,7 +14,8 @@ export default function NoticeWritePage() {
   const [formData, setFormData] = useState({
     title: '',
     content: '',
-    status: 'draft' as 'draft' | 'published'
+    status: 'draft' as 'draft' | 'published',
+    isVisible: true
   })
 
   const handleSubmit = async (status: 'draft' | 'published') => {
@@ -37,7 +38,8 @@ export default function NoticeWritePage() {
         author: user.displayName || user.email || '파트너',
         authorId: user.uid,
         partnerId: user.uid,
-        status
+        status,
+        isVisible: formData.isVisible
       })
 
       alert(status === 'published' ? '공지사항이 게시되었습니다.' : '임시 저장되었습니다.')
@@ -55,18 +57,12 @@ export default function NoticeWritePage() {
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <h1 className={styles.title}>새 공지사항 작성</h1>
-        <button
-          className={styles.cancelButton}
-          onClick={() => router.push('/partner/notice/management')}
-        >
-          취소
-        </button>
+        <h1 className={styles.title}>공지사항 작성</h1>
       </div>
 
       <div className={styles.formContainer}>
         <div className={styles.formGroup}>
-          <label className={styles.label}>제목 *</label>
+          <label className={styles.label}>제목</label>
           <input
             type="text"
             className={styles.input}
@@ -77,23 +73,35 @@ export default function NoticeWritePage() {
         </div>
 
         <div className={styles.formGroup}>
-          <label className={styles.label}>내용 *</label>
+          <label className={styles.label}>내용</label>
           <textarea
             className={styles.textarea}
             value={formData.content}
             onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
             placeholder="공지사항 내용을 입력하세요"
-            rows={15}
+            rows={8}
           />
+        </div>
+
+        <div className={styles.formGroup}>
+          <label className={styles.checkboxLabel}>
+            <input
+              type="checkbox"
+              className={styles.checkbox}
+              checked={formData.isVisible}
+              onChange={(e) => setFormData(prev => ({ ...prev, isVisible: e.target.checked }))}
+            />
+            <span className={styles.checkboxText}>공지사항 노출</span>
+          </label>
         </div>
 
         <div className={styles.buttonGroup}>
           <button
-            className={styles.saveDraftButton}
-            onClick={() => handleSubmit('draft')}
+            className={styles.cancelButton}
+            onClick={() => router.push('/partner/notice/management')}
             disabled={loading}
           >
-            임시 저장
+            취소하기
           </button>
           <button
             className={styles.publishButton}

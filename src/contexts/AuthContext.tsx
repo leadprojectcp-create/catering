@@ -14,6 +14,7 @@ interface UserData {
   companyName?: string
   phone?: string
   registrationComplete?: boolean
+  storeId?: string
 }
 
 interface AuthContextType {

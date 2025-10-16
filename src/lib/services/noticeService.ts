@@ -23,6 +23,7 @@ export interface Notice {
   authorId: string
   partnerId: string  // 파트너 ID (작성자)
   status: 'draft' | 'published' | 'archived'
+  isVisible?: boolean  // 공지사항 노출 여부
   viewCount?: number
   createdAt?: Date | Timestamp | FieldValue
   updatedAt?: Date | Timestamp | FieldValue
@@ -34,8 +35,25 @@ const COLLECTION_NAME = 'notices'
 // 공지사항 생성
 export const createNotice = async (noticeData: Omit<Notice, 'id'>): Promise<string> => {
   try {
+    // 새 공지사항이 노출되는 경우, 해당 파트너의 다른 모든 공지사항 노출 해제
+    if (noticeData.isVisible) {
+      const q = query(
+        collection(db, COLLECTION_NAME),
+        where('partnerId', '==', noticeData.partnerId),
+        where('isVisible', '==', true)
+      )
+      const querySnapshot = await getDocs(q)
+
+      // 기존 노출된 공지사항들을 모두 노출 해제
+      const updatePromises = querySnapshot.docs.map(document =>
+        updateDoc(doc(db, COLLECTION_NAME, document.id), { isVisible: false })
+      )
+      await Promise.all(updatePromises)
+    }
+
     const docRef = await addDoc(collection(db, COLLECTION_NAME), {
       ...noticeData,
+      isVisible: noticeData.isVisible ?? true,  // 기본값: 노출
       viewCount: 0,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
@@ -51,6 +69,32 @@ export const createNotice = async (noticeData: Omit<Notice, 'id'>): Promise<stri
 // 공지사항 수정
 export const updateNotice = async (id: string, noticeData: Partial<Notice>): Promise<void> => {
   try {
+    // 수정하려는 공지사항이 노출되는 경우, 해당 파트너의 다른 모든 공지사항 노출 해제
+    if (noticeData.isVisible) {
+      // 현재 수정하려는 공지사항의 정보를 가져옴
+      const currentDocSnap = await getDoc(doc(db, COLLECTION_NAME, id))
+      if (currentDocSnap.exists()) {
+        const currentData = currentDocSnap.data()
+        const partnerId = currentData.partnerId
+
+        // 같은 파트너의 다른 노출된 공지사항들을 찾음
+        const q = query(
+          collection(db, COLLECTION_NAME),
+          where('partnerId', '==', partnerId),
+          where('isVisible', '==', true)
+        )
+        const querySnapshot = await getDocs(q)
+
+        // 현재 수정하려는 공지사항을 제외한 다른 공지사항들을 모두 노출 해제
+        const updatePromises = querySnapshot.docs
+          .filter(document => document.id !== id)
+          .map(document =>
+            updateDoc(doc(db, COLLECTION_NAME, document.id), { isVisible: false })
+          )
+        await Promise.all(updatePromises)
+      }
+    }
+
     const docRef = doc(db, COLLECTION_NAME, id)
     const updateData: Record<string, unknown> = {
       ...noticeData,
@@ -132,6 +176,7 @@ export const getPublishedNotices = async (partnerId: string): Promise<Notice[]> 
       collection(db, COLLECTION_NAME),
       where('partnerId', '==', partnerId),
       where('status', '==', 'published'),
+      where('isVisible', '==', true),
       orderBy('publishedAt', 'desc')
     )
 
@@ -153,6 +198,7 @@ export const getPublishedNoticesByPartner = async (partnerId: string): Promise<N
       collection(db, COLLECTION_NAME),
       where('partnerId', '==', partnerId),
       where('status', '==', 'published'),
+      where('isVisible', '==', true),
       orderBy('publishedAt', 'desc')
     )
 
@@ -167,6 +213,7 @@ export const getPublishedNoticesByPartner = async (partnerId: string): Promise<N
         authorId: data.authorId,
         partnerId: data.partnerId,
         status: data.status,
+        isVisible: data.isVisible ?? true,
         viewCount: data.viewCount || 0,
         createdAt: data.createdAt?.toDate?.() || new Date(),
         updatedAt: data.updatedAt?.toDate?.() || new Date(),
