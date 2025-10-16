@@ -30,7 +30,7 @@ interface ChatRoomProps {
 
 export default function ChatRoom({ roomId, onBack, isPartner = false, initialProductId, initialMessage }: ChatRoomProps) {
   const router = useRouter()
-  const { user, loading: authLoading } = useAuth()
+  const { user, userData, loading: authLoading } = useAuth()
   const [room, setRoom] = useState<ChatRoomType | null>(null)
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [inputText, setInputText] = useState('')
@@ -169,12 +169,21 @@ export default function ChatRoom({ roomId, onBack, isPartner = false, initialPro
             if (otherUserDoc.exists()) {
               const otherUserData = otherUserDoc.data()
 
+              console.log('[ChatRoom] 상대방 정보:', {
+                userId: otherUserId,
+                type: otherUserData.type,
+                name: otherUserData.name,
+                companyName: otherUserData.companyName,
+                storeName: otherUserData.storeName
+              })
+
               // 상대방이 파트너면 companyName, 일반 사용자면 name
               const otherUserType = otherUserData.type || 'user'
               const displayName = otherUserType === 'partner'
                 ? (otherUserData.companyName || otherUserData.storeName || '가게')
                 : (otherUserData.name || '사용자')
 
+              console.log('[ChatRoom] 표시할 이름:', displayName)
               setOtherUserName(displayName)
             }
           } catch (error) {
@@ -208,7 +217,12 @@ export default function ChatRoom({ roomId, onBack, isPartner = false, initialPro
     if (!user || !inputText.trim()) return
 
     try {
-      await sendMessage(roomId, user.uid, user.displayName || '사용자', inputText.trim())
+      // userData에서 실제 이름 가져오기
+      const senderName = userData?.type === 'partner'
+        ? (userData.companyName || userData.storeName || '가게')
+        : (userData?.name || user.displayName || '사용자')
+
+      await sendMessage(roomId, user.uid, senderName, inputText.trim())
       setInputText('')
     } catch (error) {
       console.error('메시지 전송 실패:', error)
@@ -238,8 +252,13 @@ export default function ChatRoom({ roomId, onBack, isPartner = false, initialPro
 
       const data = await response.json()
 
+      // userData에서 실제 이름 가져오기
+      const senderName = userData?.type === 'partner'
+        ? (userData.companyName || userData.storeName || '가게')
+        : (userData?.name || user.displayName || '사용자')
+
       // 이미지 URL을 메시지로 전송
-      await sendMessage(roomId, user.uid, user.displayName || '사용자', `[이미지]${data.url}`)
+      await sendMessage(roomId, user.uid, senderName, `[이미지]${data.url}`)
 
       console.log('이미지 업로드 및 전송 완료:', data.url)
     } catch (error) {
@@ -260,11 +279,16 @@ export default function ChatRoom({ roomId, onBack, isPartner = false, initialPro
     try {
       console.log('[ChatRoom] 선택한 상품:', product)
 
+      // userData에서 실제 이름 가져오기
+      const senderName = userData?.type === 'partner'
+        ? (userData.companyName || userData.storeName || '가게')
+        : (userData?.name || user.displayName || '사용자')
+
       // 상품 ID만 전송
       const productMessage = `[상품]${product.id}`
       console.log('[ChatRoom] 전송할 메시지:', productMessage)
 
-      await sendMessage(roomId, user.uid, user.displayName || '사용자', productMessage)
+      await sendMessage(roomId, user.uid, senderName, productMessage)
       setShowProductPopup(false)
 
       console.log('[ChatRoom] 상품 전송 완료:', product.id)
@@ -278,14 +302,19 @@ export default function ChatRoom({ roomId, onBack, isPartner = false, initialPro
     if (!user) return
 
     try {
+      // userData에서 실제 이름 가져오기
+      const senderName = userData?.type === 'partner'
+        ? (userData.companyName || userData.storeName || '가게')
+        : (userData?.name || user.displayName || '사용자')
+
       // 상품 메시지 전송
       if (pendingProductId) {
-        await sendMessage(roomId, user.uid, user.displayName || '사용자', `[상품]${pendingProductId}`)
+        await sendMessage(roomId, user.uid, senderName, `[상품]${pendingProductId}`)
       }
 
       // 텍스트 메시지 전송
       if (pendingMessage) {
-        await sendMessage(roomId, user.uid, user.displayName || '사용자', pendingMessage)
+        await sendMessage(roomId, user.uid, senderName, pendingMessage)
       }
 
       console.log('[ChatRoom] 상품 문의 전송 완료')
@@ -411,7 +440,7 @@ export default function ChatRoom({ roomId, onBack, isPartner = false, initialPro
             }`}
           >
             {message.senderId !== user?.uid && (
-              <span className={styles.senderName}>{message.senderName}</span>
+              <span className={styles.senderName}>{otherUserName || message.senderName}</span>
             )}
             <div className={styles.messageContent}>
               <div className={styles.messageBubble}>
@@ -435,18 +464,6 @@ export default function ChatRoom({ roomId, onBack, isPartner = false, initialPro
 
   return (
     <div className={styles.container}>
-      <div className={styles.header}>
-        <button className={styles.backButton} onClick={() => router.back()}>
-          ←
-        </button>
-        <h1 className={styles.title}>{otherUserName || room.storeName}</h1>
-        {onBack && (
-          <button className={styles.listButton} onClick={onBack} title="채팅 목록">
-            ☰
-          </button>
-        )}
-      </div>
-
       <div className={styles.messagesContainer} ref={messagesContainerRef}>
         {messages.length === 0 ? (
           <div className={styles.emptyMessages}>

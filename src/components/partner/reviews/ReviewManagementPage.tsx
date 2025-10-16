@@ -33,6 +33,10 @@ export default function ReviewManagementPage() {
   const [replyText, setReplyText] = useState('')
   const [editingReplyId, setEditingReplyId] = useState<string | null>(null)
   const [editReplyText, setEditReplyText] = useState('')
+  const [selectedImages, setSelectedImages] = useState<string[]>([])
+  const [currentImageIndex, setCurrentImageIndex] = useState(0)
+  const [touchStart, setTouchStart] = useState(0)
+  const [touchEnd, setTouchEnd] = useState(0)
 
   useEffect(() => {
     if (user) {
@@ -230,6 +234,50 @@ export default function ReviewManagementPage() {
     return (sum / displayReviews.length).toFixed(1)
   }
 
+  const handleImageClick = (images: string[], index: number) => {
+    setSelectedImages(images)
+    setCurrentImageIndex(index)
+  }
+
+  const closeImageModal = () => {
+    setSelectedImages([])
+    setCurrentImageIndex(0)
+  }
+
+  const goToPrevImage = () => {
+    setCurrentImageIndex((prev) => (prev === 0 ? selectedImages.length - 1 : prev - 1))
+  }
+
+  const goToNextImage = () => {
+    setCurrentImageIndex((prev) => (prev === selectedImages.length - 1 ? 0 : prev + 1))
+  }
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStart(e.targetTouches[0].clientX)
+  }
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX)
+  }
+
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return
+
+    const distance = touchStart - touchEnd
+    const isLeftSwipe = distance > 50
+    const isRightSwipe = distance < -50
+
+    if (isLeftSwipe) {
+      goToNextImage()
+    }
+    if (isRightSwipe) {
+      goToPrevImage()
+    }
+
+    setTouchStart(0)
+    setTouchEnd(0)
+  }
+
   if (loading) return <Loading />
 
   return (
@@ -331,7 +379,12 @@ export default function ReviewManagementPage() {
                 {review.images && review.images.length > 0 && (
                   <div className={styles.reviewImages}>
                     {review.images.map((imageUrl, index) => (
-                      <div key={index} className={styles.imageWrapper}>
+                      <div
+                        key={index}
+                        className={styles.imageWrapper}
+                        onClick={() => handleImageClick(review.images!, index)}
+                        style={{ cursor: 'pointer' }}
+                      >
                         <Image
                           src={imageUrl}
                           alt={`리뷰 이미지 ${index + 1}`}
@@ -449,6 +502,70 @@ export default function ReviewManagementPage() {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* 이미지 미리보기 모달 */}
+      {selectedImages.length > 0 && (
+        <div className={styles.imageModal} onClick={closeImageModal}>
+          <div
+            className={styles.imageModalContent}
+            onClick={(e) => e.stopPropagation()}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+          >
+            <button
+              className={styles.imageModalClose}
+              onClick={closeImageModal}
+              aria-label="닫기"
+            >
+              ✕
+            </button>
+
+            {/* 이전 버튼 */}
+            {selectedImages.length > 1 && (
+              <button
+                className={styles.imagePrevButton}
+                onClick={goToPrevImage}
+                aria-label="이전 이미지"
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M15 18l-6-6 6-6"/>
+                </svg>
+              </button>
+            )}
+
+            {/* 이미지 */}
+            <Image
+              src={selectedImages[currentImageIndex]}
+              alt={`리뷰 이미지 ${currentImageIndex + 1}`}
+              width={800}
+              height={800}
+              className={styles.imageModalImage}
+              style={{ width: 'auto', height: 'auto', maxWidth: '100%', maxHeight: '80vh' }}
+            />
+
+            {/* 다음 버튼 */}
+            {selectedImages.length > 1 && (
+              <button
+                className={styles.imageNextButton}
+                onClick={goToNextImage}
+                aria-label="다음 이미지"
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M9 18l6-6-6-6"/>
+                </svg>
+              </button>
+            )}
+
+            {/* 이미지 인디케이터 */}
+            {selectedImages.length > 1 && (
+              <div className={styles.imageIndicator}>
+                {currentImageIndex + 1} / {selectedImages.length}
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>

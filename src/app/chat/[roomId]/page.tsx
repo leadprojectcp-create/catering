@@ -1,16 +1,21 @@
-import ChatRoom from '@/components/chat/ChatRoom'
-import Header from '@/components/Header'
+'use client'
 
-export default async function ChatRoomPage({
+import ChatRoom from '@/components/chat/ChatRoom'
+import ChatRoomHeader from '@/components/chat/ChatRoomHeader'
+import Footer from '@/components/Footer'
+import { use } from 'react'
+
+export default function ChatRoomPage({
   params,
 }: {
   params: Promise<{ roomId: string }>
 }) {
-  const { roomId } = await params
+  const { roomId } = use(params)
   return (
     <>
-      <Header />
+      <ChatRoomHeader roomId={roomId} />
       <ChatRoom roomId={roomId} />
+      <Footer />
     </>
   )
 }

@@ -19,9 +19,10 @@ interface ChatRoomWithName extends Omit<ChatRoomType, 'unreadCount'> {
 
 interface ChatContainerProps {
   isPartner?: boolean
+  onRoomSelect?: (roomName: string) => void
 }
 
-export default function ChatContainer({ isPartner = false }: ChatContainerProps) {
+export default function ChatContainer({ isPartner = false, onRoomSelect }: ChatContainerProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { user, loading: authLoading } = useAuth()
@@ -50,8 +51,14 @@ export default function ChatContainer({ isPartner = false }: ChatContainerProps)
     const productId = searchParams.get('productId')
     const message = searchParams.get('message')
 
+    // roomId가 있으면 선택, 없으면 초기화
     if (roomId) {
       setSelectedRoomId(roomId)
+    } else {
+      setSelectedRoomId(null)
+      if (onRoomSelect) {
+        onRoomSelect('')
+      }
     }
 
     // productId가 있으면 해당 상품의 가게 주인과 채팅방 찾기/생성
@@ -68,7 +75,7 @@ export default function ChatContainer({ isPartner = false }: ChatContainerProps)
       setInitialMessage(message)
       console.log('[ChatContainer] message:', message)
     }
-  }, [searchParams, user])
+  }, [searchParams, user, onRoomSelect])
 
   // 실시간으로 전체 chatRooms의 unreadCount 구독 (한 번만 설정)
   useEffect(() => {
@@ -233,6 +240,13 @@ export default function ChatContainer({ isPartner = false }: ChatContainerProps)
 
   const handleRoomClick = (roomId: string) => {
     setSelectedRoomId(roomId)
+
+    // 선택된 채팅방의 이름을 부모에 전달
+    const room = chatRooms.find(r => r.id === roomId)
+    if (room && onRoomSelect) {
+      onRoomSelect(room.otherUserName || room.storeName || '채팅')
+    }
+
     router.push(`/chat?roomId=${roomId}`, { scroll: false })
   }
 
@@ -278,7 +292,7 @@ export default function ChatContainer({ isPartner = false }: ChatContainerProps)
       {/* 왼쪽: 채팅방 목록 */}
       <div className={styles.sidebar}>
         <div className={styles.sidebarHeader}>
-          <h1 className={styles.title}>채팅</h1>
+          <h1 className={styles.title}>채팅목록</h1>
         </div>
 
         {chatRooms.length === 0 ? (
@@ -288,27 +302,31 @@ export default function ChatContainer({ isPartner = false }: ChatContainerProps)
           </div>
         ) : (
           <div className={styles.roomList}>
-            {chatRooms.map((room) => (
-              <div
-                key={room.id}
-                className={`${styles.roomItem} ${selectedRoomId === room.id ? styles.selected : ''}`}
-                onClick={() => handleRoomClick(room.id)}
-              >
-                <div className={styles.roomInfo}>
-                  <div className={styles.roomHeader}>
-                    <h3 className={styles.storeName}>{room.otherUserName || room.storeName}</h3>
-                    {(room.unreadCount ?? 0) > 0 && (
-                      <span className={styles.unreadBadge}>{room.unreadCount}</span>
+            {chatRooms.map((room, index) => (
+              <div key={room.id}>
+                <div
+                  className={`${styles.roomItem} ${selectedRoomId === room.id ? styles.selected : ''}`}
+                  onClick={() => handleRoomClick(room.id)}
+                >
+                  <div className={styles.roomInfo}>
+                    <div className={styles.roomHeader}>
+                      <h3 className={styles.storeName}>{room.otherUserName || room.storeName}</h3>
+                      {(room.unreadCount ?? 0) > 0 && (
+                        <span className={styles.unreadBadge}>{room.unreadCount}</span>
+                      )}
+                    </div>
+                    {room.lastMessage && (
+                      <p className={styles.lastMessage}>{formatLastMessage(room.lastMessage)}</p>
                     )}
                   </div>
-                  {room.lastMessage && (
-                    <p className={styles.lastMessage}>{formatLastMessage(room.lastMessage)}</p>
+                  {room.lastMessageTime && (
+                    <span className={styles.time}>
+                      {formatTime(room.lastMessageTime)}
+                    </span>
                   )}
                 </div>
-                {room.lastMessageTime && (
-                  <span className={styles.time}>
-                    {formatTime(room.lastMessageTime)}
-                  </span>
+                {index < chatRooms.length - 1 && (
+                  <div className={styles.divider}></div>
                 )}
               </div>
             ))}
@@ -321,7 +339,12 @@ export default function ChatContainer({ isPartner = false }: ChatContainerProps)
         {selectedRoomId ? (
           <ChatRoom
             roomId={selectedRoomId}
-            onBack={() => setSelectedRoomId(null)}
+            onBack={() => {
+              setSelectedRoomId(null)
+              if (onRoomSelect) {
+                onRoomSelect('')
+              }
+            }}
             isPartner={isPartner}
             initialProductId={initialProductId}
             initialMessage={initialMessage}

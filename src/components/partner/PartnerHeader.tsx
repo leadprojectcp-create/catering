@@ -108,17 +108,43 @@ const partnerMenuItems = [
   }
 ]
 
-export default function PartnerHeader() {
+interface PartnerHeaderProps {
+  chatRoomTitle?: string
+}
+
+export default function PartnerHeader({ chatRoomTitle }: PartnerHeaderProps = {}) {
   const pathname = usePathname()
   const router = useRouter()
   const { user, logout, loading } = useAuth()
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
+  const [isMobile, setIsMobile] = useState<boolean | undefined>(undefined)
 
-  // 대시보드인지 확인
-  const isDashboard = pathname === '/partner/dashboard'
-  const showBackButton = !isDashboard
-  const pageTitle = getPageTitle(pathname)
+  // 화면 크기 감지
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768)
+    }
+
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+
+  // 로고를 표시할 페이지 목록
+  const showLogoPages = [
+    '/partner/dashboard',
+    '/partner/reviews',
+    '/chat',
+    '/partner/product/management',
+    '/partner/order/history'
+  ]
+
+  // PC에서는 채팅룸 선택 시에도 로고 표시, 모바일에서만 뒤로가기 + 이름 표시
+  // isMobile이 undefined면 chatRoomTitle 우선 고려 (깜빡임 방지)
+  const shouldShowLogo = (showLogoPages.includes(pathname) || (pathname.startsWith('/chat/') && !chatRoomTitle)) && (isMobile === undefined ? !chatRoomTitle : (!chatRoomTitle || !isMobile))
+  const pageTitle = chatRoomTitle?.trim() || getPageTitle(pathname)
 
   const handleLogout = async () => {
     try {
@@ -175,24 +201,9 @@ export default function PartnerHeader() {
     <>
       <header className={styles.header}>
         <div className={styles.container}>
-          {/* 뒤로가기 버튼 + 타이틀 또는 로고 */}
+          {/* 로고 또는 뒤로가기 버튼 + 타이틀 */}
           <div className={styles.leftSection}>
-            {showBackButton ? (
-              <>
-                <button
-                  className={styles.backButton}
-                  onClick={() => router.back()}
-                  aria-label="뒤로가기"
-                >
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M19 12H5M12 19l-7-7 7-7"/>
-                  </svg>
-                </button>
-                {pageTitle && (
-                  <h1 className={styles.pageTitle}>{pageTitle}</h1>
-                )}
-              </>
-            ) : (
+            {shouldShowLogo ? (
               <div className={styles.logoContainer}>
                 <Link href="/partner/dashboard">
                   <Image
@@ -207,6 +218,28 @@ export default function PartnerHeader() {
                   />
                 </Link>
               </div>
+            ) : (
+              <>
+                <button
+                  className={styles.backButton}
+                  onClick={() => {
+                    // 채팅룸에서는 채팅 목록으로 이동
+                    if (pathname === '/chat' || pathname.startsWith('/chat/')) {
+                      router.push('/chat')
+                    } else {
+                      router.back()
+                    }
+                  }}
+                  aria-label="뒤로가기"
+                >
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M19 12H5M12 19l-7-7 7-7"/>
+                  </svg>
+                </button>
+                {pageTitle && (
+                  <h1 className={styles.pageTitle}>{pageTitle}</h1>
+                )}
+              </>
             )}
           </div>
 
@@ -214,20 +247,6 @@ export default function PartnerHeader() {
             {user ? (
               <>
                 {/* 로그인 상태 - 메뉴 아이콘들 표시 */}
-                {/* 홈 아이콘 */}
-                {pathname !== '/partner/dashboard' && (
-                  <Link href="/partner/dashboard" className={styles.iconLink}>
-                    <Image
-                      src="/partner-menu-icons/home.png"
-                      alt="홈"
-                      width={24}
-                      height={24}
-                      quality={100}
-                      unoptimized
-                    />
-                  </Link>
-                )}
-
                 {/* 리뷰관리 아이콘 */}
                 <Link href="/partner/reviews" className={styles.iconLink}>
                   <Image

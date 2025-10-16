@@ -10,6 +10,7 @@ export default function LayoutWrapper() {
 
   // partner 페이지인지 확인
   const isPartnerPage = pathname.startsWith('/partner')
+  const isChatPage = pathname.startsWith('/chat')
 
   // admin, signup, login 페이지에서는 모든 네비게이션 숨김
   const hideAllNav = pathname.startsWith('/admin') ||
@@ -18,6 +19,11 @@ export default function LayoutWrapper() {
 
   if (hideAllNav) {
     return null
+  }
+
+  // 채팅 페이지에서는 바텀 네비게이터만 표시 (푸터는 제거)
+  if (isChatPage) {
+    return <BottomNavigator />
   }
 
   // 파트너 페이지에서는 파트너용 바텀 네비게이터와 Footer 표시

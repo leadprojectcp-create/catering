@@ -356,6 +356,109 @@
   font-size: 16px;
 }
 
+/* 이미지 미리보기 모달 */
+.imageModal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 20px;
+}
+
+.imageModalContent {
+  position: relative;
+  max-width: 90vw;
+  max-height: 90vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.imageModalClose {
+  position: absolute;
+  top: -40px;
+  right: -40px;
+  width: 40px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.9);
+  border: none;
+  border-radius: 50%;
+  font-size: 24px;
+  color: #333;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  transition: background 0.2s;
+}
+
+.imageModalClose:hover {
+  background: #fff;
+}
+
+.imageModalImage {
+  max-width: 100%;
+  max-height: 80vh;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.imagePrevButton,
+.imageNextButton {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 48px;
+  height: 48px;
+  background: rgba(255, 255, 255, 0.9);
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10001;
+  transition: background 0.2s;
+}
+
+.imagePrevButton:hover,
+.imageNextButton:hover {
+  background: #fff;
+}
+
+.imagePrevButton {
+  left: -70px;
+}
+
+.imageNextButton {
+  right: -70px;
+}
+
+.imagePrevButton svg,
+.imageNextButton svg {
+  color: #333;
+}
+
+.imageIndicator {
+  position: absolute;
+  bottom: -50px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255, 255, 255, 0.9);
+  color: #333;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
 @media (max-width: 768px) {
   .container {
     padding: 32px 16px;
@@ -386,5 +489,42 @@
 
   .reviewBody {
     padding: 0;
+  }
+
+  .imageModalClose {
+    top: 10px;
+    right: 10px;
+    width: 36px;
+    height: 36px;
+    font-size: 20px;
+  }
+
+  .imageModalContent {
+    max-width: 95vw;
+    max-height: 95vh;
+  }
+
+  .imagePrevButton {
+    left: 10px;
+    width: 40px;
+    height: 40px;
+  }
+
+  .imageNextButton {
+    right: 10px;
+    width: 40px;
+    height: 40px;
+  }
+
+  .imagePrevButton svg,
+  .imageNextButton svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .imageIndicator {
+    bottom: 10px;
+    padding: 6px 12px;
+    font-size: 12px;
   }
 }

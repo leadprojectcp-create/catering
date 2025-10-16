@@ -10,6 +10,7 @@ interface Product {
   name: string
   price: number
   imageUrl?: string
+  images?: string[]
   description?: string
 }
 
@@ -43,16 +44,20 @@ export default function ProductSelectPopup({
       const productList: Product[] = []
       snapshot.forEach((doc) => {
         const data = doc.data()
-        console.log('[ProductSelectPopup] 상품 발견:', {
+        console.log('[ProductSelectPopup] 상품 데이터:', {
           id: doc.id,
           name: data.name,
-          storeId: data.storeId
+          storeId: data.storeId,
+          images: data.images,
+          imageUrl: data.imageUrl,
+          description: data.description
         })
         productList.push({
           id: doc.id,
           name: data.name,
           price: data.price,
           imageUrl: data.imageUrl,
+          images: data.images || [],
           description: data.description
         })
       })
@@ -83,7 +88,7 @@ export default function ProductSelectPopup({
       {/* 팝업 */}
       <div className={styles.popup}>
         <div className={styles.header}>
-          <h2 className={styles.title}>상품 선택</h2>
+          <h2 className={styles.title}>상품목록</h2>
           <button className={styles.closeButton} onClick={onClose}>
             ✕
           </button>
@@ -106,20 +111,17 @@ export default function ProductSelectPopup({
                   className={styles.productItem}
                   onClick={() => handleProductClick(product)}
                 >
-                  {product.imageUrl && (
-                    <div className={styles.productImage}>
+                  <div className={styles.productImage}>
+                    {(product.images && product.images.length > 0) ? (
+                      <img src={product.images[0]} alt={product.name} />
+                    ) : product.imageUrl ? (
                       <img src={product.imageUrl} alt={product.name} />
-                    </div>
-                  )}
+                    ) : (
+                      <div className={styles.noImage}>이미지 없음</div>
+                    )}
+                  </div>
                   <div className={styles.productInfo}>
                     <h3 className={styles.productName}>{product.name}</h3>
-                    {product.description && (
-                      <p className={styles.productDescription}>
-                        {product.description.length > 50
-                          ? `${product.description.substring(0, 50)}...`
-                          : product.description}
-                      </p>
-                    )}
                     <p className={styles.productPrice}>{formatPrice(product.price)}원</p>
                   </div>
                 </div>

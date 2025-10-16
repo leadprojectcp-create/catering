@@ -62,19 +62,45 @@ const getPageTitle = (path: string): string => {
   return ''
 }
 
-export default function Header() {
+interface HeaderProps {
+  chatRoomTitle?: string
+}
+
+export default function Header({ chatRoomTitle }: HeaderProps = {}) {
   const pathname = usePathname()
   const router = useRouter()
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
   const { userData, logout, user, loading } = useAuth()
   const [cartCount, setCartCount] = useState(0)
   const [unreadCount, setUnreadCount] = useState(0)
+  const [isMobile, setIsMobile] = useState<boolean | undefined>(undefined)
 
-  // 메인 페이지인지 확인 (/ 또는 /partner, /admin, /signup, /login 제외)
-  const isMainPage = pathname === '/'
+  // 화면 크기 감지
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768)
+    }
+
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+
+  // 로고를 표시할 페이지 목록 (메인 페이지 + 헤더 메뉴 아이콘으로 접속하는 페이지들)
+  const showLogoPages = [
+    '/',           // 홈
+    '/wishlist',   // 찜
+    '/cart',       // 장바구니
+    '/chat',       // 채팅
+    '/orders'      // 주문내역
+  ]
+
   const isExcludedPath = pathname.startsWith('/partner') || pathname.startsWith('/admin') || pathname.startsWith('/signup') || pathname === '/login'
-  const showBackButton = !isMainPage && !isExcludedPath
-  const pageTitle = getPageTitle(pathname)
+  // PC에서는 채팅룸 선택 시에도 로고 표시, 모바일에서만 뒤로가기 + 이름 표시
+  // isMobile이 undefined면 chatRoomTitle 우선 고려 (깜빡임 방지)
+  const shouldShowLogo = (showLogoPages.includes(pathname) || (pathname.startsWith('/chat/') && !chatRoomTitle)) && !isExcludedPath && (isMobile === undefined ? !chatRoomTitle : (!chatRoomTitle || !isMobile))
+  const pageTitle = chatRoomTitle?.trim() || getPageTitle(pathname)
 
   useEffect(() => {
     const loadCartCount = async () => {
@@ -145,24 +171,9 @@ export default function Header() {
     <>
       <header className={styles.header}>
         <div className={styles.container}>
-          {/* 뒤로가기 버튼 + 타이틀 또는 로고 */}
+          {/* 로고 또는 뒤로가기 버튼 + 타이틀 */}
           <div className={styles.leftSection}>
-            {showBackButton ? (
-              <>
-                <button
-                  className={styles.backButton}
-                  onClick={() => router.back()}
-                  aria-label="뒤로가기"
-                >
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M19 12H5M12 19l-7-7 7-7"/>
-                  </svg>
-                </button>
-                {pageTitle && (
-                  <h1 className={styles.pageTitle}>{pageTitle}</h1>
-                )}
-              </>
-            ) : (
+            {shouldShowLogo ? (
               <div className={styles.logoContainer}>
                 <Link href="/">
                   <Image
@@ -177,6 +188,28 @@ export default function Header() {
                   />
                 </Link>
               </div>
+            ) : (
+              <>
+                <button
+                  className={styles.backButton}
+                  onClick={() => {
+                    // 채팅룸에서는 채팅 목록으로 이동
+                    if (pathname === '/chat' || pathname.startsWith('/chat/')) {
+                      router.push('/chat')
+                    } else {
+                      router.back()
+                    }
+                  }}
+                  aria-label="뒤로가기"
+                >
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M19 12H5M12 19l-7-7 7-7"/>
+                  </svg>
+                </button>
+                {pageTitle && (
+                  <h1 className={styles.pageTitle}>{pageTitle}</h1>
+                )}
+              </>
             )}
           </div>
 
@@ -185,18 +218,6 @@ export default function Header() {
             {user ? (
               <>
                 {/* 로그인 상태 - 메뉴 아이콘들 표시 */}
-                {/* 홈 아이콘 (홈 페이지가 아닐 때만 표시) */}
-                {pathname !== '/' && (
-                  <Link href="/" className={styles.homeIconLink}>
-                    <Image
-                      src="/menu-icons/home.svg"
-                      alt="홈"
-                      width={24}
-                      height={24}
-                    />
-                  </Link>
-                )}
-
                 {/* 찜 아이콘 */}
                 <Link href="/wishlist" className={styles.wishlistIconLink}>
                   <Image
