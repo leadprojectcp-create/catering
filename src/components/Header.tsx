@@ -182,15 +182,17 @@ export default function Header() {
 
           {/* 오른쪽 메뉴 영역 */}
           <div className={styles.rightSection}>
-            {/* 홈 아이콘 */}
-            <Link href="/" className={styles.homeIconLink}>
-              <Image
-                src={pathname === '/' ? '/menu-icons/home_active.svg' : '/menu-icons/home.svg'}
-                alt="홈"
-                width={24}
-                height={24}
-              />
-            </Link>
+            {/* 홈 아이콘 (홈 페이지가 아닐 때만 표시) */}
+            {pathname !== '/' && (
+              <Link href="/" className={styles.homeIconLink}>
+                <Image
+                  src="/menu-icons/home.svg"
+                  alt="홈"
+                  width={24}
+                  height={24}
+                />
+              </Link>
+            )}
 
             {/* 찜 아이콘 (로그인한 사용자만 표시) */}
             {user && (

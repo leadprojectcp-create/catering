@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { collection, query, where, orderBy, getDocs, doc, getDoc } from 'firebase/firestore'
+import { collection, query, where, orderBy, getDocs, doc, getDoc, limit } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { useAuth } from '@/contexts/AuthContext'
 import { createOrGetChatRoom } from '@/lib/services/chatService'
@@ -265,6 +265,40 @@ export default function OrdersPage() {
     }
   }
 
+  const handleReviewClick = async (orderId: string, e: React.MouseEvent) => {
+    e.stopPropagation()
+
+    if (!user) {
+      alert('로그인이 필요합니다.')
+      router.push('/login')
+      return
+    }
+
+    try {
+      // 해당 주문에 대한 리뷰가 이미 존재하는지 확인
+      const reviewsRef = collection(db, 'reviews')
+      const q = query(
+        reviewsRef,
+        where('userId', '==', user.uid),
+        where('orderId', '==', orderId),
+        limit(1)
+      )
+      const reviewSnapshot = await getDocs(q)
+
+      if (!reviewSnapshot.empty) {
+        // 이미 리뷰를 작성한 경우
+        alert('리뷰 작성을 완료했습니다. 감사합니다.')
+        return
+      }
+
+      // 리뷰가 없으면 작성 페이지로 이동
+      router.push(`/reviews/write?orderId=${orderId}`)
+    } catch (error) {
+      console.error('리뷰 확인 실패:', error)
+      alert('리뷰 확인에 실패했습니다.')
+    }
+  }
+
   if (authLoading || loading) {
     return <Loading />
   }
@@ -412,10 +446,7 @@ export default function OrdersPage() {
                       </button>
                       <button
                         className={styles.reviewButton}
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          router.push(`/reviews/write?orderId=${order.id}`)
-                        }}
+                        onClick={(e) => handleReviewClick(order.id, e)}
                       >
                         리뷰작성
                       </button>

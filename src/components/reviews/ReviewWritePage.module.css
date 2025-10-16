@@ -1,57 +1,92 @@
 .container {
-  max-width: 800px;
-  margin: 100px auto 60px;
-  padding: 20px;
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 0;
+  padding-top: 80px;
+  padding-bottom: 100px;
   min-height: calc(100vh - 200px);
 }
 
 .title {
-  font-size: 28px;
-  font-weight: bold;
+  font-size: 24px;
+  font-weight: 600;
+  color: #333;
   margin-bottom: 30px;
-  text-align: center;
+  text-align: left;
 }
 
 .orderInfo {
   background: white;
-  border: 1px solid #e0e0e0;
-  border-radius: 12px;
+  border: 1px solid #F4F4F4;
+  border-radius: 20px;
   padding: 20px;
   margin-bottom: 30px;
 }
 
 .storeName {
-  font-size: 20px;
-  font-weight: bold;
-  margin-bottom: 15px;
-  color: #333;
+  color: #999;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.4;
 }
 
-.items {
+.productSummary {
+  color: #333;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.reservationDate {
+  color: #999;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.orderItem {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.productImage {
+  width: 100px;
+  height: 100px;
+  border-radius: 8px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.itemInfo {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  justify-content: space-between;
+  height: 100px;
 }
 
-.item {
-  font-size: 15px;
+.productName {
   color: #333;
+  font-size: 16px;
+  font-weight: 700;
+  word-break: break-word;
+  line-height: 1.4;
 }
 
 .options {
   color: #666;
-  font-size: 14px;
+  font-size: 13px;
 }
 
 .quantity {
   color: #999;
-  font-size: 14px;
+  font-size: 13px;
 }
 
 .form {
-  background: white;
-  border: 1px solid #e0e0e0;
-  border-radius: 12px;
+  border-radius: 20px;
+  border: 1px solid #F4F4F4;
+  background: #FFF;
   padding: 30px;
 }
 
@@ -67,28 +102,51 @@
   color: #333;
 }
 
+.ratingHeader {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.ratingTitle {
+  color: #333;
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.ratingSubtitle {
+  color: #999;
+  font-size: 14px;
+  font-weight: 500;
+}
+
 .ratingContainer {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
 }
 
-.star {
-  font-size: 36px;
-  color: #ddd;
+.starButton {
   background: none;
   border: none;
   cursor: pointer;
   padding: 0;
   transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.star:hover {
+.starButton:hover {
   transform: scale(1.1);
 }
 
-.starActive {
-  color: #FFD700;
+.starImage {
+  width: 35px;
+  height: 35px;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
 }
 
 .ratingText {
@@ -98,11 +156,30 @@
   font-weight: bold;
 }
 
+.reviewContentHeader {
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+.reviewContentTitle {
+  color: #333;
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.reviewContentSubtitle {
+  color: #999;
+  font-size: 14px;
+  font-weight: 500;
+}
+
 .textarea {
   width: 100%;
   padding: 15px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
+  border-radius: 5px;
+  border: 1px solid #F4F4F4;
+  background: #FAFAFA;
   font-size: 15px;
   font-family: inherit;
   resize: vertical;
@@ -111,7 +188,7 @@
 
 .textarea:focus {
   outline: none;
-  border-color: #2196F3;
+  border-color: #025BD9;
 }
 
 .charCount {
@@ -121,8 +198,26 @@
   color: #999;
 }
 
+.imageUploadHeader {
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+.imageUploadTitle {
+  color: #333;
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.imageUploadSubtitle {
+  color: #999;
+  font-size: 14px;
+  font-weight: 500;
+}
+
 .imageUploadContainer {
-  margin-top: 10px;
+  margin-bottom: 15px;
 }
 
 .imageInput {
@@ -130,23 +225,23 @@
 }
 
 .imageUploadButton {
-  display: inline-flex;
+  display: flex;
+  width: 100%;
   align-items: center;
-  gap: 8px;
-  padding: 12px 20px;
-  background-color: #f5f5f5;
-  border: 2px dashed #ddd;
-  border-radius: 8px;
+  justify-content: center;
+  padding: 10px 20px;
+  border-radius: 5px;
+  border: 1px solid #025BD9;
+  background-color: white;
   cursor: pointer;
   transition: all 0.3s;
-  font-size: 15px;
-  color: #666;
+  color: #025BD9;
+  font-size: 14px;
+  font-weight: 600;
 }
 
 .imageUploadButton:hover:not(.disabled) {
-  background-color: #e8f4fd;
-  border-color: #2196F3;
-  color: #2196F3;
+  background-color: #f0f7ff;
 }
 
 .imageUploadButton.disabled {
@@ -154,30 +249,24 @@
   cursor: not-allowed;
 }
 
-.uploadIcon {
-  font-size: 20px;
-}
-
 .imagePreviewContainer {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  display: flex;
   gap: 12px;
-  margin-top: 15px;
+  flex-wrap: wrap;
+  margin-bottom: 15px;
 }
 
 .imagePreviewItem {
   position: relative;
-  width: 100%;
-  padding-top: 100%;
+  width: 100px;
+  height: 100px;
   border-radius: 8px;
   overflow: hidden;
   border: 1px solid #e0e0e0;
+  flex-shrink: 0;
 }
 
 .previewImage {
-  position: absolute;
-  top: 0;
-  left: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -214,31 +303,35 @@
 .cancelButton,
 .submitButton {
   flex: 1;
-  padding: 15px;
-  border: none;
-  border-radius: 8px;
-  font-size: 16px;
-  font-weight: bold;
+  padding: 8px;
   cursor: pointer;
   transition: all 0.3s;
 }
 
 .cancelButton {
-  background-color: #f5f5f5;
-  color: #666;
+  border-radius: 5px;
+  border: 1px solid #E4E4E4;
+  background: white;
+  color: #4E5968;
+  font-size: 16px;
+  font-weight: 700;
 }
 
 .cancelButton:hover:not(:disabled) {
-  background-color: #e0e0e0;
+  background-color: #f5f5f5;
 }
 
 .submitButton {
-  background-color: #4CAF50;
-  color: white;
+  border-radius: 5px;
+  border: none;
+  background: #025BD9;
+  color: #FFF;
+  font-size: 16px;
+  font-weight: 700;
 }
 
 .submitButton:hover:not(:disabled) {
-  background-color: #45a049;
+  background-color: #0149b8;
 }
 
 .submitButton:disabled,
@@ -253,17 +346,19 @@
     padding: 15px;
   }
 
-  .title {
-    font-size: 24px;
-  }
-
   .orderInfo,
   .form {
     padding: 15px;
   }
 
-  .star {
-    font-size: 28px;
+  .productImage {
+    width: 70px;
+    height: 70px;
+  }
+
+  .starImage {
+    width: 32px;
+    height: 32px;
   }
 
   .buttonGroup {

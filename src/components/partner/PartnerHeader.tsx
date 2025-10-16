@@ -160,6 +160,8 @@ export default function PartnerHeader() {
                 alt="파트너 로고"
                 width={250}
                 height={50}
+                quality={100}
+                unoptimized
                 style={{ width: '250px', height: 'auto' }}
                 priority
               />

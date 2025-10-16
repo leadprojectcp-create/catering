@@ -25,6 +25,11 @@
   align-items: center;
 }
 
+.logoContainer img {
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+}
+
 .logo {
   object-fit: contain;
 }

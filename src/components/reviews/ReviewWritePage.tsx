@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import Image from 'next/image'
 import { doc, getDoc, collection, addDoc, updateDoc, serverTimestamp } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { useAuth } from '@/contexts/AuthContext'
@@ -11,6 +12,7 @@ import styles from './ReviewWritePage.module.css'
 interface OrderItem {
   productId: string
   productName: string
+  productImage?: string
   options: { [key: string]: string }
   quantity: number
   price: number
@@ -22,6 +24,9 @@ interface Order {
   storeName: string
   items: OrderItem[]
   orderStatus: string
+  deliveryDate: string
+  deliveryTime: string
+  deliveryMethod: string
 }
 
 export default function ReviewWritePage() {
@@ -38,6 +43,21 @@ export default function ReviewWritePage() {
   const [images, setImages] = useState<File[]>([])
   const [imagePreviews, setImagePreviews] = useState<string[]>([])
   const [uploading, setUploading] = useState(false)
+
+  // 날짜 포맷팅 함수 (24시간 형식)
+  const formatReservationDate = (dateStr: string, timeStr: string) => {
+    const date = new Date(dateStr)
+    const year = date.getFullYear()
+    const month = date.getMonth() + 1
+    const day = date.getDate()
+    const weekdays = ['일', '월', '화', '수', '목', '금', '토']
+    const weekday = weekdays[date.getDay()]
+
+    // 시간 파싱 (HH:mm 형식)
+    const [hour, minute] = timeStr.split(':').map(Number)
+
+    return `${year}년 ${month}월 ${day}일 (${weekday}) ${hour}:${minute.toString().padStart(2, '0')}`
+  }
 
   useEffect(() => {
     const loadOrder = async () => {
@@ -77,12 +97,34 @@ export default function ReviewWritePage() {
           return
         }
 
+        // 각 상품의 이미지 가져오기
+        const itemsWithImages = await Promise.all(
+          orderData.items.map(async (item: OrderItem) => {
+            try {
+              const productDoc = await getDoc(doc(db, 'products', item.productId))
+              if (productDoc.exists()) {
+                const productData = productDoc.data()
+                return {
+                  ...item,
+                  productImage: productData.images?.[0] || ''
+                }
+              }
+            } catch (error) {
+              console.error('제품 이미지 로딩 실패:', error)
+            }
+            return item
+          })
+        )
+
         setOrder({
           id: orderDoc.id,
           storeId: orderData.storeId,
           storeName: orderData.storeName,
-          items: orderData.items,
+          items: itemsWithImages,
           orderStatus: orderData.orderStatus,
+          deliveryDate: orderData.deliveryDate,
+          deliveryTime: orderData.deliveryTime,
+          deliveryMethod: orderData.deliveryMethod,
         })
       } catch (error) {
         console.error('주문 로딩 실패:', error)
@@ -170,8 +212,8 @@ export default function ReviewWritePage() {
 
     if (!user || !order) return
 
-    if (content.trim().length < 10) {
-      alert('리뷰 내용은 10자 이상 입력해주세요.')
+    if (content.trim().length < 30) {
+      alert('리뷰 내용은 30자 이상 입력해주세요.')
       return
     }
 
@@ -234,73 +276,59 @@ export default function ReviewWritePage() {
       <h1 className={styles.title}>리뷰 작성</h1>
 
       <div className={styles.orderInfo}>
-        <h2 className={styles.storeName}>{order.storeName}</h2>
-        <div className={styles.items}>
-          {order.items.map((item, index) => (
-            <div key={index} className={styles.item}>
-              {item.productName}
-              {Object.entries(item.options).length > 0 && (
-                <span className={styles.options}>
-                  {' '}({Object.values(item.options).join(', ')})
-                </span>
-              )}
-              <span className={styles.quantity}> x {item.quantity}</span>
+        <div className={styles.orderItem}>
+          {order.items[0]?.productImage && (
+            <img
+              src={order.items[0].productImage}
+              alt={order.items[0].productName}
+              className={styles.productImage}
+            />
+          )}
+          <div className={styles.itemInfo}>
+            <h2 className={styles.storeName}>{order.storeName}</h2>
+            <div className={styles.productSummary}>
+              {order.items[0]?.productName}
+              {order.items.length > 1 && ` 외 ${order.items.reduce((sum, item) => sum + item.quantity, 0) - order.items[0].quantity}개`}
             </div>
-          ))}
+            <div className={styles.reservationDate}>
+              예약날짜 {formatReservationDate(order.deliveryDate, order.deliveryTime)}
+            </div>
+          </div>
         </div>
       </div>
 
       <form onSubmit={handleSubmit} className={styles.form}>
         <div className={styles.formGroup}>
-          <label className={styles.label}>평점</label>
+          <div className={styles.ratingHeader}>
+            <div className={styles.ratingTitle}>상품에 만족하셨나요?</div>
+            <div className={styles.ratingSubtitle}>상품에 대한 만족도를 별점으로 남겨주세요.</div>
+          </div>
           <div className={styles.ratingContainer}>
             {[1, 2, 3, 4, 5].map((star) => (
               <button
                 key={star}
                 type="button"
-                className={`${styles.star} ${star <= rating ? styles.starActive : ''}`}
+                className={styles.starButton}
                 onClick={() => setRating(star)}
               >
-                ★
+                <Image
+                  src={star <= rating ? '/icons/review_star_active.png' : '/icons/review_star.png'}
+                  alt={`${star}점`}
+                  width={35}
+                  height={35}
+                  quality={100}
+                  unoptimized
+                  className={styles.starImage}
+                />
               </button>
             ))}
-            <span className={styles.ratingText}>{rating}점</span>
           </div>
         </div>
 
         <div className={styles.formGroup}>
-          <label className={styles.label}>리뷰 내용 (최소 10자)</label>
-          <textarea
-            className={styles.textarea}
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            placeholder="상품과 서비스에 대한 솔직한 평가를 남겨주세요."
-            rows={8}
-            required
-            minLength={10}
-          />
-          <div className={styles.charCount}>{content.length}자</div>
-        </div>
-
-        <div className={styles.formGroup}>
-          <label className={styles.label}>사진 첨부 (선택, 최대 5장)</label>
-          <div className={styles.imageUploadContainer}>
-            <input
-              type="file"
-              id="imageInput"
-              accept="image/*"
-              multiple
-              onChange={handleImageSelect}
-              className={styles.imageInput}
-              disabled={images.length >= 5}
-            />
-            <label
-              htmlFor="imageInput"
-              className={`${styles.imageUploadButton} ${images.length >= 5 ? styles.disabled : ''}`}
-            >
-              <span className={styles.uploadIcon}>📷</span>
-              <span>사진 추가 ({images.length}/5)</span>
-            </label>
+          <div className={styles.imageUploadHeader}>
+            <div className={styles.imageUploadTitle}>상품이미지를 추가해주세요</div>
+            <div className={styles.imageUploadSubtitle}>구매하신 상품에 대한 이미지를 추가해주세요.</div>
           </div>
 
           {imagePreviews.length > 0 && (
@@ -319,6 +347,41 @@ export default function ReviewWritePage() {
               ))}
             </div>
           )}
+
+          <div className={styles.imageUploadContainer}>
+            <input
+              type="file"
+              id="imageInput"
+              accept="image/*"
+              multiple
+              onChange={handleImageSelect}
+              className={styles.imageInput}
+              disabled={images.length >= 5}
+            />
+            <label
+              htmlFor="imageInput"
+              className={`${styles.imageUploadButton} ${images.length >= 5 ? styles.disabled : ''}`}
+            >
+              이미지 추가
+            </label>
+          </div>
+        </div>
+
+        <div className={styles.formGroup}>
+          <div className={styles.reviewContentHeader}>
+            <div className={styles.reviewContentTitle}>상품에 리뷰를 남겨주세요!</div>
+            <div className={styles.reviewContentSubtitle}>최소 30자 이상 작성해주세요.</div>
+          </div>
+          <textarea
+            className={styles.textarea}
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            placeholder="상품과 서비스에 대한 솔직한 평가를 남겨주세요."
+            rows={5}
+            required
+            minLength={30}
+          />
+          <div className={styles.charCount}>{content.length}자</div>
         </div>
 
         <div className={styles.buttonGroup}>
@@ -333,7 +396,7 @@ export default function ReviewWritePage() {
           <button
             type="submit"
             className={styles.submitButton}
-            disabled={submitting || uploading || content.trim().length < 10}
+            disabled={submitting || uploading || content.trim().length < 30}
           >
             {uploading ? '이미지 업로드 중...' : submitting ? '등록 중...' : '리뷰 등록'}
           </button>
