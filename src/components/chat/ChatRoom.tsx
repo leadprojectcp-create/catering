@@ -173,14 +173,13 @@ export default function ChatRoom({ roomId, onBack, isPartner = false, initialPro
                 userId: otherUserId,
                 type: otherUserData.type,
                 name: otherUserData.name,
-                companyName: otherUserData.companyName,
-                storeName: otherUserData.storeName
+                companyName: otherUserData.companyName
               })
 
               // 상대방이 파트너면 companyName, 일반 사용자면 name
               const otherUserType = otherUserData.type || 'user'
               const displayName = otherUserType === 'partner'
-                ? (otherUserData.companyName || otherUserData.storeName || '가게')
+                ? (otherUserData.companyName || '가게')
                 : (otherUserData.name || '사용자')
 
               console.log('[ChatRoom] 표시할 이름:', displayName)
@@ -188,7 +187,7 @@ export default function ChatRoom({ roomId, onBack, isPartner = false, initialPro
             }
           } catch (error) {
             console.error('상대방 정보 로드 실패:', error)
-            setOtherUserName(roomData.storeName || '사용자')
+            setOtherUserName('사용자')
           }
         }
       } else {
@@ -219,7 +218,7 @@ export default function ChatRoom({ roomId, onBack, isPartner = false, initialPro
     try {
       // userData에서 실제 이름 가져오기
       const senderName = userData?.type === 'partner'
-        ? (userData.companyName || userData.storeName || '가게')
+        ? (userData.companyName || '가게')
         : (userData?.name || user.displayName || '사용자')
 
       await sendMessage(roomId, user.uid, senderName, inputText.trim())
@@ -254,7 +253,7 @@ export default function ChatRoom({ roomId, onBack, isPartner = false, initialPro
 
       // userData에서 실제 이름 가져오기
       const senderName = userData?.type === 'partner'
-        ? (userData.companyName || userData.storeName || '가게')
+        ? (userData.companyName || '가게')
         : (userData?.name || user.displayName || '사용자')
 
       // 이미지 URL을 메시지로 전송
@@ -281,7 +280,7 @@ export default function ChatRoom({ roomId, onBack, isPartner = false, initialPro
 
       // userData에서 실제 이름 가져오기
       const senderName = userData?.type === 'partner'
-        ? (userData.companyName || userData.storeName || '가게')
+        ? (userData.companyName || '가게')
         : (userData?.name || user.displayName || '사용자')
 
       // 상품 ID만 전송
@@ -304,7 +303,7 @@ export default function ChatRoom({ roomId, onBack, isPartner = false, initialPro
     try {
       // userData에서 실제 이름 가져오기
       const senderName = userData?.type === 'partner'
-        ? (userData.companyName || userData.storeName || '가게')
+        ? (userData.companyName || '가게')
         : (userData?.name || user.displayName || '사용자')
 
       // 상품 메시지 전송

@@ -120,9 +120,9 @@
 }
 
 .otherMessage .messageBubble {
-  background-color: #fff;
-  color: #333;
-  border: 1px solid #e5e7eb;
+  border-radius: 0 15px 15px 15px;
+  background: #237AF2;
+  color: #fff;
 }
 
 /* 텍스트 메시지 */
