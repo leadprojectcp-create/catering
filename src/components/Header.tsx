@@ -66,7 +66,7 @@ export default function Header() {
   const pathname = usePathname()
   const router = useRouter()
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
-  const { userData, logout, user } = useAuth()
+  const { userData, logout, user, loading } = useAuth()
   const [cartCount, setCartCount] = useState(0)
   const [unreadCount, setUnreadCount] = useState(0)
 
@@ -182,82 +182,100 @@ export default function Header() {
 
           {/* 오른쪽 메뉴 영역 */}
           <div className={styles.rightSection}>
-            {/* 홈 아이콘 (홈 페이지가 아닐 때만 표시) */}
-            {pathname !== '/' && (
-              <Link href="/" className={styles.homeIconLink}>
-                <Image
-                  src="/menu-icons/home.svg"
-                  alt="홈"
-                  width={24}
-                  height={24}
-                />
-              </Link>
-            )}
-
-            {/* 찜 아이콘 (로그인한 사용자만 표시) */}
-            {user && (
-              <Link href="/wishlist" className={styles.wishlistIconLink}>
-                <Image
-                  src={pathname === '/wishlist' ? '/menu-icons/heart_active.png' : '/menu-icons/heart.png'}
-                  alt="찜"
-                  width={24}
-                  height={24}
-                />
-              </Link>
-            )}
-
-            {/* 장바구니 아이콘 (로그인한 사용자만 표시) */}
-            {user && (
-              <Link href="/cart" className={styles.cartIconLink}>
-                <Image
-                  src={pathname === '/cart' ? '/menu-icons/shopping_active.png' : '/menu-icons/shopping.png'}
-                  alt="장바구니"
-                  width={24}
-                  height={24}
-                />
-                {cartCount > 0 && (
-                  <span className={styles.cartBadge}>N</span>
+            {user ? (
+              <>
+                {/* 로그인 상태 - 메뉴 아이콘들 표시 */}
+                {/* 홈 아이콘 (홈 페이지가 아닐 때만 표시) */}
+                {pathname !== '/' && (
+                  <Link href="/" className={styles.homeIconLink}>
+                    <Image
+                      src="/menu-icons/home.svg"
+                      alt="홈"
+                      width={24}
+                      height={24}
+                    />
+                  </Link>
                 )}
-              </Link>
-            )}
 
-            {/* 채팅 아이콘 (로그인한 사용자만 표시) */}
-            {user && (
-              <Link href="/chat" className={styles.chatIconLink}>
-                <Image
-                  src={pathname === '/chat' || pathname.startsWith('/chat/') ? '/menu-icons/chat_active.png' : '/menu-icons/chat.png'}
-                  alt="채팅"
-                  width={24}
-                  height={24}
-                />
-                {unreadCount > 0 && (
-                  <span className={styles.chatBadge}>N</span>
-                )}
-              </Link>
-            )}
+                {/* 찜 아이콘 */}
+                <Link href="/wishlist" className={styles.wishlistIconLink}>
+                  <Image
+                    src={pathname === '/wishlist' ? '/menu-icons/heart_active.png' : '/menu-icons/heart.png'}
+                    alt="찜"
+                    width={24}
+                    height={24}
+                  />
+                </Link>
 
-            {/* 주문내역 아이콘 (로그인한 사용자만 표시) */}
-            {user && (
-              <Link href="/orders" className={styles.ordersIconLink}>
-                <Image
-                  src={pathname === '/orders' ? '/menu-icons/order_active.png' : '/menu-icons/order.png'}
-                  alt="주문내역"
-                  width={24}
-                  height={24}
-                />
-              </Link>
-            )}
+                {/* 장바구니 아이콘 */}
+                <Link href="/cart" className={styles.cartIconLink}>
+                  <Image
+                    src={pathname === '/cart' ? '/menu-icons/shopping_active.png' : '/menu-icons/shopping.png'}
+                    alt="장바구니"
+                    width={24}
+                    height={24}
+                  />
+                  {cartCount > 0 && (
+                    <span className={styles.cartBadge}>N</span>
+                  )}
+                </Link>
 
-            {/* 햄버거 메뉴 버튼 */}
-            <button
-              className={styles.menuButton}
-              onClick={toggleDrawer}
-              aria-label="메뉴"
-            >
-              <span className={styles.hamburger}></span>
-              <span className={styles.hamburger}></span>
-              <span className={styles.hamburger}></span>
-            </button>
+                {/* 채팅 아이콘 */}
+                <Link href="/chat" className={styles.chatIconLink}>
+                  <Image
+                    src={pathname === '/chat' || pathname.startsWith('/chat/') ? '/menu-icons/chat_active.png' : '/menu-icons/chat.png'}
+                    alt="채팅"
+                    width={24}
+                    height={24}
+                  />
+                  {unreadCount > 0 && (
+                    <span className={styles.chatBadge}>N</span>
+                  )}
+                </Link>
+
+                {/* 주문내역 아이콘 */}
+                <Link href="/orders" className={styles.ordersIconLink}>
+                  <Image
+                    src={pathname === '/orders' ? '/menu-icons/order_active.png' : '/menu-icons/order.png'}
+                    alt="주문내역"
+                    width={24}
+                    height={24}
+                  />
+                </Link>
+
+                {/* 햄버거 메뉴 버튼 */}
+                <button
+                  className={styles.menuButton}
+                  onClick={toggleDrawer}
+                  aria-label="메뉴"
+                >
+                  <span className={styles.hamburger}></span>
+                  <span className={styles.hamburger}></span>
+                  <span className={styles.hamburger}></span>
+                </button>
+              </>
+            ) : (
+              <>
+                {/* 로그아웃 상태 - 로그인/회원가입 버튼만 표시 */}
+                <button
+                  className={styles.loginButton}
+                  onClick={() => router.push('/login')}
+                >
+                  로그인/회원가입
+                </button>
+
+                {/* 햄버거 메뉴 버튼 */}
+                <button
+                  className={styles.menuButton}
+                  onClick={toggleDrawer}
+                  aria-label="메뉴"
+                >
+                  <span className={styles.hamburger}></span>
+                  <span className={styles.hamburger}></span>
+                  <span className={styles.hamburger}></span>
+                </button>
+              </>
+            )}
           </div>
         </div>
       </header>

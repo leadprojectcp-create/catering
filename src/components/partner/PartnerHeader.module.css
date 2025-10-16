@@ -15,14 +15,21 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 20px;
-  max-width: 1200px;
+  max-width: 1280px;
   margin: 0 auto;
+}
+
+.leftSection {
+  display: flex;
+  align-items: center;
+  gap: 0;
 }
 
 .logoContainer {
   display: flex;
   align-items: center;
+  height: 100%;
+  padding: 8px 0;
 }
 
 .logoContainer img {
@@ -34,10 +41,47 @@
   object-fit: contain;
 }
 
+.backButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #333;
+}
+
+.pageTitle {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+  margin-left: 12px;
+}
+
 .rightSection {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 40px;
+}
+
+.iconLink {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  transition: opacity 0.3s ease;
+}
+
+.iconLink:hover {
+  opacity: 0.7;
+}
+
+.iconLink img {
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
 }
 
 .chatIconLink {
@@ -69,6 +113,22 @@
   font-size: 11px;
   font-weight: 700;
   padding: 0 4px;
+}
+
+.loginButton {
+  padding: 10px 20px;
+  border-radius: 5px;
+  border: 1px solid #237AF2;
+  background-color: white;
+  color: #237AF2;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.loginButton:hover {
+  background-color: #f0f7ff;
 }
 
 /* 햄버거 메뉴 버튼 */
@@ -247,6 +307,16 @@
 @media (max-width: 768px) {
   .container {
     padding: 0 16px;
+  }
+
+  .pageTitle {
+    font-size: 16px;
+  }
+
+  .iconLink,
+  .chatIconLink,
+  .loginButton {
+    display: none;
   }
 
   .drawer {

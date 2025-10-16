@@ -210,6 +210,28 @@
   font-weight: 500;
 }
 
+.loginButton {
+  padding: 10px 20px;
+  border-radius: 5px;
+  border: 1px solid #237AF2;
+  background-color: white;
+  color: #237AF2;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.loginButton:hover {
+  background-color: #f0f7ff;
+}
+
+@media (max-width: 768px) {
+  .loginButton {
+    display: none;
+  }
+}
+
 /* 햄버거 메뉴 버튼 */
 .menuButton {
   display: flex;

@@ -9,6 +9,25 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { subscribeToUnreadCount } from '@/lib/services/chatService'
 
+// 페이지 경로에 따른 타이틀 매핑
+const getPageTitle = (path: string): string => {
+  if (path === '/partner/dashboard') return ''
+  if (path === '/partner/store/management') return '가게관리'
+  if (path === '/partner/reviews') return '리뷰관리'
+  if (path === '/partner/review/management') return '리뷰관리'
+  if (path === '/partner/notice/management') return '공지사항 관리'
+  if (path === '/partner/notice/write') return '공지사항 작성'
+  if (path === '/partner/product/add') return '상품등록'
+  if (path === '/partner/product/management') return '상품관리'
+  if (path === '/partner/products') return '상품관리'
+  if (path === '/partner/order/history') return '주문내역'
+  if (path === '/partner/orders') return '주문관리'
+  if (path === '/partner/order/settlements') return '정산내역'
+  if (path === '/chat') return '채팅'
+  if (path.startsWith('/chat/')) return '채팅'
+  return ''
+}
+
 const partnerMenuItems = [
   {
     category: '가게',
@@ -93,9 +112,14 @@ const partnerMenuItems = [
 export default function PartnerHeader() {
   const pathname = usePathname()
   const router = useRouter()
-  const { user, logout } = useAuth()
+  const { user, logout, loading } = useAuth()
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
+
+  // 대시보드인지 확인
+  const isDashboard = pathname === '/partner/dashboard'
+  const showBackButton = !isDashboard
+  const pageTitle = getPageTitle(pathname)
 
   const handleLogout = async () => {
     try {
@@ -152,97 +176,202 @@ export default function PartnerHeader() {
     <>
       <header className={styles.header}>
         <div className={styles.container}>
-          {/* 로고 */}
-          <div className={styles.logoContainer}>
-            <Link href="/partner/dashboard">
-              <Image
-                src="/assets/partners_logo.png"
-                alt="파트너 로고"
-                width={250}
-                height={50}
-                quality={100}
-                unoptimized
-                style={{ width: '250px', height: 'auto' }}
-                priority
-              />
-            </Link>
+          {/* 뒤로가기 버튼 + 타이틀 또는 로고 */}
+          <div className={styles.leftSection}>
+            {showBackButton ? (
+              <>
+                <button
+                  className={styles.backButton}
+                  onClick={() => router.back()}
+                  aria-label="뒤로가기"
+                >
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M19 12H5M12 19l-7-7 7-7"/>
+                  </svg>
+                </button>
+                {pageTitle && (
+                  <h1 className={styles.pageTitle}>{pageTitle}</h1>
+                )}
+              </>
+            ) : (
+              <div className={styles.logoContainer}>
+                <Link href="/partner/dashboard">
+                  <Image
+                    src="/assets/partners_logo.png"
+                    alt="파트너 로고"
+                    width={250}
+                    height={50}
+                    quality={100}
+                    unoptimized
+                    style={{ width: '250px', height: 'auto' }}
+                    priority
+                  />
+                </Link>
+              </div>
+            )}
           </div>
 
           <div className={styles.rightSection}>
-            {/* 채팅 아이콘 */}
-            <Link href="/chat" className={styles.chatIconLink}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-              </svg>
-              {unreadCount > 0 && (
-                <span className={styles.chatBadge}>{unreadCount}</span>
-              )}
-            </Link>
+            {user ? (
+              <>
+                {/* 로그인 상태 - 메뉴 아이콘들 표시 */}
+                {/* 홈 아이콘 */}
+                {pathname !== '/partner/dashboard' && (
+                  <Link href="/partner/dashboard" className={styles.iconLink}>
+                    <Image
+                      src="/partner-menu-icons/home.png"
+                      alt="홈"
+                      width={24}
+                      height={24}
+                      quality={100}
+                      unoptimized
+                    />
+                  </Link>
+                )}
 
-            {/* 햄버거 메뉴 버튼 */}
-            <button
-              className={styles.menuButton}
-              onClick={toggleDrawer}
-              aria-label="메뉴"
-            >
-              <span className={styles.hamburger}></span>
-              <span className={styles.hamburger}></span>
-              <span className={styles.hamburger}></span>
-            </button>
+                {/* 리뷰관리 아이콘 */}
+                <Link href="/partner/reviews" className={styles.iconLink}>
+                  <Image
+                    src={pathname.startsWith('/partner/reviews') ? '/partner-menu-icons/review_active.png' : '/partner-menu-icons/review.png'}
+                    alt="리뷰관리"
+                    width={24}
+                    height={24}
+                    quality={100}
+                    unoptimized
+                  />
+                </Link>
+
+                {/* 채팅 아이콘 */}
+                <Link href="/chat" className={styles.iconLink}>
+                  <Image
+                    src={pathname === '/chat' ? '/partner-menu-icons/chat_active.png' : '/partner-menu-icons/chat.png'}
+                    alt="채팅"
+                    width={24}
+                    height={24}
+                    quality={100}
+                    unoptimized
+                  />
+                  {unreadCount > 0 && (
+                    <span className={styles.chatBadge}>{unreadCount}</span>
+                  )}
+                </Link>
+
+                {/* 상품관리 아이콘 */}
+                <Link href="/partner/products" className={styles.iconLink}>
+                  <Image
+                    src={pathname.startsWith('/partner/product') ? '/partner-menu-icons/goods_active.png' : '/partner-menu-icons/goods.png'}
+                    alt="상품관리"
+                    width={24}
+                    height={24}
+                    quality={100}
+                    unoptimized
+                  />
+                </Link>
+
+                {/* 주문관리 아이콘 */}
+                <Link href="/partner/orders" className={styles.iconLink}>
+                  <Image
+                    src={pathname.startsWith('/partner/order') ? '/partner-menu-icons/order_active.png' : '/partner-menu-icons/order.png'}
+                    alt="주문관리"
+                    width={24}
+                    height={24}
+                    quality={100}
+                    unoptimized
+                  />
+                </Link>
+
+                {/* 햄버거 메뉴 버튼 */}
+                <button
+                  className={styles.menuButton}
+                  onClick={toggleDrawer}
+                  aria-label="메뉴"
+                >
+                  <span className={styles.hamburger}></span>
+                  <span className={styles.hamburger}></span>
+                  <span className={styles.hamburger}></span>
+                </button>
+              </>
+            ) : (
+              <>
+                {/* 로그아웃 상태 - 로그인/회원가입 버튼만 표시 */}
+                <button
+                  className={styles.loginButton}
+                  onClick={() => router.push('/login')}
+                >
+                  로그인/회원가입
+                </button>
+
+                {/* 햄버거 메뉴 버튼 */}
+                <button
+                  className={styles.menuButton}
+                  onClick={toggleDrawer}
+                  aria-label="메뉴"
+                >
+                  <span className={styles.hamburger}></span>
+                  <span className={styles.hamburger}></span>
+                  <span className={styles.hamburger}></span>
+                </button>
+              </>
+            )}
           </div>
         </div>
       </header>
 
-      {/* 오버레이 */}
-      {isDrawerOpen && (
-        <div className={styles.overlay} onClick={closeDrawer} />
-      )}
+      {/* 오버레이 및 사이드 드로어 (로그인 상태일 때만 표시) */}
+      {user && (
+        <>
+          {/* 오버레이 */}
+          {isDrawerOpen && (
+            <div className={styles.overlay} onClick={closeDrawer} />
+          )}
 
-      {/* 사이드 드로어 */}
-      <div className={`${styles.drawer} ${isDrawerOpen ? styles.drawerOpen : ''}`}>
-        <div className={styles.drawerHeader}>
-          <h2 className={styles.drawerTitle}>파트너 센터</h2>
-          <button
-            className={styles.closeButton}
-            onClick={closeDrawer}
-            aria-label="상품 닫기"
-          >
-            ✕
-          </button>
-        </div>
-
-        <nav className={styles.drawerNav}>
-          {partnerMenuItems.map((category) => (
-            <div key={category.category} className={styles.menuCategory}>
-              <h3 className={styles.categoryTitle}>
-                <span className={styles.categoryIcon}>{category.icon}</span>
-                {category.category}
-              </h3>
-              <div className={styles.categoryItems}>
-                {category.items.map((item) => (
-                  <Link
-                    key={item.path}
-                    href={item.path}
-                    className={`${styles.drawerMenuItem} ${pathname === item.path ? styles.drawerMenuItemActive : ''}`}
-                    onClick={closeDrawer}
-                  >
-                    {item.name}
-                  </Link>
-                ))}
-              </div>
+          {/* 사이드 드로어 */}
+          <div className={`${styles.drawer} ${isDrawerOpen ? styles.drawerOpen : ''}`}>
+            <div className={styles.drawerHeader}>
+              <h2 className={styles.drawerTitle}>파트너 센터</h2>
+              <button
+                className={styles.closeButton}
+                onClick={closeDrawer}
+                aria-label="상품 닫기"
+              >
+                ✕
+              </button>
             </div>
-          ))}
-        </nav>
 
-        <div className={styles.drawerFooter}>
-          <button
-            onClick={handleLogout}
-            className={styles.drawerLogoutButton}
-          >
-            로그아웃
-          </button>
-        </div>
-      </div>
+            <nav className={styles.drawerNav}>
+              {partnerMenuItems.map((category) => (
+                <div key={category.category} className={styles.menuCategory}>
+                  <h3 className={styles.categoryTitle}>
+                    <span className={styles.categoryIcon}>{category.icon}</span>
+                    {category.category}
+                  </h3>
+                  <div className={styles.categoryItems}>
+                    {category.items.map((item) => (
+                      <Link
+                        key={item.path}
+                        href={item.path}
+                        className={`${styles.drawerMenuItem} ${pathname === item.path ? styles.drawerMenuItemActive : ''}`}
+                        onClick={closeDrawer}
+                      >
+                        {item.name}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </nav>
+
+            <div className={styles.drawerFooter}>
+              <button
+                onClick={handleLogout}
+                className={styles.drawerLogoutButton}
+              >
+                로그아웃
+              </button>
+            </div>
+          </div>
+        </>
+      )}
     </>
   )
 }

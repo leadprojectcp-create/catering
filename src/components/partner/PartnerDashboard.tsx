@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { collection, query, where, orderBy, limit, getDocs, Timestamp } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
-import AuthGuard from '@/components/auth/AuthGuard'
 import PartnerHeader from './PartnerHeader'
 import Loading from '@/components/Loading'
 import { ShoppingBag, Star, TrendingUp, Clock, AlertCircle, DollarSign, Package, MessageSquare, MessageCircle } from 'lucide-react'
@@ -314,14 +313,16 @@ export default function PartnerDashboard() {
   }
 
   return (
-    <AuthGuard requireAuth={true}>
+    <>
       <PartnerHeader />
       <div className={styles.container}>
         <div className={styles.header}>
           <h1 className={styles.title}>파트너 대시보드</h1>
-          <p className={styles.welcome}>
-            {userData?.companyName || userData?.name}님, 환영합니다!
-          </p>
+          {user && (
+            <p className={styles.welcome}>
+              {userData?.companyName || userData?.name}님, 환영합니다!
+            </p>
+          )}
         </div>
 
         {loading ? (
@@ -509,6 +510,6 @@ export default function PartnerDashboard() {
           </>
         )}
       </div>
-    </AuthGuard>
+    </>
   )
 }

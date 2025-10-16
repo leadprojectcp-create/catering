@@ -112,43 +112,43 @@ export default function OrderManagementPage() {
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <h1 className={styles.title}>주문 관리</h1>
+        <h1 className={styles.title}>주문내역</h1>
         <div className={styles.filters}>
           <button
             className={`${styles.filterBtn} ${filter === 'all' ? styles.active : ''}`}
             onClick={() => setFilter('all')}
           >
-            전체 ({orders.length})
+            전체 {orders.length > 0 && <span className={styles.filterCount}>{orders.length}</span>}
           </button>
           <button
             className={`${styles.filterBtn} ${filter === 'pending' ? styles.active : ''}`}
             onClick={() => setFilter('pending')}
           >
-            신규 주문 ({orders.filter(o => o.orderStatus === 'pending').length})
+            신규 주문 {orders.filter(o => o.orderStatus === 'pending').length > 0 && <span className={styles.filterCount}>{orders.filter(o => o.orderStatus === 'pending').length}</span>}
           </button>
           <button
             className={`${styles.filterBtn} ${filter === 'cancelled_rejected' ? styles.active : ''}`}
             onClick={() => setFilter('cancelled_rejected')}
           >
-            주문 취소 ({orders.filter(o => o.orderStatus === 'rejected' || o.orderStatus === 'cancelled').length})
+            주문 취소 {orders.filter(o => o.orderStatus === 'rejected' || o.orderStatus === 'cancelled').length > 0 && <span className={styles.filterCount}>{orders.filter(o => o.orderStatus === 'rejected' || o.orderStatus === 'cancelled').length}</span>}
           </button>
           <button
             className={`${styles.filterBtn} ${filter === 'preparing' ? styles.active : ''}`}
             onClick={() => setFilter('preparing')}
           >
-            준비중 ({orders.filter(o => o.orderStatus === 'preparing').length})
+            준비중 {orders.filter(o => o.orderStatus === 'preparing').length > 0 && <span className={styles.filterCount}>{orders.filter(o => o.orderStatus === 'preparing').length}</span>}
           </button>
           <button
             className={`${styles.filterBtn} ${filter === 'shipping' ? styles.active : ''}`}
             onClick={() => setFilter('shipping')}
           >
-            배송중 ({orders.filter(o => o.orderStatus === 'shipping').length})
+            배송중 {orders.filter(o => o.orderStatus === 'shipping').length > 0 && <span className={styles.filterCount}>{orders.filter(o => o.orderStatus === 'shipping').length}</span>}
           </button>
           <button
             className={`${styles.filterBtn} ${filter === 'delivered' ? styles.active : ''}`}
             onClick={() => setFilter('delivered')}
           >
-            배송완료 ({orders.filter(o => o.orderStatus === 'delivered').length})
+            배송완료 {orders.filter(o => o.orderStatus === 'delivered').length > 0 && <span className={styles.filterCount}>{orders.filter(o => o.orderStatus === 'delivered').length}</span>}
           </button>
         </div>
       </div>
@@ -158,129 +158,72 @@ export default function OrderManagementPage() {
           주문이 없습니다.
         </div>
       ) : (
-        <div className={styles.orderGrid}>
-          {filteredOrders.map((order) => (
-            <div key={order.id} className={styles.orderCard}>
-              <div className={styles.cardHeader}>
-                <div className={styles.orderNumber}>
-                  {order.orderNumber || order.id}
-                </div>
-                <div className={styles.orderDate}>
-                  {formatDate(order.createdAt)}
-                </div>
-              </div>
-
-              <div className={styles.cardBody}>
-                <div className={styles.section}>
-                  <div className={styles.sectionLabel}>주문자 / 수령인</div>
-                  <div className={styles.userInfo}>
-                    <div className={styles.userName}>주문: {order.orderer}</div>
-                    <div className={styles.userName}>수령: {order.recipient}</div>
-                    <div className={styles.userPhone}>{order.phone}</div>
-                  </div>
-                </div>
-
-                <div className={styles.section}>
-                  <div className={styles.sectionLabel}>매장</div>
-                  <div className={styles.storeName}>{order.storeName}</div>
-                </div>
-
-                <div className={styles.section}>
-                  <div className={styles.sectionLabel}>주문 상품</div>
-                  <div className={styles.itemsList}>
-                    {order.items.slice(0, 2).map((item, idx) => (
-                      <div key={idx} className={styles.itemRow}>
-                        <span className={styles.itemName}>
-                          {item.productName}
-                          {item.options && Object.keys(item.options).length > 0 && (
-                            <span className={styles.itemOptions}>
-                              ({Object.entries(item.options).map(([key, value]) => `${key}: ${value}`).join(', ')})
-                            </span>
-                          )}
-                        </span>
-                        <span className={styles.itemQuantity}>x {item.quantity}</span>
-                      </div>
-                    ))}
-                    {order.items.length > 2 && (
-                      <div className={styles.moreItems}>외 {order.items.length - 2}개</div>
-                    )}
-                  </div>
-                </div>
-
-                <div className={styles.section}>
-                  <div className={styles.sectionLabel}>배송 정보</div>
-                  <div className={styles.deliveryInfo}>
-                    <div>{order.deliveryMethod}</div>
-                    <div className={styles.deliveryDateTime}>
-                      {order.deliveryDate} {order.deliveryTime}
-                    </div>
-                    <div className={styles.address}>
-                      {order.address} {order.detailAddress}
-                    </div>
-                    {order.request && (
-                      <div className={styles.requestNote}>요청사항: {order.request}</div>
-                    )}
-                    {order.detailedRequest && (
-                      <div className={styles.requestNote}>상세요청: {order.detailedRequest}</div>
-                    )}
-                  </div>
-                </div>
-
-                <div className={styles.section}>
-                  <div className={styles.sectionLabel}>결제 금액</div>
-                  <div className={styles.priceBreakdown}>
-                    <div className={styles.priceRow}>
-                      <span>상품금액</span>
-                      <span>{formatCurrency(order.totalProductPrice)}</span>
-                    </div>
-                    <div className={styles.priceRow}>
-                      <span>배송비</span>
-                      <span>{formatCurrency(order.deliveryFee)}</span>
-                    </div>
-                    <div className={`${styles.priceRow} ${styles.totalPriceRow}`}>
-                      <span>총 결제금액</span>
-                      <span className={styles.amount}>{formatCurrency(order.totalPrice)}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className={styles.cardFooter}>
-                {order.orderStatus === 'pending' ? (
-                  <>
-                    <button
-                      className={styles.acceptBtn}
-                      onClick={() => handleStatusChange(order.id || '', 'preparing')}
-                    >
-                      주문접수
-                    </button>
-                    <button
-                      className={styles.rejectBtn}
-                      onClick={() => handleStatusChange(order.id || '', 'rejected')}
-                    >
-                      주문취소
-                    </button>
-                  </>
-                ) : order.orderStatus === 'preparing' ? (
-                  <>
-                    <div className={`${styles.statusBadge} ${styles[`status_${order.orderStatus}`]}`}>
-                      {getStatusLabel(order.orderStatus)}
-                    </div>
-                    <button
-                      className={styles.rejectBtn}
-                      onClick={() => handleStatusChange(order.id || '', 'rejected')}
-                    >
-                      주문취소
-                    </button>
-                  </>
-                ) : (
-                  <div className={`${styles.statusBadge} ${styles[`status_${order.orderStatus}`]}`}>
-                    {getStatusLabel(order.orderStatus)}
-                  </div>
-                )}
-              </div>
+        <div className={styles.contentWrapper}>
+          {/* 왼쪽: 주문 리스트 */}
+          <div className={styles.orderListContainer}>
+            <div className={styles.orderListHeader}>
+              {filter === 'all' && '전체'}
+              {filter === 'pending' && '신규주문'}
+              {filter === 'cancelled_rejected' && '주문 취소'}
+              {filter === 'preparing' && '준비중'}
+              {filter === 'shipping' && '배송중'}
+              {filter === 'delivered' && '배송완료'}
+              {' '}{filteredOrders.length}개
             </div>
-          ))}
+            <div className={styles.orderList}>
+            {filteredOrders.map((order) => {
+              // D-day 계산
+              const deliveryDateObj = new Date(order.deliveryDate)
+              const today = new Date()
+              const diffTime = deliveryDateObj.getTime() - today.getTime()
+              const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+              const dDay = diffDays >= 0 ? `D-${diffDays}` : `D+${Math.abs(diffDays)}`
+
+              // 상품명 요약
+              const firstProduct = order.items[0]?.productName || ''
+              const totalCount = order.items.reduce((sum, item) => sum + item.quantity, 0)
+              const productSummary = `${firstProduct} 외 ${totalCount}개`
+
+              // 예약날짜 포맷
+              const reservationDate = new Date(order.deliveryDate)
+              const year = reservationDate.getFullYear()
+              const month = reservationDate.getMonth() + 1
+              const day = reservationDate.getDate()
+              const weekdays = ['일', '월', '화', '수', '목', '금', '토']
+              const weekday = weekdays[reservationDate.getDay()]
+              const [hour, minute] = order.deliveryTime.split(':').map(Number)
+              const period = hour >= 12 ? '오후' : '오전'
+              const displayHour = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour
+              const formattedReservation = `${year}년 ${month}월 ${day}일 (${weekday}) ${period} ${displayHour}시 ${minute}분`
+
+              // 배송방법 텍스트
+              const deliveryMethodText = order.deliveryMethod === '퀵배송' ? '퀵업체 배송' : '매장픽업'
+
+              return (
+                <div key={order.id} className={styles.orderCard}>
+                  <div className={styles.orderHeader}>
+                    <div className={styles.deliveryBadge}>{deliveryMethodText}</div>
+                    <div className={styles.dDay}>{dDay}</div>
+                    <span className={styles.orderNumberText}>주문번호 {order.orderNumber || order.id}</span>
+                  </div>
+                  <div className={styles.productName}>{productSummary}</div>
+                  <div className={styles.orderInfo}>예약날짜 {formattedReservation}</div>
+                  <div className={styles.orderInfo}>결제완료 {formatCurrency(order.totalPrice)}</div>
+                </div>
+              )
+            })}
+            </div>
+          </div>
+
+          {/* 가운데: 주문 상세 (추후 추가) */}
+          <div className={styles.orderDetailContainer}>
+            {/* 주문 상세 내용 */}
+          </div>
+
+          {/* 오른쪽: 추가 정보 (추후 추가) */}
+          <div className={styles.orderInfoContainer}>
+            {/* 추가 정보 */}
+          </div>
         </div>
       )}
     </div>

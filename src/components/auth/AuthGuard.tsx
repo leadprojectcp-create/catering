@@ -24,12 +24,22 @@ export default function AuthGuard({
   useEffect(() => {
     if (loading) return // 로딩 중이면 아무것도 하지 않음
 
+    console.log('[AuthGuard] 체크:', {
+      user: !!user,
+      userData,
+      requireAuth,
+      requireCompleteRegistration,
+      redirectTo
+    })
+
     if (requireAuth && !user) {
       // 로그인이 필요한데 로그인되지 않은 경우
+      console.log('[AuthGuard] 로그인 필요 - /login으로 리다이렉트')
       router.push(redirectTo || '/login')
     } else if (!requireAuth && user && userData?.registrationComplete) {
       // 로그인하면 안 되는 페이지인데 완전히 가입된 사용자인 경우
       // 사용자 타입에 맞는 페이지로 리다이렉트
+      console.log('[AuthGuard] 로그인된 사용자 - 리다이렉트')
       if (redirectTo) {
         router.push(redirectTo)
       } else if (userData.type === 'partner') {
@@ -41,6 +51,7 @@ export default function AuthGuard({
       }
     } else if (requireAuth && requireCompleteRegistration && user && userData && !userData.registrationComplete) {
       // 로그인되었지만 가입이 완료되지 않은 경우 회원 유형 선택으로 이동
+      console.log('[AuthGuard] 가입 미완료 - /signup/choose-type으로 리다이렉트')
       router.push('/signup/choose-type')
     }
   }, [user, userData, loading, requireAuth, requireCompleteRegistration, redirectTo, router])
