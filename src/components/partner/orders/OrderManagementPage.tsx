@@ -11,6 +11,7 @@ import { createOrGetChatRoom } from '@/lib/services/chatService'
 import { ChevronDown, Calendar } from 'lucide-react'
 import Image from 'next/image'
 import Loading from '@/components/Loading'
+import OrderCancelModal from './OrderCancelModal'
 import styles from './OrderManagementPage.module.css'
 
 type FilterStatus = 'all' | 'pending' | 'cancelled_rejected' | 'preparing' | 'shipping' | 'completed'
@@ -30,6 +31,8 @@ export default function OrderManagementPage() {
   const [currentMonth, setCurrentMonth] = useState(new Date())
   const [selectingStart, setSelectingStart] = useState(true)
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null)
+  const [showCancelModal, setShowCancelModal] = useState(false)
+  const [cancelOrderId, setCancelOrderId] = useState<string | null>(null)
 
   useEffect(() => {
     // URL 파라미터에서 filter 값 읽기
@@ -90,6 +93,31 @@ export default function OrderManagementPage() {
       console.error('상태 변경 실패:', error)
       alert('상태 변경에 실패했습니다.')
     }
+  }
+
+  const handleCancelClick = (orderId: string) => {
+    setCancelOrderId(orderId)
+    setShowCancelModal(true)
+  }
+
+  const handleCancelConfirm = async (reason: string) => {
+    if (!cancelOrderId) return
+
+    try {
+      await updateOrderStatus(cancelOrderId, 'rejected', reason)
+      setOrders(orders.map(o => o.id === cancelOrderId ? { ...o, orderStatus: 'rejected', cancelReason: reason } : o))
+      setShowCancelModal(false)
+      setCancelOrderId(null)
+      alert(`주문이 취소되었습니다.\n취소 사유: ${reason}`)
+    } catch (error) {
+      console.error('주문 취소 실패:', error)
+      alert('주문 취소에 실패했습니다.')
+    }
+  }
+
+  const handleCancelModalClose = () => {
+    setShowCancelModal(false)
+    setCancelOrderId(null)
   }
 
   const handleChatClick = async (order: Order) => {
@@ -561,7 +589,7 @@ export default function OrderManagementPage() {
                             <>
                               <button
                                 className={`${styles.actionBtn} ${styles.cancelBtn}`}
-                                onClick={() => handleStatusChange(order.id!, 'rejected')}
+                                onClick={() => handleCancelClick(order.id!)}
                               >
                                 주문취소
                               </button>
@@ -577,7 +605,7 @@ export default function OrderManagementPage() {
                             <>
                               <button
                                 className={`${styles.actionBtn} ${styles.cancelBtn}`}
-                                onClick={() => handleStatusChange(order.id!, 'rejected')}
+                                onClick={() => handleCancelClick(order.id!)}
                               >
                                 주문취소
                               </button>
@@ -624,14 +652,12 @@ export default function OrderManagementPage() {
                             <div key={index} className={styles.orderItemSection}>
                               <div className={styles.orderItemHeader}>
                                 <span className={styles.orderItemName}>{item.productName}</span>
-                              </div>
-                              <div className={styles.orderItemInfo}>
                                 <span className={styles.orderItemQuantity}>{item.quantity}개</span>
                                 <span className={styles.orderItemPrice}>{formatCurrency(item.price * item.quantity)}</span>
                               </div>
                               {Object.entries(item.options).map(([key, value], optIdx) => (
                                 <div key={optIdx} className={styles.orderItemOption}>
-                                  [옵션] {value}
+                                  [{key}] {value}
                                 </div>
                               ))}
                             </div>
@@ -781,6 +807,13 @@ export default function OrderManagementPage() {
             })}
         </div>
       )}
+
+      {/* 주문취소 모달 */}
+      <OrderCancelModal
+        isOpen={showCancelModal}
+        onClose={handleCancelModalClose}
+        onConfirm={handleCancelConfirm}
+      />
     </div>
   )
 }

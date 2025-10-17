@@ -185,11 +185,6 @@
   color: #92400e;
 }
 
-.orderStatus.accepted {
-  background: #dbeafe;
-  color: #1e40af;
-}
-
 .orderStatus.preparing {
   background: #e0e7ff;
   color: #3730a3;
@@ -200,7 +195,7 @@
   color: #5b21b6;
 }
 
-.orderStatus.delivered {
+.orderStatus.completed {
   background: #d1fae5;
   color: #065f46;
 }

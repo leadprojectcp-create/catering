@@ -175,7 +175,7 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
     if (orderStatus === 'rejected') return '업체 거부'
     if (orderStatus === 'preparing') return '준비 중'
     if (orderStatus === 'shipping') return '배송 중'
-    if (orderStatus === 'delivered') return '배송 완료'
+    if (orderStatus === 'completed') return '완료'
     if (orderStatus === 'cancelled') return '취소됨'
 
     return '알 수 없음'
@@ -190,7 +190,7 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
     if (orderStatus === 'rejected') return '#f44336'
     if (orderStatus === 'preparing') return '#FF9800'
     if (orderStatus === 'shipping') return '#9C27B0'
-    if (orderStatus === 'delivered') return '#4CAF50'
+    if (orderStatus === 'completed') return '#4CAF50'
     if (orderStatus === 'cancelled') return '#f44336'
 
     return '#999'

@@ -87,11 +87,11 @@ export default function AdminDashboard() {
         doc.data().orderStatus === 'pending'
       )
 
-      // 전체 매출 계산 (배송 완료 & 결제 완료)
+      // 전체 매출 계산 (완료 & 결제 완료)
       let totalSales = 0
       allOrders.forEach(doc => {
         const order = doc.data()
-        if (order.orderStatus === 'delivered' && order.paymentStatus === 'paid') {
+        if (order.orderStatus === 'completed' && order.paymentStatus === 'paid') {
           totalSales += order.totalPrice || order.totalAmount || 0
         }
       })
@@ -100,7 +100,7 @@ export default function AdminDashboard() {
       let todaySales = 0
       todayOrders.forEach(doc => {
         const order = doc.data()
-        if (order.orderStatus === 'delivered' && order.paymentStatus === 'paid') {
+        if (order.orderStatus === 'completed' && order.paymentStatus === 'paid') {
           todaySales += order.totalPrice || order.totalAmount || 0
         }
       })
@@ -330,11 +330,10 @@ export default function AdminDashboard() {
                     </p>
                     <span className={`${styles.orderStatus} ${styles[order.orderStatus || 'pending']}`}>
                       {order.orderStatus === 'pending' ? '승인 대기' :
-                       order.orderStatus === 'accepted' ? '승인 완료' :
                        order.orderStatus === 'rejected' ? '거부' :
                        order.orderStatus === 'preparing' ? '준비 중' :
                        order.orderStatus === 'shipping' ? '배송 중' :
-                       order.orderStatus === 'delivered' ? '배송 완료' :
+                       order.orderStatus === 'completed' ? '완료' :
                        order.orderStatus === 'cancelled' ? '취소' : '대기중'}
                     </span>
                   </div>

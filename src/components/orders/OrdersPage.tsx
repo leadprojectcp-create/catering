@@ -57,7 +57,7 @@ export default function OrdersPage() {
   const [loading, setLoading] = useState(true)
   const [orders, setOrders] = useState<Order[]>([])
   const [cancelOrderId, setCancelOrderId] = useState<string | null>(null)
-  const [filterStatus, setFilterStatus] = useState<'all' | 'pending' | 'preparing' | 'shipping' | 'delivered' | 'cancelled'>('all')
+  const [filterStatus, setFilterStatus] = useState<'all' | 'pending' | 'preparing' | 'shipping' | 'completed' | 'cancelled'>('all')
 
   useEffect(() => {
     const loadOrders = async () => {
@@ -156,7 +156,7 @@ export default function OrdersPage() {
     if (orderStatus === 'rejected') return '업체 거부'
     if (orderStatus === 'preparing') return '준비 중'
     if (orderStatus === 'shipping') return '배송 중'
-    if (orderStatus === 'delivered') return '배송 완료'
+    if (orderStatus === 'completed') return '완료'
     if (orderStatus === 'cancelled') return '취소요청'
 
     return '알 수 없음'
@@ -170,11 +170,10 @@ export default function OrdersPage() {
 
     // 주문 상태 체크
     if (orderStatus === 'pending') return '#2196F3'
-    if (orderStatus === 'accepted') return '#4CAF50'
     if (orderStatus === 'rejected') return '#f44336'
     if (orderStatus === 'preparing') return '#FF9800'
     if (orderStatus === 'shipping') return '#9C27B0'
-    if (orderStatus === 'delivered') return '#4CAF50'
+    if (orderStatus === 'completed') return '#4CAF50'
     if (orderStatus === 'cancelled') return '#f44336'
 
     return '#999'
@@ -335,10 +334,10 @@ export default function OrdersPage() {
             배송중 {orders.filter(o => o.orderStatus === 'shipping').length > 0 && <span className={styles.filterCount}>{orders.filter(o => o.orderStatus === 'shipping').length}</span>}
           </button>
           <button
-            className={filterStatus === 'delivered' ? styles.filterActive : styles.filterButton}
-            onClick={() => setFilterStatus('delivered')}
+            className={filterStatus === 'completed' ? styles.filterActive : styles.filterButton}
+            onClick={() => setFilterStatus('completed')}
           >
-            배송완료 {orders.filter(o => o.orderStatus === 'delivered').length > 0 && <span className={styles.filterCount}>{orders.filter(o => o.orderStatus === 'delivered').length}</span>}
+            완료 {orders.filter(o => o.orderStatus === 'completed').length > 0 && <span className={styles.filterCount}>{orders.filter(o => o.orderStatus === 'completed').length}</span>}
           </button>
           <button
             className={filterStatus === 'cancelled' ? styles.filterActive : styles.filterButton}
@@ -436,7 +435,7 @@ export default function OrdersPage() {
                 </div>
 
                 <div className={styles.buttonGroup}>
-                  {order.orderStatus === 'delivered' ? (
+                  {order.orderStatus === 'completed' ? (
                     <>
                       <button
                         className={styles.detailButton}

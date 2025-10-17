@@ -9,7 +9,7 @@ export interface OrderItem {
   price: number
 }
 
-export type OrderStatus = 'pending' | 'accepted' | 'preparing' | 'shipping' | 'delivered' | 'rejected' | 'cancelled'
+export type OrderStatus = 'pending' | 'preparing' | 'shipping' | 'completed' | 'rejected' | 'cancelled'
 
 export interface Order {
   id?: string
@@ -35,6 +35,7 @@ export interface Order {
   phone: string
   request?: string
   detailedRequest?: string
+  cancelReason?: string
   createdAt?: Date | Timestamp | FieldValue
   updatedAt?: Date | Timestamp | FieldValue
 }
@@ -116,14 +117,22 @@ export const getOrdersByStatus = async (status: OrderStatus): Promise<Order[]> =
 // 주문 상태 업데이트
 export const updateOrderStatus = async (
   orderId: string,
-  status: OrderStatus
+  status: OrderStatus,
+  cancelReason?: string
 ): Promise<void> => {
   try {
     const orderRef = doc(db, COLLECTION_NAME, orderId)
-    await updateDoc(orderRef, {
+    const updateData: Partial<Order> = {
       orderStatus: status,
       updatedAt: new Date()
-    })
+    }
+
+    // 취소 사유가 있으면 추가
+    if (cancelReason) {
+      updateData.cancelReason = cancelReason
+    }
+
+    await updateDoc(orderRef, updateData)
   } catch (error) {
     console.error('주문 상태 업데이트 실패:', error)
     throw error

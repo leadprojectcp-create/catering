@@ -91,8 +91,8 @@ export default function ReviewWritePage() {
           return
         }
 
-        if (orderData.orderStatus !== 'delivered') {
-          alert('배송완료된 주문만 리뷰를 작성할 수 있습니다.')
+        if (orderData.orderStatus !== 'completed') {
+          alert('완료된 주문만 리뷰를 작성할 수 있습니다.')
           router.push('/orders')
           return
         }

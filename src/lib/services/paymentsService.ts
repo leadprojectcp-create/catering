@@ -9,7 +9,7 @@ export interface OrderItem {
   price: number
 }
 
-export type OrderStatus = 'pending' | 'accepted' | 'preparing' | 'shipping' | 'delivered' | 'rejected' | 'cancelled'
+export type OrderStatus = 'pending' | 'preparing' | 'shipping' | 'completed' | 'rejected' | 'cancelled'
 
 export interface Order {
   id?: string
