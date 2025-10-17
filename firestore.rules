@@ -126,6 +126,19 @@ service cloud.firestore {
       allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likeCount']);
     }
 
+    // Notices collection - 공지사항 (관리자용)
+    match /notices/{noticeId} {
+      // 관리자(level 10)만 읽기 가능
+      allow read: if isAdmin();
+
+      // 관리자(level 10)만 생성/수정/삭제 가능
+      allow create, update, delete: if isAdmin();
+
+      // 조회수 업데이트는 관리자만 가능
+      allow update: if isAdmin() &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['viewCount']);
+    }
+
     // Orders collection - 주문
     match /orders/{orderId} {
       // 개별 문서 읽기: 로그인한 사용자만 자신의 주문 또는 파트너 주문 읽기 가능
