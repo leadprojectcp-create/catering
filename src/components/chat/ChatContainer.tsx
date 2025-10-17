@@ -10,6 +10,7 @@ import { doc, getDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { getProduct } from '@/lib/services/productService'
 import ChatRoom from './ChatRoom'
+import ChatRoomHeader from './ChatRoomHeader'
 import styles from './ChatContainer.module.css'
 
 interface ChatRoomWithName extends Omit<ChatRoomType, 'unreadCount'> {
@@ -337,18 +338,23 @@ export default function ChatContainer({ isPartner = false, onRoomSelect }: ChatC
       {/* 오른쪽: 채팅방 상세 */}
       <div className={`${styles.mainContent} ${selectedRoomId ? styles.active : ''}`}>
         {selectedRoomId ? (
-          <ChatRoom
-            roomId={selectedRoomId}
-            onBack={() => {
-              setSelectedRoomId(null)
-              if (onRoomSelect) {
-                onRoomSelect('')
-              }
-            }}
-            isPartner={isPartner}
-            initialProductId={initialProductId}
-            initialMessage={initialMessage}
-          />
+          <>
+            <div className={styles.chatRoomHeaderWrapper}>
+              <ChatRoomHeader roomId={selectedRoomId} />
+            </div>
+            <ChatRoom
+              roomId={selectedRoomId}
+              onBack={() => {
+                setSelectedRoomId(null)
+                if (onRoomSelect) {
+                  onRoomSelect('')
+                }
+              }}
+              isPartner={isPartner}
+              initialProductId={initialProductId}
+              initialMessage={initialMessage}
+            />
+          </>
         ) : (
           <div className={styles.emptyChat}>
             <p>채팅방을 선택해주세요</p>

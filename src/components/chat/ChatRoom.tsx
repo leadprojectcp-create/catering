@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef, useLayoutEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
+import Image from 'next/image'
 import {
   getChatRoom,
   subscribeToMessages,
@@ -511,7 +512,13 @@ export default function ChatRoom({ roomId, onBack, isPartner = false, initialPro
           className={styles.sendButton}
           disabled={!inputText.trim() || isUploading}
         >
-          전송
+          <Image
+            src={!inputText.trim() || isUploading ? "/icons/send.png" : "/icons/send_active.png"}
+            alt="전송"
+            width={24}
+            height={24}
+            unoptimized
+          />
         </button>
       </form>
 
