@@ -9,7 +9,8 @@ import {
   query,
   orderBy,
   where,
-  serverTimestamp
+  serverTimestamp,
+  QueryConstraint
 } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { Notice, NoticeTargetType } from '@/types/notice'
@@ -100,7 +101,7 @@ export const getNotices = async (
 
     // 대상 타입 필터 (상태 필터와 함께 사용할 경우)
     if (filterTargetType && filterTargetType !== 'all') {
-      const constraints = [where('targetType', '==', filterTargetType)]
+      const constraints: QueryConstraint[] = [where('targetType', '==', filterTargetType)]
       if (filterStatus && filterStatus !== 'all') {
         constraints.push(where('status', '==', filterStatus))
       }
@@ -124,7 +125,7 @@ export const getPublishedNotices = async (
   targetType?: NoticeTargetType
 ): Promise<Notice[]> => {
   try {
-    const constraints = [where('status', '==', 'published')]
+    const constraints: QueryConstraint[] = [where('status', '==', 'published')]
 
     if (targetType) {
       constraints.push(where('targetType', 'in', [targetType, 'all']))
