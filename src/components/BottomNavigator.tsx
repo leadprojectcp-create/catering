@@ -11,12 +11,6 @@ import styles from './BottomNavigator.module.css'
 
 export default function BottomNavigator() {
   const pathname = usePathname()
-
-  // 채팅룸 페이지에서는 바텀 네비게이터 숨기기 (최우선 체크)
-  if (pathname.startsWith('/chat/') || pathname.startsWith('/partner')) {
-    return null
-  }
-
   const { user } = useAuth()
   const [cartCount, setCartCount] = useState(0)
   const [unreadCount, setUnreadCount] = useState(0)
@@ -101,6 +95,11 @@ export default function BottomNavigator() {
       iconActive: '/menu-icons/order_active.png'
     }
   ]
+
+  // 채팅룸 페이지에서는 바텀 네비게이터 숨기기
+  if (pathname.startsWith('/chat/') || pathname.startsWith('/partner')) {
+    return null
+  }
 
   return (
     <nav className={styles.bottomNav}>
