@@ -1,4 +1,4 @@
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore'
+import { collection, addDoc, serverTimestamp, FieldValue } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 
 export interface ReportData {
@@ -8,7 +8,7 @@ export interface ReportData {
   reason: string              // 신고 유형
   details: string             // 신고 상세 내용
   status: 'pending' | 'reviewed' | 'resolved' // 처리 상태
-  createdAt: any              // 생성 시간
+  createdAt: FieldValue       // 생성 시간
 }
 
 /**

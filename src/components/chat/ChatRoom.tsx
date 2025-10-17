@@ -456,6 +456,7 @@ export default function ChatRoom({ roomId, onBack, isPartner = false, initialPro
         </div>
         {msgs.map((message) => {
           const isProductMessage = message.text.startsWith('[상품]')
+          const isImageMessage = message.text.startsWith('[이미지]')
           return (
             <div
               key={message.id}
@@ -467,7 +468,7 @@ export default function ChatRoom({ roomId, onBack, isPartner = false, initialPro
                 <span className={styles.senderName}>{otherUserName || message.senderName}</span>
               )}
               <div className={styles.messageContent}>
-                {isProductMessage ? (
+                {isProductMessage || isImageMessage ? (
                   <>
                     {renderMessageContent(message.text)}
                     <span className={styles.messageTime}>{formatTime(message.timestamp)}</span>
