@@ -175,6 +175,8 @@
   .container {
     position: relative;
     margin: 0;
+    height: 100vh;
+    height: 100dvh;
   }
 
   .loading {
@@ -198,6 +200,8 @@
     height: 100%;
     display: none;
     z-index: 10;
+    margin: 0;
+    padding: 0;
   }
 
   /* 모바일에서 채팅방이 선택되면 메인 콘텐츠만 표시 */
