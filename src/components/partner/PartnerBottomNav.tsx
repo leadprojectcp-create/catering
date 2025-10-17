@@ -8,6 +8,11 @@ export default function PartnerBottomNav() {
   const pathname = usePathname()
   const router = useRouter()
 
+  // 채팅룸 페이지에서는 바텀 네비게이터 숨기기
+  if (pathname.startsWith('/chat/')) {
+    return null
+  }
+
   const menuItems = [
     {
       label: '홈',
