@@ -346,8 +346,7 @@
   }
 
   .iconLink,
-  .chatIconLink,
-  .loginButton {
+  .chatIconLink {
     display: none;
   }
 

@@ -226,12 +226,6 @@
   background-color: #f0f7ff;
 }
 
-@media (max-width: 768px) {
-  .loginButton {
-    display: none;
-  }
-}
-
 /* 전화 버튼 (모바일 채팅룸용) */
 .phoneButton {
   display: flex;

@@ -305,26 +305,13 @@ export default function Header({ chatRoomTitle, chatRoomPhone }: HeaderProps = {
                 )}
               </>
             ) : (
-              <>
-                {/* 로그아웃 상태 - 로그인/회원가입 버튼만 표시 */}
-                <button
-                  className={styles.loginButton}
-                  onClick={() => router.push('/login')}
-                >
-                  로그인/회원가입
-                </button>
-
-                {/* 햄버거 메뉴 버튼 */}
-                <button
-                  className={styles.menuButton}
-                  onClick={toggleDrawer}
-                  aria-label="메뉴"
-                >
-                  <span className={styles.hamburger}></span>
-                  <span className={styles.hamburger}></span>
-                  <span className={styles.hamburger}></span>
-                </button>
-              </>
+              /* 로그아웃 상태 - 로그인/회원가입 버튼만 표시 */
+              <button
+                className={styles.loginButton}
+                onClick={() => router.push('/login')}
+              >
+                로그인/회원가입
+              </button>
             )}
           </div>
         </div>
