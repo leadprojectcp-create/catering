@@ -45,6 +45,7 @@ export default function ChatRoom({ roomId, onBack, isPartner = false, initialPro
   const [pendingProductId, setPendingProductId] = useState<string | null>(null)
   const [pendingMessage, setPendingMessage] = useState<string | null>(null)
   const [pendingProduct, setPendingProduct] = useState<ProductData | null>(null)
+  const [uploadingImages, setUploadingImages] = useState<{ id: string; preview: string }[]>([])
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const messagesContainerRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -129,6 +130,13 @@ export default function ChatRoom({ roomId, onBack, isPartner = false, initialPro
       messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight
     }
   }, [messages])
+
+  // 업로드 중인 이미지가 추가될 때마다 스크롤을 맨 아래로
+  useLayoutEffect(() => {
+    if (messagesContainerRef.current && uploadingImages.length > 0) {
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight
+    }
+  }, [uploadingImages])
 
   // 로딩 완료 후 맨 아래로 스크롤
   useEffect(() => {
@@ -233,6 +241,13 @@ export default function ChatRoom({ roomId, onBack, isPartner = false, initialPro
   const handleImageSelect = async (file: File) => {
     if (!user) return
 
+    // 미리보기 생성
+    const previewUrl = URL.createObjectURL(file)
+    const uploadId = `upload-${Date.now()}`
+
+    // 업로드 중인 이미지 추가 (useLayoutEffect가 자동으로 스크롤 처리)
+    setUploadingImages(prev => [...prev, { id: uploadId, preview: previewUrl }])
+
     setIsUploading(true)
     try {
       // FormData 생성
@@ -261,9 +276,16 @@ export default function ChatRoom({ roomId, onBack, isPartner = false, initialPro
       await sendMessage(roomId, user.uid, senderName, `[이미지]${data.url}`)
 
       console.log('이미지 업로드 및 전송 완료:', data.url)
+
+      // 업로드 완료 후 미리보기 제거
+      setUploadingImages(prev => prev.filter(img => img.id !== uploadId))
+      URL.revokeObjectURL(previewUrl)
     } catch (error) {
       console.error('이미지 업로드 실패:', error)
       alert('이미지 업로드에 실패했습니다.')
+      // 실패 시에도 미리보기 제거
+      setUploadingImages(prev => prev.filter(img => img.id !== uploadId))
+      URL.revokeObjectURL(previewUrl)
     } finally {
       setIsUploading(false)
     }
@@ -477,12 +499,30 @@ export default function ChatRoom({ roomId, onBack, isPartner = false, initialPro
   return (
     <div className={styles.container}>
       <div className={styles.messagesContainer} ref={messagesContainerRef}>
-        {messages.length === 0 ? (
+        {messages.length === 0 && uploadingImages.length === 0 ? (
           <div className={styles.emptyMessages}>
             <p>메시지를 보내 대화를 시작해보세요!</p>
           </div>
         ) : (
-          renderMessages()
+          <>
+            {renderMessages()}
+
+            {/* 업로드 중인 이미지 표시 */}
+            {uploadingImages.map((img) => (
+              <div key={img.id} className={`${styles.messageItem} ${styles.myMessage}`}>
+                <div className={styles.messageContent}>
+                  <div className={styles.messageBubble}>
+                    <div className={styles.uploadingImageWrapper}>
+                      <img src={img.preview} alt="업로드 중" className={styles.uploadingImage} />
+                      <div className={styles.uploadingOverlay}>
+                        <div className={styles.spinner}></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </>
         )}
         <div ref={messagesEndRef} />
       </div>

@@ -90,18 +90,25 @@ export default function ChatContainer({ isPartner = false, onRoomSelect }: ChatC
 
       console.log('[ChatContainer] chatRooms 데이터 변경 감지')
 
-      // 현재 chatRooms 상태와 비교하여 unreadCount만 업데이트
+      // 현재 chatRooms 상태와 비교하여 unreadCount, lastMessage, lastMessageTime 업데이트
       setChatRooms(prevRooms => {
         return prevRooms.map(room => {
           const roomSnapshot = snapshot.child(room.id)
           if (roomSnapshot.exists()) {
             const roomData = roomSnapshot.val()
             const unreadCount = roomData.unreadCount?.[user.uid] || 0
+            const lastMessage = roomData.lastMessage || room.lastMessage
+            const lastMessageTime = roomData.lastMessageTime || room.lastMessageTime
 
-            // unreadCount가 변경된 경우에만 업데이트
-            if (room.unreadCount !== unreadCount) {
-              console.log(`[ChatContainer] 채팅방 ${room.id} unreadCount 업데이트: ${room.unreadCount} -> ${unreadCount}`)
-              return { ...room, unreadCount }
+            // unreadCount, lastMessage, lastMessageTime이 변경된 경우에만 업데이트
+            if (room.unreadCount !== unreadCount ||
+                room.lastMessage !== lastMessage ||
+                room.lastMessageTime !== lastMessageTime) {
+              console.log(`[ChatContainer] 채팅방 ${room.id} 업데이트:`, {
+                unreadCount: `${room.unreadCount} -> ${unreadCount}`,
+                lastMessage: lastMessage
+              })
+              return { ...room, unreadCount, lastMessage, lastMessageTime }
             }
           }
           return room
