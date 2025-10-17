@@ -116,6 +116,24 @@ env:
       - BUILD
       - RUNTIME
 
+  # Aligo SMS Configuration
+  - variable: ALIGO_API_KEY
+    value: ofzvo9dtnug88txoah0krnw21hzax4x8
+    availability:
+      - RUNTIME
+  - variable: ALIGO_USER_ID
+    value: lpadcp
+    availability:
+      - RUNTIME
+  - variable: ALIGO_SENDER
+    value: "16665157"
+    availability:
+      - RUNTIME
+  - variable: ALIGO_TEST_MODE
+    value: "false"
+    availability:
+      - RUNTIME
+
   # Grant access to secrets in Cloud Secret Manager.
   # See https://firebase.google.com/docs/app-hosting/configure#secret-parameters
   # - variable: MY_SECRET
