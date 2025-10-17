@@ -30,7 +30,7 @@ export interface Notice {
   publishedAt?: Date | Timestamp | FieldValue | null
 }
 
-const COLLECTION_NAME = 'notices'
+const COLLECTION_NAME = 'partner_notices'
 
 // 공지사항 생성
 export const createNotice = async (noticeData: Omit<Notice, 'id'>): Promise<string> => {

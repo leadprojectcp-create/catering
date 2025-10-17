@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { getPartnerNotices, deleteNotice, updateNotice } from '@/lib/services/noticeService'
+import { getPartnerNotices, deleteNotice, updateNotice } from '@/lib/services/partnerNoticeService'
 import { useAuth } from '@/contexts/AuthContext'
-import type { Notice } from '@/lib/services/noticeService'
+import type { Notice } from '@/lib/services/partnerNoticeService'
 import Loading from '@/components/Loading'
 import styles from './NoticeListPage.module.css'
 

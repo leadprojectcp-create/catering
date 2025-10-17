@@ -11,6 +11,8 @@ import { db } from '@/lib/firebase'
 import { getProduct } from '@/lib/services/productService'
 import ChatRoom from './ChatRoom'
 import ChatRoomHeader from './ChatRoomHeader'
+import Header from '@/components/Header'
+import PartnerHeader from '@/components/partner/PartnerHeader'
 import styles from './ChatContainer.module.css'
 
 interface ChatRoomWithName extends Omit<ChatRoomType, 'unreadCount'> {
@@ -20,10 +22,9 @@ interface ChatRoomWithName extends Omit<ChatRoomType, 'unreadCount'> {
 
 interface ChatContainerProps {
   isPartner?: boolean
-  onRoomSelect?: (roomName: string) => void
 }
 
-export default function ChatContainer({ isPartner = false, onRoomSelect }: ChatContainerProps) {
+export default function ChatContainer({ isPartner = false }: ChatContainerProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { user, loading: authLoading } = useAuth()
@@ -31,6 +32,17 @@ export default function ChatContainer({ isPartner = false, onRoomSelect }: ChatC
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null)
   const [initialProductId, setInitialProductId] = useState<string | null>(null)
   const [initialMessage, setInitialMessage] = useState<string | null>(null)
+  const [isMobile, setIsMobile] = useState(false)
+
+  // 모바일 감지
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768)
+    }
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
 
   // 채팅방 목록 로드 (한 번만)
   useEffect(() => {
@@ -57,9 +69,6 @@ export default function ChatContainer({ isPartner = false, onRoomSelect }: ChatC
       setSelectedRoomId(roomId)
     } else {
       setSelectedRoomId(null)
-      if (onRoomSelect) {
-        onRoomSelect('')
-      }
     }
 
     // productId가 있으면 해당 상품의 가게 주인과 채팅방 찾기/생성
@@ -76,7 +85,7 @@ export default function ChatContainer({ isPartner = false, onRoomSelect }: ChatC
       setInitialMessage(message)
       console.log('[ChatContainer] message:', message)
     }
-  }, [searchParams, user, onRoomSelect])
+  }, [searchParams, user])
 
   // 실시간으로 전체 chatRooms의 unreadCount 구독 (한 번만 설정)
   useEffect(() => {
@@ -248,13 +257,6 @@ export default function ChatContainer({ isPartner = false, onRoomSelect }: ChatC
 
   const handleRoomClick = (roomId: string) => {
     setSelectedRoomId(roomId)
-
-    // 선택된 채팅방의 이름을 부모에 전달
-    const room = chatRooms.find(r => r.id === roomId)
-    if (room && onRoomSelect) {
-      onRoomSelect(room.otherUserName || room.storeName || '채팅')
-    }
-
     router.push(`/chat?roomId=${roomId}`, { scroll: false })
   }
 
@@ -296,9 +298,15 @@ export default function ChatContainer({ isPartner = false, onRoomSelect }: ChatC
   }
 
   return (
-    <div className={styles.container}>
-      {/* 왼쪽: 채팅방 목록 */}
-      <div className={styles.sidebar}>
+    <>
+      {/* 모바일 채팅룸에서는 ChatRoomHeader, 그 외에는 기본 헤더 표시 안함 (page.tsx에서 렌더링) */}
+      {isMobile && selectedRoomId && (
+        <ChatRoomHeader roomId={selectedRoomId} showFullHeader={true} />
+      )}
+
+      <div className={styles.container}>
+        {/* 왼쪽: 채팅방 목록 */}
+        <div className={styles.sidebar}>
         <div className={styles.sidebarHeader}>
           <h1 className={styles.title}>채팅목록</h1>
         </div>
@@ -346,16 +354,16 @@ export default function ChatContainer({ isPartner = false, onRoomSelect }: ChatC
       <div className={`${styles.mainContent} ${selectedRoomId ? styles.active : ''}`}>
         {selectedRoomId ? (
           <>
-            <div className={styles.chatRoomHeaderWrapper}>
-              <ChatRoomHeader roomId={selectedRoomId} />
-            </div>
+            {/* PC에서만 간단한 채팅방 헤더 표시 */}
+            {!isMobile && (
+              <div className={styles.chatRoomHeaderWrapper}>
+                <ChatRoomHeader roomId={selectedRoomId} showFullHeader={false} />
+              </div>
+            )}
             <ChatRoom
               roomId={selectedRoomId}
               onBack={() => {
                 setSelectedRoomId(null)
-                if (onRoomSelect) {
-                  onRoomSelect('')
-                }
               }}
               isPartner={isPartner}
               initialProductId={initialProductId}
@@ -369,5 +377,6 @@ export default function ChatContainer({ isPartner = false, onRoomSelect }: ChatC
         )}
       </div>
     </div>
+    </>
   )
 }

@@ -41,8 +41,8 @@ service cloud.firestore {
       // 파트너 목록 조회는 모두 가능 (StoreList에서 사용)
       allow read: if true;
 
-      // chatRooms 필드만 업데이트 가능 (채팅방 생성 시)
-      allow update: if isSignedIn() &&
+      // chatRooms 필드만 업데이트 가능 (채팅방 생성 시 또는 나가기 시)
+      allow update: if isSignedIn() && isOwner(userId) &&
         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['chatRooms']);
     }
 
@@ -152,8 +152,8 @@ service cloud.firestore {
         resource.data.userId == request.auth.uid;
     }
 
-    // Notices collection - 공지사항
-    match /notices/{noticeId} {
+    // Partner Notices collection - 파트너 공지사항
+    match /partner_notices/{noticeId} {
       // 모든 사용자 읽기 가능 (게시된 공지사항은 공개)
       allow read: if true;
 
@@ -214,6 +214,26 @@ service cloud.firestore {
         // 삭제 불가
         allow delete: if false;
       }
+    }
+
+    // Reports collection - 신고
+    match /reports/{reportId} {
+      // 관리자만 모든 신고 읽기 가능
+      allow read: if isAdmin();
+
+      // 본인이 작성한 신고만 읽기 가능
+      allow read: if isSignedIn() &&
+        resource.data.reporterUid == request.auth.uid;
+
+      // 로그인한 사용자만 신고 생성 가능 (본인의 reporterUid로만 생성)
+      allow create: if isSignedIn() &&
+        request.resource.data.reporterUid == request.auth.uid;
+
+      // 관리자만 신고 상태 업데이트 가능 (status 변경)
+      allow update: if isAdmin();
+
+      // 삭제 불가
+      allow delete: if false;
     }
   }
 }

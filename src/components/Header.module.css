@@ -62,6 +62,13 @@
   gap: 40px;
 }
 
+/* 모바일 채팅방 액션 버튼들 (전화 + 점3개) */
+.chatRoomActions {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
 .homeIconLink {
   position: relative;
   display: flex;

@@ -162,13 +162,8 @@
 }
 
 .chatRoomHeaderWrapper {
-  display: none;
-}
-
-@media (min-width: 769px) {
-  .chatRoomHeaderWrapper {
-    display: block;
-  }
+  display: block;
+  flex-shrink: 0;
 }
 
 @media (max-width: 768px) {

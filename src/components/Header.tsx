@@ -65,9 +65,10 @@ const getPageTitle = (path: string): string => {
 interface HeaderProps {
   chatRoomTitle?: string
   chatRoomPhone?: string
+  chatRoomMenu?: React.ReactNode
 }
 
-export default function Header({ chatRoomTitle, chatRoomPhone }: HeaderProps = {}) {
+export default function Header({ chatRoomTitle, chatRoomPhone, chatRoomMenu }: HeaderProps = {}) {
   const pathname = usePathname()
   const router = useRouter()
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
@@ -218,30 +219,33 @@ export default function Header({ chatRoomTitle, chatRoomPhone }: HeaderProps = {
           <div className={styles.rightSection}>
             {user ? (
               <>
-                {/* 모바일 채팅룸일 때는 전화 버튼만 표시 */}
+                {/* 모바일 채팅룸일 때는 전화 버튼과 메뉴 표시 */}
                 {isMobile && chatRoomTitle ? (
-                  <a
-                    href={chatRoomPhone ? `tel:${chatRoomPhone}` : '#'}
-                    className={styles.phoneButton}
-                    onClick={(e) => {
-                      if (!chatRoomPhone) {
-                        e.preventDefault()
-                        alert('전화번호가 없습니다.')
-                      }
-                    }}
-                  >
-                    <span className={styles.phoneIcon}>
-                      <Image
-                        src="/icons/phone.png"
-                        alt="전화"
-                        width={20}
-                        height={20}
-                        quality={100}
-                        unoptimized
-                      />
-                    </span>
-                    <span>전화</span>
-                  </a>
+                  <div className={styles.chatRoomActions}>
+                    <a
+                      href={chatRoomPhone ? `tel:${chatRoomPhone}` : '#'}
+                      className={styles.phoneButton}
+                      onClick={(e) => {
+                        if (!chatRoomPhone) {
+                          e.preventDefault()
+                          alert('전화번호가 없습니다.')
+                        }
+                      }}
+                    >
+                      <span className={styles.phoneIcon}>
+                        <Image
+                          src="/icons/phone.png"
+                          alt="전화"
+                          width={20}
+                          height={20}
+                          quality={100}
+                          unoptimized
+                        />
+                      </span>
+                      <span>전화</span>
+                    </a>
+                    {chatRoomMenu}
+                  </div>
                 ) : (
                   <>
                     {/* 로그인 상태 - 메뉴 아이콘들 표시 */}
