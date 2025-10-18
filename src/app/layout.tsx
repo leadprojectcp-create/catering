@@ -29,7 +29,7 @@ export default function RootLayout({
       <head>
         <meta
           name="viewport"
-          content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0, viewport-fit=cover"
+          content="width=device-width, initial-scale=1, viewport-fit=cover"
         />
         <script
           src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js"

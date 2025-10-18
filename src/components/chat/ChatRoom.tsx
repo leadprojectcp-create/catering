@@ -127,37 +127,52 @@ export default function ChatRoom({ roomId, onBack, isPartner = false, initialPro
   // 메시지가 변경될 때마다 스크롤을 맨 아래로 (DOM 렌더링 전에 실행)
   useLayoutEffect(() => {
     if (messagesContainerRef.current) {
-      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight
+      const container = messagesContainerRef.current
+      container.scrollTop = container.scrollHeight
+      // 모바일에서도 확실하게 스크롤
+      container.scrollTo({
+        top: container.scrollHeight,
+        behavior: 'instant'
+      })
     }
   }, [messages])
 
   // 업로드 중인 이미지가 추가될 때마다 스크롤을 맨 아래로
   useLayoutEffect(() => {
     if (messagesContainerRef.current && uploadingImages.length > 0) {
-      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight
+      const container = messagesContainerRef.current
+      container.scrollTop = container.scrollHeight
+      // 모바일에서도 확실하게 스크롤
+      container.scrollTo({
+        top: container.scrollHeight,
+        behavior: 'instant'
+      })
     }
   }, [uploadingImages])
 
   // 로딩 완료 후 맨 아래로 스크롤
   useEffect(() => {
     if (!loading && messagesContainerRef.current) {
-      // 여러 번 시도해서 확실하게 맨 아래로
-      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight
-      setTimeout(() => {
+      const scrollToBottom = () => {
         if (messagesContainerRef.current) {
-          messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight
+          const container = messagesContainerRef.current
+          container.scrollTop = container.scrollHeight
+          // 모바일에서 강제로 스크롤
+          container.scrollTo({
+            top: container.scrollHeight,
+            behavior: 'instant'
+          })
         }
-      }, 0)
-      setTimeout(() => {
-        if (messagesContainerRef.current) {
-          messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight
-        }
-      }, 50)
-      setTimeout(() => {
-        if (messagesContainerRef.current) {
-          messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight
-        }
-      }, 100)
+      }
+
+      // 즉시 실행
+      scrollToBottom()
+
+      // 여러 번 시도해서 확실하게 맨 아래로 (모바일에서 렌더링 지연 대응)
+      const timeouts = [0, 50, 100, 200, 300, 500]
+      timeouts.forEach(delay => {
+        setTimeout(scrollToBottom, delay)
+      })
     }
   }, [loading])
 
