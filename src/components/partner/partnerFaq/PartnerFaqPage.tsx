@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { getPublishedFaqs, type Faq, type FaqCategory } from '@/lib/services/faqService'
 import Loading from '@/components/Loading'
 import styles from './PartnerFaqPage.module.css'
@@ -61,10 +62,10 @@ export default function PartnerFaqPage() {
             </div>
             <div className={styles.phoneHours}>고객센터 : 오전 10시 ~ 오후 6시 운영</div>
           </div>
-          <a href="/chat" className={styles.chatButton}>
+          <Link href="/chat" className={styles.chatButton}>
             <img src="/icons/partner_faq_chat.png" alt="채팅" className={styles.chatIcon} />
             <span>채팅문의</span>
-          </a>
+          </Link>
         </div>
       </div>
 
