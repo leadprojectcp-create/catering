@@ -1,0 +1,168 @@
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 20px;
+  padding-left: 270px;
+  transition: padding-left 0.3s ease;
+}
+
+@media (max-width: 1023px) {
+  .container {
+    padding-left: 20px;
+  }
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.buttonGroup {
+  display: flex;
+  gap: 12px;
+}
+
+.editButton,
+.deleteButton,
+.listButton {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.editButton {
+  background-color: #3b82f6;
+  color: white;
+}
+
+.editButton:hover {
+  background-color: #2563eb;
+}
+
+.deleteButton {
+  background-color: #ef4444;
+  color: white;
+}
+
+.deleteButton:hover {
+  background-color: #dc2626;
+}
+
+.listButton {
+  background-color: #f3f4f6;
+  color: #374151;
+}
+
+.listButton:hover {
+  background-color: #e5e7eb;
+}
+
+.content {
+  background: white;
+  border-radius: 12px;
+  padding: 40px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.infoSection {
+  margin-bottom: 30px;
+  padding-bottom: 30px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.infoRow {
+  display: flex;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.infoRow:last-child {
+  border-bottom: none;
+}
+
+.label {
+  width: 120px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #6b7280;
+  flex-shrink: 0;
+}
+
+.value {
+  font-size: 14px;
+  color: #374151;
+}
+
+.section {
+  margin-bottom: 30px;
+}
+
+.sectionTitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 16px;
+}
+
+.sectionContent {
+  font-size: 15px;
+  line-height: 1.8;
+  color: #374151;
+  white-space: pre-wrap;
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 16px;
+  }
+
+  .content {
+    padding: 20px;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .buttonGroup {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .editButton,
+  .deleteButton,
+  .listButton {
+    flex: 1;
+    min-width: 80px;
+  }
+
+  .label {
+    width: 100px;
+    font-size: 13px;
+  }
+
+  .value {
+    font-size: 13px;
+  }
+
+  .title {
+    font-size: 24px;
+  }
+}

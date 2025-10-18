@@ -248,5 +248,14 @@ service cloud.firestore {
       // 삭제 불가
       allow delete: if false;
     }
+
+    // FAQs collection - 자주하는 질문
+    match /faqs/{faqId} {
+      // 모든 사용자 읽기 가능 (게시된 FAQ는 공개)
+      allow read: if true;
+
+      // 관리자(level 10)만 생성/수정/삭제 가능
+      allow create, update, delete: if isAdmin();
+    }
   }
 }

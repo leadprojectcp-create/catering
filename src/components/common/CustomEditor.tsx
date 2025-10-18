@@ -9,9 +9,10 @@ interface CustomEditorProps {
   placeholder?: string
   storeId?: string
   productId?: string
+  uploadType?: string
 }
 
-export default function CustomEditor({ value, onChange, placeholder, storeId, productId }: CustomEditorProps) {
+export default function CustomEditor({ value, onChange, placeholder, storeId, productId, uploadType = 'product' }: CustomEditorProps) {
   const editorRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [showColorPicker, setShowColorPicker] = useState(false)
@@ -54,7 +55,7 @@ export default function CustomEditor({ value, onChange, placeholder, storeId, pr
     try {
       const formData = new FormData()
       formData.append('file', file)
-      formData.append('type', 'product')
+      formData.append('type', uploadType)
       if (storeId) formData.append('storeId', storeId)
       if (productId) formData.append('productId', productId)
 

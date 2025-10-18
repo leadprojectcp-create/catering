@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createNotice } from '@/lib/services/partnerNoticeService'
 import { useAuth } from '@/contexts/AuthContext'
+import CustomEditor from '@/components/common/CustomEditor'
 import Loading from '@/components/Loading'
 import styles from './PartnerNoticeWritePage.module.css'
 
@@ -74,13 +75,14 @@ export default function NoticeWritePage() {
 
         <div className={styles.formGroup}>
           <label className={styles.label}>내용</label>
-          <textarea
-            className={styles.textarea}
-            value={formData.content}
-            onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
-            placeholder="공지사항 내용을 입력하세요"
-            rows={8}
-          />
+          <div className={styles.editorWrapper}>
+            <CustomEditor
+              value={formData.content}
+              onChange={(value) => setFormData(prev => ({ ...prev, content: value }))}
+              placeholder="공지사항 내용을 입력하세요"
+              uploadType="partnernotice"
+            />
+          </div>
         </div>
 
         <div className={styles.formGroup}>

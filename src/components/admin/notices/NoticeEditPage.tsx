@@ -180,6 +180,7 @@ export default function NoticeEditPage({ id }: NoticeEditPageProps) {
               value={formData.content}
               onChange={(value) => setFormData(prev => ({ ...prev, content: value }))}
               placeholder="공지사항 내용을 입력하세요"
+              uploadType="notice"
             />
           </div>
         </div>

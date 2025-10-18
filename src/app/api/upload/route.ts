@@ -44,7 +44,10 @@ export async function POST(request: NextRequest) {
       'profile': 'profiles',
       'product': 'products',
       'review': 'reviews',
-      'chat': 'chat'
+      'chat': 'chat',
+      'faq': 'faqs',
+      'notice': 'notices',
+      'partnernotice': 'partner-notices'
     }
 
     const folder = folderMap[uploadType] || 'others'
