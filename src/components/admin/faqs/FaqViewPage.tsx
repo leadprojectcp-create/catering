@@ -109,6 +109,12 @@ export default function FaqViewPage({ id }: FaqViewPageProps) {
       <div className={styles.content}>
         <div className={styles.infoSection}>
           <div className={styles.infoRow}>
+            <span className={styles.label}>대상:</span>
+            <span className={styles.value}>
+              {faq.targetType === 'all' ? '전체' : faq.targetType === 'user' ? '일반 유저' : '파트너'}
+            </span>
+          </div>
+          <div className={styles.infoRow}>
             <span className={styles.label}>카테고리:</span>
             <span className={styles.value}>{getCategoryLabel(faq.category)}</span>
           </div>

@@ -114,7 +114,8 @@ export default function FaqListPage() {
           <thead>
             <tr>
               <th style={{ width: '60px' }}>순서</th>
-              <th style={{ width: '100px' }}>카테고리</th>
+              <th style={{ width: '80px' }}>대상</th>
+              <th style={{ width: '120px' }}>카테고리</th>
               <th>질문</th>
               <th style={{ width: '100px' }}>상태</th>
               <th style={{ width: '100px' }}>작성자</th>
@@ -128,6 +129,9 @@ export default function FaqListPage() {
                 onClick={() => router.push(`/admin/faqs/view/${faq.id}`)}
               >
                 <td>{faq.order}</td>
+                <td>
+                  {faq.targetType === 'all' ? '전체' : faq.targetType === 'user' ? '일반' : '파트너'}
+                </td>
                 <td>
                   <span className={`${styles.categoryBadge} ${getCategoryClass(faq.category)}`}>
                     {getCategoryLabel(faq.category)}

@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { collection, query, where, orderBy, limit, getDocs, Timestamp } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import Loading from '@/components/Loading'
-import { ShoppingBag, Star, TrendingUp, Clock, AlertCircle, DollarSign, Package, MessageSquare, MessageCircle } from 'lucide-react'
+import { ShoppingBag, Star, TrendingUp, Clock, AlertCircle, DollarSign, Package, MessageSquare, MessageCircle, HelpCircle } from 'lucide-react'
 import styles from './PartnerDashboard.module.css'
 
 interface Order {
@@ -501,6 +501,10 @@ export default function PartnerDashboard() {
                 <a href="/partner/store/management" className={styles.quickMenuItem}>
                   <TrendingUp size={20} />
                   <span>가게 관리</span>
+                </a>
+                <a href="/partner/partnerFaq" className={styles.quickMenuItem}>
+                  <HelpCircle size={20} />
+                  <span>고객센터</span>
                 </a>
               </div>
             </div>

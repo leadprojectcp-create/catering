@@ -23,6 +23,7 @@ const getPageTitle = (path: string): string => {
   if (path === '/partner/partnerNotice/management') return '파트너 공지사항 관리'
   if (path === '/partner/partnerNotice/write') return '파트너 공지사항 작성'
   if (path.startsWith('/partner/partnerNotice/edit/')) return '파트너 공지사항 수정'
+  if (path === '/partner/partnerFaq') return '고객센터'
   if (path === '/partner/product/add') return '상품등록'
   if (path.startsWith('/partner/product/edit/')) return '상품수정'
   if (path === '/partner/product/management') return '상품관리'
@@ -426,7 +427,7 @@ export default function PartnerHeader({ chatRoomTitle, chatRoomPhone, chatRoomMe
 
                   {/* 고객센터 */}
                   <Link
-                    href="/partner/customer-service"
+                    href="/partner/partnerFaq"
                     className={styles.drawerMenuItemWithIcon}
                     onClick={closeDrawer}
                   >

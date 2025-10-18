@@ -19,12 +19,14 @@ import { db } from '@/lib/firebase'
 const COLLECTION_NAME = 'faqs'
 
 export type FaqCategory = 'store_account' | 'order' | 'delivery' | 'settlement' | 'review' | 'withdrawal'
+export type FaqTargetType = 'all' | 'user' | 'partner'
 
 export interface Faq {
   id: string
   question: string
   answer: string
   category: FaqCategory
+  targetType: FaqTargetType
   order: number
   status: 'draft' | 'published'
   author: string
@@ -136,10 +138,16 @@ export const getFaqs = async (
 
 // 게시된 FAQ만 가져오기 (사용자용)
 export const getPublishedFaqs = async (
+  targetType?: FaqTargetType,
   category?: FaqCategory
 ): Promise<Faq[]> => {
   try {
     const constraints: QueryConstraint[] = [where('status', '==', 'published')]
+
+    if (targetType) {
+      // targetType이 'all'이거나 지정된 타입인 FAQ만 가져오기
+      constraints.push(where('targetType', 'in', ['all', targetType]))
+    }
 
     if (category) {
       constraints.push(where('category', '==', category))

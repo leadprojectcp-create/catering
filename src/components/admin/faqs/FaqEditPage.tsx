@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { getFaq, updateFaq, type FaqCategory } from '@/lib/services/faqService'
+import { getFaq, updateFaq, type FaqCategory, type FaqTargetType } from '@/lib/services/faqService'
 import { useAuth } from '@/contexts/AuthContext'
 import CustomEditor from '@/components/common/CustomEditor'
 import Loading from '@/components/Loading'
@@ -20,6 +20,7 @@ export default function FaqEditPage({ id }: FaqEditPageProps) {
     question: '',
     answer: '',
     category: 'store_account' as FaqCategory,
+    targetType: 'all' as FaqTargetType,
     order: 0,
     status: 'draft' as 'draft' | 'published'
   })
@@ -37,6 +38,7 @@ export default function FaqEditPage({ id }: FaqEditPageProps) {
           question: faq.question,
           answer: faq.answer,
           category: faq.category,
+          targetType: faq.targetType,
           order: faq.order,
           status: faq.status
         })
@@ -71,6 +73,7 @@ export default function FaqEditPage({ id }: FaqEditPageProps) {
         question: formData.question,
         answer: formData.answer,
         category: formData.category,
+        targetType: formData.targetType,
         order: formData.order,
         status
       })
@@ -100,6 +103,42 @@ export default function FaqEditPage({ id }: FaqEditPageProps) {
       </div>
 
       <div className={styles.formContainer}>
+        <div className={styles.formGroup}>
+          <label className={styles.label}>대상 선택 *</label>
+          <div className={styles.radioGroup}>
+            <label className={styles.radioLabel}>
+              <input
+                type="radio"
+                name="targetType"
+                value="all"
+                checked={formData.targetType === 'all'}
+                onChange={(e) => setFormData(prev => ({ ...prev, targetType: e.target.value as FaqTargetType }))}
+              />
+              <span>전체</span>
+            </label>
+            <label className={styles.radioLabel}>
+              <input
+                type="radio"
+                name="targetType"
+                value="user"
+                checked={formData.targetType === 'user'}
+                onChange={(e) => setFormData(prev => ({ ...prev, targetType: e.target.value as FaqTargetType }))}
+              />
+              <span>일반 유저</span>
+            </label>
+            <label className={styles.radioLabel}>
+              <input
+                type="radio"
+                name="targetType"
+                value="partner"
+                checked={formData.targetType === 'partner'}
+                onChange={(e) => setFormData(prev => ({ ...prev, targetType: e.target.value as FaqTargetType }))}
+              />
+              <span>파트너</span>
+            </label>
+          </div>
+        </div>
+
         <div className={styles.formGroup}>
           <label className={styles.label}>카테고리 *</label>
           <select
