@@ -29,6 +29,7 @@ interface ChatRoomProps {
   initialProductId?: string | null
   initialMessage?: string | null
   showHeader?: boolean
+  onSearchResultsChange?: (count: number, currentIndex: number) => void
 }
 
 export interface ChatRoomRef {
@@ -38,7 +39,7 @@ export interface ChatRoomRef {
   getSearchResults: () => { count: number; currentIndex: number }
 }
 
-const ChatRoom = forwardRef<ChatRoomRef, ChatRoomProps>(({ roomId, onBack, isPartner = false, initialProductId, initialMessage, showHeader = false }, ref) => {
+const ChatRoom = forwardRef<ChatRoomRef, ChatRoomProps>(({ roomId, onBack, isPartner = false, initialProductId, initialMessage, showHeader = false, onSearchResultsChange }, ref) => {
   const router = useRouter()
   const { user, userData, loading: authLoading } = useAuth()
   const [room, setRoom] = useState<ChatRoomType | null>(null)
@@ -72,18 +73,20 @@ const ChatRoom = forwardRef<ChatRoomRef, ChatRoomProps>(({ roomId, onBack, isPar
       const nextIndex = (currentResultIndex + 1) % searchResults.length
       setCurrentResultIndex(nextIndex)
       scrollToMessage(searchResults[nextIndex].id)
+      onSearchResultsChange?.(searchResults.length, nextIndex)
     },
     prevResult: () => {
       if (searchResults.length === 0) return
       const prevIndex = currentResultIndex === 0 ? searchResults.length - 1 : currentResultIndex - 1
       setCurrentResultIndex(prevIndex)
       scrollToMessage(searchResults[prevIndex].id)
+      onSearchResultsChange?.(searchResults.length, prevIndex)
     },
     getSearchResults: () => ({
       count: searchResults.length,
       currentIndex: currentResultIndex
     })
-  }), [searchResults, currentResultIndex])
+  }), [searchResults, currentResultIndex, onSearchResultsChange])
 
   const performSearch = (query: string) => {
     console.log('[ChatRoom] 검색 실행:', query)
@@ -92,6 +95,7 @@ const ChatRoom = forwardRef<ChatRoomRef, ChatRoomProps>(({ roomId, onBack, isPar
     if (!query.trim()) {
       setSearchResults([])
       setCurrentResultIndex(0)
+      onSearchResultsChange?.(0, 0)
       return
     }
 
@@ -108,6 +112,7 @@ const ChatRoom = forwardRef<ChatRoomRef, ChatRoomProps>(({ roomId, onBack, isPar
     console.log('[ChatRoom] 검색 결과:', results.length, '개')
     setSearchResults(results)
     setCurrentResultIndex(0)
+    onSearchResultsChange?.(results.length, 0)
 
     // 첫 번째 결과로 스크롤
     if (results.length > 0) {

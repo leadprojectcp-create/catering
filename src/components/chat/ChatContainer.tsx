@@ -296,15 +296,18 @@ export default function ChatContainer({ isPartner = false }: ChatContainerProps)
     return text
   }
 
+  // 검색 결과 변경 핸들러
+  const handleSearchResultsChange = (count: number, currentIndex: number) => {
+    console.log('[ChatContainer] 검색 결과 변경:', { count, currentIndex })
+    setSearchResultCount(count)
+    setCurrentSearchIndex(currentIndex)
+  }
+
   // 검색 핸들러
   const handleSearch = (query: string) => {
     console.log('[ChatContainer] handleSearch 호출:', query)
     if (chatRoomRef.current) {
       chatRoomRef.current.search(query)
-      const results = chatRoomRef.current.getSearchResults()
-      setSearchResultCount(results.count)
-      setCurrentSearchIndex(results.currentIndex)
-      console.log('[ChatContainer] 검색 결과:', results)
     }
   }
 
@@ -312,8 +315,6 @@ export default function ChatContainer({ isPartner = false }: ChatContainerProps)
     console.log('[ChatContainer] handleNextResult 호출')
     if (chatRoomRef.current) {
       chatRoomRef.current.nextResult()
-      const results = chatRoomRef.current.getSearchResults()
-      setCurrentSearchIndex(results.currentIndex)
     }
   }
 
@@ -321,8 +322,6 @@ export default function ChatContainer({ isPartner = false }: ChatContainerProps)
     console.log('[ChatContainer] handlePrevResult 호출')
     if (chatRoomRef.current) {
       chatRoomRef.current.prevResult()
-      const results = chatRoomRef.current.getSearchResults()
-      setCurrentSearchIndex(results.currentIndex)
     }
   }
 
@@ -418,6 +417,7 @@ export default function ChatContainer({ isPartner = false }: ChatContainerProps)
               isPartner={isPartner}
               initialProductId={initialProductId}
               initialMessage={initialMessage}
+              onSearchResultsChange={handleSearchResultsChange}
             />
           </>
         ) : (

@@ -202,28 +202,39 @@ export default function ChatRoomHeader({
         {/* 검색바 */}
         {showSearchBar && (
           <div className={styles.searchBar}>
-            <input
-              type="text"
-              className={styles.searchInput}
-              placeholder="메시지 검색..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              autoFocus
-            />
-            <button
-              className={styles.searchSubmitButton}
-              onClick={() => {
-                console.log('[ChatRoomHeader] 검색 버튼 클릭:', searchQuery)
-                if (searchQuery.trim()) {
-                  console.log('[ChatRoomHeader] onSearch 호출:', searchQuery)
-                  onSearch?.(searchQuery)
-                } else {
-                  console.log('[ChatRoomHeader] 검색어가 비어있습니다')
-                }
-              }}
-            >
-              검색
-            </button>
+            <div className={styles.searchInputWrapper}>
+              <input
+                type="text"
+                className={styles.searchInput}
+                placeholder="메시지 검색..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && searchQuery.trim()) {
+                    onSearch?.(searchQuery)
+                  }
+                }}
+                autoFocus
+              />
+              <button
+                className={styles.searchInputButton}
+                onClick={() => {
+                  console.log('[ChatRoomHeader] 검색 버튼 클릭:', searchQuery)
+                  if (searchQuery.trim()) {
+                    console.log('[ChatRoomHeader] onSearch 호출:', searchQuery)
+                    onSearch?.(searchQuery)
+                  } else {
+                    console.log('[ChatRoomHeader] 검색어가 비어있습니다')
+                  }
+                }}
+                aria-label="검색"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <path d="m21 21-4.35-4.35"></path>
+                </svg>
+              </button>
+            </div>
 
             {/* 검색 결과 카운터 및 네비게이션 */}
             {searchResultCount > 0 && (
@@ -255,6 +266,7 @@ export default function ChatRoomHeader({
               onClick={() => {
                 setShowSearchBar(false)
                 setSearchQuery('')
+                onSearch?.('') // 검색 초기화하여 하이라이트 제거
               }}
             >
               ✕
@@ -325,40 +337,46 @@ export default function ChatRoomHeader({
       {/* 검색바 */}
       {showSearchBar && (
         <div className={styles.searchBar}>
-          <input
-            type="text"
-            className={styles.searchInput}
-            placeholder="메시지 검색..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && searchQuery.trim()) {
-                onSearch?.(searchQuery)
-              }
-            }}
-            autoFocus
-          />
-          <button
-            className={styles.searchSubmitButton}
-            onClick={() => {
-              console.log('[ChatRoomHeader PC] 검색 버튼 클릭:', searchQuery)
-              console.log('[ChatRoomHeader PC] onSearch 타입:', typeof onSearch)
-              console.log('[ChatRoomHeader PC] onSearch 존재:', !!onSearch)
-              if (searchQuery.trim()) {
-                console.log('[ChatRoomHeader PC] onSearch 호출 시작:', searchQuery)
-                if (onSearch) {
-                  onSearch(searchQuery)
-                  console.log('[ChatRoomHeader PC] onSearch 호출 완료')
-                } else {
-                  console.error('[ChatRoomHeader PC] onSearch가 undefined입니다!')
+          <div className={styles.searchInputWrapper}>
+            <input
+              type="text"
+              className={styles.searchInput}
+              placeholder="메시지 검색..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && searchQuery.trim()) {
+                  onSearch?.(searchQuery)
                 }
-              } else {
-                console.log('[ChatRoomHeader PC] 검색어가 비어있습니다')
-              }
-            }}
-          >
-            검색
-          </button>
+              }}
+              autoFocus
+            />
+            <button
+              className={styles.searchInputButton}
+              onClick={() => {
+                console.log('[ChatRoomHeader PC] 검색 버튼 클릭:', searchQuery)
+                console.log('[ChatRoomHeader PC] onSearch 타입:', typeof onSearch)
+                console.log('[ChatRoomHeader PC] onSearch 존재:', !!onSearch)
+                if (searchQuery.trim()) {
+                  console.log('[ChatRoomHeader PC] onSearch 호출 시작:', searchQuery)
+                  if (onSearch) {
+                    onSearch(searchQuery)
+                    console.log('[ChatRoomHeader PC] onSearch 호출 완료')
+                  } else {
+                    console.error('[ChatRoomHeader PC] onSearch가 undefined입니다!')
+                  }
+                } else {
+                  console.log('[ChatRoomHeader PC] 검색어가 비어있습니다')
+                }
+              }}
+              aria-label="검색"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="8"></circle>
+                <path d="m21 21-4.35-4.35"></path>
+              </svg>
+            </button>
+          </div>
 
           {/* 검색 결과 카운터 및 네비게이션 */}
           {searchResultCount > 0 && (
@@ -390,6 +408,7 @@ export default function ChatRoomHeader({
             onClick={() => {
               setShowSearchBar(false)
               setSearchQuery('')
+              onSearch?.('') // 검색 초기화하여 하이라이트 제거
             }}
           >
             ✕
