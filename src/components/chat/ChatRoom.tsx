@@ -119,9 +119,23 @@ export default function ChatRoom({ roomId, onBack, isPartner = false, initialPro
   const handleInputFocus = async () => {
     if (!user || !roomId) return
 
+    // 모바일 자동 확대 방지
+    const viewport = document.querySelector('meta[name=viewport]')
+    if (viewport) {
+      viewport.setAttribute('content', 'width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover')
+    }
+
     console.log('[ChatRoom] 입력창 포커스 - 읽음 처리 시작')
     await markMessagesAsRead(roomId, user.uid)
     console.log('[ChatRoom] 읽음 처리 완료')
+  }
+
+  // 입력창에서 포커스 해제될 때 줌 다시 활성화
+  const handleInputBlur = () => {
+    const viewport = document.querySelector('meta[name=viewport]')
+    if (viewport) {
+      viewport.setAttribute('content', 'width=device-width, initial-scale=1, viewport-fit=cover')
+    }
   }
 
   // 메시지가 변경될 때마다 스크롤을 맨 아래로 (DOM 렌더링 전에 실행)
@@ -561,6 +575,7 @@ export default function ChatRoom({ roomId, onBack, isPartner = false, initialPro
           value={inputText}
           onChange={(e) => setInputText(e.target.value)}
           onFocus={handleInputFocus}
+          onBlur={handleInputBlur}
           disabled={isUploading}
         />
         <button
