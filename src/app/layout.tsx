@@ -33,7 +33,6 @@ export default function RootLayout({
         />
         <script
           src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js"
-          integrity="sha384-TiCUE00h+gjGhDVZGOyEjGKFf1SnQ4oBXSqDvPSvzxG4tVxLl6d0KmB1tPQJFGlq"
           crossOrigin="anonymous"
           async
         ></script>
@@ -59,6 +58,29 @@ export default function RootLayout({
                 }
                 lastTouchEnd = now;
               }, false);
+
+              // Prevent zoom on input/textarea focus (모든 input에 적용)
+              document.addEventListener('touchstart', function(event) {
+                const target = event.target;
+                if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) {
+                  const viewport = document.querySelector('meta[name=viewport]');
+                  if (viewport) {
+                    viewport.setAttribute('content', 'width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover');
+                  }
+                }
+              }, { passive: true });
+
+              document.addEventListener('blur', function(event) {
+                setTimeout(function() {
+                  const activeElement = document.activeElement;
+                  if (!activeElement || (activeElement.tagName !== 'INPUT' && activeElement.tagName !== 'TEXTAREA')) {
+                    const viewport = document.querySelector('meta[name=viewport]');
+                    if (viewport) {
+                      viewport.setAttribute('content', 'width=device-width, initial-scale=1, viewport-fit=cover');
+                    }
+                  }
+                }, 100);
+              }, true);
 
               // Prevent zoom on input focus
               window.addEventListener('resize', function() {

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { getUserChatRooms, ChatRoom as ChatRoomType, createOrGetChatRoom } from '@/lib/services/chatService'
@@ -9,7 +9,7 @@ import { realtimeDb } from '@/lib/firebase'
 import { doc, getDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { getProduct } from '@/lib/services/productService'
-import ChatRoom from './ChatRoom'
+import ChatRoom, { ChatRoomRef } from './ChatRoom'
 import ChatRoomHeader from './ChatRoomHeader'
 import Header from '@/components/Header'
 import PartnerHeader from '@/components/partner/PartnerHeader'
@@ -33,6 +33,9 @@ export default function ChatContainer({ isPartner = false }: ChatContainerProps)
   const [initialProductId, setInitialProductId] = useState<string | null>(null)
   const [initialMessage, setInitialMessage] = useState<string | null>(null)
   const [isMobile, setIsMobile] = useState(false)
+  const chatRoomRef = useRef<ChatRoomRef>(null)
+  const [searchResultCount, setSearchResultCount] = useState(0)
+  const [currentSearchIndex, setCurrentSearchIndex] = useState(0)
 
   // 모바일 감지
   useEffect(() => {
@@ -293,6 +296,36 @@ export default function ChatContainer({ isPartner = false }: ChatContainerProps)
     return text
   }
 
+  // 검색 핸들러
+  const handleSearch = (query: string) => {
+    console.log('[ChatContainer] handleSearch 호출:', query)
+    if (chatRoomRef.current) {
+      chatRoomRef.current.search(query)
+      const results = chatRoomRef.current.getSearchResults()
+      setSearchResultCount(results.count)
+      setCurrentSearchIndex(results.currentIndex)
+      console.log('[ChatContainer] 검색 결과:', results)
+    }
+  }
+
+  const handleNextResult = () => {
+    console.log('[ChatContainer] handleNextResult 호출')
+    if (chatRoomRef.current) {
+      chatRoomRef.current.nextResult()
+      const results = chatRoomRef.current.getSearchResults()
+      setCurrentSearchIndex(results.currentIndex)
+    }
+  }
+
+  const handlePrevResult = () => {
+    console.log('[ChatContainer] handlePrevResult 호출')
+    if (chatRoomRef.current) {
+      chatRoomRef.current.prevResult()
+      const results = chatRoomRef.current.getSearchResults()
+      setCurrentSearchIndex(results.currentIndex)
+    }
+  }
+
   if (authLoading) {
     return null
   }
@@ -301,7 +334,15 @@ export default function ChatContainer({ isPartner = false }: ChatContainerProps)
     <>
       {/* 모바일 채팅룸에서는 ChatRoomHeader, 그 외에는 기본 헤더 표시 안함 (page.tsx에서 렌더링) */}
       {isMobile && selectedRoomId && (
-        <ChatRoomHeader roomId={selectedRoomId} showFullHeader={true} />
+        <ChatRoomHeader
+          roomId={selectedRoomId}
+          showFullHeader={true}
+          onSearch={handleSearch}
+          searchResultCount={searchResultCount}
+          currentSearchIndex={currentSearchIndex}
+          onNextResult={handleNextResult}
+          onPrevResult={handlePrevResult}
+        />
       )}
 
       <div className={styles.container}>
@@ -357,10 +398,19 @@ export default function ChatContainer({ isPartner = false }: ChatContainerProps)
             {/* PC에서만 간단한 채팅방 헤더 표시 */}
             {!isMobile && (
               <div className={styles.chatRoomHeaderWrapper}>
-                <ChatRoomHeader roomId={selectedRoomId} showFullHeader={false} />
+                <ChatRoomHeader
+                  roomId={selectedRoomId}
+                  showFullHeader={false}
+                  onSearch={handleSearch}
+                  searchResultCount={searchResultCount}
+                  currentSearchIndex={currentSearchIndex}
+                  onNextResult={handleNextResult}
+                  onPrevResult={handlePrevResult}
+                />
               </div>
             )}
             <ChatRoom
+              ref={chatRoomRef}
               roomId={selectedRoomId}
               onBack={() => {
                 setSelectedRoomId(null)

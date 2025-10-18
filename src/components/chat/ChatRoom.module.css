@@ -88,6 +88,33 @@
   gap: 4px;
   margin-bottom: 8px;
   width: 100%;
+  transition: background-color 0.3s;
+  padding: 4px;
+  margin-left: -4px;
+  margin-right: -4px;
+  border-radius: 8px;
+}
+
+.messageItem.highlighted {
+  background-color: rgba(255, 224, 102, 0.3);
+  animation: highlightFade 2s ease-out;
+}
+
+@keyframes highlightFade {
+  0% {
+    background-color: rgba(255, 224, 102, 0.5);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+.searchHighlight {
+  background-color: #FFD700;
+  color: #fff;
+  font-weight: 600;
+  padding: 2px 4px;
+  border-radius: 3px;
 }
 
 .myMessage {
@@ -247,6 +274,7 @@
   border-top: 1px solid #e5e7eb;
   flex-shrink: 0;
   position: relative;
+  box-sizing: border-box;
 }
 
 @media (max-width: 768px) {
@@ -255,9 +283,13 @@
     bottom: 0;
     left: 0;
     right: 0;
-    padding: 12px;
+    width: 100%;
+    padding: 10px;
+    margin: 0;
+    gap: 6px;
     z-index: 100;
     box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+    box-sizing: border-box;
   }
 }
 

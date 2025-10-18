@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useRef, useLayoutEffect } from 'react'
+import { useEffect, useState, useRef, useLayoutEffect, forwardRef, useImperativeHandle } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import Image from 'next/image'
@@ -19,6 +19,7 @@ import ChatMessageAttachment from './ChatMessageAttachment'
 import ProductSelectPopup from './ProductSelectPopup'
 import ProductMessageCard from './ProductMessageCard'
 import ImageViewerPopup from './ImageViewerPopup'
+import ChatRoomHeader from './ChatRoomHeader'
 import styles from './ChatRoom.module.css'
 
 interface ChatRoomProps {
@@ -27,9 +28,17 @@ interface ChatRoomProps {
   isPartner?: boolean
   initialProductId?: string | null
   initialMessage?: string | null
+  showHeader?: boolean
 }
 
-export default function ChatRoom({ roomId, onBack, isPartner = false, initialProductId, initialMessage }: ChatRoomProps) {
+export interface ChatRoomRef {
+  search: (query: string) => void
+  nextResult: () => void
+  prevResult: () => void
+  getSearchResults: () => { count: number; currentIndex: number }
+}
+
+const ChatRoom = forwardRef<ChatRoomRef, ChatRoomProps>(({ roomId, onBack, isPartner = false, initialProductId, initialMessage, showHeader = false }, ref) => {
   const router = useRouter()
   const { user, userData, loading: authLoading } = useAuth()
   const [room, setRoom] = useState<ChatRoomType | null>(null)
@@ -46,9 +55,65 @@ export default function ChatRoom({ roomId, onBack, isPartner = false, initialPro
   const [pendingMessage, setPendingMessage] = useState<string | null>(null)
   const [pendingProduct, setPendingProduct] = useState<ProductData | null>(null)
   const [uploadingImages, setUploadingImages] = useState<{ id: string; preview: string }[]>([])
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchResults, setSearchResults] = useState<ChatMessage[]>([])
+  const [currentResultIndex, setCurrentResultIndex] = useState(0)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const messagesContainerRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+
+  // ref를 통해 부모 컴포넌트에서 호출할 수 있는 메서드 노출
+  useImperativeHandle(ref, () => ({
+    search: (query: string) => {
+      performSearch(query)
+    },
+    nextResult: () => {
+      if (searchResults.length === 0) return
+      const nextIndex = (currentResultIndex + 1) % searchResults.length
+      setCurrentResultIndex(nextIndex)
+      scrollToMessage(searchResults[nextIndex].id)
+    },
+    prevResult: () => {
+      if (searchResults.length === 0) return
+      const prevIndex = currentResultIndex === 0 ? searchResults.length - 1 : currentResultIndex - 1
+      setCurrentResultIndex(prevIndex)
+      scrollToMessage(searchResults[prevIndex].id)
+    },
+    getSearchResults: () => ({
+      count: searchResults.length,
+      currentIndex: currentResultIndex
+    })
+  }), [searchResults, currentResultIndex])
+
+  const performSearch = (query: string) => {
+    console.log('[ChatRoom] 검색 실행:', query)
+    setSearchQuery(query)
+
+    if (!query.trim()) {
+      setSearchResults([])
+      setCurrentResultIndex(0)
+      return
+    }
+
+    // 메시지 검색 - 텍스트 메시지만 필터링
+    const queryLower = query.toLowerCase()
+    const results = messages.filter(message => {
+      // 이미지나 상품 메시지는 제외
+      if (message.text.startsWith('[이미지]') || message.text.startsWith('[상품]')) {
+        return false
+      }
+      return message.text.toLowerCase().includes(queryLower)
+    })
+
+    console.log('[ChatRoom] 검색 결과:', results.length, '개')
+    setSearchResults(results)
+    setCurrentResultIndex(0)
+
+    // 첫 번째 결과로 스크롤
+    if (results.length > 0) {
+      scrollToMessage(results[0].id)
+    }
+  }
 
   useEffect(() => {
     // 인증 로딩 중이면 아무것도 하지 않음
@@ -119,23 +184,9 @@ export default function ChatRoom({ roomId, onBack, isPartner = false, initialPro
   const handleInputFocus = async () => {
     if (!user || !roomId) return
 
-    // 모바일 자동 확대 방지
-    const viewport = document.querySelector('meta[name=viewport]')
-    if (viewport) {
-      viewport.setAttribute('content', 'width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover')
-    }
-
     console.log('[ChatRoom] 입력창 포커스 - 읽음 처리 시작')
     await markMessagesAsRead(roomId, user.uid)
     console.log('[ChatRoom] 읽음 처리 완료')
-  }
-
-  // 입력창에서 포커스 해제될 때 줌 다시 활성화
-  const handleInputBlur = () => {
-    const viewport = document.querySelector('meta[name=viewport]')
-    if (viewport) {
-      viewport.setAttribute('content', 'width=device-width, initial-scale=1, viewport-fit=cover')
-    }
   }
 
   // 메시지가 변경될 때마다 스크롤을 맨 아래로 (DOM 렌더링 전에 실행)
@@ -391,6 +442,24 @@ export default function ChatRoom({ roomId, onBack, isPartner = false, initialPro
     setPendingProduct(null)
   }
 
+  const scrollToMessage = (messageId: string) => {
+    // 해당 메시지로 스크롤
+    const messageElement = document.getElementById(`message-${messageId}`)
+    if (messageElement && messagesContainerRef.current) {
+      messageElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
+
+      // 하이라이트 효과
+      messageElement.classList.add(styles.highlighted)
+      setTimeout(() => {
+        messageElement.classList.remove(styles.highlighted)
+      }, 2000)
+    }
+  }
+
+  const handleSearchResultClick = (messageId: string) => {
+    scrollToMessage(messageId)
+  }
+
   const formatTime = (timestamp: number) => {
     const date = new Date(timestamp)
     return date.toLocaleTimeString('ko-KR', {
@@ -422,6 +491,29 @@ export default function ChatRoom({ roomId, onBack, isPartner = false, initialPro
 
   const formatPrice = (price: number) => {
     return price.toLocaleString('ko-KR')
+  }
+
+  // 검색어 하이라이트
+  const highlightSearchText = (text: string) => {
+    if (!searchQuery || !searchQuery.trim()) {
+      return text
+    }
+
+    // 정규식 특수문자 이스케이프
+    const escapedQuery = searchQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    const parts = text.split(new RegExp(`(${escapedQuery})`, 'gi'))
+
+    return (
+      <>
+        {parts.map((part, index) =>
+          part.toLowerCase() === searchQuery.toLowerCase() ? (
+            <mark key={index} className={styles.searchHighlight}>{part}</mark>
+          ) : (
+            part
+          )
+        )}
+      </>
+    )
   }
 
   // 메시지 내용 렌더링 (이미지, 상품 등)
@@ -463,8 +555,8 @@ export default function ChatRoom({ roomId, onBack, isPartner = false, initialPro
       return <div className={styles.textMessage}>{text}</div>
     }
 
-    // 일반 텍스트 메시지
-    return <div className={styles.textMessage}>{text}</div>
+    // 일반 텍스트 메시지 (검색어 하이라이트 적용)
+    return <div className={styles.textMessage}>{highlightSearchText(text)}</div>
   }
 
   const renderMessages = () => {
@@ -489,6 +581,7 @@ export default function ChatRoom({ roomId, onBack, isPartner = false, initialPro
           return (
             <div
               key={message.id}
+              id={`message-${message.id}`}
               className={`${styles.messageItem} ${
                 message.senderId === user?.uid ? styles.myMessage : styles.otherMessage
               }`}
@@ -526,8 +619,32 @@ export default function ChatRoom({ roomId, onBack, isPartner = false, initialPro
     return <div className={styles.error}>채팅방을 찾을 수 없습니다.</div>
   }
 
+  console.log('[ChatRoom] Render - showHeader:', showHeader)
+  console.log('[ChatRoom] performSearch 타입:', typeof performSearch)
+
   return (
-    <div className={styles.container}>
+    <>
+      {showHeader && (
+        <ChatRoomHeader
+          roomId={roomId}
+          onSearch={performSearch}
+          searchResultCount={searchResults.length}
+          currentSearchIndex={currentResultIndex}
+          onNextResult={() => {
+            if (searchResults.length === 0) return
+            const nextIndex = (currentResultIndex + 1) % searchResults.length
+            setCurrentResultIndex(nextIndex)
+            scrollToMessage(searchResults[nextIndex].id)
+          }}
+          onPrevResult={() => {
+            if (searchResults.length === 0) return
+            const prevIndex = currentResultIndex === 0 ? searchResults.length - 1 : currentResultIndex - 1
+            setCurrentResultIndex(prevIndex)
+            scrollToMessage(searchResults[prevIndex].id)
+          }}
+        />
+      )}
+      <div className={styles.container}>
       <div className={styles.messagesContainer} ref={messagesContainerRef}>
         {messages.length === 0 && uploadingImages.length === 0 ? (
           <div className={styles.emptyMessages}>
@@ -575,7 +692,6 @@ export default function ChatRoom({ roomId, onBack, isPartner = false, initialPro
           value={inputText}
           onChange={(e) => setInputText(e.target.value)}
           onFocus={handleInputFocus}
-          onBlur={handleInputBlur}
           disabled={isUploading}
         />
         <button
@@ -664,6 +780,12 @@ export default function ChatRoom({ roomId, onBack, isPartner = false, initialPro
           </div>
         </div>
       )}
-    </div>
+
+      </div>
+    </>
   )
-}
+})
+
+ChatRoom.displayName = 'ChatRoom'
+
+export default ChatRoom
