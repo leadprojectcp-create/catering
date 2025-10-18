@@ -1,53 +1,24 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { getNotice, updateNotice } from '@/lib/services/partnerNoticeService'
+import { createNotice } from '@/lib/services/partnerNoticeService'
 import { useAuth } from '@/contexts/AuthContext'
 import Loading from '@/components/Loading'
-import styles from './NoticeWritePage.module.css'
+import styles from './PartnerNoticeWritePage.module.css'
 
-interface NoticeEditPageProps {
-  noticeId: string
-}
-
-export default function NoticeEditPage({ noticeId }: NoticeEditPageProps) {
+export default function NoticeWritePage() {
   const router = useRouter()
   const { user } = useAuth()
-  const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
+  const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
     title: '',
     content: '',
-    status: 'draft' as 'draft' | 'published' | 'archived',
+    status: 'draft' as 'draft' | 'published',
     isVisible: true
   })
 
-  useEffect(() => {
-    loadNotice()
-  }, [noticeId])
-
-  const loadNotice = async () => {
-    try {
-      const notice = await getNotice(noticeId)
-      if (notice) {
-        setFormData({
-          title: notice.title,
-          content: notice.content,
-          status: notice.status,
-          isVisible: notice.isVisible ?? true
-        })
-      }
-    } catch (error) {
-      console.error('공지사항 로드 실패:', error)
-      alert('공지사항을 불러오는데 실패했습니다.')
-      router.push('/partner/notice/management')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleSubmit = async (status: 'draft' | 'published' | 'archived') => {
+  const handleSubmit = async (status: 'draft' | 'published') => {
     if (!formData.title || !formData.content) {
       alert('제목과 내용은 필수 입력 항목입니다.')
       return
@@ -58,23 +29,26 @@ export default function NoticeEditPage({ noticeId }: NoticeEditPageProps) {
       return
     }
 
-    setSaving(true)
+    setLoading(true)
 
     try {
-      await updateNotice(noticeId, {
+      await createNotice({
         title: formData.title,
         content: formData.content,
+        author: user.displayName || user.email || '파트너',
+        authorId: user.uid,
+        partnerId: user.uid,
         status,
         isVisible: formData.isVisible
       })
 
-      alert('공지사항이 수정되었습니다.')
-      router.push('/partner/notice/management')
+      alert(status === 'published' ? '공지사항이 게시되었습니다.' : '임시 저장되었습니다.')
+      router.push('/partner/partnerNotice/management')
     } catch (error) {
-      console.error('공지사항 수정 실패:', error)
-      alert('공지사항 수정에 실패했습니다.')
+      console.error('공지사항 저장 실패:', error)
+      alert('공지사항 저장에 실패했습니다.')
     } finally {
-      setSaving(false)
+      setLoading(false)
     }
   }
 
@@ -83,7 +57,7 @@ export default function NoticeEditPage({ noticeId }: NoticeEditPageProps) {
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <h1 className={styles.title}>공지사항 수정</h1>
+        <h1 className={styles.title}>공지사항 작성</h1>
       </div>
 
       <div className={styles.formContainer}>
@@ -124,15 +98,15 @@ export default function NoticeEditPage({ noticeId }: NoticeEditPageProps) {
         <div className={styles.buttonGroup}>
           <button
             className={styles.cancelButton}
-            onClick={() => router.push('/partner/notice/management')}
-            disabled={saving}
+            onClick={() => router.push('/partner/partnerNotice/management')}
+            disabled={loading}
           >
             취소하기
           </button>
           <button
             className={styles.publishButton}
             onClick={() => handleSubmit('published')}
-            disabled={saving}
+            disabled={loading}
           >
             게시하기
           </button>

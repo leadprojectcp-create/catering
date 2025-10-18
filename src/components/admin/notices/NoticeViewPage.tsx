@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { getNotice, incrementNoticeViewCount } from '@/lib/services/noticeService'
-import type { Notice } from '@/types/notice'
+import { getNotice, incrementNoticeViewCount, type Notice } from '@/lib/services/noticeService'
 import Loading from '@/components/Loading'
 import styles from './NoticeViewPage.module.css'
 

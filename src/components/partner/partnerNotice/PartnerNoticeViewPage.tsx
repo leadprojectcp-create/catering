@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { getNotice } from '@/lib/services/partnerNoticeService'
 import type { Notice } from '@/lib/services/partnerNoticeService'
 import Loading from '@/components/Loading'
-import styles from './NoticeViewPage.module.css'
+import styles from './PartnerNoticeViewPage.module.css'
 
 interface NoticeViewPageProps {
   noticeId: string
@@ -27,7 +27,7 @@ export default function NoticeViewPage({ noticeId }: NoticeViewPageProps) {
     } catch (error) {
       console.error('공지사항 로드 실패:', error)
       alert('공지사항을 불러오는데 실패했습니다.')
-      router.push('/partner/notice/management')
+      router.push('/partner/partnerNotice/management')
     } finally {
       setLoading(false)
     }
@@ -59,7 +59,7 @@ export default function NoticeViewPage({ noticeId }: NoticeViewPageProps) {
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <div className={styles.backButton} onClick={() => router.push('/partner/notice/management')}>
+        <div className={styles.backButton} onClick={() => router.push('/partner/partnerNotice/management')}>
           ← 목록으로
         </div>
         <div className={styles.actions}>

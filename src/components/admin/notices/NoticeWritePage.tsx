@@ -2,9 +2,8 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createNotice } from '@/lib/services/noticeService'
+import { createNotice, type NoticeCategory, type NoticeTargetType } from '@/lib/services/noticeService'
 import { useAuth } from '@/contexts/AuthContext'
-import type { NoticeTargetType } from '@/types/notice'
 import CustomEditor from '@/components/common/CustomEditor'
 import Loading from '@/components/Loading'
 import styles from './NoticeWritePage.module.css'
@@ -17,6 +16,7 @@ export default function NoticeWritePage() {
     title: '',
     content: '',
     targetType: 'all' as NoticeTargetType,
+    category: 'general' as NoticeCategory,
     status: 'draft' as 'draft' | 'published'
   })
 
@@ -38,6 +38,7 @@ export default function NoticeWritePage() {
         title: formData.title,
         content: formData.content,
         targetType: formData.targetType,
+        category: formData.category,
         author: user.displayName || user.email || '관리자',
         authorId: user.uid,
         status
@@ -111,6 +112,32 @@ export default function NoticeWritePage() {
                 onChange={(e) => setFormData(prev => ({ ...prev, targetType: e.target.value as NoticeTargetType }))}
               />
               <span>일반 유저</span>
+            </label>
+          </div>
+        </div>
+
+        <div className={styles.formGroup}>
+          <label className={styles.label}>카테고리 *</label>
+          <div className={styles.radioGroup}>
+            <label className={styles.radioLabel}>
+              <input
+                type="radio"
+                name="category"
+                value="general"
+                checked={formData.category === 'general'}
+                onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value as NoticeCategory }))}
+              />
+              <span>일반</span>
+            </label>
+            <label className={styles.radioLabel}>
+              <input
+                type="radio"
+                name="category"
+                value="event"
+                checked={formData.category === 'event'}
+                onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value as NoticeCategory }))}
+              />
+              <span>이벤트</span>
             </label>
           </div>
         </div>

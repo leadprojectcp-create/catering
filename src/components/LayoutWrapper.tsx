@@ -3,6 +3,7 @@
 import { usePathname, useSearchParams } from 'next/navigation'
 import BottomNavigator from './BottomNavigator'
 import PartnerBottomNav from './partner/PartnerBottomNav'
+import PartnerHeader from './partner/PartnerHeader'
 import Footer from './Footer'
 
 export default function LayoutWrapper() {
@@ -35,10 +36,11 @@ export default function LayoutWrapper() {
     return <BottomNavigator />
   }
 
-  // 파트너 페이지에서는 파트너용 바텀 네비게이터와 Footer 표시
+  // 파트너 페이지에서는 파트너 헤더, 파트너용 바텀 네비게이터와 Footer 표시
   if (isPartnerPage) {
     return (
       <>
+        <PartnerHeader />
         <Footer />
         <PartnerBottomNav />
       </>

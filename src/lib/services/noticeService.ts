@@ -10,12 +10,32 @@ import {
   orderBy,
   where,
   serverTimestamp,
-  QueryConstraint
+  QueryConstraint,
+  Timestamp,
+  FieldValue
 } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
-import { Notice, NoticeTargetType } from '@/types/notice'
 
 const COLLECTION_NAME = 'notices'
+
+export type NoticeTargetType = 'all' | 'partner' | 'user'
+export type NoticeCategory = 'general' | 'event'
+
+export interface Notice {
+  id: string
+  title: string
+  content: string
+  summary?: string
+  targetType: NoticeTargetType
+  category: NoticeCategory
+  author: string
+  authorId: string
+  status: 'draft' | 'published'
+  viewCount?: number
+  createdAt?: Date | Timestamp | FieldValue
+  updatedAt?: Date | Timestamp | FieldValue
+  publishedAt?: Date | Timestamp | FieldValue | null
+}
 
 // 공지사항 생성
 export const createNotice = async (noticeData: Omit<Notice, 'id'>): Promise<string> => {

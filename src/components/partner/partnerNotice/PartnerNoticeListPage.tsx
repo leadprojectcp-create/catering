@@ -6,7 +6,7 @@ import { getPartnerNotices, deleteNotice, updateNotice } from '@/lib/services/pa
 import { useAuth } from '@/contexts/AuthContext'
 import type { Notice } from '@/lib/services/partnerNoticeService'
 import Loading from '@/components/Loading'
-import styles from './NoticeListPage.module.css'
+import styles from './PartnerNoticeListPage.module.css'
 
 export default function NoticeListPage() {
   const router = useRouter()
@@ -110,7 +110,7 @@ export default function NoticeListPage() {
         <h1 className={styles.title}>공지사항 관리</h1>
         <button
           className={styles.addButton}
-          onClick={() => router.push('/partner/notice/write')}
+          onClick={() => router.push('/partner/partnerNotice/write')}
         >
           공지사항 작성하기
         </button>

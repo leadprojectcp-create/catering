@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { collection, query, where, orderBy, limit, getDocs, Timestamp } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
-import PartnerHeader from './PartnerHeader'
 import Loading from '@/components/Loading'
 import { ShoppingBag, Star, TrendingUp, Clock, AlertCircle, DollarSign, Package, MessageSquare, MessageCircle } from 'lucide-react'
 import styles from './PartnerDashboard.module.css'
@@ -313,9 +312,7 @@ export default function PartnerDashboard() {
   }
 
   return (
-    <>
-      <PartnerHeader />
-      <div className={styles.container}>
+    <div className={styles.container}>
         <div className={styles.header}>
           <h1 className={styles.title}>파트너 대시보드</h1>
           {user && (
@@ -510,6 +507,5 @@ export default function PartnerDashboard() {
           </>
         )}
       </div>
-    </>
   )
 }

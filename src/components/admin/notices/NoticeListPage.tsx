@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { getNotices, deleteNotice } from '@/lib/services/noticeService'
-import type { Notice } from '@/types/notice'
+import { getNotices, deleteNotice, type Notice } from '@/lib/services/noticeService'
 import Loading from '@/components/Loading'
 import styles from './NoticeListPage.module.css'
 
