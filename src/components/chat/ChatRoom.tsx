@@ -557,7 +557,7 @@ const ChatRoom = forwardRef<ChatRoomRef, ChatRoomProps>(({ roomId, onBack, isPar
               </div>
             </div>
           )
-        }).reverse()}
+        })}
         <div className={styles.dateDivider}>
           {formatDate(msgs[0].timestamp)}
         </div>

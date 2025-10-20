@@ -55,7 +55,7 @@ export default function SettlementAccountsPage() {
   const { user } = useAuth()
   const [account, setAccount] = useState<SettlementAccount | null>(null)
   const [loading, setLoading] = useState(true)
-  const [isBankListOpen, setIsBankListOpen] = useState(false)
+  const [isBankModalOpen, setIsBankModalOpen] = useState(false)
 
   // 입력 필드
   const [bankCode, setBankCode] = useState('')
@@ -98,12 +98,12 @@ export default function SettlementAccountsPage() {
     setBankCode('')
     setAccountNumber('')
     setHolderName('')
-    setIsBankListOpen(false)
+    setIsBankModalOpen(false)
   }
 
   const handleBankSelect = (code: string) => {
     setBankCode(code)
-    setIsBankListOpen(false)
+    setIsBankModalOpen(false)
   }
 
   const handleSave = async () => {
@@ -179,11 +179,10 @@ export default function SettlementAccountsPage() {
 
       {/* 정산 계좌 */}
       <div className={styles.section}>
-        <h2 className={styles.sectionTitle}>정산 계좌</h2>
-
         {/* 등록된 계좌 정보 (항상 표시) */}
         {account && (
           <div className={styles.accountCard}>
+            <h3 className={styles.accountCardTitle}>등록된 계좌 정보</h3>
             <div className={styles.accountInfo}>
               <div className={styles.accountRow}>
                 <span className={styles.accountLabel}>예금주명</span>
@@ -203,21 +202,6 @@ export default function SettlementAccountsPage() {
 
         {/* 계좌 등록/수정 폼 */}
         <div className={styles.accountForm}>
-          {/* 취소/저장 버튼 (위) */}
-          <div className={styles.formActionsTop}>
-            <button
-              className={styles.cancelButton}
-              onClick={cancelEdit}
-            >
-              취소
-            </button>
-            <button
-              className={styles.saveButton}
-              onClick={handleSave}
-            >
-              저장
-            </button>
-          </div>
 
           {/* 예금주명 */}
           <div className={styles.formGroup}>
@@ -234,11 +218,11 @@ export default function SettlementAccountsPage() {
           {/* 은행과 계좌번호 */}
           <div className={styles.formRow}>
             <div className={styles.formGroup}>
-              <label className={styles.label}>은행</label>
+              <label className={styles.label}>은행명</label>
               <button
                 type="button"
                 className={styles.bankSelectButton}
-                onClick={() => setIsBankListOpen(!isBankListOpen)}
+                onClick={() => setIsBankModalOpen(true)}
               >
                 {bankCode ? (
                   <div className={styles.selectedBank}>
@@ -255,40 +239,7 @@ export default function SettlementAccountsPage() {
                 ) : (
                   <span className={styles.placeholder}>은행 선택</span>
                 )}
-                <svg
-                  className={`${styles.arrowIcon} ${isBankListOpen ? styles.arrowIconOpen : ''}`}
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="20"
-                  height="20"
-                  viewBox="0 0 20 20"
-                  fill="none"
-                >
-                  <path d="M5 7.5L10 12.5L15 7.5" stroke="#6B7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
               </button>
-
-              {isBankListOpen && (
-                <div className={styles.bankList}>
-                  {BANK_LIST.map((bank) => (
-                    <button
-                      key={bank.code}
-                      type="button"
-                      className={`${styles.bankItem} ${bankCode === bank.code ? styles.bankItemSelected : ''}`}
-                      onClick={() => handleBankSelect(bank.code)}
-                    >
-                      <img
-                        src={`/bank/${bank.code}.png`}
-                        alt={bank.name}
-                        className={styles.bankIcon}
-                        onError={(e) => {
-                          e.currentTarget.style.display = 'none'
-                        }}
-                      />
-                      <span>{bank.name}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
             </div>
 
             <div className={styles.formGroup}>
@@ -302,6 +253,22 @@ export default function SettlementAccountsPage() {
               />
             </div>
           </div>
+
+          {/* 버튼 */}
+          <div className={styles.formActions}>
+            <button
+              className={styles.cancelButton}
+              onClick={cancelEdit}
+            >
+              취소
+            </button>
+            <button
+              className={styles.saveButton}
+              onClick={handleSave}
+            >
+              저장
+            </button>
+          </div>
         </div>
       </div>
 
@@ -314,6 +281,43 @@ export default function SettlementAccountsPage() {
           <li>본인 명의의 계좌만 등록 가능합니다.</li>
         </ul>
       </div>
+
+      {/* 은행 선택 모달 */}
+      {isBankModalOpen && (
+        <div className={styles.modalOverlay} onClick={() => setIsBankModalOpen(false)}>
+          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <h3 className={styles.modalTitle}>은행 선택</h3>
+              <button
+                className={styles.modalCloseButton}
+                onClick={() => setIsBankModalOpen(false)}
+              >
+                ✕
+              </button>
+            </div>
+            <div className={styles.bankGrid}>
+              {BANK_LIST.map((bank) => (
+                <button
+                  key={bank.code}
+                  type="button"
+                  className={`${styles.bankGridItem} ${bankCode === bank.code ? styles.bankGridItemSelected : ''}`}
+                  onClick={() => handleBankSelect(bank.code)}
+                >
+                  <img
+                    src={`/bank/${bank.code}.png`}
+                    alt={bank.name}
+                    className={styles.bankGridLogo}
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none'
+                    }}
+                  />
+                  <span>{bank.name}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

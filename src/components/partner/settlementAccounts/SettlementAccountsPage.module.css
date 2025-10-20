@@ -1,21 +1,27 @@
 .container {
   padding: 20px;
   padding-top: 80px;
-  max-width: 980px;
+  max-width: 800px;
   margin: 0 auto;
   background-color: white;
   min-height: 100vh;
 }
 
 .header {
-  margin-bottom: 24px;
+  margin-bottom: 12px;
 }
 
 .title {
   font-size: 24px;
   font-weight: 700;
   color: #333;
-  margin: 0;
+  margin: 0 0 5px 0;
+}
+
+.headerButtons {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
 }
 
 .loading {
@@ -29,13 +35,6 @@
   margin-bottom: 40px;
 }
 
-.sectionTitle {
-  color: #333;
-  font-size: 18px;
-  font-weight: 700;
-  margin: 0 0 16px 0;
-}
-
 /* 계좌 카드 */
 .accountCard {
   background: white;
@@ -44,32 +43,37 @@
   padding: 20px;
 }
 
+.accountCardTitle {
+  color: #333;
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 16px 0;
+}
+
 .accountInfo {
   margin-bottom: 20px;
 }
 
 .accountRow {
   display: flex;
-  justify-content: space-between;
+  gap: 12px;
   align-items: center;
-  padding: 16px 0;
-  border-bottom: 1px solid #F3F4F6;
-}
-
-.accountRow:last-child {
-  border-bottom: none;
+  padding: 8px 0;
 }
 
 .accountLabel {
+  color: #999;
   font-size: 14px;
   font-weight: 600;
-  color: #6B7280;
+  flex-shrink: 0;
+  width: 80px;
 }
 
 .accountValue {
-  font-size: 16px;
-  font-weight: 500;
   color: #333;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: left;
 }
 
 /* 빈 상태 카드 */
@@ -110,15 +114,6 @@
   border-radius: 10px;
   padding: 24px;
   margin-top: 16px;
-}
-
-.formActionsTop {
-  display: flex;
-  gap: 12px;
-  justify-content: flex-end;
-  margin-bottom: 20px;
-  padding-bottom: 20px;
-  border-bottom: 1px solid #F3F4F6;
 }
 
 .formRow {
@@ -207,71 +202,113 @@
   object-fit: contain;
 }
 
-.arrowIcon {
-  flex-shrink: 0;
-  transition: transform 0.2s;
-}
-
-.arrowIconOpen {
-  transform: rotate(180deg);
-}
-
-/* 은행 리스트 */
-.bankList {
-  position: absolute;
-  top: 100%;
+/* 은행 선택 모달 */
+.modalOverlay {
+  position: fixed;
+  top: 0;
   left: 0;
   right: 0;
-  margin-top: 8px;
-  background: white;
-  border: 1px solid #D1D5DB;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  max-height: 300px;
-  overflow-y: auto;
-  z-index: 10;
-}
-
-.bankItem {
-  width: 100%;
-  padding: 12px 16px;
-  background: white;
-  border: none;
-  border-bottom: 1px solid #F3F4F6;
-  cursor: pointer;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
-  gap: 12px;
-  font-size: 14px;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modalContent {
+  background: white;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid #EBEBEB;
+}
+
+.modalTitle {
+  font-size: 18px;
+  font-weight: 600;
   color: #333;
-  text-align: left;
-  transition: background 0.2s;
+  margin: 0;
 }
 
-.bankItem:last-child {
-  border-bottom: none;
+.modalCloseButton {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #999;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.bankItem:hover {
+.modalCloseButton:hover {
+  color: #333;
+}
+
+.bankGrid {
+  padding: 20px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  overflow-y: auto;
+}
+
+.bankGridItem {
+  padding: 16px 12px;
+  background: white;
+  border: 1px solid #EBEBEB;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s;
+  font-size: 13px;
+  color: #333;
+  text-align: center;
+}
+
+.bankGridItem:hover {
+  border-color: #025BD9;
   background: #F9FAFB;
 }
 
-.bankItemSelected {
-  background: #F0F7FF;
-  color: #025BD9;
-  font-weight: 600;
+.bankGridItemSelected {
+  border-color: #025BD9;
+  background: #EFF6FF;
+}
+
+.bankGridLogo {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
 }
 
 .formActions {
   display: flex;
   gap: 12px;
-  justify-content: flex-end;
   margin-top: 20px;
 }
 
 .cancelButton,
 .saveButton {
-  padding: 10px 20px;
+  flex: 1;
+  padding: 12px 20px;
   border-radius: 8px;
   font-size: 14px;
   font-weight: 600;
@@ -351,30 +388,17 @@
 
   .formRow {
     flex-direction: column;
-    gap: 0;
+    gap: 16px;
   }
 
   .formRow .formGroup {
-    margin-bottom: 16px;
+    margin-bottom: 0;
   }
 
-  .formActionsTop {
-    flex-direction: column-reverse;
+  .bankGrid {
+    grid-template-columns: repeat(2, 1fr);
   }
 
-  .formActionsTop .cancelButton,
-  .formActionsTop .saveButton {
-    width: 100%;
-  }
-
-  .formActions {
-    flex-direction: column-reverse;
-  }
-
-  .cancelButton,
-  .saveButton {
-    width: 100%;
-  }
 
   .accountValue {
     font-size: 15px;
