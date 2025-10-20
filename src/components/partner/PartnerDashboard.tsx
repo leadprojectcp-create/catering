@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
 import { collection, query, where, orderBy, limit, getDocs, Timestamp } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
@@ -744,7 +745,7 @@ export default function PartnerDashboard() {
               </div>
 
               <div className={styles.statCard}>
-                <a href="/chat" className={styles.statCardLink}>
+                <Link href="/chat" className={styles.statCardLink}>
                   <h3 className={styles.statLabel}>신규 채팅문의</h3>
                   <span className={styles.statDescription}>
                     미답변 {stats.newChats}건
@@ -755,7 +756,7 @@ export default function PartnerDashboard() {
                       <path d="M9 6L15 12L9 18" stroke="#333" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
                   </div>
-                </a>
+                </Link>
               </div>
 
               <div className={styles.statCard}>
