@@ -1,0 +1,382 @@
+.container {
+  padding: 20px;
+  padding-top: 80px;
+  max-width: 980px;
+  margin: 0 auto;
+  background-color: white;
+  min-height: 100vh;
+}
+
+.header {
+  margin-bottom: 24px;
+}
+
+.title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #333;
+  margin: 0;
+}
+
+.loading {
+  text-align: center;
+  padding: 60px 20px;
+  color: #6B7280;
+}
+
+/* 섹션 */
+.section {
+  margin-bottom: 40px;
+}
+
+.sectionTitle {
+  color: #333;
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0 0 16px 0;
+}
+
+/* 계좌 카드 */
+.accountCard {
+  background: white;
+  border-radius: 10px;
+  border: 1px solid #EBEBEB;
+  padding: 20px;
+}
+
+.accountInfo {
+  margin-bottom: 20px;
+}
+
+.accountRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 0;
+  border-bottom: 1px solid #F3F4F6;
+}
+
+.accountRow:last-child {
+  border-bottom: none;
+}
+
+.accountLabel {
+  font-size: 14px;
+  font-weight: 600;
+  color: #6B7280;
+}
+
+.accountValue {
+  font-size: 16px;
+  font-weight: 500;
+  color: #333;
+}
+
+/* 빈 상태 카드 */
+.emptyCard {
+  background: white;
+  border-radius: 10px;
+  border: 1px solid #EBEBEB;
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.emptyText {
+  font-size: 16px;
+  color: #6B7280;
+  margin: 0 0 20px 0;
+}
+
+.registerButton {
+  padding: 12px 32px;
+  background: #025BD9;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.registerButton:hover {
+  background: #0147A3;
+}
+
+/* 계좌 등록/수정 폼 */
+.accountForm {
+  background: white;
+  border: 1px solid #EBEBEB;
+  border-radius: 10px;
+  padding: 24px;
+  margin-top: 16px;
+}
+
+.formActionsTop {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #F3F4F6;
+}
+
+.formRow {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.formRow .formGroup:first-child {
+  flex: 0 0 35%;
+  margin-bottom: 0;
+}
+
+.formRow .formGroup:last-child {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.formGroup {
+  margin-bottom: 16px;
+  position: relative;
+}
+
+.label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 8px;
+}
+
+.input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #D1D5DB;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #1B1C1F;
+  transition: border-color 0.2s;
+}
+
+.input:focus {
+  outline: none;
+  border-color: #025BD9;
+}
+
+/* 은행 선택 버튼 */
+.bankSelectButton {
+  width: 100%;
+  padding: 12px 16px;
+  background: white;
+  border: 1px solid #D1D5DB;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #1B1C1F;
+  cursor: pointer;
+  transition: border-color 0.2s;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  text-align: left;
+}
+
+.bankSelectButton:hover {
+  border-color: #025BD9;
+}
+
+.bankSelectButton:focus {
+  outline: none;
+  border-color: #025BD9;
+}
+
+.selectedBank {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.placeholder {
+  color: #9CA3AF;
+}
+
+.bankIcon {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+
+.arrowIcon {
+  flex-shrink: 0;
+  transition: transform 0.2s;
+}
+
+.arrowIconOpen {
+  transform: rotate(180deg);
+}
+
+/* 은행 리스트 */
+.bankList {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 8px;
+  background: white;
+  border: 1px solid #D1D5DB;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  max-height: 300px;
+  overflow-y: auto;
+  z-index: 10;
+}
+
+.bankItem {
+  width: 100%;
+  padding: 12px 16px;
+  background: white;
+  border: none;
+  border-bottom: 1px solid #F3F4F6;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+  color: #333;
+  text-align: left;
+  transition: background 0.2s;
+}
+
+.bankItem:last-child {
+  border-bottom: none;
+}
+
+.bankItem:hover {
+  background: #F9FAFB;
+}
+
+.bankItemSelected {
+  background: #F0F7FF;
+  color: #025BD9;
+  font-weight: 600;
+}
+
+.formActions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+.cancelButton,
+.saveButton {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cancelButton {
+  background: white;
+  color: #6B7280;
+  border: 1px solid #D1D5DB;
+}
+
+.saveButton {
+  background: #025BD9;
+  color: white;
+  border: none;
+}
+
+/* 안내사항 */
+.infoBox {
+  background: #F9FAFB;
+  border: 1px solid #E5E7EB;
+  border-radius: 10px;
+  padding: 20px;
+}
+
+.infoTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 12px 0;
+}
+
+.infoList {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.infoList li {
+  color: #6B7280;
+  font-size: 14px;
+  line-height: 1.6;
+  margin-bottom: 8px;
+}
+
+.infoList li:last-child {
+  margin-bottom: 0;
+}
+
+/* 반응형 */
+@media (max-width: 768px) {
+  .container {
+    padding: 16px;
+    padding-top: 80px;
+    padding-bottom: 80px;
+  }
+
+  .title {
+    font-size: 20px;
+  }
+
+  .sectionTitle {
+    font-size: 16px;
+    margin: 0 0 12px 0;
+  }
+
+  .section {
+    margin-bottom: 32px;
+  }
+
+  .accountCard,
+  .accountForm,
+  .emptyCard {
+    padding: 16px;
+  }
+
+  .formRow {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .formRow .formGroup {
+    margin-bottom: 16px;
+  }
+
+  .formActionsTop {
+    flex-direction: column-reverse;
+  }
+
+  .formActionsTop .cancelButton,
+  .formActionsTop .saveButton {
+    width: 100%;
+  }
+
+  .formActions {
+    flex-direction: column-reverse;
+  }
+
+  .cancelButton,
+  .saveButton {
+    width: 100%;
+  }
+
+  .accountValue {
+    font-size: 15px;
+  }
+}

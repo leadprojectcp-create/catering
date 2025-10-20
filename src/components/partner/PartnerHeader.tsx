@@ -24,6 +24,7 @@ const getPageTitle = (path: string): string => {
   if (path === '/partner/partnerNotice/write') return '파트너 공지사항 작성'
   if (path.startsWith('/partner/partnerNotice/edit/')) return '파트너 공지사항 수정'
   if (path === '/partner/partnerFaq') return '고객센터'
+  if (path === '/partner/settlement-accounts') return '정산계좌관리'
   if (path === '/partner/settings') return '설정'
   if (path === '/partner/settings/password-change') return '비밀번호 변경'
   if (path === '/partner/settings/withdrawal') return '회원탈퇴'
@@ -395,6 +396,23 @@ export default function PartnerHeader({ chatRoomTitle, chatRoomPhone, chatRoomMe
               {/* 추가 메뉴 */}
               <div className={styles.menuCategoryFooter}>
                 <div className={styles.categoryItems}>
+                  {/* 정산계좌관리 */}
+                  <Link
+                    href="/partner/settlement-accounts"
+                    className={styles.drawerMenuItemWithIcon}
+                    onClick={closeDrawer}
+                  >
+                    <Image
+                      src="/partner-menu-icons/partner_order.png"
+                      alt="정산계좌관리"
+                      width={20}
+                      height={20}
+                      quality={100}
+                      unoptimized
+                    />
+                    <span>정산계좌관리</span>
+                  </Link>
+
                   {/* 설정 */}
                   <Link
                     href="/partner/settings"
