@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { db } from '@/lib/firebase'
-import { collection, query, where, getDocs, orderBy } from 'firebase/firestore'
+import { collection, query, where, getDocs } from 'firebase/firestore'
 import styles from './SettlementPage.module.css'
 
 interface OrderItem {
@@ -79,8 +79,9 @@ export default function SettlementPage() {
       console.log('[SettlementPage] orderBy 없이 조회된 주문 수:', snapshot2.size)
 
       const ordersList: OrderItem[] = []
+      let index = 0
 
-      snapshot2.forEach((doc, index) => {
+      snapshot2.forEach((doc) => {
         const data = doc.data()
         const productName = data.items?.[0]?.productName || data.productName || '상품명 없음'
 
@@ -105,6 +106,8 @@ export default function SettlementPage() {
           settlementDate: data.settlementDate?.toDate(),
           settlementId: data.settlementId
         })
+
+        index++
       })
 
       // 클라이언트에서 날짜순 정렬

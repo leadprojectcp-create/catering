@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { db } from '@/lib/firebase'
-import { collection, query, where, getDocs, doc, updateDoc, writeBatch, serverTimestamp } from 'firebase/firestore'
+import { collection, query, where, getDocs, doc, writeBatch, serverTimestamp } from 'firebase/firestore'
 import styles from './AdminSettlementPage.module.css'
 
 interface PartnerSettlement {
