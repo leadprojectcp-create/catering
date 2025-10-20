@@ -37,7 +37,7 @@
   overflow-y: auto;
   padding: 20px 16px;
   display: flex;
-  flex-direction: column;
+  flex-direction: column-reverse; /* 역순으로 표시하여 최신 메시지가 자연스럽게 하단에 위치 */
   gap: 12px;
 }
 

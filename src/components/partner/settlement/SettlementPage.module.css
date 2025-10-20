@@ -1,0 +1,276 @@
+.container {
+  padding: 20px;
+  padding-top: 80px;
+  max-width: 800px;
+  margin: 0 auto;
+  background-color: white;
+  min-height: 100vh;
+}
+
+.title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #333;
+  margin: 0 0 32px 0;
+}
+
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  color: #666;
+  font-size: 16px;
+}
+
+/* 요약 섹션 */
+.summarySection {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 40px;
+}
+
+.summaryCard {
+  padding: 20px;
+  border-radius: 12px;
+  background: #F5F7FA;
+  border: 1px solid #E5E7EB;
+}
+
+.summaryCard.highlight {
+  background: #237AF2;
+  border-color: #237AF2;
+}
+
+.summaryLabel {
+  font-size: 14px;
+  font-weight: 500;
+  color: #666;
+  margin-bottom: 8px;
+}
+
+.summaryCard.highlight .summaryLabel {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.summaryValue {
+  font-size: 24px;
+  font-weight: 700;
+  color: #333;
+}
+
+.summaryCard.highlight .summaryValue {
+  color: white;
+}
+
+/* 주문 내역 섹션 */
+.ordersSection {
+  margin-bottom: 40px;
+}
+
+.sectionTitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: #333;
+  margin: 0 0 20px 0;
+}
+
+.emptyState {
+  padding: 80px 20px;
+  text-align: center;
+  color: #999;
+  font-size: 15px;
+}
+
+.ordersList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.orderItem {
+  border: 1px solid #E5E7EB;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: box-shadow 0.2s;
+}
+
+.orderItem:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.orderHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  background: #F9FAFB;
+  border-bottom: 1px solid #E5E7EB;
+}
+
+.orderNumber {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+}
+
+.specialBadge {
+  padding: 4px 8px;
+  border-radius: 4px;
+  background: #FEF3C7;
+  color: #92400E;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.completedBadge {
+  padding: 4px 8px;
+  border-radius: 4px;
+  background: #D1FAE5;
+  color: #065F46;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.pendingBadge {
+  padding: 4px 8px;
+  border-radius: 4px;
+  background: #FEE2E2;
+  color: #991B1B;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.settlementDateText {
+  margin-left: 8px;
+  font-size: 12px;
+  color: #059669;
+  font-weight: 500;
+}
+
+.orderDate {
+  font-size: 14px;
+  color: #666;
+}
+
+.orderContent {
+  padding: 20px;
+}
+
+.productName {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 16px;
+}
+
+.priceInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.priceRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+  color: #666;
+}
+
+.priceRow.fee {
+  color: #DC2626;
+}
+
+.priceRow.settlement {
+  padding-top: 12px;
+  border-top: 1px solid #E5E7EB;
+  margin-top: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+.settlementAmount {
+  color: #237AF2;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 16px;
+    padding-top: 80px;
+    padding-bottom: 80px;
+  }
+
+  .title {
+    font-size: 20px;
+    margin: 0 0 24px 0;
+  }
+
+  .summarySection {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    margin-bottom: 32px;
+  }
+
+  .summaryCard {
+    padding: 16px;
+  }
+
+  .summaryLabel {
+    font-size: 13px;
+  }
+
+  .summaryValue {
+    font-size: 20px;
+  }
+
+  .sectionTitle {
+    font-size: 16px;
+    margin: 0 0 16px 0;
+  }
+
+  .orderHeader {
+    padding: 12px 16px;
+  }
+
+  .orderNumber {
+    font-size: 13px;
+  }
+
+  .specialBadge {
+    font-size: 11px;
+    padding: 3px 6px;
+  }
+
+  .orderDate {
+    font-size: 13px;
+  }
+
+  .orderContent {
+    padding: 16px;
+  }
+
+  .productName {
+    font-size: 15px;
+    margin-bottom: 12px;
+  }
+
+  .priceRow {
+    font-size: 13px;
+  }
+
+  .priceRow.settlement {
+    font-size: 15px;
+  }
+
+  .settlementAmount {
+    font-size: 16px;
+  }
+}

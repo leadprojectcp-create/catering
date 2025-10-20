@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import Link from 'next/link'
 import { getPublishedFaqs, type Faq, type FaqCategory } from '@/lib/services/faqService'
 import Loading from '@/components/Loading'
 import styles from './PartnerFaqPage.module.css'
@@ -62,10 +61,10 @@ export default function PartnerFaqPage() {
             </div>
             <div className={styles.phoneHours}>고객센터 : 오전 10시 ~ 오후 6시 운영</div>
           </div>
-          <Link href="/chat" className={styles.chatButton}>
+          <a href="http://pf.kakao.com/_xcvKtn/chat" target="_blank" rel="noopener noreferrer" className={styles.chatButton}>
             <img src="/icons/partner_faq_chat.png" alt="채팅" className={styles.chatIcon} />
             <span>채팅문의</span>
-          </Link>
+          </a>
         </div>
       </div>
 
@@ -126,15 +125,23 @@ export default function PartnerFaqPage() {
                 className={styles.faqQuestion}
                 onClick={() => toggleFaq(faq.id)}
               >
+                <img src="/icons/question.png" alt="Q" className={styles.questionIcon} />
                 <div className={styles.questionContent}>
                   <span className={styles.categoryBadge}>
                     {getCategoryLabel(faq.category)}
                   </span>
                   <span className={styles.questionText}>{faq.question}</span>
                 </div>
-                <span className={`${styles.arrow} ${openFaqId === faq.id ? styles.open : ''}`}>
-                  ▼
-                </span>
+                <svg
+                  className={`${styles.arrow} ${openFaqId === faq.id ? styles.open : ''}`}
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                >
+                  <path d="M12.0021 14.9497C11.8687 14.9497 11.7437 14.9289 11.6271 14.8872C11.5104 14.8456 11.4021 14.7747 11.3021 14.6747L6.70206 10.0747C6.51873 9.89139 6.4229 9.66222 6.41456 9.38722C6.40623 9.11222 6.50206 8.87472 6.70206 8.67472C6.8854 8.49139 7.11873 8.39972 7.40206 8.39972C7.6854 8.39972 7.91873 8.49139 8.10206 8.67472L12.0021 12.5497L15.9021 8.67472C16.0854 8.49139 16.3146 8.39555 16.5896 8.38722C16.8646 8.37889 17.1021 8.47472 17.3021 8.67472C17.4854 8.85805 17.5771 9.09139 17.5771 9.37472C17.5771 9.65805 17.4854 9.89139 17.3021 10.0747L12.7021 14.6747C12.6021 14.7747 12.4937 14.8456 12.3771 14.8872C12.2604 14.9289 12.1354 14.9497 12.0021 14.9497Z" fill="#1B1C1F"/>
+                </svg>
               </div>
               {openFaqId === faq.id && (
                 <div

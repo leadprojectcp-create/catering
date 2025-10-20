@@ -24,6 +24,9 @@ const getPageTitle = (path: string): string => {
   if (path === '/partner/partnerNotice/write') return '파트너 공지사항 작성'
   if (path.startsWith('/partner/partnerNotice/edit/')) return '파트너 공지사항 수정'
   if (path === '/partner/partnerFaq') return '고객센터'
+  if (path === '/partner/settings') return '설정'
+  if (path === '/partner/settings/password-change') return '비밀번호 변경'
+  if (path === '/partner/settings/withdrawal') return '회원탈퇴'
   if (path === '/partner/product/add') return '상품등록'
   if (path.startsWith('/partner/product/edit/')) return '상품수정'
   if (path === '/partner/product/management') return '상품관리'
@@ -31,6 +34,7 @@ const getPageTitle = (path: string): string => {
   if (path === '/partner/order/history') return '주문내역'
   if (path === '/partner/orders') return '주문관리'
   if (path === '/partner/order/settlements') return '정산내역'
+  if (path === '/partner/settlement') return '정산 내역'
   if (path === '/chat') return '채팅'
   if (path.startsWith('/chat/')) return '채팅'
   return ''
@@ -72,7 +76,7 @@ const partnerMenuItems = [
     iconSrc: '/partner-menu-icons/partner_order.png',
     items: [
       { name: '주문내역', path: '/partner/order/history' },
-      { name: '정산내역', path: '/partner/order/settlements' }
+      { name: '정산내역', path: '/partner/settlement' }
     ]
   },
 ]

@@ -194,57 +194,7 @@ const ChatRoom = forwardRef<ChatRoomRef, ChatRoomProps>(({ roomId, onBack, isPar
     console.log('[ChatRoom] 읽음 처리 완료')
   }
 
-  // 메시지가 변경될 때마다 스크롤을 맨 아래로 (DOM 렌더링 전에 실행)
-  useLayoutEffect(() => {
-    if (messagesContainerRef.current) {
-      const container = messagesContainerRef.current
-      container.scrollTop = container.scrollHeight
-      // 모바일에서도 확실하게 스크롤
-      container.scrollTo({
-        top: container.scrollHeight,
-        behavior: 'instant'
-      })
-    }
-  }, [messages])
-
-  // 업로드 중인 이미지가 추가될 때마다 스크롤을 맨 아래로
-  useLayoutEffect(() => {
-    if (messagesContainerRef.current && uploadingImages.length > 0) {
-      const container = messagesContainerRef.current
-      container.scrollTop = container.scrollHeight
-      // 모바일에서도 확실하게 스크롤
-      container.scrollTo({
-        top: container.scrollHeight,
-        behavior: 'instant'
-      })
-    }
-  }, [uploadingImages])
-
-  // 로딩 완료 후 맨 아래로 스크롤
-  useEffect(() => {
-    if (!loading && messagesContainerRef.current) {
-      const scrollToBottom = () => {
-        if (messagesContainerRef.current) {
-          const container = messagesContainerRef.current
-          container.scrollTop = container.scrollHeight
-          // 모바일에서 강제로 스크롤
-          container.scrollTo({
-            top: container.scrollHeight,
-            behavior: 'instant'
-          })
-        }
-      }
-
-      // 즉시 실행
-      scrollToBottom()
-
-      // 여러 번 시도해서 확실하게 맨 아래로 (모바일에서 렌더링 지연 대응)
-      const timeouts = [0, 50, 100, 200, 300, 500]
-      timeouts.forEach(delay => {
-        setTimeout(scrollToBottom, delay)
-      })
-    }
-  }, [loading])
+  // 역순 렌더링 방식에서는 강제 스크롤이 필요 없음
 
   const loadRoomData = async () => {
     if (!user) return
@@ -297,12 +247,7 @@ const ChatRoom = forwardRef<ChatRoomRef, ChatRoomProps>(({ roomId, onBack, isPar
     }
   }
 
-  const scrollToBottom = () => {
-    // 스크롤 위치를 직접 설정 (애니메이션 없이 즉시 맨 아래로)
-    if (messagesContainerRef.current) {
-      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight
-    }
-  }
+  // scrollToBottom 함수 제거 (역순 렌더링에서는 불필요)
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -575,11 +520,12 @@ const ChatRoom = forwardRef<ChatRoomRef, ChatRoomProps>(({ roomId, onBack, isPar
       messagesByDate[dateKey].push(message)
     })
 
-    return Object.entries(messagesByDate).map(([dateKey, msgs]) => (
+    // 날짜별로 역순 정렬 (최신 날짜가 아래로)
+    const sortedEntries = Object.entries(messagesByDate).reverse()
+
+    return sortedEntries.map(([dateKey, msgs]) => (
       <div key={dateKey}>
-        <div className={styles.dateDivider}>
-          {formatDate(msgs[0].timestamp)}
-        </div>
+        {/* 날짜 구분선을 메시지 아래에 표시 (역순이므로) */}
         {msgs.map((message) => {
           const isProductMessage = message.text.startsWith('[상품]')
           const isImageMessage = message.text.startsWith('[이미지]')
@@ -611,7 +557,10 @@ const ChatRoom = forwardRef<ChatRoomRef, ChatRoomProps>(({ roomId, onBack, isPar
               </div>
             </div>
           )
-        })}
+        }).reverse()}
+        <div className={styles.dateDivider}>
+          {formatDate(msgs[0].timestamp)}
+        </div>
       </div>
     ))
   }
