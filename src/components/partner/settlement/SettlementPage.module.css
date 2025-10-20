@@ -64,16 +64,271 @@
   color: white;
 }
 
+/* 계좌 정보 섹션 */
+.accountInfoSection {
+  border-radius: 10px;
+  border: 1px solid #EBEBEB;
+  padding: 20px;
+  margin-bottom: 32px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.accountInfoLeft {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+}
+
+.accountInfoItem {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.accountInfoLabel {
+  font-size: 13px;
+  color: #999;
+  font-weight: 500;
+}
+
+.accountInfoValue {
+  font-size: 15px;
+  color: #333;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.bankLogo {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+
+.registerAccountButton {
+  padding: 10px 20px;
+  border-radius: 10px;
+  border: 1px solid #EBEBEB;
+  background: white;
+  color: #025BD9;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  white-space: nowrap;
+}
+
+.registerAccountButton:hover {
+  background: #F9FAFB;
+}
+
 /* 주문 내역 섹션 */
 .ordersSection {
   margin-bottom: 40px;
+}
+
+.ordersSectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  gap: 20px;
+  flex-wrap: wrap;
 }
 
 .sectionTitle {
   font-size: 18px;
   font-weight: 700;
   color: #333;
-  margin: 0 0 20px 0;
+  margin: 0;
+}
+
+/* 필터 버튼 */
+.filterButtons {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.periodButton {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid #EBEBEB;
+  background: white;
+  color: #666;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.periodButton:hover {
+  background: #F9FAFB;
+}
+
+.periodButton.active {
+  background: #025BD9;
+  color: white;
+  border-color: #025BD9;
+}
+
+/* 드롭다운 및 달력 */
+.dropdownContainer {
+  position: relative;
+}
+
+.dropdown {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #EBEBEB;
+  background: white;
+  cursor: pointer;
+  min-width: 180px;
+  gap: 8px;
+}
+
+.dropdownText {
+  color: #333;
+  font-size: 14px;
+  font-weight: 500;
+  flex: 1;
+}
+
+.chevronIcon {
+  flex-shrink: 0;
+  opacity: 0.6;
+}
+
+.calendar {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: white;
+  border: 1px solid #F0F0F3;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  min-width: 280px;
+}
+
+.calendarHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.navButton {
+  background: none;
+  border: none;
+  color: #333;
+  font-size: 20px;
+  font-weight: bold;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.navButton:hover {
+  background: #F4F4F4;
+}
+
+.monthYear {
+  color: #333;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.weekday {
+  text-align: center;
+  color: #999;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 8px 0;
+}
+
+.days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0;
+}
+
+.emptyDay {
+  aspect-ratio: 1;
+}
+
+.day {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #333;
+  font-size: 14px;
+  cursor: pointer;
+  position: relative;
+}
+
+.day:hover {
+  background: #F4F4F4;
+  border-radius: 4px;
+}
+
+.selectedDate {
+  color: white;
+  font-weight: 600;
+}
+
+.selectedDate::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 32px;
+  height: 32px;
+  background: #025BD9;
+  border-radius: 50%;
+  z-index: -1;
+}
+
+.inRange {
+  background: rgba(2, 91, 217, 0.1);
+}
+
+.calendarFooter {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #F0F0F3;
+  text-align: center;
+}
+
+.clearButton {
+  background: none;
+  border: 1px solid #F0F0F3;
+  color: #666;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.clearButton:hover {
+  background: #F4F4F4;
 }
 
 .emptyState {
@@ -93,11 +348,6 @@
   border: 1px solid #E5E7EB;
   border-radius: 12px;
   overflow: hidden;
-  transition: box-shadow 0.2s;
-}
-
-.orderItem:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .orderHeader {
@@ -217,6 +467,53 @@
     grid-template-columns: 1fr;
     gap: 12px;
     margin-bottom: 32px;
+  }
+
+  .accountInfoSection {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 16px;
+  }
+
+  .accountInfoLeft {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    width: 100%;
+  }
+
+  .registerAccountButton {
+    width: 100%;
+  }
+
+  .ordersSectionHeader {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .filterButtons {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .periodButton {
+    flex: 1;
+    min-width: 70px;
+  }
+
+  .dropdownContainer {
+    width: 100%;
+  }
+
+  .dropdown {
+    width: 100%;
+  }
+
+  .calendar {
+    right: auto;
+    left: 50%;
+    transform: translateX(-50%);
   }
 
   .summaryCard {

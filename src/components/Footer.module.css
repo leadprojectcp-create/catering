@@ -12,11 +12,12 @@
   text-align: left;
 }
 
-.companyName {
-  color: #ccc;
-  font-size: 32px;
-  font-weight: bold;
+.logoWrapper {
   margin-bottom: 16px;
+}
+
+.logo {
+  object-fit: contain;
 }
 
 .companyInfo {
@@ -59,6 +60,19 @@
 .copyright {
   color: #999;
   font-size: 12px;
+}
+
+/* 데스크탑/모바일 텍스트 전환 */
+.desktopText {
+  display: inline;
+}
+
+.mobileText {
+  display: none;
+}
+
+.mobileOnly {
+  display: none;
 }
 
 .content {
@@ -138,6 +152,23 @@
 
 /* 반응형 */
 @media (max-width: 768px) {
+  .footer {
+    padding: 40px 0 80px 0; /* 모바일에서 하단 여백 추가 */
+  }
+
+  /* 데스크탑 텍스트 숨기고 모바일 텍스트 표시 */
+  .desktopText {
+    display: none;
+  }
+
+  .mobileText {
+    display: inline;
+  }
+
+  .mobileOnly {
+    display: block;
+  }
+
   .content {
     flex-direction: column;
     gap: 16px;

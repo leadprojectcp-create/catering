@@ -3,7 +3,9 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { db } from '@/lib/firebase'
-import { collection, query, where, getDocs } from 'firebase/firestore'
+import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore'
+import { useRouter } from 'next/navigation'
+import { Calendar } from 'lucide-react'
 import styles from './SettlementPage.module.css'
 
 interface OrderItem {
@@ -18,22 +20,71 @@ interface OrderItem {
   settlementId?: string // 정산 ID
 }
 
+interface SettlementAccount {
+  bankCode: string
+  bankName: string
+  accountNumber: string
+  holderName: string
+}
+
+type PeriodFilter = 'all' | 'daily' | 'weekly' | 'monthly' | 'custom'
+
 export default function SettlementPage() {
   const { user } = useAuth()
+  const router = useRouter()
   const [orders, setOrders] = useState<OrderItem[]>([])
   const [loading, setLoading] = useState(true)
   const [totalSettlement, setTotalSettlement] = useState(0)
   const [totalFee, setTotalFee] = useState(0)
+  const [account, setAccount] = useState<SettlementAccount | null>(null)
+
+  // 필터 상태
+  const [periodFilter, setPeriodFilter] = useState<PeriodFilter>('all')
+  const [dateRange, setDateRange] = useState<{ start: Date | null; end: Date | null }>({ start: null, end: null })
+  const [showDatePicker, setShowDatePicker] = useState(false)
+  const [currentMonth, setCurrentMonth] = useState(new Date())
+  const [selectingStart, setSelectingStart] = useState(true)
 
   useEffect(() => {
     console.log('[SettlementPage] useEffect 실행, user:', user)
     if (user) {
       fetchOrders()
+      fetchAccount()
     } else {
       console.log('[SettlementPage] user가 없습니다')
       setLoading(false)
     }
   }, [user])
+
+  // 초기 날짜 필터 설정 (전체)
+  useEffect(() => {
+    handlePeriodFilter('all')
+  }, [])
+
+  const fetchAccount = async () => {
+    if (!user) return
+
+    try {
+      const userRef = doc(db, 'users', user.uid)
+      const userDoc = await getDoc(userRef)
+
+      if (userDoc.exists()) {
+        const userData = userDoc.data()
+        const settlementAccount = userData?.settlementAccount
+
+        if (settlementAccount) {
+          setAccount({
+            bankCode: settlementAccount.bankCode,
+            bankName: settlementAccount.bankName,
+            accountNumber: settlementAccount.accountNumber,
+            holderName: settlementAccount.holderName
+          })
+        }
+      }
+    } catch (error) {
+      console.error('[SettlementPage] 계좌 정보 조회 실패:', error)
+    }
+  }
 
   const fetchOrders = async () => {
     if (!user) {
@@ -189,6 +240,147 @@ export default function SettlementPage() {
     }).format(date)
   }
 
+  // 기간 필터 핸들러
+  const handlePeriodFilter = (period: PeriodFilter) => {
+    setPeriodFilter(period)
+    if (period === 'custom') {
+      setShowDatePicker(true)
+    } else {
+      setShowDatePicker(false)
+
+      if (period === 'all') {
+        setDateRange({ start: null, end: null })
+      } else {
+        const today = new Date()
+        today.setHours(0, 0, 0, 0)
+
+        if (period === 'daily') {
+          setDateRange({ start: today, end: today })
+        } else if (period === 'weekly') {
+          const weekStart = new Date(today)
+          weekStart.setDate(today.getDate() - today.getDay())
+          const weekEnd = new Date(today)
+          weekEnd.setDate(weekStart.getDate() + 6)
+          setDateRange({ start: weekStart, end: weekEnd })
+        } else if (period === 'monthly') {
+          const monthStart = new Date(today.getFullYear(), today.getMonth(), 1)
+          const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0)
+          setDateRange({ start: monthStart, end: monthEnd })
+        }
+      }
+    }
+  }
+
+  // 날짜 범위 라벨
+  const getDateRangeLabel = () => {
+    if (!dateRange.start || !dateRange.end) return '기간 선택'
+    const start = dateRange.start.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' })
+    const end = dateRange.end.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' })
+    return `${start} - ${end}`
+  }
+
+  // 달력 날짜 클릭
+  const handleDateClick = (date: Date) => {
+    if (selectingStart) {
+      setDateRange({ start: date, end: null })
+      setSelectingStart(false)
+    } else {
+      if (dateRange.start && date >= dateRange.start) {
+        setDateRange({ ...dateRange, end: date })
+        setShowDatePicker(false)
+        setSelectingStart(true)
+        setPeriodFilter('custom')
+      } else {
+        setDateRange({ start: date, end: null })
+      }
+    }
+  }
+
+  // 날짜 범위 초기화
+  const clearDateRange = () => {
+    setDateRange({ start: null, end: null })
+    setSelectingStart(true)
+    setPeriodFilter('all')
+    handlePeriodFilter('all')
+  }
+
+  // 날짜 범위 체크
+  const isDateInRange = (date: Date) => {
+    if (!dateRange.start || !dateRange.end) return false
+    return date >= dateRange.start && date <= dateRange.end
+  }
+
+  // 선택된 날짜 체크
+  const isDateSelected = (date: Date) => {
+    if (!dateRange.start && !dateRange.end) return false
+    if (dateRange.start && date.toDateString() === dateRange.start.toDateString()) return true
+    if (dateRange.end && date.toDateString() === dateRange.end.toDateString()) return true
+    return false
+  }
+
+  // 달력 렌더링 헬퍼
+  const getDaysInMonth = (date: Date) => {
+    const year = date.getFullYear()
+    const month = date.getMonth()
+    const firstDay = new Date(year, month, 1)
+    const lastDay = new Date(year, month + 1, 0)
+    const daysInMonth = lastDay.getDate()
+    const startingDayOfWeek = firstDay.getDay()
+
+    return { daysInMonth, startingDayOfWeek }
+  }
+
+  const goToPreviousMonth = () => {
+    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1))
+  }
+
+  const goToNextMonth = () => {
+    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1))
+  }
+
+  const renderCalendar = () => {
+    const { daysInMonth, startingDayOfWeek } = getDaysInMonth(currentMonth)
+    const days = []
+
+    for (let i = 0; i < startingDayOfWeek; i++) {
+      days.push(<div key={`empty-${i}`} className={styles.emptyDay}></div>)
+    }
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      const date = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day)
+      const isSelected = isDateSelected(date)
+      const inRange = isDateInRange(date)
+
+      days.push(
+        <div
+          key={day}
+          className={`${styles.day} ${isSelected ? styles.selectedDate : ''} ${inRange ? styles.inRange : ''}`}
+          onClick={() => handleDateClick(date)}
+        >
+          <span>{day}</span>
+        </div>
+      )
+    }
+
+    return days
+  }
+
+  // 날짜 필터링된 주문
+  const filteredOrders = orders.filter(order => {
+    if (!dateRange.start || !dateRange.end) return true
+
+    const orderDate = new Date(order.orderDate)
+    orderDate.setHours(0, 0, 0, 0)
+
+    const startDate = new Date(dateRange.start)
+    startDate.setHours(0, 0, 0, 0)
+
+    const endDate = new Date(dateRange.end)
+    endDate.setHours(23, 59, 59, 999)
+
+    return orderDate >= startDate && orderDate <= endDate
+  })
+
   if (loading) {
     return (
       <div className={styles.container}>
@@ -222,16 +414,130 @@ export default function SettlementPage() {
         </div>
       </div>
 
-      <div className={styles.ordersSection}>
-        <h2 className={styles.sectionTitle}>주문 내역 ({orders.length}건)</h2>
+      {/* 계좌 정보 섹션 */}
+      <div className={styles.accountInfoSection}>
+        <div className={styles.accountInfoLeft}>
+          <div className={styles.accountInfoItem}>
+            <div className={styles.accountInfoLabel}>은행명</div>
+            <div className={styles.accountInfoValue}>
+              {account ? (
+                <>
+                  <img
+                    src={`/bank/${account.bankCode}.png`}
+                    alt={account.bankName}
+                    className={styles.bankLogo}
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none'
+                    }}
+                  />
+                  {account.bankName}
+                </>
+              ) : (
+                '-'
+              )}
+            </div>
+          </div>
+          <div className={styles.accountInfoItem}>
+            <div className={styles.accountInfoLabel}>예금주</div>
+            <div className={styles.accountInfoValue}>{account?.holderName || '-'}</div>
+          </div>
+          <div className={styles.accountInfoItem}>
+            <div className={styles.accountInfoLabel}>계좌번호</div>
+            <div className={styles.accountInfoValue}>{account?.accountNumber || '-'}</div>
+          </div>
+        </div>
+        <button
+          className={styles.registerAccountButton}
+          onClick={() => router.push('/partner/settlement-accounts')}
+        >
+          정산계좌 등록하기
+        </button>
+      </div>
 
-        {orders.length === 0 ? (
+      <div className={styles.ordersSection}>
+        <div className={styles.ordersSectionHeader}>
+          <h2 className={styles.sectionTitle}>주문 내역 ({filteredOrders.length}건)</h2>
+
+          <div className={styles.filterButtons}>
+            <button
+              className={`${styles.periodButton} ${periodFilter === 'all' ? styles.active : ''}`}
+              onClick={() => handlePeriodFilter('all')}
+            >
+              전체
+            </button>
+            <button
+              className={`${styles.periodButton} ${periodFilter === 'daily' ? styles.active : ''}`}
+              onClick={() => handlePeriodFilter('daily')}
+            >
+              일별
+            </button>
+            <button
+              className={`${styles.periodButton} ${periodFilter === 'weekly' ? styles.active : ''}`}
+              onClick={() => handlePeriodFilter('weekly')}
+            >
+              주별
+            </button>
+            <button
+              className={`${styles.periodButton} ${periodFilter === 'monthly' ? styles.active : ''}`}
+              onClick={() => handlePeriodFilter('monthly')}
+            >
+              월별
+            </button>
+
+            {/* 기간 선택 */}
+            <div className={styles.dropdownContainer}>
+              <div
+                className={styles.dropdown}
+                onClick={() => {
+                  setShowDatePicker(!showDatePicker)
+                  if (!showDatePicker) {
+                    setPeriodFilter('custom')
+                  }
+                }}
+              >
+                <span className={styles.dropdownText}>{getDateRangeLabel()}</span>
+                <Calendar size={16} className={styles.chevronIcon} />
+              </div>
+
+              {showDatePicker && (
+                <div className={styles.calendar}>
+                  <div className={styles.calendarHeader}>
+                    <button className={styles.navButton} onClick={goToPreviousMonth}>‹</button>
+                    <span className={styles.monthYear}>
+                      {currentMonth.getFullYear()}년 {currentMonth.getMonth() + 1}월
+                    </span>
+                    <button className={styles.navButton} onClick={goToNextMonth}>›</button>
+                  </div>
+                  <div className={styles.weekdays}>
+                    <div className={styles.weekday}>일</div>
+                    <div className={styles.weekday}>월</div>
+                    <div className={styles.weekday}>화</div>
+                    <div className={styles.weekday}>수</div>
+                    <div className={styles.weekday}>목</div>
+                    <div className={styles.weekday}>금</div>
+                    <div className={styles.weekday}>토</div>
+                  </div>
+                  <div className={styles.days}>
+                    {renderCalendar()}
+                  </div>
+                  <div className={styles.calendarFooter}>
+                    <button className={styles.clearButton} onClick={clearDateRange}>
+                      초기화
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {filteredOrders.length === 0 ? (
           <div className={styles.emptyState}>
             <p>정산 가능한 주문이 없습니다.</p>
           </div>
         ) : (
           <div className={styles.ordersList}>
-            {orders.map((order) => {
+            {filteredOrders.map((order) => {
               const { fee, settlementAmount, feeRate } = calculateOrderSettlement(order)
 
               return (

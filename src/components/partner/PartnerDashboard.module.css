@@ -2,24 +2,34 @@
   min-height: 100vh;
   padding: 20px;
   padding-top: 80px; /* 헤더 높이(60px) + 여백 */
-  background-color: #f9fafb;
 }
 
 .header {
-  text-align: center;
+  text-align: left;
   margin-bottom: 40px;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
-.title {
-  font-size: 32px;
-  font-weight: 700;
+.welcomeTitle {
   color: #333;
-  margin-bottom: 8px;
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0 0 8px 0;
 }
 
-.welcome {
-  font-size: 18px;
-  color: #6b7280;
+.settlementInfo {
+  color: #333;
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.settlementAmount {
+  color: #025BD9;
+  font-size: 20px;
+  font-weight: 700;
 }
 
 .loading {
@@ -29,6 +39,76 @@
   min-height: 400px;
   font-size: 18px;
   color: #6b7280;
+}
+
+/* 공지사항 슬라이드 (위아래) */
+.noticeSliderWrapper {
+  padding: 16px 20px;
+  border-radius: 10px;
+  background: #FBFBFB;
+  margin-bottom: 40px;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+  overflow: hidden;
+  position: relative;
+  height: 56px;
+}
+
+.noticeSliderContainer {
+  position: relative;
+  height: 100%;
+}
+
+.noticeSliderItem {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  height: 100%;
+  transition: transform 0.5s ease-in-out, opacity 0.5s ease-in-out;
+  opacity: 0;
+}
+
+.noticeSliderItemActive {
+  opacity: 1;
+}
+
+.noticeBadge {
+  padding: 4px 8px;
+  border-radius: 3px;
+  background: #EFF7FF;
+  color: #025BD9;
+  font-size: 14px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.noticeSliderTitle {
+  color: #4E5968;
+  font-size: 16px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+}
+
+.noticeSliderRight {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.noticeSliderDate {
+  color: #999;
+  font-size: 14px;
+  font-weight: 500;
 }
 
 /* 통계 카드 */
@@ -43,45 +123,46 @@
 }
 
 .statCard {
-  background: white;
-  border-radius: 12px;
+  border-radius: 10px;
+  border: 1px solid #F4F4F4;
+  background: #FFF;
+  box-shadow: 0 4px 4px 0 rgba(0, 0, 0, 0.03);
+}
+
+.statCardLink {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
   padding: 20px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  display: flex;
-  gap: 16px;
-}
-
-.statIcon {
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.statContent {
-  flex: 1;
+  text-decoration: none;
 }
 
 .statLabel {
-  font-size: 14px;
-  color: #6b7280;
-  margin-bottom: 4px;
-  font-weight: 500;
-}
-
-.statValue {
-  font-size: 24px;
+  color: #4E5968;
+  font-size: 16px;
   font-weight: 700;
-  color: #111827;
-  margin: 0 0 4px 0;
+  margin: 0;
 }
 
 .statDescription {
-  font-size: 12px;
-  color: #9ca3af;
+  color: #999;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.statCardBottom {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+  margin-top: auto;
+}
+
+.statValue {
+  color: #333;
+  font-size: 24px;
+  font-weight: 700;
+  margin: 0;
 }
 
 .statAlert {
@@ -358,6 +439,36 @@
     font-size: 24px;
   }
 
+  .welcomeTitle {
+    font-size: 18px;
+  }
+
+  .settlementInfo {
+    font-size: 18px;
+  }
+
+  .settlementAmount {
+    font-size: 18px;
+  }
+
+  .noticeSliderWrapper {
+    padding: 12px 16px;
+    height: 48px;
+  }
+
+  .noticeSliderTitle {
+    font-size: 14px;
+  }
+
+  .noticeBadge {
+    font-size: 12px;
+    padding: 3px 6px;
+  }
+
+  .noticeSliderDate {
+    font-size: 13px;
+  }
+
   .statsGrid {
     grid-template-columns: 1fr;
   }
@@ -368,6 +479,23 @@
 
   .statCard {
     padding: 16px;
+  }
+
+  .statLabel {
+    font-size: 14px;
+  }
+
+  .statDescription {
+    font-size: 12px;
+  }
+
+  .statValue {
+    font-size: 20px;
+  }
+
+  .statCardBottom svg {
+    width: 20px;
+    height: 20px;
   }
 
   .activitySection {

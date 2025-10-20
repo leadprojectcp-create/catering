@@ -4,8 +4,9 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { collection, query, where, orderBy, limit, getDocs, Timestamp } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
+import { getPublishedNotices, Notice } from '@/lib/services/noticeService'
 import Loading from '@/components/Loading'
-import { ShoppingBag, Star, TrendingUp, Clock, AlertCircle, DollarSign, Package, MessageSquare, MessageCircle, HelpCircle } from 'lucide-react'
+import { ShoppingBag, Star, TrendingUp, Clock, AlertCircle, DollarSign, Package, MessageSquare, MessageCircle, HelpCircle, Bell } from 'lucide-react'
 import styles from './PartnerDashboard.module.css'
 
 interface Order {
@@ -34,6 +35,7 @@ interface DashboardStats {
   newChats: number // 신규 채팅 문의
   todaySales: number
   monthSales: number
+  monthSettlement: number // 이번 달 정산예정 금액
   newReviews: number
   avgRating: number
   totalProducts: number
@@ -51,6 +53,7 @@ export default function PartnerDashboard() {
     newChats: 0,
     todaySales: 0,
     monthSales: 0,
+    monthSettlement: 0,
     newReviews: 0,
     avgRating: 0,
     totalProducts: 0,
@@ -59,14 +62,37 @@ export default function PartnerDashboard() {
     recentReviews: []
   })
   const [loading, setLoading] = useState(true)
+  const [notices, setNotices] = useState<Notice[]>([])
+  const [currentNoticeIndex, setCurrentNoticeIndex] = useState(0)
 
   useEffect(() => {
     if (user) {
       fetchDashboardData()
+      fetchNotices()
     } else {
       setLoading(false)
     }
   }, [user, userData])
+
+  const fetchNotices = async () => {
+    try {
+      const partnerNotices = await getPublishedNotices('partner')
+      setNotices(partnerNotices.slice(0, 10)) // 최근 10개
+    } catch (error) {
+      console.error('공지사항 로드 실패:', error)
+    }
+  }
+
+  // 공지사항 슬라이드 자동 전환 (위아래)
+  useEffect(() => {
+    if (notices.length <= 1) return
+
+    const interval = setInterval(() => {
+      setCurrentNoticeIndex((prev) => (prev + 1) % notices.length)
+    }, 3000) // 3초마다 전환
+
+    return () => clearInterval(interval)
+  }, [notices.length])
 
   const fetchDashboardData = async () => {
     try {
@@ -269,6 +295,51 @@ export default function PartnerDashboard() {
         if (product.status === 'active') activeProducts++
       })
 
+      // 이번 달 정산 예정 금액 계산
+      // SettlementPage와 동일한 로직: partnerId로 조회, completed & paid 주문
+      // 정산 로직: 1-5건 3.4%, 6건 이상 13.4% 수수료
+      let monthSettlement = 0
+
+      try {
+        // partnerId로 완료된 주문 조회
+        const settlementOrdersQuery = query(
+          collection(db, 'orders'),
+          where('partnerId', '==', storeId),
+          where('orderStatus', '==', 'completed'),
+          where('paymentStatus', '==', 'paid')
+        )
+        const settlementSnapshot = await getDocs(settlementOrdersQuery)
+
+        // createdAt 기준으로 정렬
+        const sortedOrders = settlementSnapshot.docs.sort((a, b) => {
+          const aTime = a.data().createdAt?.toMillis ? a.data().createdAt.toMillis() : 0
+          const bTime = b.data().createdAt?.toMillis ? b.data().createdAt.toMillis() : 0
+          return aTime - bTime // 오래된 순서 (오름차순)
+        })
+
+        // 이번 달 주문만 필터링
+        const monthStartTime = monthStartTimestamp.toMillis()
+        const monthCompletedOrders = sortedOrders.filter(doc => {
+          const createdAt = doc.data().createdAt
+          const createdTime = createdAt?.toMillis ? createdAt.toMillis() : 0
+          return createdTime >= monthStartTime
+        })
+
+        // 정산 금액 계산
+        monthCompletedOrders.forEach((doc, index) => {
+          const order = doc.data()
+          const orderNumber = index + 1
+          const totalProductPrice = order.totalProductPrice || 0
+          const feeRate = orderNumber <= 5 ? 0.034 : 0.134
+          const fee = totalProductPrice * feeRate
+          const settlementAmount = totalProductPrice - fee
+          monthSettlement += settlementAmount
+        })
+      } catch (error) {
+        console.log('정산 금액 계산 실패:', error)
+        monthSettlement = 0
+      }
+
       setStats({
         todayOrders: todayOrdersSnapshot?.size || 0,
         pendingOrders: pendingOrdersSnapshot?.size || 0,
@@ -276,6 +347,7 @@ export default function PartnerDashboard() {
         newChats: 0,
         todaySales,
         monthSales,
+        monthSettlement,
         newReviews: recentReviewsSnapshot?.docs?.length || 0,
         avgRating: reviewCount > 0 ? totalRating / reviewCount : 0,
         totalProducts: productsSnapshot?.size || 0,
@@ -311,14 +383,28 @@ export default function PartnerDashboard() {
     })
   }
 
+  const formatNoticeDate = (date: unknown) => {
+    if (!date) return ''
+    const d = (date as { toDate?: () => Date })?.toDate ? (date as { toDate: () => Date }).toDate() : new Date(date as string | number | Date)
+    return d.toLocaleDateString('ko-KR', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    })
+  }
+
   return (
     <div className={styles.container}>
         <div className={styles.header}>
-          <h1 className={styles.title}>파트너 대시보드</h1>
           {user && (
-            <p className={styles.welcome}>
-              {userData?.companyName || userData?.name}님, 환영합니다!
-            </p>
+            <>
+              <h1 className={styles.welcomeTitle}>
+                {userData?.companyName || userData?.name}님, 환영합니다!
+              </h1>
+              <p className={styles.settlementInfo}>
+                이번달 정산예정 금액은 <span className={styles.settlementAmount}>{formatNumber(stats.monthSettlement)}원</span> 입니다.
+              </p>
+            </>
           )}
         </div>
 
@@ -326,185 +412,83 @@ export default function PartnerDashboard() {
           <Loading />
         ) : (
           <>
+            {/* 공지사항 슬라이드 (위아래) */}
+            {notices.length > 0 && (
+              <div className={styles.noticeSliderWrapper}>
+                <div className={styles.noticeSliderContainer}>
+                  {notices.map((notice, index) => (
+                    <a
+                      key={notice.id}
+                      href={`/notice/${notice.id}`}
+                      className={`${styles.noticeSliderItem} ${
+                        index === currentNoticeIndex ? styles.noticeSliderItemActive : ''
+                      }`}
+                      style={{
+                        transform: `translateY(${(index - currentNoticeIndex) * 100}%)`
+                      }}
+                    >
+                      <span className={styles.noticeBadge}>공지사항</span>
+                      <span className={styles.noticeSliderTitle}>
+                        {notice.title}
+                      </span>
+                      <div className={styles.noticeSliderRight}>
+                        <span className={styles.noticeSliderDate}>
+                          {formatNoticeDate(notice.publishedAt)}
+                        </span>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                          <path d="M7.5 5L12.5 10L7.5 15" stroke="#999" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </div>
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* 주요 통계 카드 */}
             <div className={styles.statsGrid}>
-              <a href="/partner/order/history?filter=pending" className={styles.statCard}>
-                <div className={styles.statIcon} style={{ background: '#fee2e2' }}>
-                  <AlertCircle size={24} color="#ef4444" />
-                </div>
-                <div className={styles.statContent}>
-                  <h3 className={styles.statLabel}>신규 주문</h3>
-                  <p className={styles.statValue}>{stats.newOrders}건</p>
-                  <span className={styles.statDescription}>
-                    승인 대기 중
-                  </span>
-                </div>
-              </a>
-
-              <a href="/partner/order/history" className={styles.statCard}>
-                <div className={styles.statIcon} style={{ background: '#fef3c7' }}>
-                  <ShoppingBag size={24} color="#f59e0b" />
-                </div>
-                <div className={styles.statContent}>
-                  <h3 className={styles.statLabel}>24시간 주문</h3>
-                  <p className={styles.statValue}>{stats.todayOrders}건</p>
-                  <span className={styles.statDescription}>
-                    최근 24시간 이내
-                  </span>
-                </div>
-              </a>
-
               <div className={styles.statCard}>
-                <div className={styles.statIcon} style={{ background: '#dbeafe' }}>
-                  <DollarSign size={24} color="#3b82f6" />
-                </div>
-                <div className={styles.statContent}>
-                  <h3 className={styles.statLabel}>{new Date().getMonth() + 1}월 매출</h3>
-                  <p className={styles.statValue}>{formatNumber(stats.monthSales)}원</p>
+                <a href="/partner/order/history?filter=pending" className={styles.statCardLink}>
+                  <h3 className={styles.statLabel}>신규 주문요청</h3>
                   <span className={styles.statDescription}>
-                    배송 완료 및 결제 완료된 주문
+                    최근 주문 {stats.recentOrders.length > 0 && formatDate(stats.recentOrders[0].createdAt)}
                   </span>
-                </div>
+                  <div className={styles.statCardBottom}>
+                    <p className={styles.statValue}>{stats.newOrders}건</p>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                      <path d="M9 6L15 12L9 18" stroke="#333" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </div>
+                </a>
               </div>
 
               <div className={styles.statCard}>
-                <div className={styles.statIcon} style={{ background: '#dcfce7' }}>
-                  <MessageCircle size={24} color="#10b981" />
-                </div>
-                <div className={styles.statContent}>
-                  <h3 className={styles.statLabel}>신규 채팅 문의</h3>
-                  <p className={styles.statValue}>{stats.newChats}건</p>
+                <a href="/chat" className={styles.statCardLink}>
+                  <h3 className={styles.statLabel}>신규 채팅문의</h3>
                   <span className={styles.statDescription}>
-                    답변 대기 중
+                    미답변 {stats.newChats}건
                   </span>
-                </div>
+                  <div className={styles.statCardBottom}>
+                    <p className={styles.statValue}>{stats.newChats}건</p>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                      <path d="M9 6L15 12L9 18" stroke="#333" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </div>
+                </a>
               </div>
 
               <div className={styles.statCard}>
-                <div className={styles.statIcon} style={{ background: '#fce7f3' }}>
-                  <Star size={24} color="#ec4899" />
-                </div>
-                <div className={styles.statContent}>
+                <a href="/partner/reviews" className={styles.statCardLink}>
                   <h3 className={styles.statLabel}>평균 별점</h3>
-                  <p className={styles.statValue}>{stats.avgRating.toFixed(1)}</p>
                   <span className={styles.statDescription}>
-                    신규 리뷰 {stats.newReviews}개
+                    새로 등록된 리뷰 {stats.newReviews}개
                   </span>
-                </div>
-              </div>
-
-              <div className={styles.statCard}>
-                <div className={styles.statIcon} style={{ background: '#ede9fe' }}>
-                  <Package size={24} color="#8b5cf6" />
-                </div>
-                <div className={styles.statContent}>
-                  <h3 className={styles.statLabel}>등록 상품</h3>
-                  <p className={styles.statValue}>{stats.totalProducts}개</p>
-                  <span className={styles.statDescription}>
-                    활성: {stats.activeProducts}개
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* 최근 활동 */}
-            <div className={styles.recentActivities}>
-              {/* 최근 주문 */}
-              <div className={styles.activitySection}>
-                <h2 className={styles.sectionTitle}>
-                  <Clock size={20} />
-                  최근 주문
-                </h2>
-                <div className={styles.activityList}>
-                  {stats.recentOrders.length === 0 ? (
-                    <p className={styles.emptyMessage}>최근 주문이 없습니다</p>
-                  ) : (
-                    stats.recentOrders.map(order => (
-                      <div key={order.id} className={styles.activityItem}>
-                        <div className={styles.activityInfo}>
-                          <p className={styles.activityTitle}>
-                            {order.orderNumber || order.id.substring(0, 8)}
-                          </p>
-                          <p className={styles.activityDetail}>
-                            {order.orderer || order.customerName} | {formatNumber(order.totalPrice || order.totalAmount || 0)}원
-                          </p>
-                          <span className={`${styles.orderStatus} ${styles[order.orderStatus || 'pending']}`}>
-                            {order.orderStatus === 'pending' ? '승인 대기' :
-                             order.orderStatus === 'accepted' ? '승인 완료' :
-                             order.orderStatus === 'rejected' ? '거부' :
-                             order.orderStatus === 'preparing' ? '준비 중' :
-                             order.orderStatus === 'shipping' ? '배송 중' :
-                             order.orderStatus === 'delivered' ? '배송 완료' :
-                             order.orderStatus === 'cancelled' ? '취소' : '대기중'}
-                          </span>
-                        </div>
-                        <span className={styles.activityTime}>
-                          {formatDate(order.createdAt)}
-                        </span>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-
-              {/* 최근 리뷰 */}
-              <div className={styles.activitySection}>
-                <h2 className={styles.sectionTitle}>
-                  <MessageSquare size={20} />
-                  최근 리뷰
-                </h2>
-                <div className={styles.activityList}>
-                  {stats.recentReviews.length === 0 ? (
-                    <p className={styles.emptyMessage}>최근 리뷰가 없습니다</p>
-                  ) : (
-                    stats.recentReviews.map(review => (
-                      <div key={review.id} className={styles.activityItem}>
-                        <div className={styles.activityInfo}>
-                          <div className={styles.reviewHeader}>
-                            <p className={styles.activityTitle}>
-                              {review.userName || '익명'}
-                            </p>
-                            <div className={styles.rating}>
-                              {'★'.repeat(review.rating || 0)}{'☆'.repeat(5 - (review.rating || 0))}
-                            </div>
-                          </div>
-                          <p className={styles.reviewContent}>
-                            {review.content}
-                          </p>
-                        </div>
-                        <span className={styles.activityTime}>
-                          {formatDate(review.createdAt)}
-                        </span>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* 빠른 메뉴 */}
-            <div className={styles.quickMenu}>
-              <h2 className={styles.sectionTitle}>빠른 메뉴</h2>
-              <div className={styles.quickMenuGrid}>
-                <a href="/partner/order/history" className={styles.quickMenuItem}>
-                  <ShoppingBag size={20} />
-                  <span>주문 관리</span>
-                </a>
-                <a href="/partner/product/management" className={styles.quickMenuItem}>
-                  <Package size={20} />
-                  <span>상품 관리</span>
-                </a>
-                <a href="/partner/review/management" className={styles.quickMenuItem}>
-                  <Star size={20} />
-                  <span>리뷰 관리</span>
-                </a>
-                <a href="/partner/store/management" className={styles.quickMenuItem}>
-                  <TrendingUp size={20} />
-                  <span>가게 관리</span>
-                </a>
-                <a href="/partner/partnerFaq" className={styles.quickMenuItem}>
-                  <HelpCircle size={20} />
-                  <span>고객센터</span>
+                  <div className={styles.statCardBottom}>
+                    <p className={styles.statValue}>{stats.avgRating.toFixed(1)}/5</p>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                      <path d="M9 6L15 12L9 18" stroke="#333" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </div>
                 </a>
               </div>
             </div>
