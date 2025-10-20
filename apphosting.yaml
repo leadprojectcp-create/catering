@@ -96,7 +96,7 @@ env:
       - BUILD
       - RUNTIME
   - variable: PORTONE_API_SECRET
-    value: HSReeOPf8Rq0S9KnqhAiDXnYlgkrwTqZjdBxPMuvNWdwIHn0Q4SHW4j6pKFjFMAlUEM7qrejaLIF2PAq
+    value: live_sk_ex6BJGQOVDP2RjMMvExBVW4w2zNb
     availability:
       - RUNTIME
   - variable: PORTONE_WEBHOOK_SECRET_1
@@ -104,6 +104,9 @@ env:
     availability:
       - RUNTIME
   - variable: PORTONE_WEBHOOK_SECRET_2
+    value: whsec_mj2+4LpHvAfvWHA68mgYwu9Q4VGBHuAKQKxvy9IfXzg=
+    availability:
+      - RUNTIME
   - variable: NEXT_PUBLIC_PORTONE_PG_MID
     value: im_goplaymhhp
     availability:
@@ -111,9 +114,6 @@ env:
       - RUNTIME
   - variable: PORTONE_CLIENT_SECRET
     value: live_ck_ma60RZblrqKg2byvaG263wzYWBm1
-    availability:
-      - RUNTIME
-    value: whsec_mj2+4LpHvAfvWHA68mgYwu9Q4VGBHuAKQKxvy9IfXzg=
     availability:
       - RUNTIME
 
