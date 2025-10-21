@@ -100,10 +100,12 @@ export async function POST(request: NextRequest) {
         )
       }
 
-      // paymentId가 곧 orderId입니다 (주문 생성 시 orderId를 paymentId로 사용)
-      const orderId = paymentId
+      // paymentId 형식: payment-{orderId}-{timestamp}
+      // orderId 추출 (예: payment-xx5LScOWPjlq8PUvxXJt-1761071072457 -> xx5LScOWPjlq8PUvxXJt)
+      const orderId = paymentId.replace(/^payment-/, '').replace(/-\d+$/, '')
 
-      console.log('[Webhook] Using orderId:', orderId)
+      console.log('[Webhook] PaymentId:', paymentId)
+      console.log('[Webhook] Extracted orderId:', orderId)
 
       // Firestore에서 주문 업데이트
       if (orderId) {
@@ -204,7 +206,8 @@ export async function POST(request: NextRequest) {
     // 결제 취소 이벤트 처리
     if (type === 'Transaction.Cancelled') {
       const { paymentId } = data
-      const orderId = paymentId
+      // paymentId에서 orderId 추출
+      const orderId = paymentId.replace(/^payment-/, '').replace(/-\d+$/, '')
 
       if (orderId) {
         const orderRef = doc(db, 'orders', orderId)
@@ -222,7 +225,8 @@ export async function POST(request: NextRequest) {
     // 결제 실패 이벤트 처리
     if (type === 'Transaction.Failed') {
       const { paymentId } = data
-      const orderId = paymentId
+      // paymentId에서 orderId 추출
+      const orderId = paymentId.replace(/^payment-/, '').replace(/-\d+$/, '')
 
       if (orderId) {
         const orderRef = doc(db, 'orders', orderId)
