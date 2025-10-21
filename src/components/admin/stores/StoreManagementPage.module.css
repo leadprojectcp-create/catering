@@ -1,7 +1,15 @@
 .container {
-  padding: 2rem;
-  max-width: 1600px;
-  margin: 0 auto;
+  min-height: 100vh;
+  padding: 40px 20px;
+  padding-left: 270px;
+  background-color: #f9fafb;
+  transition: padding-left 0.3s ease;
+}
+
+@media (max-width: 1023px) {
+  .container {
+    padding-left: 20px;
+  }
 }
 
 .header {
