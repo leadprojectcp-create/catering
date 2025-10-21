@@ -81,7 +81,7 @@ export default function CompleteSignupPage() {
 
         // 타입별 추가 정보
         ...(userType === 'user' ? {
-          companyName: formData.companyName || '',
+          ...(formData.companyName ? { companyName: formData.companyName } : {}),
           phone: formData.phone || ''
         } : {
           businessName: formData.businessName,

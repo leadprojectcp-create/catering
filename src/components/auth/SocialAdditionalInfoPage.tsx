@@ -207,7 +207,7 @@ export default function SocialAdditionalInfoPage() {
           email: user.email || existingUserData?.email || currentEmail || '',
           name: formData.name,
           phone: formData.phone,
-          companyName: formData.companyName || '',
+          ...(existingUserData?.type === 'partner' && formData.companyName ? { companyName: formData.companyName } : {}),
           registrationComplete: true,
           updatedAt: new Date()
         }

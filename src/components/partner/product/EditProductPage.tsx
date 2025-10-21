@@ -116,7 +116,6 @@ export default function EditProductPage({ productId }: { productId: string }) {
             { field: 'storeName', name: '가게명' },
             { field: 'businessRegistration', name: '사업자번호' },
             { field: 'businessRegistrationImage', name: '사업자등록증 이미지' },
-            { field: 'openingHours', name: '영업시간' },
           ]
 
           for (const { field, name } of requiredFields) {
