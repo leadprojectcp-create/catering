@@ -106,11 +106,11 @@ env:
     availability:
       - RUNTIME
   - variable: PORTONE_WEBHOOK_SECRET_1
-    value: whsec_pzkWqKqCAZS7C+g/kfKtvzounlVXgQ1cEq3m2NDISd4=
+    value: whsec_Pb4Cw6vtHxG55lZkG3E2T1uMUkCk9Ix/5RcBCcXxJYY=
     availability:
       - RUNTIME
   - variable: PORTONE_WEBHOOK_SECRET_2
-    value: whsec_mj2+4LpHvAfvWHA68mgYwu9Q4VGBHuAKQKxvy9IfXzg=
+    value: whsec_z+aDBvTj5/jrWrfAl28D7lYQWieCAE0RgUUrkTE7MWk=
     availability:
       - RUNTIME
 
@@ -139,9 +139,8 @@ env:
     value: "false"
     availability:
       - RUNTIME
-
   - variable: ALIGO_SENDER_KEY
-    value: "376e9a762cd6e56df067f1f4dceba3d1946c17d1"
+    secret: ALIGO_SENDER_KEY
     availability:
       - RUNTIME
 
