@@ -3,6 +3,9 @@ import { adminDb } from '@/lib/firebaseAdmin'
 import crypto from 'crypto'
 import { sendKakaoAlimtalk } from '@/lib/services/smsService'
 
+// Force dynamic rendering to prevent build-time initialization
+export const dynamic = 'force-dynamic'
+
 export async function POST(request: NextRequest) {
   try {
     // Verify webhook signature
