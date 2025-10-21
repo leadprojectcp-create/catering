@@ -34,6 +34,7 @@ export const requestPayment = async (
     console.log('Customer Name:', request.customerName)
     console.log('Customer Phone:', request.customerPhoneNumber)
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const paymentParams: any = {
       storeId: process.env.NEXT_PUBLIC_PORTONE_STORE_ID!,
       channelKey: process.env.NEXT_PUBLIC_PORTONE_CHANNEL_KEY!,
