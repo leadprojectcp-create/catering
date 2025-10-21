@@ -23,6 +23,7 @@ export interface OrderData {
   deliveryMethod?: string
   totalPrice?: number
   storeRequest?: string
+  minOrderDays?: number
 }
 
 export interface DeliveryAddress {

@@ -58,6 +58,7 @@ export default function PaymentsPage() {
   const [showTermsModal, setShowTermsModal] = useState<string | null>(null)
   const [usePoint, setUsePoint] = useState(0)
   const [availablePoint, setAvailablePoint] = useState(0)
+  const [minOrderDays, setMinOrderDays] = useState(0)
 
   useEffect(() => {
     const loadData = async () => {
@@ -99,6 +100,11 @@ export default function PaymentsPage() {
             productImage = productData.images[0]
           }
 
+          // minOrderDays 가져오기
+          if (productData.minOrderDays !== undefined) {
+            setMinOrderDays(productData.minOrderDays)
+          }
+
           // orderDocData에서 저장된 배송방법 확인
           if (orderDocData.deliveryMethod) {
             setDeliveryMethod(orderDocData.deliveryMethod)
@@ -118,7 +124,8 @@ export default function PaymentsPage() {
           items: orderDocData.items,
           totalPrice: orderDocData.totalProductPrice,
           storeRequest: orderDocData.request || '',
-          deliveryMethods: deliveryMethods
+          deliveryMethods: deliveryMethods,
+          minOrderDays: minOrderDays
         }
 
         setOrderData(data)
@@ -613,6 +620,7 @@ export default function PaymentsPage() {
                   <DateTimePicker
                     deliveryDate={orderInfo.deliveryDate}
                     deliveryTime={orderInfo.deliveryTime}
+                    minOrderDays={minOrderDays}
                     onDateChange={(date) => setOrderInfo({...orderInfo, deliveryDate: date})}
                     onTimeChange={(time) => setOrderInfo({...orderInfo, deliveryTime: time})}
                   />
@@ -662,6 +670,7 @@ export default function PaymentsPage() {
                   <DateTimePicker
                     deliveryDate={orderInfo.deliveryDate}
                     deliveryTime={orderInfo.deliveryTime}
+                    minOrderDays={minOrderDays}
                     onDateChange={(date) => setOrderInfo({...orderInfo, deliveryDate: date})}
                     onTimeChange={(time) => setOrderInfo({...orderInfo, deliveryTime: time})}
                   />

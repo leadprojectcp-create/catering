@@ -7,6 +7,7 @@ import styles from './DateTimePicker.module.css'
 interface DateTimePickerProps {
   deliveryDate: string
   deliveryTime: string
+  minOrderDays?: number
   onDateChange: (date: string) => void
   onTimeChange: (time: string) => void
 }
@@ -14,6 +15,7 @@ interface DateTimePickerProps {
 export default function DateTimePicker({
   deliveryDate,
   deliveryTime,
+  minOrderDays = 0,
   onDateChange,
   onTimeChange
 }: DateTimePickerProps) {
@@ -83,6 +85,11 @@ export default function DateTimePicker({
     const today = new Date()
     today.setHours(0, 0, 0, 0)
 
+    // 최소 선택 가능 날짜 (오늘부터 minOrderDays 이후)
+    const minDate = new Date(today)
+    minDate.setDate(minDate.getDate() + minOrderDays)
+    minDate.setHours(0, 0, 0, 0)
+
     // 최대 선택 가능 날짜 (오늘부터 30일 후)
     const maxDate = new Date(today)
     maxDate.setDate(maxDate.getDate() + 30)
@@ -93,7 +100,7 @@ export default function DateTimePicker({
       date.setDate(startDate.getDate() + i)
 
       const isCurrentMonth = date.getMonth() === month
-      const isPast = date < today
+      const isBeforeMinDate = date < minDate
       const isToday = date.getTime() === today.getTime()
       const isBeyondMaxDate = date > maxDate
 
@@ -101,7 +108,7 @@ export default function DateTimePicker({
         date: date,
         day: date.getDate(),
         isCurrentMonth,
-        isPast: isPast || isBeyondMaxDate, // 과거 날짜 또는 30일 이후 날짜 모두 비활성화
+        isPast: isBeforeMinDate || isBeyondMaxDate, // minOrderDays 이전 날짜 또는 30일 이후 날짜 모두 비활성화
         isToday,
         value: `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
       })
