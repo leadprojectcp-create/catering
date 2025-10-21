@@ -106,7 +106,7 @@ export async function POST(request: NextRequest) {
         const orderRef = doc(db, 'orders', orderId)
 
         // paymentData에서 필요한 필드만 저장 (민감한 정보 제외, undefined 제외)
-        const paymentInfo: Record<string, any> = {}
+        const paymentInfo: Record<string, string | number | object> = {}
 
         if (paymentData.method) paymentInfo.method = paymentData.method
         if (paymentData.amount) paymentInfo.amount = paymentData.amount
