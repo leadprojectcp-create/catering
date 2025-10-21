@@ -7,9 +7,11 @@ runConfig:
   # cpu: 1
   # memoryMiB: 512
 
-  # VPC Connector for Cloud NAT (fixed IP for SMS sending)
-  vpcConnector: catering-vpc-connector
-  vpcEgress: ALL_TRAFFIC
+  # VPC Access for Cloud NAT (fixed IP for SMS sending)
+  # See https://firebase.google.com/docs/app-hosting/vpc-network
+  vpcAccess:
+    connector: projects/catering-26952/locations/asia-southeast1/connectors/catering-vpc-connector
+    egress: ALL_TRAFFIC
 
 # Environment variables and secrets.
 env:
