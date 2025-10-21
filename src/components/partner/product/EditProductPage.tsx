@@ -295,7 +295,6 @@ export default function EditProductPage({ productId }: { productId: string }) {
               deliveryMethodsArray = product.deliveryMethods
             } else {
               // Convert from old object format to array
-              if (product.deliveryMethods.self) deliveryMethodsArray.push('자체 배송')
               if (product.deliveryMethods.quick) deliveryMethodsArray.push('퀵업체 배송')
               if (product.deliveryMethods.pickup) deliveryMethodsArray.push('매장 픽업')
             }
