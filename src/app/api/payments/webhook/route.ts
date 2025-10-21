@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { doc, updateDoc } from 'firebase/firestore'
+import { doc, updateDoc, getDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import crypto from 'crypto'
+import { sendKakaoAlimtalk } from '@/lib/services/smsService'
 
 export async function POST(request: NextRequest) {
   try {
@@ -90,6 +91,50 @@ export async function POST(request: NextRequest) {
         })
 
         console.log(`Order ${orderId} updated with payment info`)
+
+        // 주문 정보 조회
+        const orderDoc = await getDoc(orderRef)
+        if (orderDoc.exists()) {
+          const orderData = orderDoc.data()
+          const storeId = orderData.storeId
+
+          if (storeId) {
+            // 가게 정보 조회
+            const storeRef = doc(db, 'stores', storeId)
+            const storeDoc = await getDoc(storeRef)
+
+            if (storeDoc.exists()) {
+              const storeData = storeDoc.data()
+              const partnerPhone = storeData.businessPhone
+
+              if (partnerPhone) {
+                // 총 수량 계산
+                const totalQuantity = orderData.items?.reduce(
+                  (sum: number, item: { quantity: number }) => sum + item.quantity,
+                  0
+                ) || 0
+
+                // 카카오톡 알림톡 발송
+                try {
+                  await sendKakaoAlimtalk(partnerPhone, 'order_notification', {
+                    storeName: orderData.storeName || '',
+                    orderNumber: orderData.orderNumber || orderId,
+                    totalQuantity: String(totalQuantity),
+                    totalProductPrice: String(orderData.totalProductPrice || orderData.totalPrice || 0),
+                  })
+                  console.log(`카카오톡 알림 발송 성공: ${partnerPhone}`)
+                } catch (kakaoError) {
+                  console.error('카카오톡 알림 발송 실패:', kakaoError)
+                  // 카카오톡 발송 실패해도 주문 처리는 계속 진행
+                }
+              } else {
+                console.warn(`Store ${storeId} has no businessPhone`)
+              }
+            } else {
+              console.warn(`Store ${storeId} not found`)
+            }
+          }
+        }
       }
 
       return NextResponse.json({ success: true })
