@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getAdminDb } from '@/lib/firebaseAdmin'
+import { db } from '@/lib/firebase'
+import { doc, updateDoc, getDoc } from 'firebase/firestore'
 import crypto from 'crypto'
 import { sendKakaoAlimtalk } from '@/lib/services/smsService'
 
@@ -100,12 +101,10 @@ export async function POST(request: NextRequest) {
 
       console.log('[Webhook] Using orderId:', orderId)
 
-      // Firestore에서 주문 업데이트 (Admin SDK 사용)
+      // Firestore에서 주문 업데이트
       if (orderId) {
-        const adminDb = getAdminDb()
-        const orderRef = adminDb.collection('orders').doc(orderId)
-
-        await orderRef.update({
+        const orderRef = doc(db, 'orders', orderId)
+        await updateDoc(orderRef, {
           paymentStatus: 'paid',
           paymentId: paymentId,
           transactionId: transactionId,
@@ -116,8 +115,8 @@ export async function POST(request: NextRequest) {
         console.log(`[Webhook] Order ${orderId} updated with payment info`)
 
         // 주문 정보 조회
-        const orderDoc = await orderRef.get()
-        if (orderDoc.exists) {
+        const orderDoc = await getDoc(orderRef)
+        if (orderDoc.exists()) {
           const orderData = orderDoc.data()
           const storeId = orderData?.storeId
 
@@ -129,11 +128,11 @@ export async function POST(request: NextRequest) {
           })
 
           if (storeId) {
-            // 가게 정보 조회 (Admin SDK 사용)
-            const storeRef = adminDb.collection('stores').doc(storeId)
-            const storeDoc = await storeRef.get()
+            // 가게 정보 조회
+            const storeRef = doc(db, 'stores', storeId)
+            const storeDoc = await getDoc(storeRef)
 
-            if (storeDoc.exists) {
+            if (storeDoc.exists()) {
               const storeData = storeDoc.data()
               const partnerPhone = storeData?.phone
 
@@ -194,9 +193,8 @@ export async function POST(request: NextRequest) {
       const { paymentId, orderId } = data
 
       if (orderId) {
-        const adminDb = getAdminDb()
-        const orderRef = adminDb.collection('orders').doc(orderId)
-        await orderRef.update({
+        const orderRef = doc(db, 'orders', orderId)
+        await updateDoc(orderRef, {
           paymentStatus: 'cancelled',
           cancelledAt: new Date(),
         })
@@ -212,9 +210,8 @@ export async function POST(request: NextRequest) {
       const { paymentId, orderId } = data
 
       if (orderId) {
-        const adminDb = getAdminDb()
-        const orderRef = adminDb.collection('orders').doc(orderId)
-        await orderRef.update({
+        const orderRef = doc(db, 'orders', orderId)
+        await updateDoc(orderRef, {
           paymentStatus: 'failed',
           failedAt: new Date(),
         })
