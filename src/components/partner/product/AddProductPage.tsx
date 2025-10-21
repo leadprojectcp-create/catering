@@ -434,6 +434,80 @@ export default function AddProductPage() {
       return
     }
 
+    // 유효성 검사 (3번 상품 타입 설정 제외 모든 필드 필수)
+    if (formData.images.length === 0) {
+      alert('상품 이미지를 최소 1개 이상 등록해주세요.')
+      return
+    }
+
+    if (!formData.name.trim()) {
+      alert('상품명을 입력해주세요.')
+      return
+    }
+
+    // 3번 상품 타입 설정은 선택사항이므로 검사하지 않음
+
+    if (!formData.category) {
+      alert('카테고리를 선택해주세요.')
+      return
+    }
+
+    if (formData.price <= 0) {
+      alert('상품 판매가를 입력해주세요.')
+      return
+    }
+
+    if (formData.minOrderQuantity <= 0) {
+      alert('최소 수량을 입력해주세요.')
+      return
+    }
+
+    if (formData.maxOrderQuantity <= 0) {
+      alert('최대 수량을 입력해주세요.')
+      return
+    }
+
+    if (formData.minOrderQuantity > formData.maxOrderQuantity) {
+      alert('최소 수량은 최대 수량보다 클 수 없습니다.')
+      return
+    }
+
+    // 옵션 검사 - 최소 1개 이상 필수
+    const validOptions = formData.options.filter(option =>
+      option.groupName.trim() !== '' &&
+      option.values.some(v => v.name.trim() !== '')
+    )
+
+    if (validOptions.length === 0) {
+      alert('상품 옵션을 최소 1개 이상 등록해주세요.')
+      return
+    }
+
+    if (!formData.description || formData.description.trim() === '' || formData.description === '<p><br></p>') {
+      alert('상품설명을 작성해주세요.')
+      return
+    }
+
+    if (formData.origin.length === 0 || formData.origin.some(o => !o.ingredient.trim() || !o.origin.trim())) {
+      alert('원산지 표기를 입력해주세요.')
+      return
+    }
+
+    if (formData.deliveryMethods.length === 0) {
+      alert('배송 방법을 최소 1개 이상 선택해주세요.')
+      return
+    }
+
+    if (formData.additionalSettings.length === 0) {
+      alert('추가설정을 최소 1개 이상 선택해주세요.')
+      return
+    }
+
+    if (formData.minOrderDays < 0) {
+      alert('최소 주문 날짜를 선택해주세요.')
+      return
+    }
+
     setIsSubmitting(true)
 
     try {
@@ -462,11 +536,8 @@ export default function AddProductPage() {
         uploadedImageUrls.push(uploadResult.url)
       }
 
-      // 비어있지 않은 옵션만 필터링
-      const validOptions = formData.options.filter(option =>
-        option.groupName.trim() !== '' &&
-        option.values.some(v => v.name.trim() !== '')
-      ).map(option => ({
+      // 비어있지 않은 옵션만 필터링 (유효성 검사에서 이미 확인했으므로 validOptions는 항상 1개 이상)
+      const filteredOptions = validOptions.map(option => ({
         ...option,
         values: option.values.filter(v => v.name.trim() !== '')
       }))
@@ -476,7 +547,7 @@ export default function AddProductPage() {
       const submitData: any = {
         ...formData,
         images: uploadedImageUrls, // File 객체 대신 업로드된 URL들
-        options: validOptions.length > 0 ? validOptions : undefined, // 비어있으면 저장하지 않음
+        options: filteredOptions, // 유효성 검사 통과한 옵션들
         orderType: 'single', // 항상 단건주문으로 설정
         createdAt: new Date().toISOString()
       }
