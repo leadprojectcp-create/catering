@@ -105,7 +105,7 @@ export async function POST(request: NextRequest) {
 
             if (storeDoc.exists()) {
               const storeData = storeDoc.data()
-              const partnerPhone = storeData.businessPhone
+              const partnerPhone = storeData.phone
 
               if (partnerPhone) {
                 // 총 수량 계산
@@ -115,17 +115,28 @@ export async function POST(request: NextRequest) {
                 ) || 0
 
                 // 카카오톡 알림톡 발송
-                try {
-                  await sendKakaoAlimtalk(partnerPhone, 'order_notification', {
-                    storeName: orderData.storeName || '',
-                    orderNumber: orderData.orderNumber || orderId,
-                    totalQuantity: String(totalQuantity),
-                    totalProductPrice: String(orderData.totalProductPrice || orderData.totalPrice || 0),
-                  })
+                const kakaoSuccess = await sendKakaoAlimtalk(partnerPhone, 'order_notification', {
+                  storeName: orderData.storeName || '',
+                  orderNumber: orderData.orderNumber || orderId,
+                  totalQuantity: String(totalQuantity),
+                  totalProductPrice: String(orderData.totalProductPrice || orderData.totalPrice || 0),
+                })
+
+                if (kakaoSuccess) {
                   console.log(`카카오톡 알림 발송 성공: ${partnerPhone}`)
-                } catch (kakaoError) {
-                  console.error('카카오톡 알림 발송 실패:', kakaoError)
-                  // 카카오톡 발송 실패해도 주문 처리는 계속 진행
+                } else {
+                  console.warn('카카오톡 알림 발송 실패, SMS로 폴백 시도')
+                  // 카카오톡 발송 실패 시 SMS로 폴백
+                  try {
+                    const { sendSMS } = await import('@/lib/services/smsService')
+                    const smsMessage = `[단모] 신규주문이 들어왔습니다.\n\n가게명: ${orderData.storeName || ''}\n주문번호: ${orderData.orderNumber || orderId}\n총 수량: ${totalQuantity}개\n상품금액: ${orderData.totalProductPrice || orderData.totalPrice || 0}원\n\n주문확인: https://danchemoim.com/partner/order/history/`
+
+                    await sendSMS(partnerPhone, smsMessage)
+                    console.log(`SMS 알림 발송 성공 (폴백): ${partnerPhone}`)
+                  } catch (smsError) {
+                    console.error('SMS 알림 발송 실패:', smsError)
+                    // SMS도 실패해도 주문 처리는 계속 진행
+                  }
                 }
               } else {
                 console.warn(`Store ${storeId} has no businessPhone`)

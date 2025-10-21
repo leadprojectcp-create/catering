@@ -140,6 +140,11 @@ env:
     availability:
       - RUNTIME
 
+  - variable: ALIGO_SENDER_KEY
+    value: "376e9a762cd6e56df067f1f4dceba3d1946c17d1"
+    availability:
+      - RUNTIME
+
   # App Version
   - variable: NEXT_PUBLIC_APP_VERSION
     value: "0.1.0"
