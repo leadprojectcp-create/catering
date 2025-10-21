@@ -176,23 +176,13 @@ export async function POST(request: NextRequest) {
                 console.log(`[Webhook] Sending Kakao Alimtalk to ${partnerPhone}`)
 
                 // 카카오톡 알림톡 발송 (템플릿 코드: UD_0958)
+                // Aligo에서 알림톡 실패 시 자동으로 SMS 대체 발송
                 const kakaoSuccess = await sendKakaoAlimtalk(partnerPhone, 'UD_0958', alimtalkParams)
 
                 if (kakaoSuccess) {
-                  console.log(`[Webhook] 카카오톡 알림 발송 성공: ${partnerPhone}`)
+                  console.log(`[Webhook] 알림톡/SMS 발송 요청 성공: ${partnerPhone}`)
                 } else {
-                  console.warn('[Webhook] 카카오톡 알림 발송 실패, SMS로 폴백 시도')
-                  // 카카오톡 발송 실패 시 SMS로 폴백
-                  try {
-                    const { sendSMS } = await import('@/lib/services/smsService')
-                    const smsMessage = `[단모] 신규주문이 들어왔습니다.\n\n가게명: ${String(orderData.storeName || '')}\n주문번호: ${String(orderData.orderNumber || orderId)}\n총 수량: ${String(totalQuantity)}개\n상품금액: ${String(orderData.totalProductPrice || orderData.totalPrice || 0)}원\n\n주문을 확인하려면 아래 버튼을 클릭해주세요.\n\nhttps://danchemoim.com/partner/order/history/`
-
-                    await sendSMS(partnerPhone, smsMessage)
-                    console.log(`[Webhook] SMS 알림 발송 성공 (폴백): ${partnerPhone}`)
-                  } catch (smsError) {
-                    console.error('[Webhook] SMS 알림 발송 실패:', smsError)
-                    // SMS도 실패해도 주문 처리는 계속 진행
-                  }
+                  console.error('[Webhook] 알림톡/SMS 발송 요청 실패:', partnerPhone)
                 }
               } else {
                 console.warn(`Store ${storeId} has no businessPhone`)
