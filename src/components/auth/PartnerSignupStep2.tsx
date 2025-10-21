@@ -267,21 +267,9 @@ export default function PartnerSignupStep2() {
 
       await setDoc(doc(db, 'stores', uid), storeData)
 
-      // users 컬렉션 업데이트 - 가게명 추가 및 회원가입 완료 처리
+      // users 컬렉션 업데이트 - 회원가입 완료 처리만
       const userRef = doc(db, 'users', uid)
       await setDoc(userRef, {
-        companyName: formData.storeName,
-        businessCategory: categoryNames[0], // 한글 카테고리
-        businessRegistration: formData.businessRegistration,
-        businessRegistrationImage: formData.businessRegistrationImage,
-        businessOwner: formData.businessOwner,
-        businessAddress: {
-          city: formData.address.split(' ')[0] || '',
-          district: formData.address.split(' ')[1] || '',
-          dong: formData.address.split(' ')[2] || '',
-          detail: formData.detailAddress,
-          fullAddress: formData.address
-        },
         registrationComplete: true, // Step2 완료 시점에 회원가입 완료 처리
         updatedAt: new Date()
       }, { merge: true })
