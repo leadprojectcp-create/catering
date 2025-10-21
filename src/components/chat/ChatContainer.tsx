@@ -36,6 +36,7 @@ export default function ChatContainer({ isPartner = false }: ChatContainerProps)
   const chatRoomRef = useRef<ChatRoomRef>(null)
   const [searchResultCount, setSearchResultCount] = useState(0)
   const [currentSearchIndex, setCurrentSearchIndex] = useState(0)
+  const hasProcessedProductId = useRef(false)
 
   // 모바일 감지
   useEffect(() => {
@@ -70,12 +71,14 @@ export default function ChatContainer({ isPartner = false }: ChatContainerProps)
     // roomId가 있으면 선택, 없으면 초기화
     if (roomId) {
       setSelectedRoomId(roomId)
+      // roomId가 있으면 productId 처리 플래그 리셋하지 않음
     } else {
       setSelectedRoomId(null)
     }
 
-    // productId가 있으면 해당 상품의 가게 주인과 채팅방 찾기/생성
-    if (productId && user) {
+    // productId가 있고, 아직 처리하지 않았으면 채팅방 찾기/생성
+    if (productId && user && !hasProcessedProductId.current) {
+      hasProcessedProductId.current = true
       findOrCreateChatRoom(productId)
     }
 

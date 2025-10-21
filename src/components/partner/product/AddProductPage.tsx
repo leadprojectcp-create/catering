@@ -113,40 +113,41 @@ export default function AddProductPage() {
 
           const storeData = storeDoc.data()
 
+          // 누락된 항목들을 모두 수집
+          const missingItems: string[] = []
+
           // 필수 필드 체크
           const requiredFields = [
             { field: 'storeName', name: '가게명' },
             { field: 'businessRegistration', name: '사업자번호' },
             { field: 'businessRegistrationImage', name: '사업자등록증 이미지' },
-            { field: 'businessPhone', name: '가게 대표 전화번호' },
             { field: 'openingHours', name: '영업시간' },
           ]
 
           for (const { field, name } of requiredFields) {
             if (!storeData[field]) {
-              setMissingInfo(name)
-              setShowStoreInfoModal(true)
-              return
+              missingItems.push(name)
             }
           }
 
           // 주소 체크
           if (!storeData.address || !storeData.address.fullAddress) {
-            setMissingInfo('가게 주소')
-            setShowStoreInfoModal(true)
-            return
+            missingItems.push('가게 주소')
           }
 
           // 가게 사진 체크 (최소 3장)
           if (!storeData.storeImages || storeData.storeImages.length < 3) {
-            setMissingInfo(`가게 사진 (최소 3장 필요, 현재 ${storeData.storeImages?.length || 0}장)`)
-            setShowStoreInfoModal(true)
-            return
+            missingItems.push(`가게 사진 (최소 3장 필요, 현재 ${storeData.storeImages?.length || 0}장)`)
           }
 
           // 휴무일 체크
           if (!storeData.closedDays || storeData.closedDays.length === 0) {
-            setMissingInfo('휴무일 (연중무휴도 설정 필요)')
+            missingItems.push('휴무일 (연중무휴도 설정 필요)')
+          }
+
+          // 누락된 항목이 있으면 모달 표시
+          if (missingItems.length > 0) {
+            setMissingInfo(missingItems.join(', '))
             setShowStoreInfoModal(true)
             return
           }

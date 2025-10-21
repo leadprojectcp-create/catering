@@ -672,7 +672,7 @@ export default function StoreManagement() {
                 <span className={styles.previewValue}>
                   {storeInfo.closedDays?.length > 0
                     ? storeInfo.closedDays.join(', ')
-                    : '매주 월요일'}
+                    : '휴무일 미설정'}
                 </span>
               </div>
             </div>
@@ -789,7 +789,7 @@ export default function StoreManagement() {
                   <span className={styles.previewValue}>
                     {storeInfo.closedDays?.length > 0
                       ? storeInfo.closedDays.join(', ')
-                      : '매주 월요일'}
+                      : '휴무일 미설정'}
                   </span>
                 </div>
               </div>
