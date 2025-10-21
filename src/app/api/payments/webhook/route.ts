@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
 
     // 결제 완료 이벤트 처리
     if (type === 'Transaction.Paid') {
-      const { paymentId, transactionId, orderId } = data
+      const { paymentId, transactionId, orderId: webhookOrderId } = data
 
       // 포트원 API로 결제 검증
       const verifyResponse = await fetch(
@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
       )
 
       if (!verifyResponse.ok) {
-        console.error('Payment verification failed')
+        console.error('[Webhook] Payment verification failed')
         return NextResponse.json(
           { error: 'Payment verification failed' },
           { status: 400 }
@@ -78,14 +78,25 @@ export async function POST(request: NextRequest) {
 
       const paymentData = await verifyResponse.json()
 
+      console.log('[Webhook] Payment data:', {
+        status: paymentData.status,
+        orderId: paymentData.orderId,
+        webhookOrderId,
+      })
+
       // 결제 상태가 PAID인지 확인
       if (paymentData.status !== 'PAID') {
-        console.error('Payment status is not PAID:', paymentData.status)
+        console.error('[Webhook] Payment status is not PAID:', paymentData.status)
         return NextResponse.json(
           { error: 'Invalid payment status' },
           { status: 400 }
         )
       }
+
+      // orderId 가져오기: webhook data > payment data > paymentId에서 추출
+      const orderId = webhookOrderId || paymentData.orderId || paymentId.split('-')[1]
+
+      console.log('[Webhook] Using orderId:', orderId)
 
       // Firestore에서 주문 업데이트
       if (orderId) {
