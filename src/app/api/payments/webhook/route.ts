@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/firebase'
 import { doc, updateDoc, getDoc } from 'firebase/firestore'
-import crypto from 'crypto'
+import * as PortOne from '@portone/server-sdk'
 import { sendKakaoAlimtalk } from '@/lib/services/smsService'
 
 // Force dynamic rendering
@@ -9,52 +9,61 @@ export const dynamic = 'force-dynamic'
 
 export async function POST(request: NextRequest) {
   try {
-    // Verify webhook signature
-    const signature = request.headers.get('webhook-signature')
+    // 웹훅 검증을 위해 raw body 읽기
     const rawBody = await request.text()
-    const isDevelopment = process.env.NODE_ENV === 'development'
 
-    if (!isDevelopment) {
-      if (!signature) {
-        console.error('No webhook signature provided')
+    // 웹훅 메시지 검증 (Standard Webhooks 스펙)
+    let webhook: any
+    try {
+      // 테스트 시크릿 먼저 시도
+      const testSecret = process.env.PORTONE_WEBHOOK_SECRET_1
+      if (testSecret) {
+        try {
+          webhook = await PortOne.Webhook.verify(
+            testSecret,
+            rawBody,
+            Object.fromEntries(request.headers.entries())
+          )
+        } catch (e) {
+          // 테스트 시크릿 실패 시 실제 시크릿 시도
+          const prodSecret = process.env.PORTONE_WEBHOOK_SECRET_2
+          if (prodSecret) {
+            webhook = await PortOne.Webhook.verify(
+              prodSecret,
+              rawBody,
+              Object.fromEntries(request.headers.entries())
+            )
+          } else {
+            throw e
+          }
+        }
+      }
+    } catch (e) {
+      if (e instanceof PortOne.Webhook.WebhookVerificationError) {
+        console.error('[Webhook] Verification failed:', e.message)
         return NextResponse.json(
           { error: 'Unauthorized' },
           { status: 401 }
         )
       }
-
-      // Try both webhook secrets
-      const secret1 = process.env.PORTONE_WEBHOOK_SECRET_1
-      const secret2 = process.env.PORTONE_WEBHOOK_SECRET_2
-
-      const expectedSignature1 = secret1
-        ? crypto.createHmac('sha256', secret1).update(rawBody).digest('base64')
-        : null
-      const expectedSignature2 = secret2
-        ? crypto.createHmac('sha256', secret2).update(rawBody).digest('base64')
-        : null
-
-      const isValidSignature =
-        signature === expectedSignature1 ||
-        signature === expectedSignature2
-
-      if (!isValidSignature) {
-        console.error('Invalid webhook signature')
-        return NextResponse.json(
-          { error: 'Unauthorized' },
-          { status: 401 }
-        )
-      }
+      throw e
     }
 
-    const body = JSON.parse(rawBody)
-    const { type, data } = body
+    if (!webhook) {
+      console.error('[Webhook] No webhook secret configured')
+      return NextResponse.json(
+        { error: 'Server configuration error' },
+        { status: 500 }
+      )
+    }
+
+    const { type, data } = webhook
 
     console.log('PortOne Webhook received:', { type, data })
 
     // 결제 완료 이벤트 처리
     if (type === 'Transaction.Paid') {
-      const { paymentId, transactionId, orderId: webhookOrderId } = data
+      const { paymentId, transactionId } = data
 
       // 포트원 API로 결제 검증
       const verifyResponse = await fetch(
@@ -78,8 +87,7 @@ export async function POST(request: NextRequest) {
 
       console.log('[Webhook] Payment data:', {
         status: paymentData.status,
-        orderId: paymentData.orderId,
-        webhookOrderId,
+        paymentId: paymentId,
       })
 
       // 결제 상태가 PAID인지 확인
@@ -91,8 +99,8 @@ export async function POST(request: NextRequest) {
         )
       }
 
-      // orderId 가져오기: webhook data > payment data > paymentId에서 추출
-      const orderId = webhookOrderId || paymentData.orderId || paymentId.split('-')[1]
+      // paymentId가 곧 orderId입니다 (주문 생성 시 orderId를 paymentId로 사용)
+      const orderId = paymentId
 
       console.log('[Webhook] Using orderId:', orderId)
 
@@ -194,7 +202,8 @@ export async function POST(request: NextRequest) {
 
     // 결제 취소 이벤트 처리
     if (type === 'Transaction.Cancelled') {
-      const { paymentId, orderId } = data
+      const { paymentId } = data
+      const orderId = paymentId
 
       if (orderId) {
         const orderRef = doc(db, 'orders', orderId)
@@ -211,7 +220,8 @@ export async function POST(request: NextRequest) {
 
     // 결제 실패 이벤트 처리
     if (type === 'Transaction.Failed') {
-      const { paymentId, orderId } = data
+      const { paymentId } = data
+      const orderId = paymentId
 
       if (orderId) {
         const orderRef = doc(db, 'orders', orderId)
