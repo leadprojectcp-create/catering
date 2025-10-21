@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { collection, getDocs, query, orderBy, where, updateDoc, doc } from 'firebase/firestore'
+import { collection, getDocs, query, orderBy, updateDoc, doc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import type { Timestamp, FieldValue } from 'firebase/firestore'
 import Loading from '@/components/Loading'
@@ -26,7 +26,6 @@ interface Store {
   status?: 'active' | 'inactive' | 'pending'
   createdAt?: Date | Timestamp | FieldValue
   lastLoginAt?: Date | Timestamp | FieldValue
-  disabled?: boolean
 }
 
 export default function StoreManagementPage() {
@@ -44,8 +43,7 @@ export default function StoreManagementPage() {
     try {
       setLoading(true)
       const q = query(
-        collection(db, 'users'),
-        where('type', '==', 'partner'),
+        collection(db, 'stores'),
         orderBy('createdAt', 'desc')
       )
       const querySnapshot = await getDocs(q)
@@ -73,7 +71,7 @@ export default function StoreManagementPage() {
     }
 
     try {
-      const storeRef = doc(db, 'users', uid)
+      const storeRef = doc(db, 'stores', uid)
       await updateDoc(storeRef, { status: newStatus })
       setStores(stores.map(s =>
         s.uid === uid ? { ...s, status: newStatus } : s
@@ -85,19 +83,19 @@ export default function StoreManagementPage() {
     }
   }
 
-  const handleToggleDisabled = async (uid: string, currentDisabled: boolean) => {
-    const newDisabled = !currentDisabled
-    if (!confirm(`이 업체를 ${newDisabled ? '비활성화' : '활성화'}하시겠습니까?`)) {
+  const handleToggleDisabled = async (uid: string, currentStatus?: 'active' | 'inactive' | 'pending') => {
+    const newStatus = currentStatus === 'inactive' ? 'active' : 'inactive'
+    if (!confirm(`이 업체를 ${newStatus === 'inactive' ? '비활성화' : '활성화'}하시겠습니까?`)) {
       return
     }
 
     try {
-      const storeRef = doc(db, 'users', uid)
-      await updateDoc(storeRef, { disabled: newDisabled })
+      const storeRef = doc(db, 'stores', uid)
+      await updateDoc(storeRef, { status: newStatus })
       setStores(stores.map(s =>
-        s.uid === uid ? { ...s, disabled: newDisabled } : s
+        s.uid === uid ? { ...s, status: newStatus } : s
       ))
-      alert(`업체가 ${newDisabled ? '비활성화' : '활성화'}되었습니다.`)
+      alert(`업체가 ${newStatus === 'inactive' ? '비활성화' : '활성화'}되었습니다.`)
     } catch (error) {
       console.error('상태 변경 실패:', error)
       alert('상태 변경에 실패했습니다.')
@@ -202,7 +200,7 @@ export default function StoreManagementPage() {
               </tr>
             ) : (
               filteredStores.map((store) => (
-                <tr key={store.uid} className={store.disabled ? styles.disabledRow : ''}>
+                <tr key={store.uid} className={store.status === 'inactive' ? styles.disabledRow : ''}>
                   <td>
                     <div className={styles.storeImage}>
                       {store.businessImage ? (
@@ -251,9 +249,9 @@ export default function StoreManagementPage() {
                       </button>
                       <button
                         className={styles.toggleBtn}
-                        onClick={() => handleToggleDisabled(store.uid, store.disabled || false)}
+                        onClick={() => handleToggleDisabled(store.uid, store.status)}
                       >
-                        {store.disabled ? '활성화' : '비활성화'}
+                        {store.status === 'inactive' ? '활성화' : '비활성화'}
                       </button>
                     </div>
                   </td>
@@ -382,8 +380,8 @@ export default function StoreManagementPage() {
                   <div className={styles.detailItem}>
                     <span className={styles.detailLabel}>계정 상태:</span>
                     <span className={styles.detailValue}>
-                      <span className={`${styles.badge} ${selectedStore.disabled ? styles.badgeDanger : styles.badgeSuccess}`}>
-                        {selectedStore.disabled ? '비활성' : '활성'}
+                      <span className={`${styles.badge} ${selectedStore.status === 'inactive' ? styles.badgeDanger : styles.badgeSuccess}`}>
+                        {selectedStore.status === 'inactive' ? '비활성' : '활성'}
                       </span>
                     </span>
                   </div>
