@@ -104,12 +104,23 @@ export async function POST(request: NextRequest) {
       // Firestore에서 주문 업데이트
       if (orderId) {
         const orderRef = doc(db, 'orders', orderId)
+
+        // paymentData에서 필요한 필드만 저장
+        const paymentInfo = {
+          method: paymentData.method,
+          amount: paymentData.amount,
+          currency: paymentData.currency,
+          paidAt: paymentData.paidAt,
+          pgProvider: paymentData.pgProvider,
+          pgTxId: paymentData.pgTxId,
+        }
+
         await updateDoc(orderRef, {
           paymentStatus: 'paid',
           paymentId: paymentId,
           transactionId: transactionId,
           paidAt: new Date(),
-          paymentData: paymentData,
+          paymentInfo: paymentInfo,
         })
 
         console.log(`[Webhook] Order ${orderId} updated with payment info`)
@@ -144,20 +155,26 @@ export async function POST(request: NextRequest) {
 
               if (partnerPhone) {
                 // 총 수량 계산
+                console.log(`[Webhook] Order items:`, orderData.items)
                 const totalQuantity = orderData.items?.reduce(
                   (sum: number, item: { quantity: number }) => sum + item.quantity,
                   0
                 ) || 0
 
-                console.log(`[Webhook] Sending Kakao Alimtalk to ${partnerPhone}`)
+                console.log(`[Webhook] Calculated totalQuantity:`, totalQuantity)
 
-                // 카카오톡 알림톡 발송
-                const kakaoSuccess = await sendKakaoAlimtalk(partnerPhone, 'order_notification', {
+                const alimtalkParams = {
                   storeName: orderData.storeName || '',
                   orderNumber: orderData.orderNumber || orderId,
                   totalQuantity: String(totalQuantity),
                   totalProductPrice: String(orderData.totalProductPrice || orderData.totalPrice || 0),
-                })
+                }
+
+                console.log(`[Webhook] Alimtalk params:`, alimtalkParams)
+                console.log(`[Webhook] Sending Kakao Alimtalk to ${partnerPhone}`)
+
+                // 카카오톡 알림톡 발송
+                const kakaoSuccess = await sendKakaoAlimtalk(partnerPhone, 'order_notification', alimtalkParams)
 
                 if (kakaoSuccess) {
                   console.log(`[Webhook] 카카오톡 알림 발송 성공: ${partnerPhone}`)
