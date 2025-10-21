@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { getProduct, updateProduct } from '@/lib/services/productService'
+import { useAuth } from '@/contexts/AuthContext'
 import CustomEditor from '@/components/common/CustomEditor'
 import styles from './AddProductPage.module.css'
 
@@ -60,6 +61,7 @@ interface ProductFormData {
 
 export default function EditProductPage({ productId }: { productId: string }) {
   const router = useRouter()
+  const { user, userData, loading } = useAuth()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [newImages, setNewImages] = useState<File[]>([])
@@ -82,6 +84,17 @@ export default function EditProductPage({ productId }: { productId: string }) {
     origin: [],
     status: 'pending'
   })
+
+  // 가게 정보 등록 확인
+  useEffect(() => {
+    if (!loading && user && userData) {
+      // registrationComplete가 false이거나 없으면 가게관리 페이지로 리다이렉트
+      if (!userData.registrationComplete) {
+        alert('상품 수정을 하려면 먼저 가게 정보를 모두 등록해주세요.')
+        router.push('/partner/store/management')
+      }
+    }
+  }, [loading, user, userData, router])
 
   // Format number with commas
   const formatNumberWithCommas = (num: number): string => {

@@ -60,7 +60,7 @@ interface ProductFormData {
 
 export default function AddProductPage() {
   const router = useRouter()
-  const { user, loading } = useAuth()
+  const { user, userData, loading } = useAuth()
   const [hasSavedData, setHasSavedData] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showCalendar, setShowCalendar] = useState(false)
@@ -89,6 +89,17 @@ export default function AddProductPage() {
       isAlwaysActive: true
     }
   })
+
+  // 가게 정보 등록 확인
+  useEffect(() => {
+    if (!loading && user && userData) {
+      // registrationComplete가 false이거나 없으면 가게관리 페이지로 리다이렉트
+      if (!userData.registrationComplete) {
+        alert('상품 등록을 하려면 먼저 가게 정보를 모두 등록해주세요.')
+        router.push('/partner/store/management')
+      }
+    }
+  }, [loading, user, userData, router])
 
   // Format number with commas
   const formatNumberWithCommas = (num: number): string => {
