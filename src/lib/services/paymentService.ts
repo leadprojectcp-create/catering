@@ -1,5 +1,8 @@
 import * as PortOne from '@portone/browser-sdk/v2'
 
+// 결제 수단 타입
+export type PayMethod = 'CARD' | 'VIRTUAL_ACCOUNT' | 'TRANSFER'
+
 // 결제 요청 파라미터 타입
 export interface PaymentRequest {
   orderName: string // 주문명
@@ -8,6 +11,7 @@ export interface PaymentRequest {
   customerName?: string // 고객 이름
   customerEmail?: string // 고객 이메일
   customerPhoneNumber?: string // 고객 전화번호
+  payMethod?: PayMethod // 결제 수단 (기본값: CARD)
 }
 
 // 결제 결과 타입
@@ -30,20 +34,34 @@ export const requestPayment = async (
     console.log('Customer Name:', request.customerName)
     console.log('Customer Phone:', request.customerPhoneNumber)
 
-    const response = await PortOne.requestPayment({
+    const paymentParams: any = {
       storeId: process.env.NEXT_PUBLIC_PORTONE_STORE_ID!,
       channelKey: process.env.NEXT_PUBLIC_PORTONE_CHANNEL_KEY!,
       paymentId: `payment-${request.orderId}-${Date.now()}`,
       orderName: request.orderName,
       totalAmount: request.amount,
       currency: 'KRW',
-      payMethod: 'CARD',
+      payMethod: request.payMethod || 'CARD',
       customer: {
         fullName: request.customerName,
         phoneNumber: request.customerPhoneNumber,
         email: request.customerEmail,
       },
-    })
+    }
+
+    // 가상계좌 결제 시 필수 파라미터 추가
+    if (request.payMethod === 'VIRTUAL_ACCOUNT') {
+      paymentParams.virtualAccount = {
+        accountExpiry: {
+          validHours: 24, // 24시간 후 만료
+        },
+        cashReceipt: {
+          type: 'PERSONAL', // 개인 소득공제
+        },
+      }
+    }
+
+    const response = await PortOne.requestPayment(paymentParams)
 
     console.log('=== 포트원 응답 ===')
     console.log('Response:', response)

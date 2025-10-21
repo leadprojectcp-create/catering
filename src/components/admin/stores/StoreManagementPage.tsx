@@ -10,22 +10,30 @@ import styles from './StoreManagementPage.module.css'
 
 interface Store {
   uid: string
-  email: string
-  name?: string
-  phone?: string
-  type?: 'partner' | 'user' | 'admin'
-  businessName?: string
-  businessNumber?: string
-  businessAddress?: string
+  partnerId: string
+  storeName?: string
+  businessOwner?: string
   businessPhone?: string
-  businessEmail?: string
-  businessImage?: string
-  businessCategory?: string
+  businessRegistration?: string
+  businessRegistrationImage?: string
+  primaryCategory?: string
+  categories?: string[]
+  address?: {
+    fullAddress?: string
+    city?: string
+    district?: string
+    dong?: string
+    detail?: string
+  }
+  phone?: string
   description?: string
-  registrationComplete?: boolean
+  storeImages?: string[]
+  closedDays?: string[]
   status?: 'active' | 'inactive' | 'pending'
   createdAt?: Date | Timestamp | FieldValue
-  lastLoginAt?: Date | Timestamp | FieldValue
+  updatedAt?: Date | Timestamp | FieldValue
+  viewCount?: number
+  lastViewedAt?: Date | Timestamp | FieldValue
 }
 
 export default function StoreManagementPage() {
@@ -181,7 +189,7 @@ export default function StoreManagementPage() {
               <th>이미지</th>
               <th>업체명</th>
               <th>대표자명</th>
-              <th>이메일</th>
+              <th>파트너ID</th>
               <th>전화번호</th>
               <th>사업자번호</th>
               <th>카테고리</th>
@@ -203,10 +211,10 @@ export default function StoreManagementPage() {
                 <tr key={store.uid} className={store.status === 'inactive' ? styles.disabledRow : ''}>
                   <td>
                     <div className={styles.storeImage}>
-                      {store.businessImage ? (
+                      {store.storeImages && store.storeImages.length > 0 ? (
                         <Image
-                          src={store.businessImage}
-                          alt={store.businessName || '업체'}
+                          src={store.storeImages[0]}
+                          alt={store.storeName || '업체'}
                           width={60}
                           height={60}
                           style={{ objectFit: 'cover', borderRadius: '4px' }}
@@ -216,16 +224,16 @@ export default function StoreManagementPage() {
                       )}
                     </div>
                   </td>
-                  <td>{store.businessName || '-'}</td>
-                  <td>{store.name || '-'}</td>
-                  <td>{store.email}</td>
+                  <td>{store.storeName || '-'}</td>
+                  <td>{store.businessOwner || '-'}</td>
+                  <td>{store.partnerId || '-'}</td>
                   <td>{store.businessPhone || store.phone || '-'}</td>
-                  <td>{store.businessNumber || '-'}</td>
-                  <td>{store.businessCategory || '-'}</td>
+                  <td>{store.businessRegistration || '-'}</td>
+                  <td>{store.primaryCategory || '-'}</td>
                   <td>{formatDate(store.createdAt)}</td>
                   <td>
-                    <span className={`${styles.badge} ${store.registrationComplete ? styles.badgeSuccess : styles.badgeWarning}`}>
-                      {store.registrationComplete ? '완료' : '미완료'}
+                    <span className={`${styles.badge} ${store.status === 'active' ? styles.badgeSuccess : styles.badgeWarning}`}>
+                      {store.status === 'active' ? '완료' : '미완료'}
                     </span>
                   </td>
                   <td>
@@ -273,17 +281,20 @@ export default function StoreManagementPage() {
 
             <div className={styles.modalBody}>
               {/* 업체 이미지 */}
-              {selectedStore.businessImage && (
+              {selectedStore.storeImages && selectedStore.storeImages.length > 0 && (
                 <div className={styles.detailSection}>
                   <h3 className={styles.detailSectionTitle}>업체 이미지</h3>
                   <div className={styles.imageContainer}>
-                    <Image
-                      src={selectedStore.businessImage}
-                      alt={selectedStore.businessName || '업체'}
-                      width={200}
-                      height={200}
-                      style={{ objectFit: 'cover', borderRadius: '8px' }}
-                    />
+                    {selectedStore.storeImages.map((image, index) => (
+                      <Image
+                        key={index}
+                        src={image}
+                        alt={`${selectedStore.storeName || '업체'} ${index + 1}`}
+                        width={200}
+                        height={200}
+                        style={{ objectFit: 'cover', borderRadius: '8px', marginRight: '8px' }}
+                      />
+                    ))}
                   </div>
                 </div>
               )}
@@ -294,19 +305,23 @@ export default function StoreManagementPage() {
                 <div className={styles.detailGrid}>
                   <div className={styles.detailItem}>
                     <span className={styles.detailLabel}>업체명:</span>
-                    <span className={styles.detailValue}>{selectedStore.businessName || '-'}</span>
+                    <span className={styles.detailValue}>{selectedStore.storeName || '-'}</span>
                   </div>
                   <div className={styles.detailItem}>
                     <span className={styles.detailLabel}>대표자명:</span>
-                    <span className={styles.detailValue}>{selectedStore.name || '-'}</span>
+                    <span className={styles.detailValue}>{selectedStore.businessOwner || '-'}</span>
                   </div>
                   <div className={styles.detailItem}>
                     <span className={styles.detailLabel}>사업자번호:</span>
-                    <span className={styles.detailValue}>{selectedStore.businessNumber || '-'}</span>
+                    <span className={styles.detailValue}>{selectedStore.businessRegistration || '-'}</span>
                   </div>
                   <div className={styles.detailItem}>
                     <span className={styles.detailLabel}>카테고리:</span>
-                    <span className={styles.detailValue}>{selectedStore.businessCategory || '-'}</span>
+                    <span className={styles.detailValue}>{selectedStore.primaryCategory || '-'}</span>
+                  </div>
+                  <div className={styles.detailItem}>
+                    <span className={styles.detailLabel}>파트너ID:</span>
+                    <span className={styles.detailValue}>{selectedStore.partnerId || '-'}</span>
                   </div>
                 </div>
               </div>
@@ -315,10 +330,6 @@ export default function StoreManagementPage() {
               <div className={styles.detailSection}>
                 <h3 className={styles.detailSectionTitle}>연락처 정보</h3>
                 <div className={styles.detailGrid}>
-                  <div className={styles.detailItem}>
-                    <span className={styles.detailLabel}>업체 이메일:</span>
-                    <span className={styles.detailValue}>{selectedStore.businessEmail || selectedStore.email}</span>
-                  </div>
                   <div className={styles.detailItem}>
                     <span className={styles.detailLabel}>업체 전화번호:</span>
                     <span className={styles.detailValue}>{selectedStore.businessPhone || '-'}</span>
@@ -329,7 +340,7 @@ export default function StoreManagementPage() {
                   </div>
                   <div className={styles.detailItem}>
                     <span className={styles.detailLabel}>업체 주소:</span>
-                    <span className={styles.detailValue}>{selectedStore.businessAddress || '-'}</span>
+                    <span className={styles.detailValue}>{selectedStore.address?.fullAddress || '-'}</span>
                   </div>
                 </div>
               </div>
@@ -347,22 +358,22 @@ export default function StoreManagementPage() {
                 <h3 className={styles.detailSectionTitle}>계정 정보</h3>
                 <div className={styles.detailGrid}>
                   <div className={styles.detailItem}>
-                    <span className={styles.detailLabel}>계정 이메일:</span>
-                    <span className={styles.detailValue}>{selectedStore.email}</span>
-                  </div>
-                  <div className={styles.detailItem}>
-                    <span className={styles.detailLabel}>가입일:</span>
+                    <span className={styles.detailLabel}>등록일:</span>
                     <span className={styles.detailValue}>{formatDate(selectedStore.createdAt)}</span>
                   </div>
                   <div className={styles.detailItem}>
-                    <span className={styles.detailLabel}>마지막 로그인:</span>
-                    <span className={styles.detailValue}>{formatDate(selectedStore.lastLoginAt)}</span>
+                    <span className={styles.detailLabel}>수정일:</span>
+                    <span className={styles.detailValue}>{formatDate(selectedStore.updatedAt)}</span>
+                  </div>
+                  <div className={styles.detailItem}>
+                    <span className={styles.detailLabel}>조회수:</span>
+                    <span className={styles.detailValue}>{selectedStore.viewCount || 0}</span>
                   </div>
                   <div className={styles.detailItem}>
                     <span className={styles.detailLabel}>등록 완료 여부:</span>
                     <span className={styles.detailValue}>
-                      <span className={`${styles.badge} ${selectedStore.registrationComplete ? styles.badgeSuccess : styles.badgeWarning}`}>
-                        {selectedStore.registrationComplete ? '완료' : '미완료'}
+                      <span className={`${styles.badge} ${selectedStore.status === 'active' ? styles.badgeSuccess : styles.badgeWarning}`}>
+                        {selectedStore.status === 'active' ? '완료' : '미완료'}
                       </span>
                     </span>
                   </div>

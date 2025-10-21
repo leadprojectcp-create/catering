@@ -929,3 +929,58 @@
     font-size: 13px;
   }
 }
+
+/* 결제 수단 선택 */
+.paymentMethodContainer {
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 20px;
+  border: 1px solid #F4F4F4;
+  background: #FAFAFA;
+}
+
+.paymentMethodLabel {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 1px solid #D9D9D9;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.paymentMethodLabel input[type="radio"] {
+  margin-right: 8px;
+  cursor: pointer;
+}
+
+.paymentMethodLabel span {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+}
+
+.paymentMethodLabel:has(input:checked) {
+  border-color: #FF6B35;
+  background: #FFF5F2;
+}
+
+.paymentMethodLabel:has(input:checked) span {
+  color: #FF6B35;
+  font-weight: 600;
+}
+
+@media (max-width: 768px) {
+  .paymentMethodContainer {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .paymentMethodLabel {
+    justify-content: flex-start;
+  }
+}

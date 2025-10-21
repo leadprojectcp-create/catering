@@ -16,7 +16,7 @@ import { createOrder } from '@/lib/services/paymentsService'
 import PrivacyPolicy from '@/components/terms/PrivacyPolicy'
 import RefundPolicy from '@/components/terms/RefundPolicy'
 import PaymentTerms from './PaymentTerms'
-import { requestPayment } from '@/lib/services/paymentService'
+import { requestPayment, PayMethod } from '@/lib/services/paymentService'
 import styles from './PaymentsPage.module.css'
 
 export default function PaymentsPage() {
@@ -27,6 +27,7 @@ export default function PaymentsPage() {
   const [orderId, setOrderId] = useState<string | null>(null)
   const [orderData, setOrderData] = useState<OrderData | null>(null)
   const [deliveryMethod, setDeliveryMethod] = useState('pickup')
+  const [payMethod, setPayMethod] = useState<PayMethod>('CARD')
   const [orderInfo, setOrderInfo] = useState({
     orderer: '',
     phone: '',
@@ -344,6 +345,7 @@ export default function PaymentsPage() {
         customerName: orderInfo.orderer,
         customerEmail: userEmail,
         customerPhoneNumber: orderInfo.phone,
+        payMethod: payMethod,
       })
 
       if (!paymentResult.success) {
@@ -761,6 +763,43 @@ export default function PaymentsPage() {
             </section>
           </>
         )}
+
+        {/* 결제 수단 선택 */}
+        <section className={styles.section}>
+          <h2 className={styles.sectionTitle}>결제 수단</h2>
+          <div className={styles.paymentMethodContainer}>
+            <label className={styles.paymentMethodLabel}>
+              <input
+                type="radio"
+                name="payMethod"
+                value="CARD"
+                checked={payMethod === 'CARD'}
+                onChange={(e) => setPayMethod(e.target.value as PayMethod)}
+              />
+              <span>신용카드</span>
+            </label>
+            <label className={styles.paymentMethodLabel}>
+              <input
+                type="radio"
+                name="payMethod"
+                value="VIRTUAL_ACCOUNT"
+                checked={payMethod === 'VIRTUAL_ACCOUNT'}
+                onChange={(e) => setPayMethod(e.target.value as PayMethod)}
+              />
+              <span>가상계좌</span>
+            </label>
+            <label className={styles.paymentMethodLabel}>
+              <input
+                type="radio"
+                name="payMethod"
+                value="TRANSFER"
+                checked={payMethod === 'TRANSFER'}
+                onChange={(e) => setPayMethod(e.target.value as PayMethod)}
+              />
+              <span>계좌이체</span>
+            </label>
+          </div>
+        </section>
 
         {/* 총 결제금액 */}
         <section className={styles.section}>

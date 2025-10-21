@@ -133,7 +133,7 @@ export default function NoticeListPage() {
                 작성일 {formatDate(notice.createdAt)} 작성
               </div>
               <div className={styles.noticeTitle}>{notice.title}</div>
-              <div className={styles.noticeContent}>{notice.content}</div>
+              <div className={styles.noticeContent} dangerouslySetInnerHTML={{ __html: notice.content }} />
               <div className={styles.noticeActions}>
                 {notice.isVisible ? (
                   <button
