@@ -173,8 +173,8 @@ export async function POST(request: NextRequest) {
                 console.log(`[Webhook] Alimtalk params:`, alimtalkParams)
                 console.log(`[Webhook] Sending Kakao Alimtalk to ${partnerPhone}`)
 
-                // 카카오톡 알림톡 발송
-                const kakaoSuccess = await sendKakaoAlimtalk(partnerPhone, 'order_notification', alimtalkParams)
+                // 카카오톡 알림톡 발송 (템플릿 코드: UD_0958)
+                const kakaoSuccess = await sendKakaoAlimtalk(partnerPhone, 'UD_0958', alimtalkParams)
 
                 if (kakaoSuccess) {
                   console.log(`[Webhook] 카카오톡 알림 발송 성공: ${partnerPhone}`)

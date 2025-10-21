@@ -83,6 +83,11 @@ export async function sendKakaoAlimtalk(
           },
         ],
       }),
+      // 템플릿 변수 전달 (문자열로 확실하게 전달)
+      storeName_1: String(variables.storeName || ''),
+      orderNumber_1: String(variables.orderNumber || ''),
+      totalQuantity_1: String(variables.totalQuantity || '0'),
+      totalProductPrice_1: String(variables.totalProductPrice || '0'),
     })
 
     console.log('[Aligo 카카오톡] Request params:', {
