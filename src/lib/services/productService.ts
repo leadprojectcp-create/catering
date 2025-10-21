@@ -87,7 +87,12 @@ export async function createProduct(productData: Omit<ProductData, 'partnerId' |
     updatedAt: new Date().toISOString()
   }
 
-  const docRef = await addDoc(collection(db, 'products'), completeProductData)
+  // undefined 값 제거
+  const cleanData = Object.fromEntries(
+    Object.entries(completeProductData).filter(([_, v]) => v !== undefined)
+  )
+
+  const docRef = await addDoc(collection(db, 'products'), cleanData)
   return docRef.id
 }
 
@@ -117,10 +122,15 @@ export async function updateProduct(productId: string, productData: Partial<Prod
     throw new Error('수정 권한이 없습니다.')
   }
 
-  await updateDoc(productRef, {
-    ...productData,
-    updatedAt: new Date().toISOString()
-  })
+  // undefined 값 제거
+  const updateData = Object.fromEntries(
+    Object.entries({
+      ...productData,
+      updatedAt: new Date().toISOString()
+    }).filter(([_, v]) => v !== undefined)
+  )
+
+  await updateDoc(productRef, updateData)
 }
 
 // 상품 삭제
