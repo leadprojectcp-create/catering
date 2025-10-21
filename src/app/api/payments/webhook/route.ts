@@ -105,17 +105,17 @@ export async function POST(request: NextRequest) {
       if (orderId) {
         const orderRef = doc(db, 'orders', orderId)
 
-        // paymentData에서 필요한 필드만 저장 (민감한 정보 제외)
-        const paymentInfo = {
-          method: paymentData.method,           // 결제 수단
-          amount: paymentData.amount,           // 금액 정보
-          currency: paymentData.currency,       // 통화
-          paidAt: paymentData.paidAt,           // 결제 시각
-          pgProvider: paymentData.pgProvider,   // PG사
-          pgTxId: paymentData.pgTxId,           // PG 거래 ID (환불/취소 시 필요)
-          receiptUrl: paymentData.receiptUrl,   // 영수증 URL
-          status: paymentData.status,           // 결제 상태
-        }
+        // paymentData에서 필요한 필드만 저장 (민감한 정보 제외, undefined 제외)
+        const paymentInfo: Record<string, any> = {}
+
+        if (paymentData.method) paymentInfo.method = paymentData.method
+        if (paymentData.amount) paymentInfo.amount = paymentData.amount
+        if (paymentData.currency) paymentInfo.currency = paymentData.currency
+        if (paymentData.paidAt) paymentInfo.paidAt = paymentData.paidAt
+        if (paymentData.pgProvider) paymentInfo.pgProvider = paymentData.pgProvider
+        if (paymentData.pgTxId) paymentInfo.pgTxId = paymentData.pgTxId
+        if (paymentData.receiptUrl) paymentInfo.receiptUrl = paymentData.receiptUrl
+        if (paymentData.status) paymentInfo.status = paymentData.status
 
         await updateDoc(orderRef, {
           paymentStatus: 'paid',
