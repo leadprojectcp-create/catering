@@ -1,0 +1,153 @@
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modal {
+  background: white;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 700px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px;
+  padding-bottom: 32px;
+}
+
+.title {
+  color: #1B1C1F;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 150%;
+  margin: 0;
+}
+
+.closeButton {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #9CA3AF;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.closeButton:hover {
+  background-color: #F3F4F6;
+}
+
+.content {
+  padding: 24px;
+}
+
+.imageWrapper {
+  width: 100%;
+  margin-bottom: 24px;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.image {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.instructions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.instruction {
+  color: #4E5968;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 150%;
+  margin: 0;
+}
+
+/* 모바일 반응형 */
+@media (max-width: 768px) {
+  .overlay {
+    padding: 16px;
+  }
+
+  .modal {
+    max-height: 85vh;
+  }
+
+  .header {
+    padding: 20px;
+  }
+
+  .title {
+    font-size: 16px;
+  }
+
+  .closeButton {
+    width: 28px;
+    height: 28px;
+    font-size: 20px;
+  }
+
+  .content {
+    padding: 20px;
+  }
+
+  .imageWrapper {
+    margin-bottom: 20px;
+  }
+
+  .instruction {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .overlay {
+    padding: 12px;
+  }
+
+  .header {
+    padding: 16px;
+  }
+
+  .title {
+    font-size: 15px;
+  }
+
+  .content {
+    padding: 16px;
+  }
+
+  .imageWrapper {
+    margin-bottom: 16px;
+  }
+
+  .instruction {
+    font-size: 13px;
+  }
+}

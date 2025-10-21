@@ -73,9 +73,25 @@ export default function ChatRoomHeader({
                   : (otherUserData.name || '사용자')
                 setOtherUserName(displayName)
 
-                // 전화번호 저장
-                if (otherUserData.phone) {
-                  setOtherUserPhone(otherUserData.phone)
+                // 전화번호 저장 - 파트너인 경우 stores 컬렉션에서 businessPhone 가져오기
+                if (otherUserType === 'partner') {
+                  try {
+                    const storeDoc = await getDoc(doc(db, 'stores', foundOtherUserId))
+                    if (storeDoc.exists()) {
+                      const storeData = storeDoc.data()
+                      // businessPhone이 있으면 사용, 없으면 phone 사용
+                      setOtherUserPhone(storeData.businessPhone || storeData.phone || otherUserData.phone || '')
+                    } else {
+                      // stores 컬렉션에 없으면 users의 phone 사용
+                      setOtherUserPhone(otherUserData.phone || '')
+                    }
+                  } catch (error) {
+                    console.error('파트너 stores 정보 로드 실패:', error)
+                    setOtherUserPhone(otherUserData.phone || '')
+                  }
+                } else {
+                  // 일반 유저는 users 컬렉션의 phone 사용
+                  setOtherUserPhone(otherUserData.phone || '')
                 }
               }
             } catch (error) {

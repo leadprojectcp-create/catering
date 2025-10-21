@@ -1,8 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import Image from 'next/image'
-import orderStyles from '@/components/order/OrderPage.module.css'
+import ProductCard from '@/components/order/ProductCard'
+import { Product as OrderProduct } from '@/components/order/OrderPage'
 import styles from './ProductPreviewModal.module.css'
 
 interface Product {
@@ -21,6 +21,7 @@ interface Product {
   deliveryMethods?: string[]
   additionalSettings?: string[]
   origin?: { ingredient: string; origin: string }[]
+  productTypes?: string[]
 }
 
 interface ProductPreviewModalProps {
@@ -29,7 +30,37 @@ interface ProductPreviewModalProps {
 }
 
 export default function ProductPreviewModal({ product, onClose }: ProductPreviewModalProps) {
+  const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false)
+
+  const handlePrevImage = () => {
+    setCurrentImageIndex(prev =>
+      prev === 0 ? (product.images?.length || 1) - 1 : prev - 1
+    )
+  }
+
+  const handleNextImage = () => {
+    setCurrentImageIndex(prev =>
+      prev === (product.images?.length || 1) - 1 ? 0 : prev + 1
+    )
+  }
+
+  const handleToggleDescription = () => {
+    setIsDescriptionExpanded(prev => !prev)
+  }
+
+  // ProductCard에 맞는 형식으로 변환
+  // 할인이 실제로 적용되어 있는지 확인
+  const hasValidDiscount = product.discountedPrice && product.discount && product.discount.discountPercent > 0
+
+  const orderProduct: OrderProduct = {
+    ...product,
+    storeId: '',
+    status: 'active',
+    // 할인이 없으면 discount와 discountedPrice를 undefined로 설정
+    discount: hasValidDiscount ? product.discount : undefined,
+    discountedPrice: hasValidDiscount ? product.discountedPrice : undefined
+  } as OrderProduct
 
   return (
     <div className={styles.modalOverlay} onClick={onClose}>
@@ -40,110 +71,18 @@ export default function ProductPreviewModal({ product, onClose }: ProductPreview
           <button className={styles.closeButton} onClick={onClose}>✕</button>
         </div>
 
-        {/* OrderPage leftSection 그대로 복사 */}
-        <div className={orderStyles.leftSection}>
-          {/* 상품 정보 카드 */}
-          <div className={orderStyles.productCard}>
-            <div className={orderStyles.productInfo}>
-              <h1 className={orderStyles.productName}>{product.name}</h1>
-
-              {/* 가격 정보 */}
-              {product.discount ? (
-                <>
-                  <span className={orderStyles.originalPrice}>{product.price.toLocaleString()}원</span>
-                  <div className={orderStyles.discountRow}>
-                    <span className={orderStyles.discountedPrice}>{product.discountedPrice?.toLocaleString()}원</span>
-                    <span className={orderStyles.discountPercent}>{product.discount.discountPercent}%</span>
-                  </div>
-                </>
-              ) : (
-                <span className={orderStyles.regularPrice}>{product.price.toLocaleString()}원</span>
-              )}
-
-              {/* 주문 가능 수량 */}
-              {product.minOrderQuantity && product.maxOrderQuantity && (
-                <div className={orderStyles.orderQuantity}>
-                  주문가능 수량 최소 {product.minOrderQuantity}개 ~ 최대 {product.maxOrderQuantity}개
-                </div>
-              )}
-
-              {/* 배송 방법 및 추가 설정 - PC용 */}
-              <div className={orderStyles.badgeContainerDesktop}>
-                <div className={orderStyles.badgeRow}>
-                  {product.deliveryMethods?.map((method, index) => (
-                    <span key={index} className={orderStyles.deliveryBadge}>{method}</span>
-                  ))}
-                </div>
-                <div className={orderStyles.badgeRow}>
-                  {product.additionalSettings?.map((setting, index) => (
-                    <span key={index} className={orderStyles.settingBadge}>{setting}</span>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* 상품 이미지 */}
-            <div className={orderStyles.imageWrapper}>
-              {product.images && product.images.length > 0 ? (
-                <Image
-                  src={product.images[0]}
-                  alt={product.name}
-                  fill
-                  className={orderStyles.productImage}
-                  style={{ objectFit: 'cover' }}
-                />
-              ) : (
-                <div className={orderStyles.placeholderImage}>
-                  <span>이미지 없음</span>
-                </div>
-              )}
-            </div>
-
-            {/* 배송 방법 및 추가 설정 - 모바일용 */}
-            <div className={orderStyles.badgeContainerMobile}>
-              <div className={orderStyles.badgeRow}>
-                {product.deliveryMethods?.map((method, index) => (
-                  <span key={index} className={orderStyles.deliveryBadge}>{method}</span>
-                ))}
-              </div>
-              <div className={orderStyles.badgeRow}>
-                {product.additionalSettings?.map((setting, index) => (
-                  <span key={index} className={orderStyles.settingBadge}>{setting}</span>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* 상품 상세 설명 */}
-          {product.description && (
-            <div className={orderStyles.descriptionSection}>
-              <h3 className={orderStyles.sectionTitle}>상품 상세 설명</h3>
-              <div
-                className={`${orderStyles.descriptionText} ${isDescriptionExpanded ? orderStyles.expanded : ''}`}
-                dangerouslySetInnerHTML={{ __html: product.description }}
-              />
-              <button
-                className={orderStyles.expandButton}
-                onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
-              >
-                {isDescriptionExpanded ? '상품 설명 접기' : '상품 설명 펼쳐보기'}
-              </button>
-            </div>
-          )}
-
-          {/* 원산지 표기 */}
-          {product.origin && product.origin.length > 0 && (
-            <div className={orderStyles.originSection}>
-              <h3 className={orderStyles.sectionTitle}>원산지 표기</h3>
-              <p className={orderStyles.originText}>
-                {product.origin.map((item, index) => (
-                  <span key={index}>
-                    {item.ingredient}({item.origin}){index < product.origin!.length - 1 ? ', ' : ''}
-                  </span>
-                ))}
-              </p>
-            </div>
-          )}
+        {/* ProductCard 컴포넌트 사용 */}
+        <div className={styles.productCardWrapper}>
+          <ProductCard
+            product={orderProduct}
+            store={null}
+            user={null}
+            currentImageIndex={currentImageIndex}
+            isDescriptionExpanded={isDescriptionExpanded}
+            onPrevImage={handlePrevImage}
+            onNextImage={handleNextImage}
+            onToggleDescription={handleToggleDescription}
+          />
         </div>
       </div>
     </div>

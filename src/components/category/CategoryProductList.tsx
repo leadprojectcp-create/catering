@@ -167,7 +167,7 @@ export default function CategoryProductList({ categoryName }: CategoryProductLis
                   <h3 className={styles.productName}>{product.name}</h3>
 
                   {/* 가격 정보 */}
-                  {product.discount ? (
+                  {product.discount && product.discountedPrice && product.discount.discountPercent > 0 ? (
                     <div className={styles.priceSection}>
                       <span className={styles.originalPrice}>{product.price.toLocaleString()}원</span>
                       <span className={styles.discountedPrice}>{product.discountedPrice?.toLocaleString()}원</span>

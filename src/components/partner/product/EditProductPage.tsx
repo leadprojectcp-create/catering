@@ -6,6 +6,8 @@ import Image from 'next/image'
 import { getProduct, updateProduct } from '@/lib/services/productService'
 import { useAuth } from '@/contexts/AuthContext'
 import CustomEditor from '@/components/common/CustomEditor'
+import StoreInfoRequiredModal from './StoreInfoRequiredModal'
+import OptionHelpModal from './OptionHelpModal'
 import styles from './AddProductPage.module.css'
 
 
@@ -69,6 +71,9 @@ export default function EditProductPage({ productId }: { productId: string }) {
   const [currentMonth, setCurrentMonth] = useState(new Date())
   const [selectingDate, setSelectingDate] = useState<'start' | 'end'>('start')
   const [storeId, setStoreId] = useState<string>('')
+  const [showStoreInfoModal, setShowStoreInfoModal] = useState(false)
+  const [missingInfo, setMissingInfo] = useState<string>('')
+  const [showOptionHelpModal, setShowOptionHelpModal] = useState(false)
   const [formData, setFormData] = useState<ProductFormData>({
     name: '',
     images: [],
@@ -87,14 +92,67 @@ export default function EditProductPage({ productId }: { productId: string }) {
 
   // 가게 정보 등록 확인
   useEffect(() => {
-    if (!loading && user && userData) {
-      // registrationComplete가 false이거나 없으면 가게관리 페이지로 리다이렉트
-      if (!userData.registrationComplete) {
-        alert('상품 수정을 하려면 먼저 가게 정보를 모두 등록해주세요.')
-        router.push('/partner/store/management')
+    const checkStoreInfo = async () => {
+      if (!loading && user) {
+        try {
+          const { doc, getDoc } = await import('firebase/firestore')
+          const { db } = await import('@/lib/firebase')
+
+          const storeDoc = await getDoc(doc(db, 'stores', user.uid))
+
+          if (!storeDoc.exists()) {
+            setMissingInfo('가게 정보가 등록되지 않았습니다.')
+            setShowStoreInfoModal(true)
+            return
+          }
+
+          const storeData = storeDoc.data()
+
+          // 필수 필드 체크
+          const requiredFields = [
+            { field: 'storeName', name: '가게명' },
+            { field: 'businessRegistration', name: '사업자번호' },
+            { field: 'businessRegistrationImage', name: '사업자등록증 이미지' },
+            { field: 'businessPhone', name: '가게 대표 전화번호' },
+            { field: 'openingHours', name: '영업시간' },
+          ]
+
+          for (const { field, name } of requiredFields) {
+            if (!storeData[field]) {
+              setMissingInfo(name)
+              setShowStoreInfoModal(true)
+              return
+            }
+          }
+
+          // 주소 체크
+          if (!storeData.address || !storeData.address.fullAddress) {
+            setMissingInfo('가게 주소')
+            setShowStoreInfoModal(true)
+            return
+          }
+
+          // 가게 사진 체크 (최소 3장)
+          if (!storeData.storeImages || storeData.storeImages.length < 3) {
+            setMissingInfo(`가게 사진 (최소 3장 필요, 현재 ${storeData.storeImages?.length || 0}장)`)
+            setShowStoreInfoModal(true)
+            return
+          }
+
+          // 휴무일 체크
+          if (!storeData.closedDays || storeData.closedDays.length === 0) {
+            setMissingInfo('휴무일 (연중무휴도 설정 필요)')
+            setShowStoreInfoModal(true)
+            return
+          }
+        } catch (error) {
+          console.error('가게 정보 확인 실패:', error)
+        }
       }
     }
-  }, [loading, user, userData, router])
+
+    checkStoreInfo()
+  }, [loading, user, router])
 
   // Format number with commas
   const formatNumberWithCommas = (num: number): string => {
@@ -1013,6 +1071,18 @@ export default function EditProductPage({ productId }: { productId: string }) {
           <div className={styles.titleWithNumber}>
             <span className={styles.numberCircle}>7</span>
             <span className={styles.sectionTitle}>상품 옵션 설정</span>
+            <button
+              type="button"
+              className={styles.helpButton}
+              onClick={() => setShowOptionHelpModal(true)}
+            >
+              <Image
+                src="/icons/help.png"
+                alt="도움말"
+                width={20}
+                height={20}
+              />
+            </button>
           </div>
           {formData.options.map((option, groupIndex) => (
             <div key={groupIndex} className={styles.optionCard}>
@@ -1349,6 +1419,21 @@ export default function EditProductPage({ productId }: { productId: string }) {
         </div>
         </form>
       </div>
+
+      {/* 가게 정보 미등록 모달 */}
+      {showStoreInfoModal && (
+        <StoreInfoRequiredModal
+          missingInfo={missingInfo}
+          onClose={() => setShowStoreInfoModal(false)}
+        />
+      )}
+
+      {/* 옵션 설정 도움말 모달 */}
+      {showOptionHelpModal && (
+        <OptionHelpModal
+          onClose={() => setShowOptionHelpModal(false)}
+        />
+      )}
     </div>
   )
 }

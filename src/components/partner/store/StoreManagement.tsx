@@ -24,6 +24,7 @@ interface StoreInfo {
     fullAddress: string
   }
   phone: string
+  businessPhone: string // 가게 대표 전화번호 (공개용)
   description: string
   openingHours: string
   closedDays: string[]
@@ -58,6 +59,10 @@ export default function StoreManagement() {
 
       if (storeDoc.exists()) {
         const data = storeDoc.data() as StoreInfo
+        // businessPhone이 없으면 phone 값을 사용
+        if (!data.businessPhone && data.phone) {
+          data.businessPhone = data.phone
+        }
         setStoreInfo(data)
         setOriginalStoreInfo(data)
       }
@@ -170,6 +175,25 @@ export default function StoreManagement() {
   // 전체 적용 버튼 - 모든 변경사항 한 번에 저장
   const handleApplyAllChanges = async () => {
     if (!user || !storeInfo) return
+
+    // 가게 대표 전화번호 검증
+    if (!storeInfo.businessPhone || storeInfo.businessPhone.trim() === '') {
+      alert('가게 대표 전화번호를 입력해주세요.')
+      return
+    }
+
+    // 이미지 개수 검증 (기존 + 새로운 이미지)
+    const totalImageCount = (storeInfo.storeImages || []).length + tempImages.length
+    if (totalImageCount < 3) {
+      alert(`가게 사진은 최소 3장 이상 등록해야 합니다.\n현재: ${totalImageCount}장`)
+      return
+    }
+
+    // 휴무일 검증
+    if (!storeInfo.closedDays || storeInfo.closedDays.length === 0) {
+      alert('휴무일을 선택해주세요.\n연중무휴인 경우 "연중무휴"를 선택해주세요.')
+      return
+    }
 
     setUploading(true)
 
@@ -462,10 +486,10 @@ export default function StoreManagement() {
               <h2 className={styles.sectionTitle}>가게 대표 전화</h2>
               <input
                 type="tel"
-                value={storeInfo.phone}
-                onChange={(e) => handleFieldChange('phone', e.target.value)}
+                value={storeInfo.businessPhone || ''}
+                onChange={(e) => handleFieldChange('businessPhone', e.target.value)}
                 className={styles.editInput}
-                placeholder="전화번호를 입력해주세요"
+                placeholder="고객이 볼 가게 전화번호"
               />
             </div>
           </div>
@@ -634,7 +658,7 @@ export default function StoreManagement() {
               <h3 className={styles.previewDetailsTitle}>가게 정보</h3>
               <div className={styles.previewDetailItem}>
                 <span className={styles.previewLabel}>전화</span>
-                <span className={styles.previewValue}>{storeInfo.phone || '02-1234-5678'}</span>
+                <span className={styles.previewValue}>{storeInfo.businessPhone || storeInfo.phone || '02-1234-5678'}</span>
               </div>
               <div className={styles.previewDetailItem}>
                 <span className={styles.previewLabel}>가게위치</span>
@@ -751,7 +775,7 @@ export default function StoreManagement() {
                 <h3 className={styles.previewDetailsTitle}>가게 정보</h3>
                 <div className={styles.previewDetailItem}>
                   <span className={styles.previewLabel}>전화</span>
-                  <span className={styles.previewValue}>{storeInfo.phone || '02-1234-5678'}</span>
+                  <span className={styles.previewValue}>{storeInfo.businessPhone || storeInfo.phone || '02-1234-5678'}</span>
                 </div>
                 <div className={styles.previewDetailItem}>
                   <span className={styles.previewLabel}>가게위치</span>

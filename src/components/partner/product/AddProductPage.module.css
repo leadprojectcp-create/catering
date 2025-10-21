@@ -55,6 +55,22 @@
   line-height: 19px;
 }
 
+.helpButton {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+
+.helpButton:hover {
+  opacity: 1;
+}
+
 .optionalLabel {
   font-size: 12px;
   font-weight: 400;

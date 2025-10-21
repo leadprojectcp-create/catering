@@ -6,7 +6,8 @@ export function middleware(request: NextRequest) {
 
   // partner.danchemoim.com 서브도메인 접속 시 danchemoim.com/partner/dashboard로 리다이렉트
   if (hostname.includes('partner.danchemoim.com')) {
-    return NextResponse.redirect('https://danchemoim.com/partner/dashboard')
+    const url = new URL('https://danchemoim.com/partner/dashboard')
+    return NextResponse.redirect(url, 301)
   }
 
   // For now, let client-side handle auth checking
@@ -15,5 +16,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/', '/admin/:path*']
+  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)']
 }
