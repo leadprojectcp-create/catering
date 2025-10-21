@@ -49,6 +49,7 @@ interface ProductFormData {
   maxOrderQuantity: number
   deliveryMethods: string[]
   additionalSettings: string[]
+  minOrderDays: number
   origin: { ingredient: string, origin: string }[]
   discount?: {
     enabled: boolean
@@ -84,6 +85,7 @@ export default function AddProductPage() {
     maxOrderQuantity: 11,
     deliveryMethods: [],
     additionalSettings: [],
+    minOrderDays: 3,
     origin: [],
     discount: {
       enabled: false,
@@ -1289,7 +1291,8 @@ export default function AddProductPage() {
                   ...prev,
                   additionalSettings: e.target.checked
                     ? [...prev.additionalSettings, '당일배송']
-                    : prev.additionalSettings.filter(s => s !== '당일배송')
+                    : prev.additionalSettings.filter(s => s !== '당일배송'),
+                  minOrderDays: e.target.checked ? 0 : 3
                 }))}
                 className={styles.hiddenCheckbox}
               />
@@ -1361,6 +1364,26 @@ export default function AddProductPage() {
               </span>
               답례품
             </label>
+          </div>
+        </div>
+
+        {/* 최소 주문 날짜 */}
+        <div className={styles.section}>
+          <div className={styles.titleWithNumber}>
+            <span className={styles.numberCircle}>12</span>
+            <span className={styles.sectionTitle}>최소 주문 날짜</span>
+          </div>
+          <div className={styles.inputWithUnit}>
+            <input
+              type="number"
+              value={formData.minOrderDays}
+              onChange={(e) => setFormData(prev => ({ ...prev, minOrderDays: Number(e.target.value) }))}
+              min="1"
+              className={styles.textInput}
+              disabled={formData.additionalSettings.includes('당일배송')}
+              required
+            />
+            <span className={styles.inputUnit}>일</span>
           </div>
         </div>
 

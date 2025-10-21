@@ -19,7 +19,6 @@ export interface ProductData {
   minOrderQuantity: number
   maxOrderQuantity: number
   deliveryMethods: {
-    self: boolean
     quick: boolean
     pickup: boolean
   }
@@ -29,6 +28,7 @@ export interface ProductData {
     stickerCustom: boolean
     giftItem: boolean
   }
+  minOrderDays: number
   origin: { ingredient: string, origin: string }[]
   orderType: string
   partnerId?: string

@@ -236,6 +236,7 @@ export default function PartnerSignupStep2() {
       // Step3 표시용 데이터 저장
       const step2Data = {
         storeName: formData.storeName,
+        businessOwner: formData.businessOwner,
         city: formData.address.split(' ')[0] || '',
         district: formData.address.split(' ')[1] || '',
         dong: formData.address.split(' ')[2] || '',
@@ -262,7 +263,7 @@ export default function PartnerSignupStep2() {
   }
 
   return (
-    <AuthGuard requireAuth={false}>
+    <AuthGuard requireAuth={true} requireCompleteRegistration={false}>
       <Script
         src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"
         strategy="afterInteractive"

@@ -137,15 +137,14 @@ service cloud.firestore {
 
     // Notices collection - 공지사항 (관리자용)
     match /notices/{noticeId} {
-      // 관리자(level 10)만 읽기 가능
-      allow read: if isAdmin();
+      // 모든 사용자 읽기 가능 (게시된 공지사항은 공개)
+      allow read: if true;
 
       // 관리자(level 10)만 생성/수정/삭제 가능
       allow create, update, delete: if isAdmin();
 
-      // 조회수 업데이트는 관리자만 가능
-      allow update: if isAdmin() &&
-        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['viewCount']);
+      // 조회수 업데이트는 모든 사용자 가능
+      allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['viewCount']);
     }
 
     // Orders collection - 주문

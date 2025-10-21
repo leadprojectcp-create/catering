@@ -238,26 +238,58 @@ export default function PartnerSignupStep1() {
         }, { merge: true })
       } else {
         // 일반 회원가입 - Firebase Auth 계정 생성
-        const { createUserWithEmailAndPassword } = await import('firebase/auth')
-        const userCredential = await createUserWithEmailAndPassword(
-          auth,
-          formData.email,
-          formData.password
-        )
-        uid = userCredential.user.uid
+        try {
+          const { createUserWithEmailAndPassword } = await import('firebase/auth')
+          const userCredential = await createUserWithEmailAndPassword(
+            auth,
+            formData.email,
+            formData.password
+          )
+          uid = userCredential.user.uid
 
-        // users 컬렉션에 기본 정보 저장
-        const userRef = doc(db, 'users', uid)
-        await setDoc(userRef, {
-          email: formData.email,
-          name: formData.name,
-          phone: formData.phone.replace(/-/g, ''), // 하이픈 제거
-          type: 'partner',
-          terms: createTermsAgreements(),
-          registrationComplete: false, // Step2 완료 후 true로 변경
-          createdAt: new Date(),
-          updatedAt: new Date()
-        })
+          // users 컬렉션에 기본 정보 저장
+          const userRef = doc(db, 'users', uid)
+          await setDoc(userRef, {
+            email: formData.email,
+            name: formData.name,
+            phone: formData.phone.replace(/-/g, ''), // 하이픈 제거
+            type: 'partner',
+            terms: createTermsAgreements(),
+            registrationComplete: false, // Step2 완료 후 true로 변경
+            createdAt: new Date(),
+            updatedAt: new Date()
+          })
+        } catch (authError: unknown) {
+          // 이미 계정이 존재하는 경우 로그인 시도
+          if (authError instanceof Error && 'code' in authError && authError.code === 'auth/email-already-in-use') {
+            const { signInWithEmailAndPassword } = await import('firebase/auth')
+            const userCredential = await signInWithEmailAndPassword(
+              auth,
+              formData.email,
+              formData.password
+            )
+            uid = userCredential.user.uid
+
+            // 회원가입 완료 여부 확인
+            const { getDoc } = await import('firebase/firestore')
+            const userRef = doc(db, 'users', uid)
+            const userDoc = await getDoc(userRef)
+
+            if (userDoc.exists() && userDoc.data().registrationComplete) {
+              throw new Error('이미 회원가입이 완료된 계정입니다. 로그인 페이지로 이동해주세요.')
+            }
+
+            // registrationComplete가 false인 경우 Step2로 진행
+            // users 컬렉션 정보 업데이트 (전화번호나 이름이 변경되었을 수 있음)
+            await setDoc(userRef, {
+              name: formData.name,
+              phone: formData.phone.replace(/-/g, ''),
+              updatedAt: new Date()
+            }, { merge: true })
+          } else {
+            throw authError
+          }
+        }
       }
 
       // UID를 세션 스토리지에 저장

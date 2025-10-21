@@ -48,6 +48,7 @@ interface ProductFormData {
   maxOrderQuantity: number
   deliveryMethods: string[]
   additionalSettings: string[]
+  minOrderDays: number
   origin: { ingredient: string, origin: string }[]
   status?: 'active' | 'inactive' | 'pending'
   discount?: {
@@ -86,6 +87,7 @@ export default function EditProductPage({ productId }: { productId: string }) {
     maxOrderQuantity: 11,
     deliveryMethods: [],
     additionalSettings: [],
+    minOrderDays: 3,
     origin: [],
     status: 'pending'
   })
@@ -330,6 +332,7 @@ export default function EditProductPage({ productId }: { productId: string }) {
             maxOrderQuantity: product.maxOrderQuantity || 11,
             deliveryMethods: deliveryMethodsArray,
             additionalSettings: additionalSettingsArray,
+            minOrderDays: product.minOrderDays || 3,
             origin: Array.isArray(product.origin) ? product.origin : [],
             status: product.status as 'active' | 'inactive' | 'pending',
             discount: product.discount ? {
@@ -1335,7 +1338,8 @@ export default function EditProductPage({ productId }: { productId: string }) {
                   ...prev,
                   additionalSettings: e.target.checked
                     ? [...prev.additionalSettings, '당일배송가능']
-                    : prev.additionalSettings.filter(s => s !== '당일배송가능')
+                    : prev.additionalSettings.filter(s => s !== '당일배송가능'),
+                  minOrderDays: e.target.checked ? 0 : 3
                 }))}
                 className={styles.hiddenCheckbox}
               />
@@ -1407,6 +1411,26 @@ export default function EditProductPage({ productId }: { productId: string }) {
               </span>
               답례품
             </label>
+          </div>
+        </div>
+
+        {/* 최소 주문 날짜 */}
+        <div className={styles.section}>
+          <div className={styles.titleWithNumber}>
+            <span className={styles.numberCircle}>12</span>
+            <span className={styles.sectionTitle}>최소 주문 날짜</span>
+          </div>
+          <div className={styles.inputWithUnit}>
+            <input
+              type="number"
+              value={formData.minOrderDays}
+              onChange={(e) => setFormData(prev => ({ ...prev, minOrderDays: Number(e.target.value) }))}
+              min="1"
+              className={styles.textInput}
+              disabled={formData.additionalSettings.includes('당일배송가능')}
+              required
+            />
+            <span className={styles.inputUnit}>일</span>
           </div>
         </div>
 

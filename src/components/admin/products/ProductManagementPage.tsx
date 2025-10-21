@@ -316,7 +316,6 @@ export default function ProductManagementPage() {
               <div className={styles.detailSection}>
                 <h3 className={styles.detailSectionTitle}>배송 방법</h3>
                 <div className={styles.deliveryMethods}>
-                  {selectedProduct.deliveryMethods?.self && <span className={styles.badge}>자체 배송</span>}
                   {selectedProduct.deliveryMethods?.quick && <span className={styles.badge}>퀵 배송</span>}
                   {selectedProduct.deliveryMethods?.pickup && <span className={styles.badge}>픽업</span>}
                 </div>

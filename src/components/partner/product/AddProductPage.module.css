@@ -203,6 +203,12 @@
   font-weight: 500;
 }
 
+.textInput:disabled {
+  color: #ccc;
+  background: #FAFAFA;
+  cursor: not-allowed;
+}
+
 .inputWithCounter {
   position: relative;
   width: 100%;
@@ -224,11 +230,13 @@
 
 .inputWithUnit {
   position: relative;
-  width: 100%;
+  min-width: 200px;
+  width: fit-content;
 }
 
 .inputWithUnit .textInput {
   padding-right: 40px;
+  min-width: 200px;
 }
 
 .inputUnit {
@@ -859,6 +867,14 @@
   .tempSaveButton,
   .submitButton {
     padding: 14px 32px;
+  }
+
+  .inputWithUnit {
+    width: 100%;
+  }
+
+  .inputWithUnit .textInput {
+    width: 100%;
   }
 }
 

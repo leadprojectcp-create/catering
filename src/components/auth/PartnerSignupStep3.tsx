@@ -19,17 +19,43 @@ export default function PartnerSignupStep3() {
   const [step2Data, setStep2Data] = useState<Step2Data | null>(null)
 
   useEffect(() => {
-    // Step2 표시용 데이터 확인
-    const savedStep2 = sessionStorage.getItem('partnerSignupStep2')
-    const uid = sessionStorage.getItem('partnerSignupUid')
+    const loadStoreData = async () => {
+      const uid = sessionStorage.getItem('partnerSignupUid')
 
-    if (!savedStep2 || !uid) {
-      // 데이터가 없으면 Step1로 돌아가기
-      router.replace('/signup/partner/step1')
-      return
+      if (!uid) {
+        // 데이터가 없으면 Step1로 돌아가기
+        router.replace('/signup/partner/step1')
+        return
+      }
+
+      try {
+        // stores 컬렉션에서 데이터 가져오기
+        const { doc, getDoc } = await import('firebase/firestore')
+        const { db } = await import('@/lib/firebase')
+
+        const storeDoc = await getDoc(doc(db, 'stores', uid))
+
+        if (!storeDoc.exists()) {
+          router.replace('/signup/partner/step1')
+          return
+        }
+
+        const storeData = storeDoc.data()
+        setStep2Data({
+          storeName: storeData.storeName || '',
+          businessOwner: storeData.businessOwner || '',
+          city: storeData.address?.city || '',
+          district: storeData.address?.district || '',
+          dong: storeData.address?.dong || '',
+          detailAddress: storeData.address?.detail || ''
+        })
+      } catch (error) {
+        console.error('가게 데이터 로드 실패:', error)
+        router.replace('/signup/partner/step1')
+      }
     }
 
-    setStep2Data(JSON.parse(savedStep2))
+    loadStoreData()
   }, [router])
 
   const handleGoBack = () => {
@@ -55,7 +81,7 @@ export default function PartnerSignupStep3() {
   }
 
   return (
-    <AuthGuard requireAuth={false}>
+    <AuthGuard requireAuth={true} requireCompleteRegistration={false}>
       <div className={styles.container}>
         <div className={styles.formCard}>
           <div className={styles.header}>
@@ -86,7 +112,7 @@ export default function PartnerSignupStep3() {
                 <span className={styles.infoValue}>{step2Data.storeName}</span>
               </div>
               <div className={styles.infoRow}>
-                <span className={styles.infoLabel}>가게 대표자 명</span>
+                <span className={styles.infoLabel}>대표자명</span>
                 <span className={styles.infoValue}>{step2Data.businessOwner}</span>
               </div>
               <div className={styles.infoRow}>
