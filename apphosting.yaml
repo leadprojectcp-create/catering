@@ -7,6 +7,10 @@ runConfig:
   # cpu: 1
   # memoryMiB: 512
 
+  # VPC Connector for Cloud NAT (fixed IP for SMS sending)
+  vpcConnector: catering-vpc-connector
+  vpcEgress: ALL_TRAFFIC
+
 # Environment variables and secrets.
 env:
   # Configure environment variables.
