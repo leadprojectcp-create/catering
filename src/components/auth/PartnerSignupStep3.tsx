@@ -5,17 +5,9 @@ import { useRouter } from 'next/navigation'
 import AuthGuard from './AuthGuard'
 import styles from './SignupPage.module.css'
 
-const categoryNames: { [key: string]: string } = {
-  dessert: '디저트박스',
-  sandwich: '샌드위치',
-  salad: '샐러드/과일',
-  kimbap: '김밥/한식',
-  traditional: '떡/전통한과'
-}
-
 interface Step2Data {
   storeName: string;
-  category: string;
+  businessOwner: string;
   city: string;
   district: string;
   dong: string;
@@ -94,8 +86,8 @@ export default function PartnerSignupStep3() {
                 <span className={styles.infoValue}>{step2Data.storeName}</span>
               </div>
               <div className={styles.infoRow}>
-                <span className={styles.infoLabel}>업종</span>
-                <span className={styles.infoValue}>{categoryNames[step2Data.category]}</span>
+                <span className={styles.infoLabel}>가게 대표자 명</span>
+                <span className={styles.infoValue}>{step2Data.businessOwner}</span>
               </div>
               <div className={styles.infoRow}>
                 <span className={styles.infoLabel}>위치</span>

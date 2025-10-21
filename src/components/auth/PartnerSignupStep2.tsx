@@ -9,21 +9,6 @@ import AuthGuard from './AuthGuard'
 import { DaumPostcodeData } from '@/components/payments/types'
 import styles from './SignupPage.module.css'
 
-interface CategoryOption {
-  id: string
-  name: string
-  icon: string
-}
-
-const categories: CategoryOption[] = [
-  { id: 'dessert', name: '디저트', icon: '/icons/dessert_box.png' },
-  { id: 'sandwich', name: '샌드위치', icon: '/icons/sandwich_bakery.png' },
-  { id: 'salad', name: '샐러드/과일', icon: '/icons/salad_fruit.png' },
-  { id: 'kimbap', name: '김밥', icon: '/icons/kimbap_korean.png' },
-  { id: 'lunchbox', name: '도시락', icon: '/icons/kimbap_korean.png' },
-  { id: 'traditional', name: '떡/전통한과', icon: '/icons/ricecake_traditional.png' }
-]
-
 interface Step1Data {
   email: string;
   password?: string;
@@ -40,10 +25,10 @@ export default function PartnerSignupStep2() {
   const router = useRouter()
   const [step1Data, setStep1Data] = useState<Step1Data | null>(null)
   const [formData, setFormData] = useState({
-    categories: [] as string[],
     storeName: '',
     businessRegistration: '',
     businessOwner: '',
+    businessPhone: '',
     businessRegistrationImage: '',
     address: '',
     detailAddress: ''
@@ -89,23 +74,6 @@ export default function PartnerSignupStep2() {
     })
   }
 
-  const handleCategorySelect = (categoryId: string) => {
-    const currentCategories = formData.categories
-
-    if (currentCategories.includes(categoryId)) {
-      // 이미 선택된 카테고리면 해제
-      setFormData({
-        ...formData,
-        categories: currentCategories.filter(id => id !== categoryId)
-      })
-    } else if (currentCategories.length < 2) {
-      // 최대 2개까지만 선택 가능
-      setFormData({
-        ...formData,
-        categories: [...currentCategories, categoryId]
-      })
-    }
-  }
 
   const handleAddressSearch = () => {
     if (typeof window !== 'undefined' && window.daum && window.daum.Postcode) {
@@ -203,7 +171,6 @@ export default function PartnerSignupStep2() {
 
     // 사업자 정보 검증
     const validationError =
-      formData.categories.length === 0 ? '가게업종분류를 선택해주세요.' :
       !formData.storeName ? '가게명을 입력해주세요.' :
       !formData.businessRegistration ? '사업자등록번호를 입력해주세요.' :
       !formData.businessOwner ? '사업자 대표이름을 입력해주세요.' :
@@ -235,20 +202,13 @@ export default function PartnerSignupStep2() {
       const { doc, setDoc } = await import('firebase/firestore')
       const { db } = await import('@/lib/firebase')
 
-      // 카테고리 ID를 한글 이름으로 변환
-      const categoryNames = formData.categories.map(id => {
-        const category = categories.find(c => c.id === id)
-        return category ? category.name : id
-      })
-
       const storeData = {
         partnerId: uid,
         storeName: formData.storeName,
-        categories: categoryNames, // 한글 카테고리 이름
-        primaryCategory: categoryNames[0], // 대표 업종
         businessRegistration: formData.businessRegistration,
         businessRegistrationImage: formData.businessRegistrationImage || '',
         businessOwner: formData.businessOwner,
+        businessPhone: formData.businessPhone,
         address: {
           city: formData.address.split(' ')[0] || '',
           district: formData.address.split(' ')[1] || '',
@@ -258,7 +218,6 @@ export default function PartnerSignupStep2() {
         },
         phone: step1Data.phone,
         description: '',
-        openingHours: '',
         closedDays: [],
         status: 'pending', // 'pending' | 'active' | 'inactive' - 검수 대기 중
         createdAt: new Date(),
@@ -277,7 +236,6 @@ export default function PartnerSignupStep2() {
       // Step3 표시용 데이터 저장
       const step2Data = {
         storeName: formData.storeName,
-        category: categoryNames[0], // 한글 카테고리
         city: formData.address.split(' ')[0] || '',
         district: formData.address.split(' ')[1] || '',
         dong: formData.address.split(' ')[2] || '',
@@ -337,75 +295,6 @@ export default function PartnerSignupStep2() {
 
           <form className={styles.form} onSubmit={handleSubmit}>
             <div>
-              {/* 가게업종분류 */}
-              <div className={styles.inputGroup}>
-                <label className={styles.categoryTitle}>
-                  가게업종선택
-                </label>
-                <p className={styles.categoryDescription}>
-                  파트너님의 가게 업종을 선택해주세요.<br />
-                  최대 2개 까지 선택가능하며, <span className={styles.categoryHighlight}>최초 1개가 대표업종</span>으로 선택됩니다.
-                </p>
-                <div className={styles.categoryGrid}>
-                  <div className={styles.categoryRowTop}>
-                    {categories.slice(0, 3).map((category) => {
-                      const isSelected = formData.categories.includes(category.id)
-                      const isFirstSelection = formData.categories[0] === category.id
-
-                      return (
-                        <button
-                          key={category.id}
-                          type="button"
-                          className={`${styles.categoryCard} ${isSelected ? styles.selected : ''}`}
-                          onClick={() => handleCategorySelect(category.id)}
-                        >
-                          {isFirstSelection && (
-                            <div className={styles.representativeLabel}>대표</div>
-                          )}
-                          <div className={styles.categoryIcon}>
-                            <Image
-                              src={category.icon}
-                              alt={category.name}
-                              width={32}
-                              height={32}
-                            />
-                          </div>
-                          <div className={styles.categoryName}>{category.name}</div>
-                        </button>
-                      )
-                    })}
-                  </div>
-                  <div className={styles.categoryRowBottom}>
-                    {categories.slice(3, 6).map((category) => {
-                      const isSelected = formData.categories.includes(category.id)
-                      const isFirstSelection = formData.categories[0] === category.id
-
-                      return (
-                        <button
-                          key={category.id}
-                          type="button"
-                          className={`${styles.categoryCard} ${isSelected ? styles.selected : ''}`}
-                          onClick={() => handleCategorySelect(category.id)}
-                        >
-                          {isFirstSelection && (
-                            <div className={styles.representativeLabel}>대표</div>
-                          )}
-                          <div className={styles.categoryIcon}>
-                            <Image
-                              src={category.icon}
-                              alt={category.name}
-                              width={32}
-                              height={32}
-                            />
-                          </div>
-                          <div className={styles.categoryName}>{category.name}</div>
-                        </button>
-                      )
-                    })}
-                  </div>
-                </div>
-              </div>
-
               {/* 가게명 */}
               <div className={styles.inputGroup}>
                 <label htmlFor="storeName" className={styles.label}>
@@ -454,6 +343,23 @@ export default function PartnerSignupStep2() {
                   onChange={handleChange}
                   className={styles.inputNoIcon}
                   placeholder="사업자 대표이름을 입력해주세요"
+                />
+              </div>
+
+              {/* 가게 대표전화 */}
+              <div className={styles.inputGroup}>
+                <label htmlFor="businessPhone" className={styles.label}>
+                  가게 대표전화
+                </label>
+                <input
+                  id="businessPhone"
+                  name="businessPhone"
+                  type="tel"
+                  required
+                  value={formData.businessPhone}
+                  onChange={handleChange}
+                  className={styles.inputNoIcon}
+                  placeholder="가게 대표전화를 입력해주세요"
                 />
               </div>
 
