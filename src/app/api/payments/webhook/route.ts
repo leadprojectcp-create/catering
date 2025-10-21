@@ -13,7 +13,8 @@ export async function POST(request: NextRequest) {
     const rawBody = await request.text()
 
     // 웹훅 메시지 검증 (Standard Webhooks 스펙)
-    let webhook: any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let webhook: any = null
     try {
       // 테스트 시크릿 먼저 시도
       const testSecret = process.env.PORTONE_WEBHOOK_SECRET_1
