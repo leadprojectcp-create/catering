@@ -8,7 +8,6 @@ const nextConfig: NextConfig = {
 
   async redirects() {
     return [
-      // partner.danchemoim.com에서 접속 시 /partner/dashboard로 리다이렉트
       {
         source: '/',
         has: [
