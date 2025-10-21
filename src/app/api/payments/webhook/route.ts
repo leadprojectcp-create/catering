@@ -105,14 +105,16 @@ export async function POST(request: NextRequest) {
       if (orderId) {
         const orderRef = doc(db, 'orders', orderId)
 
-        // paymentData에서 필요한 필드만 저장
+        // paymentData에서 필요한 필드만 저장 (민감한 정보 제외)
         const paymentInfo = {
-          method: paymentData.method,
-          amount: paymentData.amount,
-          currency: paymentData.currency,
-          paidAt: paymentData.paidAt,
-          pgProvider: paymentData.pgProvider,
-          pgTxId: paymentData.pgTxId,
+          method: paymentData.method,           // 결제 수단
+          amount: paymentData.amount,           // 금액 정보
+          currency: paymentData.currency,       // 통화
+          paidAt: paymentData.paidAt,           // 결제 시각
+          pgProvider: paymentData.pgProvider,   // PG사
+          pgTxId: paymentData.pgTxId,           // PG 거래 ID (환불/취소 시 필요)
+          receiptUrl: paymentData.receiptUrl,   // 영수증 URL
+          status: paymentData.status,           // 결제 상태
         }
 
         await updateDoc(orderRef, {
@@ -183,7 +185,7 @@ export async function POST(request: NextRequest) {
                   // 카카오톡 발송 실패 시 SMS로 폴백
                   try {
                     const { sendSMS } = await import('@/lib/services/smsService')
-                    const smsMessage = `[단모] 신규주문이 들어왔습니다.\n\n가게명: ${orderData.storeName || ''}\n주문번호: ${orderData.orderNumber || orderId}\n총 수량: ${totalQuantity}개\n상품금액: ${orderData.totalProductPrice || orderData.totalPrice || 0}원\n\n주문확인: https://danchemoim.com/partner/order/history/`
+                    const smsMessage = `[단모] 신규주문이 들어왔습니다.\n\n가게명: ${String(orderData.storeName || '')}\n주문번호: ${String(orderData.orderNumber || orderId)}\n총 수량: ${String(totalQuantity)}개\n상품금액: ${String(orderData.totalProductPrice || orderData.totalPrice || 0)}원\n\n주문을 확인하려면 아래 버튼을 클릭해주세요.\n\nhttps://danchemoim.com/partner/order/history/`
 
                     await sendSMS(partnerPhone, smsMessage)
                     console.log(`[Webhook] SMS 알림 발송 성공 (폴백): ${partnerPhone}`)

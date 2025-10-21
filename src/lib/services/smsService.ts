@@ -55,12 +55,12 @@ export async function sendKakaoAlimtalk(
 
     console.log('[Aligo 카카오톡] Sending to:', receiver)
 
-    // 템플릿 변수를 메시지로 변환
+    // 템플릿 변수를 메시지로 치환
     let message = `[단모] 신규주문이 들어왔습니다.\n\n`
-    message += `가게명: ${variables.storeName}\n`
-    message += `주문번호: ${variables.orderNumber}\n`
-    message += `총 수량: ${variables.totalQuantity}개\n`
-    message += `상품금액: ${variables.totalProductPrice}원\n\n`
+    message += `가게명: ${String(variables.storeName)}\n`
+    message += `주문번호: ${String(variables.orderNumber)}\n`
+    message += `총 수량: ${String(variables.totalQuantity)}개\n`
+    message += `상품금액: ${String(variables.totalProductPrice)}원\n\n`
     message += `주문을 확인하려면 아래 버튼을 클릭해주세요.`
 
     const params = new URLSearchParams({
@@ -83,11 +83,6 @@ export async function sendKakaoAlimtalk(
           },
         ],
       }),
-      // 템플릿 변수 전달 (문자열로 확실하게 전달)
-      storeName_1: String(variables.storeName || ''),
-      orderNumber_1: String(variables.orderNumber || ''),
-      totalQuantity_1: String(variables.totalQuantity || '0'),
-      totalProductPrice_1: String(variables.totalProductPrice || '0'),
     })
 
     console.log('[Aligo 카카오톡] Request params:', {
