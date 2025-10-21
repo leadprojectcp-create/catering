@@ -6,6 +6,20 @@ const nextConfig: NextConfig = {
     unoptimized: true, // 이미지 최적화 비활성화 - 원본 그대로 사용
   },
 
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'no-store, must-revalidate',
+          },
+        ],
+      },
+    ];
+  },
+
   async redirects() {
     return [
       {

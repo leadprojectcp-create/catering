@@ -423,7 +423,7 @@ export default function PartnerHeader({ chatRoomTitle, chatRoomPhone, chatRoomMe
                     onClick={closeDrawer}
                   >
                     <Image
-                      src="/partner-menu-icons/partner_order.png"
+                      src="/partner-menu-icons/settlement.png"
                       alt="정산계좌관리"
                       width={20}
                       height={20}

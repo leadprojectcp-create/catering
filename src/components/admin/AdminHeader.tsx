@@ -12,6 +12,7 @@ const adminMenuItems = [
   { label: '대시보드', path: '/admin/dashboard', icon: '📊' },
   { label: '사용자 관리', path: '/admin/users', icon: '👥' },
   { label: '업체 관리', path: '/admin/stores', icon: '🏪' },
+  { label: '상품 관리', path: '/admin/products', icon: '🛍️' },
   { label: '주문 관리', path: '/admin/orders', icon: '📦' },
   { label: '매거진 관리', path: '/admin/magazine', icon: '📝' },
   { label: '공지사항 관리', path: '/admin/notices', icon: '📢' },
