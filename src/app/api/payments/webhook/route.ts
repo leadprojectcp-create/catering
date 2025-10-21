@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { doc, updateDoc, getDoc } from 'firebase/firestore'
-import { db } from '@/lib/firebase'
+import { adminDb } from '@/lib/firebaseAdmin'
 import crypto from 'crypto'
 import { sendKakaoAlimtalk } from '@/lib/services/smsService'
 
@@ -100,8 +99,8 @@ export async function POST(request: NextRequest) {
 
       // Firestore에서 주문 업데이트
       if (orderId) {
-        const orderRef = doc(db, 'orders', orderId)
-        await updateDoc(orderRef, {
+        const orderRef = adminDb.collection('orders').doc(orderId)
+        await orderRef.update({
           paymentStatus: 'paid',
           paymentId: paymentId,
           transactionId: transactionId,
@@ -112,31 +111,31 @@ export async function POST(request: NextRequest) {
         console.log(`[Webhook] Order ${orderId} updated with payment info`)
 
         // 주문 정보 조회
-        const orderDoc = await getDoc(orderRef)
-        if (orderDoc.exists()) {
+        const orderDoc = await orderRef.get()
+        if (orderDoc.exists) {
           const orderData = orderDoc.data()
-          const storeId = orderData.storeId
+          const storeId = orderData?.storeId
 
           console.log(`[Webhook] Order data:`, {
             orderId,
             storeId,
-            storeName: orderData.storeName,
-            orderNumber: orderData.orderNumber,
+            storeName: orderData?.storeName,
+            orderNumber: orderData?.orderNumber,
           })
 
           if (storeId) {
             // 가게 정보 조회
-            const storeRef = doc(db, 'stores', storeId)
-            const storeDoc = await getDoc(storeRef)
+            const storeRef = adminDb.collection('stores').doc(storeId)
+            const storeDoc = await storeRef.get()
 
-            if (storeDoc.exists()) {
+            if (storeDoc.exists) {
               const storeData = storeDoc.data()
-              const partnerPhone = storeData.phone
+              const partnerPhone = storeData?.phone
 
               console.log(`[Webhook] Store data:`, {
                 storeId,
                 partnerPhone,
-                storeName: storeData.storeName,
+                storeName: storeData?.storeName,
               })
 
               if (partnerPhone) {
@@ -190,8 +189,8 @@ export async function POST(request: NextRequest) {
       const { paymentId, orderId } = data
 
       if (orderId) {
-        const orderRef = doc(db, 'orders', orderId)
-        await updateDoc(orderRef, {
+        const orderRef = adminDb.collection('orders').doc(orderId)
+        await orderRef.update({
           paymentStatus: 'cancelled',
           cancelledAt: new Date(),
         })
@@ -207,8 +206,8 @@ export async function POST(request: NextRequest) {
       const { paymentId, orderId } = data
 
       if (orderId) {
-        const orderRef = doc(db, 'orders', orderId)
-        await updateDoc(orderRef, {
+        const orderRef = adminDb.collection('orders').doc(orderId)
+        await orderRef.update({
           paymentStatus: 'failed',
           failedAt: new Date(),
         })
