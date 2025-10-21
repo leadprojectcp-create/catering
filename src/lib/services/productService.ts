@@ -107,7 +107,13 @@ export async function updateProduct(productId: string, productData: Partial<Prod
   }
 
   const existingData = productDoc.data()
-  if (existingData.partnerId !== user.uid) {
+
+  // 관리자 권한 확인
+  const userDoc = await getDoc(doc(db, 'users', user.uid))
+  const isAdmin = userDoc.exists() && userDoc.data()?.level === 10
+
+  // 관리자가 아니면 본인 상품만 수정 가능
+  if (!isAdmin && existingData.partnerId !== user.uid) {
     throw new Error('수정 권한이 없습니다.')
   }
 
@@ -242,7 +248,13 @@ export async function updateProductStatus(productId: string, status: 'active' | 
   }
 
   const existingData = productDoc.data()
-  if (existingData.partnerId !== user.uid) {
+
+  // 관리자 권한 확인
+  const userDoc = await getDoc(doc(db, 'users', user.uid))
+  const isAdmin = userDoc.exists() && userDoc.data()?.level === 10
+
+  // 관리자가 아니면 본인 상품만 수정 가능
+  if (!isAdmin && existingData.partnerId !== user.uid) {
     throw new Error('수정 권한이 없습니다.')
   }
 
