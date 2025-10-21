@@ -489,11 +489,21 @@ export default function EditProductPage({ productId }: { productId: string }) {
         uploadedImageUrls.push(uploadResult.url)
       }
 
+      // 비어있지 않은 옵션만 필터링
+      const validOptions = formData.options.filter(option =>
+        option.groupName.trim() !== '' &&
+        option.values.some(v => v.name.trim() !== '')
+      ).map(option => ({
+        ...option,
+        values: option.values.filter(v => v.name.trim() !== '')
+      }))
+
       // 수정된 데이터 준비
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const submitData: any = {
         ...formData,
         images: uploadedImageUrls,
+        options: validOptions.length > 0 ? validOptions : undefined, // 비어있으면 저장하지 않음
         updatedAt: new Date().toISOString()
       }
 

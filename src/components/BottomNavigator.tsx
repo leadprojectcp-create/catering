@@ -65,8 +65,8 @@ export default function BottomNavigator() {
     {
       name: '홈',
       path: '/',
-      iconDefault: '/menu-icons/home.svg',
-      iconActive: '/menu-icons/home_active.svg'
+      iconDefault: '/menu-icons/home.png',
+      iconActive: '/menu-icons/home_active.png'
     },
     {
       name: '찜',

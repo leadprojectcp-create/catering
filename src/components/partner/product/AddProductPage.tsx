@@ -460,11 +460,21 @@ export default function AddProductPage() {
         uploadedImageUrls.push(uploadResult.url)
       }
 
+      // 비어있지 않은 옵션만 필터링
+      const validOptions = formData.options.filter(option =>
+        option.groupName.trim() !== '' &&
+        option.values.some(v => v.name.trim() !== '')
+      ).map(option => ({
+        ...option,
+        values: option.values.filter(v => v.name.trim() !== '')
+      }))
+
       // orderType을 'single'로 고정하여 전송
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const submitData: any = {
         ...formData,
         images: uploadedImageUrls, // File 객체 대신 업로드된 URL들
+        options: validOptions.length > 0 ? validOptions : undefined, // 비어있으면 저장하지 않음
         orderType: 'single', // 항상 단건주문으로 설정
         createdAt: new Date().toISOString()
       }

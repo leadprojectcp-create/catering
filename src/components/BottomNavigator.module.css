@@ -24,7 +24,7 @@
     align-items: center;
     justify-content: center;
     text-decoration: none;
-    color: #999;
+    color: #333;
     transition: color 0.2s;
     flex: 1;
     padding: 8px 0;
@@ -33,6 +33,10 @@
 
   .navItemActive {
     color: #025BD9;
+  }
+
+  .navItemActive .label {
+    font-weight: 700;
   }
 
   .iconWrapper {
@@ -60,7 +64,8 @@
   }
 
   .label {
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 500;
+    color: #333;
   }
 }
