@@ -393,6 +393,26 @@ export default function PartnerHeader({ chatRoomTitle, chatRoomPhone, chatRoomMe
                 </div>
               ))}
 
+              {/* 사용자 페이지로 이동 버튼 */}
+              <Link
+                href="/"
+                className={styles.userPageButton}
+                onClick={closeDrawer}
+              >
+                <Image
+                  src="/assets/menu_logo.png"
+                  alt="단체모임"
+                  width={24}
+                  height={24}
+                  quality={100}
+                  unoptimized
+                />
+                <span>사용자 페이지로</span>
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M7.5 15L12.5 10L7.5 5" stroke="#333" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </Link>
+
               {/* 추가 메뉴 */}
               <div className={styles.menuCategoryFooter}>
                 <div className={styles.categoryItems}>

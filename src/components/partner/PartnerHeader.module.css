@@ -357,6 +357,32 @@
   border-left-color: #025BD9;
 }
 
+/* 사용자 페이지로 이동 버튼 */
+.userPageButton {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: calc(100% - 40px);
+  margin: 20px 20px;
+  padding: 14px 16px;
+  border-radius: 10px;
+  background: #FAFAFA;
+  color: #333;
+  font-size: 16px;
+  font-weight: 600;
+  text-decoration: none;
+  gap: 12px;
+}
+
+.userPageButton span {
+  flex: 1;
+  text-align: left;
+}
+
+.userPageButton svg {
+  flex-shrink: 0;
+}
+
 /* 모바일 반응형 */
 @media (max-width: 768px) {
   .container {
