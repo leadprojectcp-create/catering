@@ -74,7 +74,34 @@ interface QuickOrderResponse {
   code: string
   message?: string
   orderNo?: string
-  [key: string]: any
+  [key: string]: unknown
+}
+
+interface OrderData {
+  deliveryInfo?: {
+    addressName?: string
+    deliveryDate?: string
+    deliveryTime?: string
+    address?: string
+    detailAddress?: string
+    recipient?: string
+    recipientPhone?: string
+    deliveryRequest?: string
+    detailedRequest?: string
+  }
+  [key: string]: unknown
+}
+
+interface StoreData {
+  storeName?: string
+  phone?: string
+  address?: {
+    city?: string
+    district?: string
+    dong?: string
+    detail?: string
+  }
+  [key: string]: unknown
 }
 
 /**
@@ -167,8 +194,8 @@ export async function requestQuickDelivery(
  * 주문 정보에서 퀵 배송 요청 데이터 생성
  */
 export function createQuickDeliveryData(
-  orderInfo: any,
-  storeInfo: any
+  orderInfo: OrderData,
+  storeInfo: StoreData
 ): Omit<QuickOrderRequest, 'topGroupNo' | 'groupNo' | 'customerNo'> {
   // 배송 방법 설정 (고정값: 일반 배송)
   const runtype = 0 // 0=일반배송, 2=빠른배차, 3=긴급배차
