@@ -5,21 +5,6 @@ const nextConfig: NextConfig = {
     domains: ['tripjoy.b-cdn.net', 'picktoeat.b-cdn.net'],
     unoptimized: true, // 이미지 최적화 비활성화 - 원본 그대로 사용
   },
-  async redirects() {
-    return [
-      {
-        source: '/',
-        has: [
-          {
-            type: 'host',
-            value: 'partner.danchemoim.com',
-          },
-        ],
-        destination: '/partner/dashboard',
-        permanent: false,
-      },
-    ];
-  },
 };
 
 export default nextConfig;
