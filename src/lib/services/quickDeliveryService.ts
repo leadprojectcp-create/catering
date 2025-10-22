@@ -73,7 +73,11 @@ interface QuickOrderRequest {
 interface QuickOrderResponse {
   code: string
   message?: string
-  orderNo?: string
+  orderNo?: number
+  orderInfo?: {
+    feeTotal?: number
+    feeDetail?: string
+  }
   [key: string]: unknown
 }
 
