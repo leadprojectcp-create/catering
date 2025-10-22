@@ -168,9 +168,10 @@ service cloud.firestore {
          resource.data.storeId == request.auth.uid ||
          resource.data.partnerId == request.auth.uid);
 
-      // 웹훅이 결제 관련 필드만 업데이트 가능 (인증 불필요)
+      // 웹훅이 결제 및 퀵 배송 관련 필드만 업데이트 가능 (인증 불필요)
       allow update: if request.resource.data.diff(resource.data).affectedKeys()
-        .hasOnly(['paymentStatus', 'paymentId', 'transactionId', 'paidAt', 'paymentInfo']);
+        .hasOnly(['paymentStatus', 'paymentId', 'transactionId', 'paidAt', 'paymentInfo',
+                  'quickDeliveryOrderNo', 'quickDeliveryStatus', 'quickDeliveryError']);
 
       // 웹훅이 주문 정보를 읽을 수 있도록 허용
       allow read: if true;
@@ -271,6 +272,15 @@ service cloud.firestore {
 
       // 관리자(level 10)만 생성/수정/삭제 가능
       allow create, update, delete: if isAdmin();
+    }
+
+    // QuickDeliveries collection - 퀵 배송
+    match /quickDeliveries/{orderId} {
+      // 웹훅에서 퀵 배송 정보 읽기/쓰기 가능 (인증 불필요)
+      allow read, write: if true;
+
+      // 주문자 본인 또는 해당 파트너도 읽기 가능
+      allow read: if request.auth != null;
     }
   }
 }
