@@ -159,7 +159,7 @@ export default function NoticeListPage() {
                   </button>
                   <button
                     className={styles.editButton}
-                    onClick={() => router.push(`/partner/notice/edit/${notice.id}`)}
+                    onClick={() => router.push(`/partner/partnerNotice/edit/${notice.id}`)}
                   >
                     수정
                   </button>

@@ -1,5 +1,6 @@
 'use client'
 
+import { memo } from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { Product, Store } from './ProductDetailPage'
@@ -16,7 +17,7 @@ interface ProductCardProps {
   onToggleDescription: () => void
 }
 
-export default function ProductCard({
+const ProductCard = memo(function ProductCard({
   product,
   user,
   currentImageIndex,
@@ -96,36 +97,29 @@ export default function ProductCard({
           {/* 주문 가능 수량 */}
           {product.minOrderQuantity && product.maxOrderQuantity && (
             <div className={styles.orderQuantity}>
-              주문가능 수량 최소 {product.minOrderQuantity}개 ~ 최대 {product.maxOrderQuantity}개
+              최소 {product.minOrderQuantity}개 ~ 최대 {product.maxOrderQuantity}개 주문가능
             </div>
           )}
 
-          {/* 배송 방법 및 추가 설정 - PC용 */}
+          {/* 최소 주문일 정보 */}
+          {product.minOrderDays && product.minOrderDays > 0 && (
+            <div className={styles.minOrderDays}>
+              최소 {product.minOrderDays}일 전 주문 가능
+            </div>
+          )}
+
+          {/* 추가 설정 - PC용 */}
           <div className={styles.badgeContainerDesktop}>
-            <div className={styles.badgeRow}>
-              {product.deliveryMethods?.map((method, index) => (
-                <span key={index} className={styles.deliveryBadge}>{method}</span>
-              ))}
-            </div>
-            <div className={styles.badgeRow}>
-              {product.additionalSettings?.map((setting, index) => (
-                <span key={index} className={styles.settingBadge}>{setting}</span>
-              ))}
-            </div>
+            {product.additionalSettings?.map((setting, index) => (
+              <span key={index} className={styles.settingBadge}>{setting}</span>
+            ))}
           </div>
 
-          {/* 배송 방법 및 추가 설정 - 모바일용 */}
+          {/* 추가 설정 - 모바일용 */}
           <div className={styles.badgeContainerMobile}>
-            <div className={styles.badgeRow}>
-              {product.deliveryMethods?.map((method, index) => (
-                <span key={index} className={styles.deliveryBadge}>{method}</span>
-              ))}
-            </div>
-            <div className={styles.badgeRow}>
-              {product.additionalSettings?.map((setting, index) => (
-                <span key={index} className={styles.settingBadge}>{setting}</span>
-              ))}
-            </div>
+            {product.additionalSettings?.map((setting, index) => (
+              <span key={index} className={styles.settingBadge}>{setting}</span>
+            ))}
           </div>
 
           {/* 채팅 및 가게 버튼 */}
@@ -184,4 +178,6 @@ export default function ProductCard({
       )}
     </>
   )
-}
+})
+
+export default ProductCard

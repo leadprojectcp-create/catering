@@ -2,7 +2,6 @@
 .reviewSection {
   padding: 20px 0;
   border-top: 1px solid #F5F5F5;
-  margin-top: 20px;
 }
 
 .reviewTitle {
@@ -10,6 +9,46 @@
   font-weight: 700;
   color: #333;
   margin: 0 0 16px 0;
+}
+
+.filterContainer {
+  display: flex;
+  justify-content: flex-start;
+  gap: 10px;
+  margin-bottom: 20px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.filterContainer::-webkit-scrollbar {
+  display: none;
+}
+
+.filterButton {
+  color: #4E5968;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 30px;
+  border: 1px solid #F0F0F3;
+  padding: 6px 12px;
+  background: #fff;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.filterButton:hover {
+  background: #F9F9F9;
+}
+
+.filterButtonActive {
+  border-radius: 30px;
+  border: 1px solid #237AF2;
+  background: #F0F6FF;
+  color: #237AF2;
+  font-size: 14px;
+  font-weight: 500;
 }
 
 .reviewLoading,
@@ -23,13 +62,16 @@
 .reviewList {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 0;
 }
 
 .reviewItem {
-  padding: 16px;
-  background: #F5F7F9;
-  border-radius: 8px;
+  padding: 16px 0;
+  border-bottom: 1px solid #F5F5F5;
+}
+
+.reviewItem:last-child {
+  border-bottom: none;
 }
 
 .reviewHeader {
@@ -71,32 +113,164 @@
   color: #999;
 }
 
-.reviewContent {
-  font-size: 14px;
-  color: #666;
-  line-height: 1.6;
-  margin: 0 0 12px 0;
-  white-space: pre-wrap;
-}
-
 .reviewImages {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
+  margin-bottom: 12px;
 }
 
 .reviewImageItem {
+  position: relative;
+  width: 80px;
+  height: 80px;
   border-radius: 8px;
   overflow: hidden;
   border: 1px solid #e0e0e0;
+  cursor: pointer;
 }
 
 .reviewImage {
   object-fit: cover;
-  cursor: pointer;
   transition: transform 0.2s;
 }
 
-.reviewImage:hover {
+.reviewImageItem:hover .reviewImage {
   transform: scale(1.05);
+}
+
+.reviewContent {
+  color: #333;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 150%; /* 21px */
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+/* 이미지 모달 */
+.imageModal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.modalContent {
+  position: relative;
+  max-width: 90vw;
+  max-height: 90vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.imageContainer {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modalImage {
+  max-width: 90vw;
+  max-height: 90vh;
+  width: auto !important;
+  height: auto !important;
+  object-fit: contain;
+}
+
+.closeButton {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: rgba(0, 0, 0, 0.5);
+  border: none;
+  color: white;
+  font-size: 32px;
+  cursor: pointer;
+  padding: 8px 12px;
+  z-index: 10001;
+  line-height: 1;
+  border-radius: 50%;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.closeButton:hover {
+  background: rgba(0, 0, 0, 0.8);
+}
+
+.prevButton,
+.nextButton {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.3);
+  border: none;
+  color: white;
+  font-size: 60px;
+  cursor: pointer;
+  padding: 20px;
+  z-index: 10001;
+  line-height: 1;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.prevButton:hover,
+.nextButton:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.prevButton {
+  left: 20px;
+}
+
+.nextButton {
+  right: 20px;
+}
+
+.imageCounter {
+  position: absolute;
+  bottom: -40px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: white;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+@media (max-width: 768px) {
+  .prevButton,
+  .nextButton {
+    font-size: 40px;
+    padding: 10px;
+  }
+
+  .prevButton {
+    left: 10px;
+  }
+
+  .nextButton {
+    right: 10px;
+  }
+
+  .closeButton {
+    top: 10px;
+    right: 10px;
+    font-size: 24px;
+    width: 40px;
+    height: 40px;
+  }
 }

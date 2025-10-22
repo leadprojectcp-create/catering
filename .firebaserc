@@ -1,5 +1,15 @@
 {
   "projects": {
     "default": "catering-26952"
-  }
+  },
+  "targets": {
+    "catering-26952": {
+      "database": {
+        "catering": [
+          "catering"
+        ]
+      }
+    }
+  },
+  "etags": {}
 }

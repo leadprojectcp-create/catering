@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 import Script from 'next/script'
-import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore'
+import { doc, getDoc, setDoc, updateDoc, addDoc, collection } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { useAuth } from '@/contexts/AuthContext'
 import Header from '@/components/Header'
@@ -19,6 +19,19 @@ import PaymentTerms from './PaymentTerms'
 import { requestPayment, PayMethod } from '@/lib/services/paymentService'
 import styles from './PaymentsPage.module.css'
 
+// 결제 수단 타입 (UI용)
+type PayMethodUI = 'card' | 'trans' | 'vbank'
+
+// UI 결제 수단을 포트원 API 값으로 매핑
+const mapPayMethodToPortOne = (method: PayMethodUI): PayMethod => {
+  const mapping: Record<PayMethodUI, PayMethod> = {
+    'card': 'CARD',
+    'trans': 'TRANSFER',
+    'vbank': 'VIRTUAL_ACCOUNT'
+  }
+  return mapping[method] || 'CARD'
+}
+
 export default function PaymentsPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -27,7 +40,7 @@ export default function PaymentsPage() {
   const [orderId, setOrderId] = useState<string | null>(null)
   const [orderData, setOrderData] = useState<OrderData | null>(null)
   const [deliveryMethod, setDeliveryMethod] = useState('pickup')
-  const [payMethod, setPayMethod] = useState<PayMethod>('CARD')
+  const [payMethod, setPayMethod] = useState<PayMethodUI>('card')
   const [orderInfo, setOrderInfo] = useState({
     orderer: '',
     phone: '',
@@ -62,20 +75,24 @@ export default function PaymentsPage() {
 
   useEffect(() => {
     const loadData = async () => {
-      // URL에서 orderId 가져오기
+      // URL에서 cartId 또는 orderId 가져오기
+      const cartIdParam = searchParams.get('cartId')
       const orderIdParam = searchParams.get('orderId')
 
-      if (!orderIdParam) {
+      const id = cartIdParam || orderIdParam
+      const collection = cartIdParam ? 'shoppingCart' : 'orders'
+
+      if (!id) {
         alert('주문 정보가 없습니다.')
         router.push('/')
         return
       }
 
-      setOrderId(orderIdParam)
+      setOrderId(id)
 
       try {
-        // Firestore에서 주문 정보 가져오기
-        const orderDoc = await getDoc(doc(db, 'orders', orderIdParam))
+        // Firestore에서 주문 정보 가져오기 (shoppingCart 또는 orders)
+        const orderDoc = await getDoc(doc(db, collection, id))
 
         if (!orderDoc.exists()) {
           alert('주문 정보를 찾을 수 없습니다.')
@@ -296,12 +313,49 @@ export default function PaymentsPage() {
         return
       }
 
+      // cartId로 들어온 경우 shoppingCart에서 orders로 데이터 이동
+      const cartIdParam = searchParams.get('cartId')
+      let finalOrderId = orderId
+
+      if (cartIdParam) {
+        // shoppingCart에서 데이터 가져오기
+        const cartDocRef = doc(db, 'shoppingCart', cartIdParam)
+        const cartDocSnap = await getDoc(cartDocRef)
+
+        if (!cartDocSnap.exists()) {
+          alert('장바구니 정보를 찾을 수 없습니다.')
+          return
+        }
+
+        const cartData = cartDocSnap.data()
+
+        // orders 컬렉션에 새로운 문서 생성
+        const newOrderData = {
+          uid: cartData.uid,
+          productId: cartData.productId,
+          storeId: cartData.storeId,
+          storeName: cartData.storeName,
+          items: cartData.items,
+          totalProductPrice: cartData.totalProductPrice,
+          totalQuantity: cartData.totalQuantity,
+          deliveryMethod: cartData.deliveryMethod,
+          request: cartData.request,
+          status: 'pending',
+          createdAt: cartData.createdAt || new Date(),
+          updatedAt: new Date()
+        }
+
+        const newOrderRef = await addDoc(collection(db, 'orders'), newOrderData)
+        finalOrderId = newOrderRef.id
+        console.log('shoppingCart에서 orders로 이동 완료:', finalOrderId)
+      }
+
       // 가게 정보 가져오기 (partnerId와 partnerPhone을 위해)
       const storeDoc = await getDoc(doc(db, 'stores', orderData.storeId))
       const storeData = storeDoc.exists() ? storeDoc.data() : null
 
-      // 기존 주문 문서 가져오기
-      const orderDocRef = doc(db, 'orders', orderId)
+      // 주문 문서 가져오기
+      const orderDocRef = doc(db, 'orders', finalOrderId)
       const orderDocSnap = await getDoc(orderDocRef)
 
       if (!orderDocSnap.exists()) {
@@ -342,7 +396,7 @@ export default function PaymentsPage() {
         updatedAt: new Date()
       })
 
-      console.log('주문 업데이트 완료:', orderId, orderNumber)
+      console.log('주문 업데이트 완료:', finalOrderId, orderNumber)
 
       console.log('=== 결제 요청 전 orderInfo 확인 ===')
       console.log('orderInfo:', orderInfo)
@@ -354,11 +408,11 @@ export default function PaymentsPage() {
       const paymentResult = await requestPayment({
         orderName: `${orderData.productName} ${orderData.items.length > 1 ? `외 ${orderData.items.length - 1}건` : ''}`,
         amount: totalPrice,
-        orderId: orderId,
+        orderId: finalOrderId,
         customerName: orderInfo.orderer,
         customerEmail: userEmail,
         customerPhoneNumber: orderInfo.phone,
-        payMethod: payMethod,
+        payMethod: mapPayMethodToPortOne(payMethod),
       })
 
       if (!paymentResult.success) {
@@ -385,7 +439,7 @@ export default function PaymentsPage() {
       }
 
       // 결제 검증 성공 - 주문 상태 업데이트
-      const orderRef = doc(db, 'orders', orderId)
+      const orderRef = doc(db, 'orders', finalOrderId)
       await setDoc(orderRef, {
         paymentStatus: 'paid',
         paymentId: paymentResult.paymentId,
@@ -785,36 +839,24 @@ export default function PaymentsPage() {
         <section className={styles.section}>
           <h2 className={styles.sectionTitle}>결제 수단</h2>
           <div className={styles.paymentMethodContainer}>
-            <label className={styles.paymentMethodLabel}>
-              <input
-                type="radio"
-                name="payMethod"
-                value="CARD"
-                checked={payMethod === 'CARD'}
-                onChange={(e) => setPayMethod(e.target.value as PayMethod)}
-              />
-              <span>신용카드</span>
-            </label>
-            <label className={styles.paymentMethodLabel}>
-              <input
-                type="radio"
-                name="payMethod"
-                value="VIRTUAL_ACCOUNT"
-                checked={payMethod === 'VIRTUAL_ACCOUNT'}
-                onChange={(e) => setPayMethod(e.target.value as PayMethod)}
-              />
-              <span>가상계좌</span>
-            </label>
-            <label className={styles.paymentMethodLabel}>
-              <input
-                type="radio"
-                name="payMethod"
-                value="TRANSFER"
-                checked={payMethod === 'TRANSFER'}
-                onChange={(e) => setPayMethod(e.target.value as PayMethod)}
-              />
+            <div
+              className={`${styles.paymentMethodBox} ${payMethod === 'card' ? styles.paymentMethodBoxSelected : ''}`}
+              onClick={() => setPayMethod('card')}
+            >
+              <span>신용/체크카드</span>
+            </div>
+            <div
+              className={`${styles.paymentMethodBox} ${payMethod === 'trans' ? styles.paymentMethodBoxSelected : ''}`}
+              onClick={() => setPayMethod('trans')}
+            >
               <span>계좌이체</span>
-            </label>
+            </div>
+            <div
+              className={`${styles.paymentMethodBox} ${payMethod === 'vbank' ? styles.paymentMethodBoxSelected : ''}`}
+              onClick={() => setPayMethod('vbank')}
+            >
+              <span>가상계좌</span>
+            </div>
           </div>
         </section>
 

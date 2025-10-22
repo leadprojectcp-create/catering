@@ -41,7 +41,7 @@ export default function Footer() {
                 서울특별시 광진구 아차산로62길 14-12(구의동, 대영트윈,투) | 대표번호 1666-5157
               </span>
               <span className={styles.mobileText}>
-                사업자 등록번호 413-87-02826 | 통신판매업 신고번호 2024-서울광진-1870
+                사업자 등록번호 413-87-02826 <br /> 통신판매업 신고번호 2024-서울광진-1870
               </span>
             </div>
             <div className={styles.companyInfo + ' ' + styles.mobileOnly}>

@@ -12,6 +12,11 @@
     "alwaysDeployFromSource": true
   },
   "firestore": {
-    "rules": "firestore.rules"
+    "rules": "firestore.rules",
+    "databases": {
+      "catering": {
+        "rules": "firestore.rules"
+      }
+    }
   }
 }

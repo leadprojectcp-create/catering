@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { collection, addDoc, updateDoc, doc, getDoc, query, where, getDocs, orderBy } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
@@ -505,16 +505,16 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
           productName: product.name,
           price: product.discountedPrice || product.price,
           quantity: item.quantity,
-          options: item.options, // 옵션명만 저장 { groupName: optionName }
-          optionsWithPrices: optionsWithPrices, // 가격 포함 정보 { groupName: { name, price } }
+          options: item.options,
+          optionsWithPrices: optionsWithPrices,
           itemPrice: calculateItemPrice(product, item.options, item.quantity)
         }
       })
 
-      // orders 컬렉션에 주문 생성
-      const orderDoc = await addDoc(collection(db, 'orders'), {
-        userId: user.uid,
+      // shoppingCart 컬렉션에 저장 (orders가 아닌 shoppingCart에 저장)
+      const cartDoc = await addDoc(collection(db, 'shoppingCart'), {
         uid: user.uid,
+        productId: productId,
         storeId: product.storeId,
         storeName: store?.storeName || '',
         items: orderItems,
@@ -522,29 +522,32 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
         totalQuantity: totalQuantity,
         deliveryMethod: deliveryMethod,
         request: storeRequest,
-        orderStatus: 'pending',
-        paymentStatus: 'unpaid',
+        status: 'pending',
         createdAt: new Date(),
         updatedAt: new Date()
       })
 
-      // 생성된 orderId로 payments 페이지로 이동
-      router.push(`/payments?orderId=${orderDoc.id}`)
+      // payments 페이지로 이동 (cartId를 전달)
+      router.push(`/payments?cartId=${cartDoc.id}`)
     } catch (error) {
-      console.error('주문 생성 실패:', error)
-      alert('주문 생성에 실패했습니다.')
+      console.error('장바구니 저장 실패:', error)
+      alert('장바구니 저장에 실패했습니다.')
     }
   }
 
-  const handlePrevImage = () => {
+  const handlePrevImage = useCallback(() => {
     if (!product?.images) return
     setCurrentImageIndex((prev) => (prev === 0 ? product.images!.length - 1 : prev - 1))
-  }
+  }, [product?.images])
 
-  const handleNextImage = () => {
+  const handleNextImage = useCallback(() => {
     if (!product?.images) return
     setCurrentImageIndex((prev) => (prev === product.images!.length - 1 ? 0 : prev + 1))
-  }
+  }, [product?.images])
+
+  const handleToggleDescription = useCallback(() => {
+    setIsDescriptionExpanded(prev => !prev)
+  }, [])
 
   const handleDragStart = (e: React.TouchEvent | React.MouseEvent) => {
     setIsDragging(true)
@@ -629,22 +632,24 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
               isDescriptionExpanded={isDescriptionExpanded}
               onPrevImage={handlePrevImage}
               onNextImage={handleNextImage}
-              onToggleDescription={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
+              onToggleDescription={handleToggleDescription}
             />
 
             <ReviewSection
               reviews={reviews}
               loadingReviews={loadingReviews}
             />
+          </div>
 
-            {/* 모바일 주문하기 버튼 */}
+          {/* 모바일 주문하기 버튼 */}
+          {!isModalOpen && (
             <button
-              className={modalStyles.mobileOptionButton}
+              className={styles.mobileOrderButton}
               onClick={() => setIsModalOpen(true)}
             >
               주문하기
             </button>
-          </div>
+          )}
 
           {/* 오른쪽 영역 - 상품 옵션 */}
           {product.options && product.options.length > 0 && (
