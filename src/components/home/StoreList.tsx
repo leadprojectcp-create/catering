@@ -101,6 +101,10 @@ export default function StoreList({ selectedCategory }: StoreListProps) {
 
   return (
     <div className={styles.container}>
+      <div className={styles.header}>
+        <h2 className={styles.title}>단모 제휴업체</h2>
+        <p className={styles.subtitle}>총 {filteredStores.length}개</p>
+      </div>
       <div className={styles.storeGrid}>
         {filteredStores.length === 0 ? (
           <div className={styles.emptyState}>
