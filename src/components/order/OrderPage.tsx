@@ -241,7 +241,7 @@ export default function OrderPage({ productId }: OrderPageProps) {
   const [store, setStore] = useState<Store | null>(null)
   const [loading, setLoading] = useState(true)
   const [quantity, setQuantity] = useState(10)
-  const [selectedOptions, setSelectedOptions] = useState<{ [key: string]: string }>({})
+  const [selectedOptions, setSelectedOptions] = useState<Array<{ groupName: string; optionName: string }>>([])
   const [cartItems, setCartItems] = useState<CartItem[]>([])
   const [expandedOptions, setExpandedOptions] = useState<{ [key: string]: boolean }>({})
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false)
@@ -340,33 +340,57 @@ export default function OrderPage({ productId }: OrderPageProps) {
 
   const handleOptionSelect = (groupName: string, optionName: string) => {
     setSelectedOptions(prev => {
-      if (prev[groupName] === optionName) {
-        const newOptions = { ...prev }
-        delete newOptions[groupName]
-        return newOptions
-      }
-      return {
-        ...prev,
-        [groupName]: optionName
+      // 이미 선택된 옵션인지 확인
+      const existingIndex = prev.findIndex(
+        opt => opt.groupName === groupName && opt.optionName === optionName
+      )
+
+      if (existingIndex !== -1) {
+        // 이미 선택되어 있으면 제거 (체크 해제)
+        return prev.filter((_, index) => index !== existingIndex)
+      } else {
+        // 선택되어 있지 않으면 추가 (체크)
+        return [...prev, { groupName, optionName }]
       }
     })
   }
 
   const resetOptions = () => {
-    setSelectedOptions({})
+    setSelectedOptions([])
     setQuantity(product?.minOrderQuantity || 10)
     setCartItems([])
   }
 
   const addToCart = () => {
-    if (Object.keys(selectedOptions).length === 0) return
+    if (selectedOptions.length === 0) {
+      alert('옵션을 선택해주세요.')
+      return
+    }
 
-    setCartItems(prev => [...prev, {
-      options: { ...selectedOptions },
-      quantity: product?.minOrderQuantity || 10
-    }])
+    // 선택된 각 옵션을 개별 아이템으로 추가
+    selectedOptions.forEach(selectedOption => {
+      const optionObj = { [selectedOption.groupName]: selectedOption.optionName }
 
-    setSelectedOptions({})
+      // 같은 옵션이 이미 있는지 확인
+      const existingIndex = cartItems.findIndex(item =>
+        JSON.stringify(item.options) === JSON.stringify(optionObj)
+      )
+
+      if (existingIndex !== -1) {
+        // 같은 옵션이 있으면 수량만 증가
+        setCartItems(prev => prev.map((item, i) =>
+          i === existingIndex ? { ...item, quantity: item.quantity + 1 } : item
+        ))
+      } else {
+        // 새로운 옵션이면 추가 (초기 수량 1개)
+        setCartItems(prev => [...prev, {
+          options: optionObj,
+          quantity: 1
+        }])
+      }
+    })
+
+    setSelectedOptions([])
   }
 
   const removeFromCart = (index: number) => {
@@ -374,9 +398,8 @@ export default function OrderPage({ productId }: OrderPageProps) {
   }
 
   const updateCartQuantity = (index: number, newQuantity: number) => {
-    const minQty = product?.minOrderQuantity || 1
-    const maxQty = product?.maxOrderQuantity || 999
-    const validQuantity = Math.min(maxQty, Math.max(minQty, newQuantity))
+    // 개별 아이템은 1개부터 가능
+    const validQuantity = Math.max(1, newQuantity)
 
     setCartItems(prev => prev.map((item, i) =>
       i === index ? { ...item, quantity: validQuantity } : item
@@ -455,9 +478,23 @@ export default function OrderPage({ productId }: OrderPageProps) {
       return
     }
 
+    // 전체 주문 수량 검증
+    const totalQuantity = cartItems.reduce((total, item) => total + item.quantity, 0)
+    const minQty = product.minOrderQuantity || 1
+    const maxQty = product.maxOrderQuantity || 999
+
+    if (totalQuantity < minQty) {
+      alert(`최소 주문 수량은 ${minQty}개입니다. (현재: ${totalQuantity}개)`)
+      return
+    }
+
+    if (totalQuantity > maxQty) {
+      alert(`최대 주문 수량은 ${maxQty}개입니다. (현재: ${totalQuantity}개)`)
+      return
+    }
+
     try {
       const totalPrice = calculateTotalPrice(product, cartItems)
-      const totalQuantity = cartItems.reduce((total, item) => total + item.quantity, 0)
 
       // Firestore에 저장할 주문 항목 데이터
       const orderItems = cartItems.map(item => {
@@ -600,12 +637,12 @@ export default function OrderPage({ productId }: OrderPageProps) {
               loadingReviews={loadingReviews}
             />
 
-            {/* 모바일 옵션 선택 버튼 */}
+            {/* 모바일 주문하기 버튼 */}
             <button
               className={modalStyles.mobileOptionButton}
               onClick={() => setIsModalOpen(true)}
             >
-              옵션 선택
+              주문하기
             </button>
           </div>
 

@@ -7,7 +7,7 @@ import styles from './OptionSelector.module.css'
 interface OptionSelectorProps {
   product: Product
   expandedOptions: { [key: string]: boolean }
-  selectedOptions: { [key: string]: string }
+  selectedOptions: Array<{ groupName: string; optionName: string }>
   onToggleOption: (groupName: string) => void
   onSelectOption: (groupName: string, optionName: string) => void
   onReset: () => void
@@ -47,24 +47,30 @@ export default function OptionSelector({
 
             {isExpanded && (
               <div className={styles.optionList}>
-                {option.values.map((value, valueIndex) => (
-                  <div
-                    key={valueIndex}
-                    className={styles.optionItem}
-                    onClick={() => onSelectOption(option.groupName, value.name)}
-                  >
-                    <Image
-                      src={selectedOptions[option.groupName] === value.name ? '/icons/check_active.png' : '/icons/check_empty.png'}
-                      alt="checkbox"
-                      width={20}
-                      height={20}
-                    />
-                    <span>{value.name}</span>
-                    <span className={styles.optionPrice}>
-                      + {value.price.toLocaleString()}원
-                    </span>
-                  </div>
-                ))}
+                {option.values.map((value, valueIndex) => {
+                  const isSelected = selectedOptions.some(
+                    opt => opt.groupName === option.groupName && opt.optionName === value.name
+                  )
+
+                  return (
+                    <div
+                      key={valueIndex}
+                      className={styles.optionItem}
+                      onClick={() => onSelectOption(option.groupName, value.name)}
+                    >
+                      <Image
+                        src={isSelected ? '/icons/check_active.png' : '/icons/check_empty.png'}
+                        alt="checkbox"
+                        width={20}
+                        height={20}
+                      />
+                      <span>{value.name}</span>
+                      <span className={styles.optionPrice}>
+                        + {value.price.toLocaleString()}원
+                      </span>
+                    </div>
+                  )
+                })}
               </div>
             )}
           </div>
