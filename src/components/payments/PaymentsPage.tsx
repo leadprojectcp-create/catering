@@ -492,8 +492,8 @@ export default function PaymentsPage() {
     }
   }
 
-  // 퀵업체 배송만 25,000원 추가
-  const deliveryFee = deliveryMethod === '퀵업체 배송' ? 25000 : 0
+  // 퀵업체 배송만 20,000원 추가
+  const deliveryFee = deliveryMethod === '퀵업체 배송' ? 20000 : 0
   const totalProductPrice = orderData
     ? orderData.items.reduce((sum, item) => {
         // itemPrice가 있으면 그것을 사용, 없으면 기본 가격 * 수량
