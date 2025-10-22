@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/firebase'
-import { doc, updateDoc, getDoc } from 'firebase/firestore'
+import { doc, updateDoc, getDoc, setDoc } from 'firebase/firestore'
 import * as PortOne from '@portone/server-sdk'
 import { sendKakaoAlimtalk } from '@/lib/services/smsService'
 import { requestQuickDelivery, createQuickDeliveryData } from '@/lib/services/quickDeliveryService'
@@ -199,16 +199,44 @@ export async function POST(request: NextRequest) {
                     const quickDeliveryData = createQuickDeliveryData(orderData, storeData)
                     const quickResult = await requestQuickDelivery(quickDeliveryData)
 
-                    if (quickResult && quickResult.code === '200') {
+                    if (quickResult && quickResult.code === '1') {
                       console.log('[Webhook] 퀵 배송 요청 성공:', quickResult)
-                      // 퀵 배송 주문 번호를 Firestore에 저장
+
+                      // quickDeliveries 컬렉션에 저장
+                      const quickDeliveryRef = doc(db, 'quickDeliveries', orderId)
+                      await setDoc(quickDeliveryRef, {
+                        orderId: orderId,
+                        orderNo: quickResult.orderNo,
+                        status: 'requested',
+                        feeTotal: quickResult.orderInfo?.feeTotal || 0,
+                        feeDetail: quickResult.orderInfo?.feeDetail || '',
+                        requestData: quickDeliveryData,
+                        responseData: quickResult,
+                        createdAt: new Date(),
+                        updatedAt: new Date(),
+                      })
+
+                      // orders 컬렉션에도 퀵 배송 정보 저장
                       await updateDoc(orderRef, {
                         quickDeliveryOrderNo: quickResult.orderNo,
                         quickDeliveryStatus: 'requested',
-                        quickDeliveryResult: quickResult,
                       })
                     } else {
                       console.error('[Webhook] 퀵 배송 요청 실패:', quickResult)
+
+                      // 실패 정보도 quickDeliveries 컬렉션에 저장
+                      const quickDeliveryRef = doc(db, 'quickDeliveries', orderId)
+                      await setDoc(quickDeliveryRef, {
+                        orderId: orderId,
+                        status: 'failed',
+                        errorCode: quickResult?.code || 'unknown',
+                        errorMessage: quickResult?.message || 'Unknown error',
+                        requestData: quickDeliveryData,
+                        responseData: quickResult,
+                        createdAt: new Date(),
+                        updatedAt: new Date(),
+                      })
+
                       await updateDoc(orderRef, {
                         quickDeliveryStatus: 'failed',
                         quickDeliveryError: quickResult?.message || 'Unknown error',
@@ -216,6 +244,17 @@ export async function POST(request: NextRequest) {
                     }
                   } catch (error) {
                     console.error('[Webhook] 퀵 배송 요청 에러:', error)
+
+                    // 에러 정보도 quickDeliveries 컬렉션에 저장
+                    const quickDeliveryRef = doc(db, 'quickDeliveries', orderId)
+                    await setDoc(quickDeliveryRef, {
+                      orderId: orderId,
+                      status: 'error',
+                      errorMessage: error instanceof Error ? error.message : 'Unknown error',
+                      createdAt: new Date(),
+                      updatedAt: new Date(),
+                    })
+
                     await updateDoc(orderRef, {
                       quickDeliveryStatus: 'error',
                       quickDeliveryError: error instanceof Error ? error.message : 'Unknown error',
