@@ -1,7 +1,7 @@
 'use client'
 
 import Image from 'next/image'
-import { Review } from './OrderPage'
+import { Review } from './ProductDetailPage'
 import styles from './ReviewSection.module.css'
 
 interface ReviewSectionProps {

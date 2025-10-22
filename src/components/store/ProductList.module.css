@@ -1,5 +1,5 @@
 .container {
-  max-width: 600px;
+  max-width: 800px;
   margin: 0 auto;
   padding: 20px 0;
 }
@@ -8,7 +8,7 @@
   color: #333;
   font-size: 20px;
   font-weight: 700;
-  margin-bottom: 16px;
+  margin-bottom: 10px;
 }
 
 .loading,
@@ -22,7 +22,7 @@
 .filterContainer {
   display: flex;
   justify-content: flex-start;
-  gap: 5px;
+  gap: 10px;
   margin-bottom: 20px;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
@@ -41,13 +41,22 @@
   padding: 10px 15px;
   background: #fff;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: all 0.2s;
   white-space: nowrap;
   flex-shrink: 0;
 }
 
 .filterButton:hover {
   background: #F9F9F9;
+}
+
+.filterButtonActive {
+  border-radius: 30px;
+  border: 1px solid #237AF2;
+  background: #F0F6FF;
+  color: #237AF2;
+  font-size: 14px;
+  font-weight: 500;
 }
 
 .productGrid {
@@ -59,7 +68,6 @@
 .card {
   display: flex;
   justify-content: space-between;
-  max-width: 600px;
   width: 100%;
   background: white;
   border-radius: 8px;
@@ -163,38 +171,27 @@
 .orderQuantity {
   color: #999;
   font-size: 12px;
-  font-weight: 400;
+  font-weight: 500;
+  margin: 0;
+}
+
+.minOrderDays {
+  color: #999;
+  font-size: 12px;
+  font-weight: 500;
   margin: 0;
 }
 
 .badgeContainerDesktop {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  gap: 6px;
+  flex-wrap: wrap;
   margin: 0;
+  padding-top: 5px;
 }
 
 .badgeContainerMobile {
   display: none;
-}
-
-.badgeRow {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-
-.deliveryBadge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 4px 8px;
-  background: #F5F7F9;
-  color: #999;
-  border-radius: 4px;
-  font-size: 11px;
-  font-weight: 700;
-  line-height: 1;
 }
 
 .settingBadge {
@@ -202,9 +199,10 @@
   align-items: center;
   justify-content: center;
   padding: 4px 8px;
-  background: #025BD9;
-  color: #FFF;
-  border-radius: 4px;
+  background: transparent;
+  color: #025BD9;
+  border-radius: 3px;
+  border: 1px solid #025BD9;
   font-size: 11px;
   font-weight: 700;
   line-height: 1;

@@ -24,6 +24,7 @@ interface Product {
   status?: string
   minOrderQuantity?: number
   maxOrderQuantity?: number
+  minOrderDays?: number
   deliveryMethods?: string[]
   additionalSettings?: string[]
 }
@@ -32,10 +33,13 @@ interface ProductListProps {
   storeId: string
 }
 
+type SortType = '주문많은순' | '주문적은순' | '가격낮은순' | '가격높은순' | '추천순'
+
 export default function ProductList({ storeId }: ProductListProps) {
   const router = useRouter()
   const [products, setProducts] = useState<Product[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [sortType, setSortType] = useState<SortType>('추천순')
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -102,27 +106,52 @@ export default function ProductList({ storeId }: ProductListProps) {
     )
   }
 
+  // 정렬 함수
+  const getSortedProducts = () => {
+    const sorted = [...products]
+
+    switch (sortType) {
+      case '가격낮은순':
+        return sorted.sort((a, b) => (a.discountedPrice || a.price) - (b.discountedPrice || b.price))
+      case '가격높은순':
+        return sorted.sort((a, b) => (b.discountedPrice || b.price) - (a.discountedPrice || a.price))
+      case '주문많은순':
+      case '주문적은순':
+      case '추천순':
+      default:
+        return sorted
+    }
+  }
+
+  const sortedProducts = getSortedProducts()
+
+  const filterOptions: SortType[] = ['추천순', '주문많은순', '주문적은순', '가격낮은순', '가격높은순']
+
   return (
     <div className={styles.container}>
-      <h2 className={styles.title}>상품 목록</h2>
+      <h2 className={styles.title}>가게상품</h2>
 
       <div className={styles.filterContainer}>
-        <button className={styles.filterButton}>주문많은순</button>
-        <button className={styles.filterButton}>주문적은순</button>
-        <button className={styles.filterButton}>가격낮은순</button>
-        <button className={styles.filterButton}>가격높은순</button>
-        <button className={styles.filterButton}>추천순</button>
+        {filterOptions.map((option) => (
+          <button
+            key={option}
+            className={`${styles.filterButton} ${sortType === option ? styles.filterButtonActive : ''}`}
+            onClick={() => setSortType(option)}
+          >
+            {option}
+          </button>
+        ))}
       </div>
 
       <div className={styles.productGrid}>
-        {products.map((product, index) => {
+        {sortedProducts.map((product, index) => {
           const imageUrl = product.images && product.images.length > 0 ? product.images[0] : ''
 
           return (
             <React.Fragment key={product.id}>
               <div
                 className={styles.card}
-                onClick={() => router.push(`/order/${product.id}?storeId=${storeId}`)}
+                onClick={() => router.push(`/productDetail/${product.id}?storeId=${storeId}`)}
               >
               <div className={styles.info}>
                 <h3 className={styles.productName}>{product.name}</h3>
@@ -143,22 +172,22 @@ export default function ProductList({ storeId }: ProductListProps) {
                 {/* 주문 가능 수량 */}
                 {product.minOrderQuantity && product.maxOrderQuantity && (
                   <div className={styles.orderQuantity}>
-                    주문가능 수량 최소 {product.minOrderQuantity}개 ~ {product.maxOrderQuantity}개
+                    최소 {product.minOrderQuantity}개 ~ 최대 {product.maxOrderQuantity}개 주문가능
                   </div>
                 )}
 
-                {/* 배송 방법 및 추가 설정 - PC용 */}
+                {/* 최소 주문일 정보 */}
+                {product.minOrderDays && product.minOrderDays > 0 && (
+                  <div className={styles.minOrderDays}>
+                    최소 {product.minOrderDays}일 전 주문 가능
+                  </div>
+                )}
+
+                {/* 추가 설정 - PC용 */}
                 <div className={styles.badgeContainerDesktop}>
-                  <div className={styles.badgeRow}>
-                    {product.deliveryMethods?.map((method, index) => (
-                      <span key={index} className={styles.deliveryBadge}>{method}</span>
-                    ))}
-                  </div>
-                  <div className={styles.badgeRow}>
-                    {product.additionalSettings?.map((setting, index) => (
-                      <span key={index} className={styles.settingBadge}>{setting}</span>
-                    ))}
-                  </div>
+                  {product.additionalSettings?.map((setting, index) => (
+                    <span key={index} className={styles.settingBadge}>{setting}</span>
+                  ))}
                 </div>
               </div>
 
@@ -178,18 +207,11 @@ export default function ProductList({ storeId }: ProductListProps) {
                 )}
               </div>
 
-              {/* 배송 방법 및 추가 설정 - 모바일용 */}
+              {/* 추가 설정 - 모바일용 */}
               <div className={styles.badgeContainerMobile}>
-                <div className={styles.badgeRow}>
-                  {product.deliveryMethods?.map((method, index) => (
-                    <span key={index} className={styles.deliveryBadge}>{method}</span>
-                  ))}
-                </div>
-                <div className={styles.badgeRow}>
-                  {product.additionalSettings?.map((setting, index) => (
-                    <span key={index} className={styles.settingBadge}>{setting}</span>
-                  ))}
-                </div>
+                {product.additionalSettings?.map((setting, index) => (
+                  <span key={index} className={styles.settingBadge}>{setting}</span>
+                ))}
               </div>
             </div>
             {index < products.length - 1 && <div className={styles.divider}></div>}

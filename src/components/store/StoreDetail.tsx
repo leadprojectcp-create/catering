@@ -181,8 +181,10 @@ export default function StoreDetail({ storeId }: StoreDetailProps) {
     <>
       <Header />
       <div className={styles.container}>
-      {/* 이미지 슬라이더 */}
-      <div className={styles.imageSection}>
+      {/* 상단 섹션: 이미지 + 정보 */}
+      <div className={styles.topSection}>
+        {/* 이미지 슬라이더 */}
+        <div className={styles.imageSection}>
         {images.length > 0 ? (
           <>
             <div className={styles.mainImage}>
@@ -234,8 +236,8 @@ export default function StoreDetail({ storeId }: StoreDetailProps) {
         <div className={styles.header}>
           <div className={styles.topRow}>
             <div className={styles.location}>
-              {store.address?.city && store.address?.district && store.primaryCategory && (
-                <span>{store.address.city}, {store.address.district} | {store.primaryCategory}</span>
+              {store.address?.city && store.address?.district && (
+                <span>{store.address.city} | {store.address.district}</span>
               )}
             </div>
             <button
@@ -243,7 +245,7 @@ export default function StoreDetail({ storeId }: StoreDetailProps) {
               onClick={handleLikeToggle}
             >
               <Image
-                src={isLiked ? "/icons/heart-filled.svg" : "/icons/heart.svg"}
+                src={isLiked ? "/icons/heart-filled.png" : "/icons/heart.png"}
                 alt="좋아요"
                 width={24}
                 height={24}
@@ -251,30 +253,7 @@ export default function StoreDetail({ storeId }: StoreDetailProps) {
             </button>
           </div>
           <div className={styles.nameRatingRow}>
-            <div className={styles.nameRatingWrapper}>
-              <h1 className={styles.storeName}>{store.storeName}</h1>
-              <div className={styles.rating}>
-                <Image src="/icons/star.png" alt="star" width={16} height={16} className={styles.star} />
-                <span className={styles.ratingNumber}>
-                  {store.rating ? store.rating.toFixed(1) : '0.0'}/5
-                </span>
-                <span className={styles.reviewCount}>
-                  ({store.reviewCount || 0})
-                </span>
-              </div>
-            </div>
-            <div className={styles.actionButtons}>
-              <button className={styles.chatButton} onClick={handleChatClick}>
-                <Image src="/icons/chat.png" alt="채팅" width={20} height={20} />
-                <span>채팅</span>
-              </button>
-              {store.phone && (
-                <a href={`tel:${store.phone}`} className={styles.phoneButton}>
-                  <Image src="/icons/phone.png" alt="전화" width={20} height={20} />
-                  <span>전화</span>
-                </a>
-              )}
-            </div>
+            <h1 className={styles.storeName}>{store.storeName}</h1>
           </div>
         </div>
 
@@ -287,7 +266,7 @@ export default function StoreDetail({ storeId }: StoreDetailProps) {
         <div className={styles.detailsSection}>
           {store.address && (
             <div className={styles.detailItem}>
-              <Image src="/icons/map_pin.svg" alt="주소" width={24} height={24} />
+              <Image src="/icons/map_pin.png" alt="주소" width={24} height={24} />
               <span className={styles.detailValue}>
                 {store.address.fullAddress}
                 {store.address.detail && ` ${store.address.detail}`}
@@ -297,16 +276,36 @@ export default function StoreDetail({ storeId }: StoreDetailProps) {
 
           {store.openingHours && (
             <div className={styles.detailItem}>
-              <Image src="/icons/clock.svg" alt="운영시간" width={24} height={24} />
-              <span className={styles.detailValue}>{store.openingHours} 휴무</span>
+              <Image src="/icons/clock.png" alt="운영시간" width={24} height={24} />
+              <span className={styles.detailValue}>{store.openingHours}</span>
+            </div>
+          )}
+
+          {store.closedDays && store.closedDays.length > 0 && (
+            <div className={styles.detailItem}>
+              <Image src="/icons/clock.png" alt="휴무일" width={24} height={24} />
+              <span className={styles.detailValue}>
+                {store.closedDays.join(', ')} 휴무
+              </span>
             </div>
           )}
         </div>
-      </div>
 
-      {/* 공지사항 섹션 */}
-      {!noticesLoading && notices.length > 0 && (
-        <>
+        <div className={styles.actionButtons}>
+          <button className={styles.chatButton} onClick={handleChatClick}>
+            <Image src="/icons/chat.png" alt="채팅" width={20} height={20} />
+            <span>채팅</span>
+          </button>
+          {store.phone && (
+            <a href={`tel:${store.phone}`} className={styles.phoneButton}>
+              <Image src="/icons/phone.png" alt="전화" width={20} height={20} />
+              <span>전화</span>
+            </a>
+          )}
+        </div>
+
+        {/* 공지사항 섹션 */}
+        {!noticesLoading && notices.length > 0 && (
           <div className={styles.noticeSection}>
             <div className={styles.sectionTitle}>사장님 공지사항</div>
             <div className={styles.noticeList}>
@@ -317,13 +316,12 @@ export default function StoreDetail({ storeId }: StoreDetailProps) {
               ))}
             </div>
           </div>
-          <div className={styles.divider}></div>
-        </>
-      )}
+        )}
+      </div>
+      </div>
 
-      {!noticesLoading && notices.length === 0 && (
-        <div className={styles.divider}></div>
-      )}
+      {/* 구분선 */}
+      <div className={styles.divider}></div>
 
       {/* 상품 목록 */}
       <ProductList storeId={storeId} />

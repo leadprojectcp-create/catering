@@ -283,7 +283,7 @@ export default function CategoryProductList({ categoryName }: CategoryProductLis
               <div
                 key={product.id}
                 className={styles.card}
-                onClick={() => router.push(`/order/${product.id}`)}
+                onClick={() => router.push(`/productDetail/${product.id}`)}
               >
                 <div className={styles.imageWrapper}>
                   {imageUrl ? (

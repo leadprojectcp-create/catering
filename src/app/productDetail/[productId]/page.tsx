@@ -1,5 +1,5 @@
 import Header from '@/components/Header'
-import OrderPage from '@/components/order/OrderPage'
+import ProductDetailPage from '@/components/productDetail/ProductDetailPage'
 
 interface PageProps {
   params: Promise<{
@@ -17,7 +17,7 @@ export default async function Page({ params, searchParams }: PageProps) {
   return (
     <>
       <Header />
-      <OrderPage productId={productId} storeId={storeId || ''} />
+      <ProductDetailPage productId={productId} storeId={storeId || ''} />
     </>
   )
 }

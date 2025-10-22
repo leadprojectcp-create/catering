@@ -1,7 +1,7 @@
 'use client'
 
 import Image from 'next/image'
-import { Product } from './OrderPage'
+import { Product } from './ProductDetailPage'
 import styles from './OptionSelector.module.css'
 
 interface OptionSelectorProps {

@@ -12,7 +12,7 @@ import OptionSelector from './OptionSelector'
 import SelectedItems from './SelectedItems'
 import BottomModal from './BottomModal'
 import DeliveryMethodSelector from './DeliveryMethodSelector'
-import styles from './OrderPage.module.css'
+import styles from './ProductDetailPage.module.css'
 import modalStyles from './BottomModal.module.css'
 
 // Types
@@ -72,7 +72,7 @@ export interface Review {
   createdAt: Date
 }
 
-interface OrderPageProps {
+interface ProductDetailPageProps {
   productId: string
   storeId: string
 }
@@ -234,7 +234,7 @@ const fetchReviews = async (productId: string): Promise<Review[]> => {
   }
 }
 
-export default function OrderPage({ productId }: OrderPageProps) {
+export default function ProductDetailPage({ productId }: ProductDetailPageProps) {
   const router = useRouter()
   const { user } = useAuth()
   const [product, setProduct] = useState<Product | null>(null)

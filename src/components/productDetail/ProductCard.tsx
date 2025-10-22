@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { Product, Store } from './OrderPage'
+import { Product, Store } from './ProductDetailPage'
 import styles from './ProductCard.module.css'
 
 interface ProductCardProps {

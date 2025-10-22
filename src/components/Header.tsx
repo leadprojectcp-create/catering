@@ -53,7 +53,7 @@ const getPageTitle = (path: string): string => {
   if (path === '/notices') return '공지사항'
   if (path === '/faq') return '자주묻는질문'
   if (path === '/contact') return '문의하기'
-  if (path.startsWith('/order/')) return '상품 주문'
+  if (path.startsWith('/productDetail/')) return '상품 주문'
   if (path === '/payments') return '결제하기'
   if (path.startsWith('/store/')) return '가게 정보'
   if (path === '/magazine') return '매거진'

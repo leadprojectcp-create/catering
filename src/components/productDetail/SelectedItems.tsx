@@ -1,7 +1,7 @@
 'use client'
 
 import Image from 'next/image'
-import { Product, CartItem, getOptionPrice } from './OrderPage'
+import { Product, CartItem, getOptionPrice } from './ProductDetailPage'
 import styles from './SelectedItems.module.css'
 
 interface SelectedItemsProps {

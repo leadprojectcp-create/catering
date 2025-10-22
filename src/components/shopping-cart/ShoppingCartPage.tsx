@@ -125,7 +125,7 @@ export default function ShoppingCartPage() {
     }))
 
     // 상품 주문 페이지로 이동
-    router.push(`/order/${item.productId}`)
+    router.push(`/productDetail/${item.productId}`)
   }
 
   const handleDeleteItem = async (itemId: string) => {

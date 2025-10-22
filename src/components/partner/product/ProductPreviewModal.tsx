@@ -1,8 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import ProductCard from '@/components/order/ProductCard'
-import { Product as OrderProduct } from '@/components/order/OrderPage'
+import ProductCard from '@/components/productDetail/ProductCard'
+import { Product as OrderProduct } from '@/components/productDetail/ProductDetailPage'
 import styles from './ProductPreviewModal.module.css'
 
 interface Product {
