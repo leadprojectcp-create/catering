@@ -30,10 +30,10 @@ export default function Footer() {
             </div>
             <div className={styles.companyInfo}>
               <span className={styles.desktopText}>
-                (주)리프컴퍼니 | CEO 박상호, CTO 배철응, CDD 정윤우 | 사업자 등록번호 413-87-02826 | 통신판매업 신고번호 2024-서울광진-1870
+                (주)리프컴퍼니 | CEO 박상호, CTO 배철응, CDO 정윤우 | 사업자 등록번호 413-87-02826 | 통신판매업 신고번호 2024-서울광진-1870
               </span>
               <span className={styles.mobileText}>
-                (주)리프컴퍼니 | CEO 박상호, CTO 배철응, CDD 정윤우
+                (주)리프컴퍼니 | CEO 박상호, CTO 배철응, CDO 정윤우
               </span>
             </div>
             <div className={styles.companyInfo}>

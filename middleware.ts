@@ -3,11 +3,18 @@ import type { NextRequest } from 'next/server'
 
 export function middleware(request: NextRequest) {
   const hostname = request.headers.get('host') || ''
+  const url = request.nextUrl
 
-  // partner.danchemoim.com 서브도메인 접속 시 danchemoim.com/partner/dashboard로 리다이렉트
+  // partner.danchemoim.com 서브도메인 접속 시
   if (hostname.includes('partner.danchemoim.com')) {
-    const url = new URL('https://danchemoim.com/partner/dashboard')
-    return NextResponse.redirect(url, 301)
+    // 루트 경로(/)로 접속하면 /partner/dashboard로 리다이렉트
+    if (url.pathname === '/') {
+      return NextResponse.redirect(new URL('/partner/dashboard', request.url))
+    }
+
+    // 다른 경로는 그대로 표시
+    // 예: partner.danchemoim.com/partner/orders -> 그대로 표시
+    return NextResponse.next()
   }
 
   // For now, let client-side handle auth checking
