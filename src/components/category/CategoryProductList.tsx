@@ -128,7 +128,7 @@ export default function CategoryProductList({ categoryName }: CategoryProductLis
         // 각 상품의 storeId로 storeName과 리뷰 정보 가져오기
         const productsWithStoreNameAndReviews = await Promise.all(
           productData.map(async (product) => {
-            let updatedProduct = { ...product }
+            const updatedProduct = { ...product }
 
             // storeName 가져오기
             if (product.storeId && !product.storeName) {
@@ -293,6 +293,9 @@ export default function CategoryProductList({ categoryName }: CategoryProductLis
                       fill
                       className={styles.image}
                       style={{ objectFit: 'cover' }}
+                      priority
+                      sizes="(max-width: 768px) 50vw, 300px"
+                      quality={85}
                     />
                   ) : (
                     <div className={styles.placeholderImage}>

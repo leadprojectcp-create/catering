@@ -165,9 +165,9 @@ export default function StoreList({ selectedCategory }: StoreListProps) {
                               fill
                               className={styles.cardImage}
                               style={{ objectFit: 'cover' }}
-                              priority={index === 0}
-                              loading={index === 0 ? 'eager' : 'lazy'}
-                              sizes="(max-width: 768px) 100vw, 25vw"
+                              priority
+                              sizes="150px"
+                              quality={85}
                             />
                           </div>
                         </SwiperSlide>
