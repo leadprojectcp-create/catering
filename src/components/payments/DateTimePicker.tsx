@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Image from 'next/image'
+import Picker from 'react-mobile-picker'
 import styles from './DateTimePicker.module.css'
 
 interface DateTimePickerProps {
@@ -22,52 +23,15 @@ export default function DateTimePicker({
   const [showDatePicker, setShowDatePicker] = useState(false)
   const [showTimePicker, setShowTimePicker] = useState(false)
   const [currentMonth, setCurrentMonth] = useState(new Date())
-  const [selectedHour, setSelectedHour] = useState(0)
-  const [selectedMinute, setSelectedMinute] = useState(0)
+  const [pickerValue, setPickerValue] = useState({
+    hour: '00',
+    minute: '00'
+  })
 
-  // 무한 스크롤을 위한 배열 생성
-  const generateInfiniteArray = (max: number, repeatCount: number = 100) => {
-    const arr = []
-    for (let i = 0; i < repeatCount; i++) {
-      for (let j = 0; j < max; j++) {
-        arr.push(j)
-      }
-    }
-    return arr
-  }
-
-  const hours = generateInfiniteArray(24)
-  const minutes = generateInfiniteArray(60)
-
-  // 시간 피커 열릴 때 중앙으로 스크롤
-  const initializeTimePicker = () => {
-    setTimeout(() => {
-      const hourScroll = document.getElementById('hourScroll')
-      const minuteScroll = document.getElementById('minuteScroll')
-
-      if (hourScroll && minuteScroll) {
-        const itemHeight = 40
-        const middleIndex = Math.floor(hours.length / 2)
-
-        // 현재 선택된 시간으로 스크롤 (정확히 중앙에 위치)
-        const hourIndex = middleIndex - (middleIndex % 24) + selectedHour
-        const minuteIndex = Math.floor(minutes.length / 2) - (Math.floor(minutes.length / 2) % 60) + selectedMinute
-
-        hourScroll.scrollTop = hourIndex * itemHeight
-        minuteScroll.scrollTop = minuteIndex * itemHeight
-
-        // 스크롤 이벤트 리스너
-        const handleScroll = (element: HTMLElement, setter: (val: number) => void, max: number, arr: number[]) => {
-          const scrollTop = element.scrollTop
-          const index = Math.round(scrollTop / itemHeight)
-          const value = arr[index] !== undefined ? arr[index] % max : 0
-          setter(value)
-        }
-
-        hourScroll.addEventListener('scroll', () => handleScroll(hourScroll, setSelectedHour, 24, hours))
-        minuteScroll.addEventListener('scroll', () => handleScroll(minuteScroll, setSelectedMinute, 60, minutes))
-      }
-    }, 10)
+  // react-mobile-picker용 데이터 생성
+  const pickerSelections = {
+    hour: Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0')),
+    minute: Array.from({ length: 60 }, (_, i) => String(i).padStart(2, '0'))
   }
 
   // 달력 날짜 생성
@@ -133,12 +97,6 @@ export default function DateTimePicker({
 
   const nextMonth = () => {
     setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1))
-  }
-
-  const handleTimeConfirm = () => {
-    const time = `${String(selectedHour).padStart(2, '0')}:${String(selectedMinute).padStart(2, '0')}`
-    onTimeChange(time)
-    setShowTimePicker(false)
   }
 
   const calendar = generateCalendar()
@@ -221,13 +179,9 @@ export default function DateTimePicker({
             onClick={() => {
               if (deliveryTime) {
                 const [h, m] = deliveryTime.split(':')
-                setSelectedHour(parseInt(h))
-                setSelectedMinute(parseInt(m))
+                setPickerValue({ hour: h, minute: m })
               }
               setShowTimePicker(!showTimePicker)
-              if (!showTimePicker) {
-                initializeTimePicker()
-              }
             }}
             readOnly
           />
@@ -237,52 +191,41 @@ export default function DateTimePicker({
                 <span>시간 선택</span>
                 <button onClick={() => setShowTimePicker(false)}>✕</button>
               </div>
-              <div className={styles.wheelPicker}>
-                <div className={styles.wheelColumn}>
-                  <div className={styles.wheelScroll} id="hourScroll">
-                    {hours.map((hour, idx) => (
-                      <div
-                        key={idx}
-                        className={`${styles.wheelItem} ${selectedHour === hour ? styles.wheelItemSelected : ''}`}
-                        onClick={() => {
-                          setSelectedHour(hour)
-                          const hourScroll = document.getElementById('hourScroll')
-                          if (hourScroll) {
-                            const itemHeight = 40
-                            hourScroll.scrollTop = idx * itemHeight
-                          }
-                        }}
-                      >
-                        {String(hour).padStart(2, '0')}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                <div className={styles.wheelSeparator}>:</div>
-                <div className={styles.wheelColumn}>
-                  <div className={styles.wheelScroll} id="minuteScroll">
-                    {minutes.map((minute, idx) => (
-                      <div
-                        key={idx}
-                        className={`${styles.wheelItem} ${selectedMinute === minute ? styles.wheelItemSelected : ''}`}
-                        onClick={() => {
-                          setSelectedMinute(minute)
-                          const minuteScroll = document.getElementById('minuteScroll')
-                          if (minuteScroll) {
-                            const itemHeight = 40
-                            minuteScroll.scrollTop = idx * itemHeight
-                          }
-                        }}
-                      >
-                        {String(minute).padStart(2, '0')}
-                      </div>
-                    ))}
-                  </div>
-                </div>
+              <div className={styles.pickerContainer}>
+                <Picker
+                  value={pickerValue}
+                  onChange={setPickerValue}
+                  wheelMode="natural"
+                  height={200}
+                  itemHeight={40}
+                >
+                  {Object.keys(pickerSelections).map((name) => (
+                    <Picker.Column key={name} name={name}>
+                      {pickerSelections[name as keyof typeof pickerSelections].map((option) => (
+                        <Picker.Item
+                          key={option}
+                          value={option}
+                          style={{
+                            color: pickerValue[name as keyof typeof pickerValue] === option ? '#025BD9' : '#ccc',
+                            fontSize: pickerValue[name as keyof typeof pickerValue] === option ? '20px' : '14px',
+                            fontWeight: pickerValue[name as keyof typeof pickerValue] === option ? 600 : 400,
+                            transition: 'all 0.2s ease'
+                          }}
+                        >
+                          {option}
+                        </Picker.Item>
+                      ))}
+                    </Picker.Column>
+                  ))}
+                </Picker>
+                <div className={styles.timeSeparator}>:</div>
               </div>
-              <div className={styles.selectionHighlight}></div>
               <div className={styles.timeFooter}>
-                <button onClick={handleTimeConfirm}>확인</button>
+                <button onClick={() => {
+                  const time = `${pickerValue.hour}:${pickerValue.minute}`
+                  onTimeChange(time)
+                  setShowTimePicker(false)
+                }}>확인</button>
               </div>
             </div>
           )}
