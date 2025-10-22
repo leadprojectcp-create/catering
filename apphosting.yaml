@@ -144,6 +144,24 @@ env:
     availability:
       - RUNTIME
 
+  # Hudadaq Quick Delivery Configuration
+  - variable: HUDADAQ_API_BASE_URL
+    value: https://api.hudadaq.com/v3
+    availability:
+      - RUNTIME
+  - variable: HUDADAQ_API_KEY
+    value: test_rouKAs8yPHLEFV1ofgq1x2NRRE2SPhVpqkgUqx5C
+    availability:
+      - RUNTIME
+  - variable: HUDADAQ_LOGIN_ID
+    value: guest-leadproject
+    availability:
+      - RUNTIME
+  - variable: HUDADAQ_PASSWORD
+    value: user1!
+    availability:
+      - RUNTIME
+
   # App Version
   - variable: NEXT_PUBLIC_APP_VERSION
     value: "0.1.0"

@@ -3,6 +3,7 @@ import { db } from '@/lib/firebase'
 import { doc, updateDoc, getDoc } from 'firebase/firestore'
 import * as PortOne from '@portone/server-sdk'
 import { sendKakaoAlimtalk } from '@/lib/services/smsService'
+import { requestQuickDelivery, createQuickDeliveryData } from '@/lib/services/quickDeliveryService'
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic'
@@ -189,6 +190,37 @@ export async function POST(request: NextRequest) {
                   console.log(`[Webhook] 알림톡/SMS 발송 요청 성공: ${partnerPhone}`)
                 } else {
                   console.error('[Webhook] 알림톡/SMS 발송 요청 실패:', partnerPhone)
+                }
+
+                // 퀵업체 배송인 경우 퀵 배송 요청
+                if (orderData?.deliveryMethod === '퀵업체 배송') {
+                  console.log('[Webhook] 퀵 배송 요청 시작...')
+                  try {
+                    const quickDeliveryData = createQuickDeliveryData(orderData, storeData)
+                    const quickResult = await requestQuickDelivery(quickDeliveryData)
+
+                    if (quickResult && quickResult.code === '200') {
+                      console.log('[Webhook] 퀵 배송 요청 성공:', quickResult)
+                      // 퀵 배송 주문 번호를 Firestore에 저장
+                      await updateDoc(orderRef, {
+                        quickDeliveryOrderNo: quickResult.orderNo,
+                        quickDeliveryStatus: 'requested',
+                        quickDeliveryResult: quickResult,
+                      })
+                    } else {
+                      console.error('[Webhook] 퀵 배송 요청 실패:', quickResult)
+                      await updateDoc(orderRef, {
+                        quickDeliveryStatus: 'failed',
+                        quickDeliveryError: quickResult?.message || 'Unknown error',
+                      })
+                    }
+                  } catch (error) {
+                    console.error('[Webhook] 퀵 배송 요청 에러:', error)
+                    await updateDoc(orderRef, {
+                      quickDeliveryStatus: 'error',
+                      quickDeliveryError: error instanceof Error ? error.message : 'Unknown error',
+                    })
+                  }
                 }
               } else {
                 console.warn(`Store ${storeId} has no businessPhone`)

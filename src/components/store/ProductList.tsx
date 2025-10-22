@@ -128,7 +128,7 @@ export default function ProductList({ storeId }: ProductListProps) {
                 <h3 className={styles.productName}>{product.name}</h3>
 
                 {/* 가격 정보 */}
-                {product.discount ? (
+                {product.discount && product.discountedPrice && product.discount.discountPercent > 0 ? (
                   <>
                     <span className={styles.originalPrice}>{product.price.toLocaleString()}원</span>
                     <div className={styles.discountRow}>

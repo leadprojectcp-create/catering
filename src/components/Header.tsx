@@ -249,6 +249,18 @@ export default function Header({ chatRoomTitle, chatRoomPhone, chatRoomMenu }: H
                 ) : (
                   <>
                     {/* 로그인 상태 - 메뉴 아이콘들 표시 */}
+                    {/* 페이지 타이틀이 있을 때만 홈 아이콘 표시 */}
+                    {pageTitle && (
+                      <Link href="/" className={styles.homeIconLink}>
+                        <Image
+                          src={pathname === '/' ? '/menu-icons/home_active.png' : '/menu-icons/home.png'}
+                          alt="홈"
+                          width={24}
+                          height={24}
+                        />
+                      </Link>
+                    )}
+
                     {/* 찜 아이콘 */}
                     <Link href="/wishlist" className={styles.wishlistIconLink}>
                       <Image

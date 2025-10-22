@@ -17,6 +17,7 @@ import PrivacyPolicy from '@/components/terms/PrivacyPolicy'
 import RefundPolicy from '@/components/terms/RefundPolicy'
 import PaymentTerms from './PaymentTerms'
 import { requestPayment, PayMethod } from '@/lib/services/paymentService'
+import { requestQuickDelivery, createQuickDeliveryData } from '@/lib/services/quickDeliveryService'
 import styles from './PaymentsPage.module.css'
 
 export default function PaymentsPage() {
@@ -316,20 +317,26 @@ export default function PaymentsPage() {
       await updateDoc(orderDocRef, {
         partnerId: storeData?.partnerId,
         partnerPhone: storeData?.phone,
+        storeName: storeData?.storeName, // 출발지 상호명
         totalPrice: totalPrice,
         totalProductPrice: totalProductPrice,
         deliveryFee: deliveryFee,
         deliveryMethod: deliveryMethod,
-        deliveryDate: orderInfo.deliveryDate,
-        deliveryTime: orderInfo.deliveryTime,
-        address: orderInfo.address,
-        detailAddress: `${orderInfo.detailAddress}${entranceCode ? ` (${entranceCode})` : ''}`,
-        recipient: recipient,
+        // 배송 정보를 Map 형태로 저장
+        deliveryInfo: {
+          addressName: addressName, // 배송지명
+          deliveryDate: orderInfo.deliveryDate,
+          deliveryTime: orderInfo.deliveryTime,
+          address: orderInfo.address,
+          detailAddress: `${orderInfo.detailAddress}${entranceCode ? ` (${entranceCode})` : ''}`,
+          recipient: recipient,
+          recipientPhone: orderInfo.phone, // 받는 사람 연락처
+          deliveryRequest: deliveryRequest, // 배달 요청사항 (드롭다운)
+          detailedRequest: detailedRequest, // 상세요청
+        },
         orderer: orderInfo.orderer,
         phone: orderInfo.phone,
         // request는 OrderPage에서 저장한 매장 요청사항이므로 유지
-        deliveryRequest: deliveryRequest, // 배달 요청사항 (드롭다운)
-        detailedRequest: detailedRequest, // 상세요청
         orderNumber: orderNumber,
         orderStatus: 'pending',
         paymentStatus: 'unpaid',
@@ -387,6 +394,30 @@ export default function PaymentsPage() {
         paidAt: new Date(),
         verifiedAt: new Date()
       }, { merge: true })
+
+      // 퀵업체 배송인 경우 퀵 배송 요청
+      if (deliveryMethod === '퀵업체 배송') {
+        console.log('[Payment] 퀵 배송 요청 시작...')
+        try {
+          const quickDeliveryData = createQuickDeliveryData(orderInfo, storeData)
+          const quickResult = await requestQuickDelivery(quickDeliveryData)
+
+          if (quickResult) {
+            console.log('[Payment] 퀵 배송 요청 성공:', quickResult)
+            // 퀵 배송 주문 번호를 Firestore에 저장
+            await updateDoc(orderRef, {
+              quickDeliveryOrderNo: quickResult.orderNo,
+              quickDeliveryResult: quickResult
+            })
+          } else {
+            console.error('[Payment] 퀵 배송 요청 실패')
+            // 실패해도 결제는 완료되었으므로 계속 진행
+          }
+        } catch (error) {
+          console.error('[Payment] 퀵 배송 요청 에러:', error)
+          // 에러가 발생해도 결제는 완료되었으므로 계속 진행
+        }
+      }
 
       // 세션 스토리지 클리어
       sessionStorage.removeItem('orderData')

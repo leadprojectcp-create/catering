@@ -17,8 +17,8 @@ const categories: CategoryOption[] = [
   { id: 'kimbap', name: '김밥', icon: '/icons/kimbap_korean.png' },
   { id: 'lunchbox', name: '도시락', icon: '/icons/dosilak.png' },
   { id: 'traditional', name: '떡/전통한과', icon: '/icons/ricecake_traditional.png' },
-  { id: 'gift', name: '답례품', icon: '/icons/gift.png' },
-  { id: 'delivery', name: '당일배송', icon: '/icons/delivery.png' },
+  { id: 'gift', name: '답례품❤️', icon: '/icons/gift.png' },
+  { id: 'delivery', name: '당일배송⚡', icon: '/icons/delivery.png' },
   // { id: 'ai', name: 'AI추천', icon: '/icons/ai_recommendation.png' }, // 데이터 축적 후 활성화 예정
   { id: 'magazine', name: '단모 매거진', icon: '/icons/magazine.png' }
 ]
