@@ -17,7 +17,6 @@ import PrivacyPolicy from '@/components/terms/PrivacyPolicy'
 import RefundPolicy from '@/components/terms/RefundPolicy'
 import PaymentTerms from './PaymentTerms'
 import { requestPayment, PayMethod } from '@/lib/services/paymentService'
-import { requestQuickDelivery, createQuickDeliveryData } from '@/lib/services/quickDeliveryService'
 import styles from './PaymentsPage.module.css'
 
 export default function PaymentsPage() {
@@ -395,29 +394,7 @@ export default function PaymentsPage() {
         verifiedAt: new Date()
       }, { merge: true })
 
-      // 퀵업체 배송인 경우 퀵 배송 요청
-      if (deliveryMethod === '퀵업체 배송') {
-        console.log('[Payment] 퀵 배송 요청 시작...')
-        try {
-          const quickDeliveryData = createQuickDeliveryData(orderInfo, storeData)
-          const quickResult = await requestQuickDelivery(quickDeliveryData)
-
-          if (quickResult) {
-            console.log('[Payment] 퀵 배송 요청 성공:', quickResult)
-            // 퀵 배송 주문 번호를 Firestore에 저장
-            await updateDoc(orderRef, {
-              quickDeliveryOrderNo: quickResult.orderNo,
-              quickDeliveryResult: quickResult
-            })
-          } else {
-            console.error('[Payment] 퀵 배송 요청 실패')
-            // 실패해도 결제는 완료되었으므로 계속 진행
-          }
-        } catch (error) {
-          console.error('[Payment] 퀵 배송 요청 에러:', error)
-          // 에러가 발생해도 결제는 완료되었으므로 계속 진행
-        }
-      }
+      // 퀵 배송은 웹훅에서 자동으로 처리됨
 
       // 세션 스토리지 클리어
       sessionStorage.removeItem('orderData')
