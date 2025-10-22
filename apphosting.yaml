@@ -105,12 +105,8 @@ env:
     value: HSReeOPf8Rq0S9KnqhAiDXnYlgkrwTqZjdBxPMuvNWdwIHn0Q4SHW4j6pKFjFMAlUEM7qrejaLIF2PAq
     availability:
       - RUNTIME
-  - variable: PORTONE_WEBHOOK_SECRET_1
+  - variable: PORTONE_WEBHOOK_SECRET
     value: whsec_Pb4Cw6vtHxG55lZkG3E2T1uMUkCk9Ix/5RcBCcXxJYY=
-    availability:
-      - RUNTIME
-  - variable: PORTONE_WEBHOOK_SECRET_2
-    value: whsec_z+aDBvTj5/jrWrfAl28D7lYQWieCAE0RgUUrkTE7MWk=
     availability:
       - RUNTIME
 

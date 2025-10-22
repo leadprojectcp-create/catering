@@ -16,30 +16,22 @@ export async function POST(request: NextRequest) {
     // 웹훅 메시지 검증 (Standard Webhooks 스펙)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let webhook: any = null
+    const webhookSecret = process.env.PORTONE_WEBHOOK_SECRET
+
+    if (!webhookSecret) {
+      console.error('[Webhook] No webhook secret configured')
+      return NextResponse.json(
+        { error: 'Server configuration error' },
+        { status: 500 }
+      )
+    }
+
     try {
-      // 테스트 시크릿 먼저 시도
-      const testSecret = process.env.PORTONE_WEBHOOK_SECRET_1
-      if (testSecret) {
-        try {
-          webhook = await PortOne.Webhook.verify(
-            testSecret,
-            rawBody,
-            Object.fromEntries(request.headers.entries())
-          )
-        } catch (e) {
-          // 테스트 시크릿 실패 시 실제 시크릿 시도
-          const prodSecret = process.env.PORTONE_WEBHOOK_SECRET_2
-          if (prodSecret) {
-            webhook = await PortOne.Webhook.verify(
-              prodSecret,
-              rawBody,
-              Object.fromEntries(request.headers.entries())
-            )
-          } else {
-            throw e
-          }
-        }
-      }
+      webhook = await PortOne.Webhook.verify(
+        webhookSecret,
+        rawBody,
+        Object.fromEntries(request.headers.entries())
+      )
     } catch (e) {
       if (e instanceof PortOne.Webhook.WebhookVerificationError) {
         console.error('[Webhook] Verification failed:', e.message)
@@ -49,14 +41,6 @@ export async function POST(request: NextRequest) {
         )
       }
       throw e
-    }
-
-    if (!webhook) {
-      console.error('[Webhook] No webhook secret configured')
-      return NextResponse.json(
-        { error: 'Server configuration error' },
-        { status: 500 }
-      )
     }
 
     const { type, data } = webhook
