@@ -147,33 +147,50 @@ export async function POST(request: NextRequest) {
               })
 
               if (partnerPhone) {
-                // 총 수량 계산
-                console.log(`[Webhook] Order items:`, orderData.items)
-                const totalQuantity = orderData.items?.reduce(
-                  (sum: number, item: { quantity: number }) => sum + item.quantity,
-                  0
-                ) || 0
+                // 이미 알림톡을 발송했는지 확인
+                const alreadyNotified = orderData.partnerNotified === true
 
-                console.log(`[Webhook] Calculated totalQuantity:`, totalQuantity)
+                if (!alreadyNotified) {
+                  // 총 수량 계산
+                  console.log(`[Webhook] Order items:`, orderData.items)
+                  const totalQuantity = orderData.items?.reduce(
+                    (sum: number, item: { quantity: number }) => sum + item.quantity,
+                    0
+                  ) || 0
 
-                const alimtalkParams = {
-                  storeName: orderData.storeName || '',
-                  orderNumber: orderData.orderNumber || orderId,
-                  totalQuantity: String(totalQuantity),
-                  totalProductPrice: String(orderData.totalProductPrice || orderData.totalPrice || 0),
-                }
+                  console.log(`[Webhook] Calculated totalQuantity:`, totalQuantity)
 
-                console.log(`[Webhook] Alimtalk params:`, alimtalkParams)
-                console.log(`[Webhook] Sending Kakao Alimtalk to ${partnerPhone}`)
+                  const alimtalkParams = {
+                    storeName: orderData.storeName || '',
+                    orderNumber: orderData.orderNumber || orderId,
+                    totalQuantity: String(totalQuantity),
+                    totalProductPrice: String(orderData.totalProductPrice || orderData.totalPrice || 0),
+                  }
 
-                // 카카오톡 알림톡 발송 (템플릿 코드: UD_0958)
-                // Aligo에서 알림톡 실패 시 자동으로 SMS 대체 발송
-                const kakaoSuccess = await sendKakaoAlimtalk(partnerPhone, 'UD_0958', alimtalkParams)
+                  console.log(`[Webhook] Alimtalk params:`, alimtalkParams)
+                  console.log(`[Webhook] Sending Kakao Alimtalk to ${partnerPhone}`)
 
-                if (kakaoSuccess) {
-                  console.log(`[Webhook] 알림톡/SMS 발송 요청 성공: ${partnerPhone}`)
+                  try {
+                    // 카카오톡 알림톡 발송 (템플릿 코드: UD_0958)
+                    // Aligo에서 알림톡 실패 시 자동으로 SMS 대체 발송
+                    const kakaoSuccess = await sendKakaoAlimtalk(partnerPhone, 'UD_0958', alimtalkParams)
+
+                    if (kakaoSuccess) {
+                      console.log(`[Webhook] 알림톡/SMS 발송 요청 성공: ${partnerPhone}`)
+                      // 알림톡 발송 완료 표시
+                      await updateDoc(orderRef, {
+                        partnerNotified: true,
+                        partnerNotifiedAt: new Date(),
+                      })
+                    } else {
+                      console.error('[Webhook] 알림톡/SMS 발송 요청 실패:', partnerPhone)
+                    }
+                  } catch (alimtalkError) {
+                    console.error('[Webhook] 알림톡 발송 중 에러:', alimtalkError)
+                    // 알림톡 에러가 발생해도 웹훅은 계속 진행
+                  }
                 } else {
-                  console.error('[Webhook] 알림톡/SMS 발송 요청 실패:', partnerPhone)
+                  console.log(`[Webhook] 이미 알림톡을 발송한 주문입니다: ${orderId}`)
                 }
 
                 // 퀵업체 배송인 경우 퀵 배송 요청
