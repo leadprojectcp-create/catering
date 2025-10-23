@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
+import OptimizedImage from '@/components/common/OptimizedImage'
 import styles from './Header.module.css'
 import { usePathname, useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
@@ -178,13 +178,12 @@ export default function Header({ chatRoomTitle, chatRoomPhone, chatRoomMenu }: H
             {shouldShowLogo ? (
               <div className={styles.logoContainer}>
                 <Link href="/">
-                  <Image
+                  <OptimizedImage
                     src="/assets/logo.png"
                     alt="로고"
                     width={150}
                     height={0}
                     className={styles.logo}
-                    quality={100}
                     priority
                     style={{ width: 'auto', height: 'auto' }}
                   />
@@ -233,12 +232,11 @@ export default function Header({ chatRoomTitle, chatRoomPhone, chatRoomMenu }: H
                       }}
                     >
                       <span className={styles.phoneIcon}>
-                        <Image
+                        <OptimizedImage
                           src="/icons/phone.png"
                           alt="전화"
                           width={20}
                           height={20}
-                          quality={100}
                           unoptimized
                         />
                       </span>
@@ -252,7 +250,7 @@ export default function Header({ chatRoomTitle, chatRoomPhone, chatRoomMenu }: H
                     {/* 페이지 타이틀이 있을 때만 홈 아이콘 표시 */}
                     {pageTitle && (
                       <Link href="/" className={styles.homeIconLink}>
-                        <Image
+                        <OptimizedImage
                           src={pathname === '/' ? '/menu-icons/home_active.png' : '/menu-icons/home.png'}
                           alt="홈"
                           width={24}
@@ -263,7 +261,7 @@ export default function Header({ chatRoomTitle, chatRoomPhone, chatRoomMenu }: H
 
                     {/* 찜 아이콘 */}
                     <Link href="/wishlist" className={styles.wishlistIconLink}>
-                      <Image
+                      <OptimizedImage
                         src={pathname === '/wishlist' ? '/menu-icons/heart_active.png' : '/menu-icons/heart.png'}
                         alt="찜"
                         width={24}
@@ -273,7 +271,7 @@ export default function Header({ chatRoomTitle, chatRoomPhone, chatRoomMenu }: H
 
                     {/* 장바구니 아이콘 */}
                     <Link href="/cart" className={styles.cartIconLink}>
-                      <Image
+                      <OptimizedImage
                         src={pathname === '/cart' ? '/menu-icons/shopping_active.png' : '/menu-icons/shopping.png'}
                         alt="장바구니"
                         width={24}
@@ -286,7 +284,7 @@ export default function Header({ chatRoomTitle, chatRoomPhone, chatRoomMenu }: H
 
                     {/* 채팅 아이콘 */}
                     <Link href="/chat" className={styles.chatIconLink}>
-                      <Image
+                      <OptimizedImage
                         src={pathname === '/chat' || pathname.startsWith('/chat/') ? '/menu-icons/chat_active.png' : '/menu-icons/chat.png'}
                         alt="채팅"
                         width={24}
@@ -299,7 +297,7 @@ export default function Header({ chatRoomTitle, chatRoomPhone, chatRoomMenu }: H
 
                     {/* 주문내역 아이콘 */}
                     <Link href="/orders" className={styles.ordersIconLink}>
-                      <Image
+                      <OptimizedImage
                         src={pathname === '/orders' ? '/menu-icons/order_active.png' : '/menu-icons/order.png'}
                         alt="주문내역"
                         width={24}

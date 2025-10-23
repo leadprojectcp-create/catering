@@ -34,7 +34,7 @@ html {
 
 @media (max-width: 768px) {
   .page-wrapper {
-    padding-top: 60px;
+    padding-top: 80px;
     padding-left: 15px;
     padding-right: 15px;
   }

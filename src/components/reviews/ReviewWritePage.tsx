@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
-import { doc, getDoc, collection, addDoc, updateDoc, serverTimestamp } from 'firebase/firestore'
+import { doc, getDoc, collection, addDoc, updateDoc, serverTimestamp, query, where, getDocs, limit } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { useAuth } from '@/contexts/AuthContext'
 import Loading from '@/components/Loading'
@@ -24,9 +24,13 @@ interface Order {
   storeName: string
   items: OrderItem[]
   orderStatus: string
-  deliveryDate: string
-  deliveryTime: string
+  deliveryDate?: string
+  deliveryTime?: string
   deliveryMethod: string
+  deliveryInfo?: {
+    deliveryDate?: string
+    deliveryTime?: string
+  }
 }
 
 export default function ReviewWritePage() {
@@ -45,7 +49,9 @@ export default function ReviewWritePage() {
   const [uploading, setUploading] = useState(false)
 
   // 날짜 포맷팅 함수 (24시간 형식)
-  const formatReservationDate = (dateStr: string, timeStr: string) => {
+  const formatReservationDate = (dateStr?: string, timeStr?: string) => {
+    if (!dateStr || !timeStr) return ''
+
     const date = new Date(dateStr)
     const year = date.getFullYear()
     const month = date.getMonth() + 1
@@ -85,7 +91,7 @@ export default function ReviewWritePage() {
 
         const orderData = orderDoc.data()
 
-        if (orderData.userId !== user.uid) {
+        if (orderData.uid !== user.uid) {
           alert('권한이 없습니다.')
           router.push('/orders')
           return
@@ -93,6 +99,22 @@ export default function ReviewWritePage() {
 
         if (orderData.orderStatus !== 'completed') {
           alert('완료된 주문만 리뷰를 작성할 수 있습니다.')
+          router.push('/orders')
+          return
+        }
+
+        // 이미 리뷰가 작성되었는지 확인
+        const reviewsRef = collection(db, 'reviews')
+        const reviewQuery = query(
+          reviewsRef,
+          where('uid', '==', user.uid),
+          where('orderId', '==', orderId),
+          limit(1)
+        )
+        const reviewSnapshot = await getDocs(reviewQuery)
+
+        if (!reviewSnapshot.empty) {
+          alert('이미 리뷰를 작성한 주문입니다.')
           router.push('/orders')
           return
         }
@@ -125,6 +147,7 @@ export default function ReviewWritePage() {
           deliveryDate: orderData.deliveryDate,
           deliveryTime: orderData.deliveryTime,
           deliveryMethod: orderData.deliveryMethod,
+          deliveryInfo: orderData.deliveryInfo,
         })
       } catch (error) {
         console.error('주문 로딩 실패:', error)
@@ -222,7 +245,7 @@ export default function ReviewWritePage() {
 
       // 먼저 리뷰 문서 생성
       const reviewRef = await addDoc(collection(db, 'reviews'), {
-        userId: user.uid,
+        uid: user.uid,
         orderId: order.id,
         storeId: order.storeId,
         storeName: order.storeName,
@@ -291,7 +314,10 @@ export default function ReviewWritePage() {
               {order.items.length > 1 && ` 외 ${order.items.reduce((sum, item) => sum + item.quantity, 0) - order.items[0].quantity}개`}
             </div>
             <div className={styles.reservationDate}>
-              예약날짜 {formatReservationDate(order.deliveryDate, order.deliveryTime)}
+              예약날짜 {formatReservationDate(
+                order.deliveryInfo?.deliveryDate || order.deliveryDate,
+                order.deliveryInfo?.deliveryTime || order.deliveryTime
+              )}
             </div>
           </div>
         </div>

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { collection, getDocs, query, where, limit } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
-import Image from 'next/image'
+import OptimizedImage from '@/components/common/OptimizedImage'
 import { Swiper, SwiperSlide } from 'swiper/react'
 import { Navigation } from 'swiper/modules'
 import { generateStoreSlug } from '@/lib/utils/slug'
@@ -159,7 +159,7 @@ export default function StoreList({ selectedCategory }: StoreListProps) {
                       {images.map((image, index) => (
                         <SwiperSlide key={index}>
                           <div className={styles.imageWrapper}>
-                            <Image
+                            <OptimizedImage
                               src={image}
                               alt={`${store.storeName || '가게'} 이미지 ${index + 1}`}
                               fill
@@ -167,7 +167,6 @@ export default function StoreList({ selectedCategory }: StoreListProps) {
                               style={{ objectFit: 'cover' }}
                               priority
                               sizes="150px"
-                              quality={85}
                             />
                           </div>
                         </SwiperSlide>
@@ -193,7 +192,7 @@ export default function StoreList({ selectedCategory }: StoreListProps) {
                   <div className={styles.titleRow}>
                     <h3 className={styles.cardTitle}>{store.storeName}</h3>
                     <div className={styles.ratingRow}>
-                      <Image
+                      <OptimizedImage
                         src="/icons/star.png"
                         alt="별점"
                         width={14}

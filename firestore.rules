@@ -200,13 +200,13 @@ service cloud.firestore {
       // 모든 사용자 읽기 가능 (리뷰는 공개)
       allow read: if true;
 
-      // 일반 사용자(type이 user)만 리뷰 생성 가능 (자신의 userId로만 생성)
+      // 일반 사용자(type이 user)만 리뷰 생성 가능 (자신의 uid로만 생성)
       allow create: if isUser() &&
-        request.resource.data.userId == request.auth.uid;
+        request.resource.data.uid == request.auth.uid;
 
       // 본인의 리뷰만 수정/삭제 가능
       allow update, delete: if isSignedIn() &&
-        resource.data.userId == request.auth.uid;
+        resource.data.uid == request.auth.uid;
 
       // 파트너는 답글(reply) 필드만 업데이트 가능
       allow update: if isPartner() &&
@@ -286,6 +286,12 @@ service cloud.firestore {
 
       // 주문자 본인 또는 해당 파트너도 읽기 가능
       allow read: if request.auth != null;
+    }
+
+    // TaxInvoiceInfo collection - 세금계산서 정보
+    match /taxInvoiceInfo/{userId} {
+      // 본인만 읽기/쓰기 가능
+      allow read, write: if isSignedIn() && isOwner(userId);
     }
   }
 }

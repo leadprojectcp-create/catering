@@ -10,6 +10,8 @@ import { createOrGetChatRoom } from '@/lib/services/chatService'
 import { addCartItem } from '@/lib/services/cartService'
 import Loading from '@/components/Loading'
 import OrderCancelModal from './OrderCancelModal'
+import CashReceiptModal from './CashReceiptModal'
+import TaxInvoiceModal from './TaxInvoiceModal'
 import { ChevronDown, ChevronLeft, ChevronRight, Calendar } from 'lucide-react'
 import styles from './OrdersPage.module.css'
 
@@ -50,6 +52,7 @@ interface Order {
   orderNumber?: string
   createdAt: Date
   paidAt?: Date
+  hasReview?: boolean
   deliveryInfo?: {
     addressName?: string
     deliveryDate?: string
@@ -69,6 +72,8 @@ export default function OrdersPage() {
   const [loading, setLoading] = useState(true)
   const [orders, setOrders] = useState<Order[]>([])
   const [cancelOrderId, setCancelOrderId] = useState<string | null>(null)
+  const [cashReceiptOrder, setCashReceiptOrder] = useState<{ orderId: string; paymentId: string } | null>(null)
+  const [taxInvoiceOrder, setTaxInvoiceOrder] = useState<{ orderId: string; paymentId: string; totalAmount: number } | null>(null)
   const [filterStatus, setFilterStatus] = useState<'all' | 'unpaid' | 'pending' | 'preparing' | 'shipping' | 'completed' | 'cancelled'>('all')
   const [deliveryMethodFilter, setDeliveryMethodFilter] = useState<'all' | '퀵업체 배송' | '매장 픽업'>('all')
   const [dateRange, setDateRange] = useState<{ start: Date | null; end: Date | null }>({ start: null, end: null })
@@ -143,6 +148,24 @@ export default function OrdersPage() {
             })
           )
 
+          // 리뷰 존재 여부 확인
+          let hasReview = false
+          if (data.orderStatus === 'completed') {
+            try {
+              const reviewsRef = collection(db, 'reviews')
+              const reviewQuery = query(
+                reviewsRef,
+                where('uid', '==', user.uid),
+                where('orderId', '==', docSnapshot.id),
+                limit(1)
+              )
+              const reviewSnapshot = await getDocs(reviewQuery)
+              hasReview = !reviewSnapshot.empty
+            } catch (error) {
+              console.error('리뷰 확인 실패:', error)
+            }
+          }
+
           ordersData.push({
             id: docSnapshot.id,
             ...data,
@@ -151,6 +174,7 @@ export default function OrdersPage() {
             items: itemsWithImages,
             createdAt: data.createdAt?.toDate() || new Date(),
             paidAt: data.paidAt?.toDate(),
+            hasReview: hasReview,
           } as Order)
         }
 
@@ -455,7 +479,7 @@ export default function OrdersPage() {
       const reviewsRef = collection(db, 'reviews')
       const q = query(
         reviewsRef,
-        where('userId', '==', user.uid),
+        where('uid', '==', user.uid),
         where('orderId', '==', orderId),
         limit(1)
       )
@@ -731,11 +755,51 @@ export default function OrdersPage() {
                         장바구니 담기
                       </button>
                       <button
-                        className={styles.reviewButton}
-                        onClick={(e) => handleReviewClick(order.id, e)}
+                        className={styles.receiptButton}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          if (!order.paymentId) {
+                            alert('결제 정보가 없습니다.')
+                            return
+                          }
+                          setCashReceiptOrder({ orderId: order.id, paymentId: order.paymentId })
+                        }}
                       >
-                        리뷰작성
+                        현금영수증
                       </button>
+                      <button
+                        className={styles.taxInvoiceButton}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          if (!order.paymentId) {
+                            alert('결제 정보가 없습니다.')
+                            return
+                          }
+                          setTaxInvoiceOrder({
+                            orderId: order.id,
+                            paymentId: order.paymentId,
+                            totalAmount: order.totalPrice,
+                          })
+                        }}
+                      >
+                        세금계산서
+                      </button>
+                      {order.hasReview ? (
+                        <button
+                          className={styles.reviewButton}
+                          disabled
+                          style={{ opacity: 0.5, cursor: 'not-allowed' }}
+                        >
+                          작성완료
+                        </button>
+                      ) : (
+                        <button
+                          className={styles.reviewButton}
+                          onClick={(e) => handleReviewClick(order.id, e)}
+                        >
+                          리뷰작성
+                        </button>
+                      )}
                     </>
                   ) : (order.paymentStatus === 'unpaid' || order.paymentStatus === 'failed') ? (
                     <>
@@ -807,6 +871,29 @@ export default function OrdersPage() {
             // 주문 목록 새로고침
             window.location.reload()
           }}
+        />
+      )}
+
+      {/* 현금영수증 발급 모달 */}
+      {cashReceiptOrder && (
+        <CashReceiptModal
+          orderId={cashReceiptOrder.orderId}
+          paymentId={cashReceiptOrder.paymentId}
+          onClose={() => setCashReceiptOrder(null)}
+          onSuccess={() => {
+            // 현금영수증 발급 성공
+          }}
+        />
+      )}
+
+      {/* 세금계산서 발급 모달 */}
+      {taxInvoiceOrder && (
+        <TaxInvoiceModal
+          isOpen={!!taxInvoiceOrder}
+          onClose={() => setTaxInvoiceOrder(null)}
+          orderId={taxInvoiceOrder.orderId}
+          paymentId={taxInvoiceOrder.paymentId}
+          totalAmount={taxInvoiceOrder.totalAmount}
         />
       )}
     </>
