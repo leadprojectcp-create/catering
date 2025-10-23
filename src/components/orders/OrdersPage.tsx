@@ -10,7 +10,6 @@ import { createOrGetChatRoom } from '@/lib/services/chatService'
 import { addCartItem } from '@/lib/services/cartService'
 import Loading from '@/components/Loading'
 import OrderCancelModal from './OrderCancelModal'
-import CashReceiptModal from './CashReceiptModal'
 import TaxInvoiceModal from './TaxInvoiceModal'
 import { ChevronDown, ChevronLeft, ChevronRight, Calendar } from 'lucide-react'
 import styles from './OrdersPage.module.css'
@@ -72,7 +71,6 @@ export default function OrdersPage() {
   const [loading, setLoading] = useState(true)
   const [orders, setOrders] = useState<Order[]>([])
   const [cancelOrderId, setCancelOrderId] = useState<string | null>(null)
-  const [cashReceiptOrder, setCashReceiptOrder] = useState<{ orderId: string; paymentId: string } | null>(null)
   const [taxInvoiceOrder, setTaxInvoiceOrder] = useState<{ orderId: string; paymentId: string; totalAmount: number } | null>(null)
   const [filterStatus, setFilterStatus] = useState<'all' | 'unpaid' | 'pending' | 'preparing' | 'shipping' | 'completed' | 'cancelled'>('all')
   const [deliveryMethodFilter, setDeliveryMethodFilter] = useState<'all' | '퀵업체 배송' | '매장 픽업'>('all')
@@ -439,23 +437,25 @@ export default function OrdersPage() {
     }
 
     try {
-      // 주문의 첫 번째 상품을 장바구니에 추가
-      const firstItem = order.items[0]
-
-      await addCartItem({
+      // 주문 정보를 장바구니에 추가 (주문하기와 동일한 구조)
+      const cartData = {
         uid: user.uid,
         storeId: order.storeId,
-        productId: firstItem.productId,
-        productName: firstItem.productName,
-        productPrice: firstItem.price,
-        productImage: firstItem.productImage || '',
+        storeName: order.storeName,
+        productId: order.items[0].productId,
         items: order.items.map(item => ({
           options: item.options,
           quantity: item.quantity
         })),
-        totalPrice: order.totalPrice,
-        createdAt: new Date()
-      })
+        totalProductPrice: order.totalProductPrice,
+        totalQuantity: order.items.reduce((sum, item) => sum + item.quantity, 0),
+        deliveryMethod: order.deliveryMethod,
+        request: order.request,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
+
+      await addCartItem(cartData as any)
 
       alert('장바구니에 담았습니다.')
       router.push('/cart')
@@ -755,19 +755,6 @@ export default function OrdersPage() {
                         장바구니 담기
                       </button>
                       <button
-                        className={styles.receiptButton}
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          if (!order.paymentId) {
-                            alert('결제 정보가 없습니다.')
-                            return
-                          }
-                          setCashReceiptOrder({ orderId: order.id, paymentId: order.paymentId })
-                        }}
-                      >
-                        현금영수증
-                      </button>
-                      <button
                         className={styles.taxInvoiceButton}
                         onClick={(e) => {
                           e.stopPropagation()
@@ -870,18 +857,6 @@ export default function OrdersPage() {
           onCancel={() => {
             // 주문 목록 새로고침
             window.location.reload()
-          }}
-        />
-      )}
-
-      {/* 현금영수증 발급 모달 */}
-      {cashReceiptOrder && (
-        <CashReceiptModal
-          orderId={cashReceiptOrder.orderId}
-          paymentId={cashReceiptOrder.paymentId}
-          onClose={() => setCashReceiptOrder(null)}
-          onSuccess={() => {
-            // 현금영수증 발급 성공
           }}
         />
       )}

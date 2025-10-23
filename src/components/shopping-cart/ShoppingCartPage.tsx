@@ -12,6 +12,7 @@ import Loading from '@/components/Loading'
 import styles from './ShoppingCartPage.module.css'
 
 interface Product {
+  images?: string[]
   options?: {
     groupName: string
     values: { name: string; price: number }[]
@@ -160,28 +161,35 @@ export default function ShoppingCartPage() {
   }
 
   const calculateItemPrice = (item: CartItem): number => {
-    const product = products[item.productId]
-    let totalPrice = 0
+    // 새로운 구조에서는 totalProductPrice를 사용
+    if (item.totalProductPrice) {
+      return item.totalProductPrice
+    }
 
-    // items 배열의 모든 옵션 조합 가격 계산
-    item.items.forEach(cartItemOption => {
-      let itemPrice = item.productPrice
-
-      if (product?.options) {
-        Object.values(cartItemOption.options).forEach(optionValue => {
-          product.options?.forEach(group => {
-            const selected = group.values.find(v => v.name === optionValue)
-            if (selected) {
-              itemPrice += selected.price
-            }
+    // items 배열에 itemPrice가 있으면 합산
+    if (item.items && item.items.length > 0) {
+      return item.items.reduce((sum, cartItem: any) => {
+        if (cartItem.itemPrice) {
+          return sum + cartItem.itemPrice
+        }
+        // 하위 호환: 기존 방식
+        let itemPrice = item.productPrice || 0
+        const product = products[item.productId]
+        if (product?.options) {
+          Object.values(cartItem.options).forEach(optionValue => {
+            product.options?.forEach(group => {
+              const selected = group.values.find(v => v.name === optionValue)
+              if (selected) {
+                itemPrice += selected.price
+              }
+            })
           })
-        })
-      }
+        }
+        return sum + (itemPrice * cartItem.quantity)
+      }, 0)
+    }
 
-      totalPrice += itemPrice * cartItemOption.quantity
-    })
-
-    return totalPrice
+    return 0
   }
 
   const calculateTotalPrice = (): number => {
@@ -229,51 +237,17 @@ export default function ShoppingCartPage() {
     }
 
     const firstItem = selectedCartItems[0]
-    const product = products[firstItem.productId]
 
-    // 주문 데이터 구성 - items 배열을 펼쳐서 개별 옵션 조합으로 변환
-    const itemsWithPrices = selectedCartItems.flatMap(cartItem => {
-      return cartItem.items.map(itemOption => {
-        const optionsWithPrices: { [key: string]: { name: string; price: number } } = {}
-
-        Object.entries(itemOption.options).forEach(([groupName, optionValue]) => {
-          const group = product?.options?.find(g => g.groupName === groupName)
-          const selected = group?.values.find(v => v.name === optionValue as string)
-
-          optionsWithPrices[groupName] = {
-            name: optionValue as string,
-            price: selected?.price || 0
-          }
-        })
-
-        let itemPrice = cartItem.productPrice
-        Object.values(itemOption.options).forEach(optionValue => {
-          product?.options?.forEach(group => {
-            const selected = group.values.find(v => v.name === optionValue)
-            if (selected) {
-              itemPrice += selected.price
-            }
-          })
-        })
-
-        return {
-          options: itemOption.options,
-          optionsWithPrices,
-          quantity: itemOption.quantity,
-          itemPrice: itemPrice * itemOption.quantity
-        }
-      })
-    })
-
+    // 새로운 구조: items 배열이 이미 올바른 형식으로 저장되어 있음
     const orderData = {
       storeId: firstItem.storeId,
-      storeName: '', // 필요시 store 정보도 가져와야 함
+      storeName: firstItem.storeName || '',
       productId: firstItem.productId,
-      productName: firstItem.productName,
-      productPrice: firstItem.productPrice,
-      productImage: firstItem.productImage,
-      items: itemsWithPrices,
-      totalPrice: calculateTotalPrice()
+      items: firstItem.items,  // 이미 올바른 구조 (productId, productName, options, optionsWithPrices, quantity, price, itemPrice 포함)
+      totalProductPrice: firstItem.totalProductPrice || calculateTotalPrice(),
+      totalQuantity: firstItem.totalQuantity || firstItem.items.reduce((sum: number, item: any) => sum + item.quantity, 0),
+      deliveryMethod: firstItem.deliveryMethod || '',
+      request: firstItem.request || ''
     }
 
     sessionStorage.setItem('orderData', JSON.stringify(orderData))
@@ -338,10 +312,10 @@ export default function ShoppingCartPage() {
                 />
 
                 <div className={styles.itemImage}>
-                  {item.productImage && (
+                  {(products[item.productId]?.images?.[0] || item.productImage || item.items[0]?.productImage) && (
                     <Image
-                      src={item.productImage}
-                      alt={item.productName}
+                      src={products[item.productId]?.images?.[0] || item.productImage || item.items[0]?.productImage || ''}
+                      alt={item.productName || item.items[0]?.productName || '상품'}
                       fill
                       style={{ objectFit: 'cover' }}
                     />
@@ -349,7 +323,8 @@ export default function ShoppingCartPage() {
                 </div>
 
                 <div className={styles.itemInfo}>
-                  <h3 className={styles.itemName}>{item.productName}</h3>
+                  <h3 className={styles.itemName}>{item.productName || item.items[0]?.productName || '상품'}</h3>
+                  <p className={styles.storeName}>{item.storeName}</p>
                   {/* items 배열의 모든 옵션 표시 */}
                   {item.items.map((itemOption, index) => (
                     <div key={index} className={styles.itemOptionGroup}>
@@ -364,7 +339,7 @@ export default function ShoppingCartPage() {
                     </div>
                   ))}
                   <div className={styles.itemPrice}>
-                    합계: {(item.totalPrice || calculateItemPrice(item)).toLocaleString()}원
+                    합계: {(item.totalProductPrice || calculateItemPrice(item)).toLocaleString()}원
                   </div>
                 </div>
 
@@ -399,6 +374,11 @@ export default function ShoppingCartPage() {
                 {cartItems
                   .filter(item => selectedItems.includes(item.id!))
                   .reduce((sum, item) => {
+                    // 새로운 구조에서는 totalQuantity 사용
+                    if (item.totalQuantity) {
+                      return sum + item.totalQuantity
+                    }
+                    // 하위 호환: items 배열에서 계산
                     const itemTotal = item.items.reduce((itemSum, opt) => itemSum + opt.quantity, 0)
                     return sum + itemTotal
                   }, 0)}개

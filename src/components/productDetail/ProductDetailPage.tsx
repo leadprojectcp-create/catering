@@ -438,6 +438,21 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
       return
     }
 
+    // 전체 주문 수량 검증
+    const totalQuantity = cartItems.reduce((total, item) => total + item.quantity, 0)
+    const minQty = product.minOrderQuantity || 1
+    const maxQty = product.maxOrderQuantity || 999
+
+    if (totalQuantity < minQty) {
+      alert(`최소 주문 수량은 ${minQty}개입니다. (현재: ${totalQuantity}개)`)
+      return
+    }
+
+    if (totalQuantity > maxQty) {
+      alert(`최대 주문 수량은 ${maxQty}개입니다. (현재: ${totalQuantity}개)`)
+      return
+    }
+
     try {
       const items = cartItems.map(item => ({
         options: item.options,
@@ -457,16 +472,39 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
         alert('장바구니가 수정되었습니다.')
         setEditingCartItemId(null)
       } else {
+        // 가게 정보 가져오기
+        const storeDoc = await getDoc(doc(db, 'stores', product.storeId))
+        const storeData = storeDoc.exists() ? storeDoc.data() : null
+
+        // 주문하기와 동일한 구조로 저장
+        const orderItems = cartItems.map(item => {
+          const optionsWithPrices = createOptionsWithPrices(product, item.options)
+
+          return {
+            productId: productId,
+            productName: product.name,
+            options: item.options,
+            optionsWithPrices: optionsWithPrices,
+            quantity: item.quantity,
+            price: product.discountedPrice || product.price,
+            itemPrice: calculateItemPrice(product, item.options, item.quantity)
+          }
+        })
+
+        const totalQuantity = cartItems.reduce((sum, item) => sum + item.quantity, 0)
+
         await addDoc(collection(db, 'shoppingCart'), {
           uid: user.uid,
           storeId: product.storeId,
+          storeName: storeData?.storeName || '',
           productId: productId,
-          productName: product.name,
-          productPrice: product.discountedPrice || product.price,
-          productImage: product.images?.[0] || '',
-          items: items,
-          totalPrice: totalPrice,
-          createdAt: new Date()
+          items: orderItems,
+          totalProductPrice: totalPrice,
+          totalQuantity: totalQuantity,
+          deliveryMethod: '',  // 장바구니에서는 나중에 선택
+          request: '',
+          createdAt: new Date(),
+          updatedAt: new Date()
         })
 
         alert('장바구니에 추가되었습니다.')
@@ -540,7 +578,6 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
         totalQuantity: totalQuantity,
         deliveryMethod: deliveryMethod,
         request: storeRequest,
-        status: 'pending',
         createdAt: new Date(),
         updatedAt: new Date()
       })

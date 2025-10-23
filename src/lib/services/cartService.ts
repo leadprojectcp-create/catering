@@ -21,13 +21,19 @@ export interface CartItem {
   id?: string
   uid: string
   storeId: string
+  storeName: string
   productId: string
-  productName: string
-  productPrice: number
-  productImage: string
+  productName?: string  // 선택적 (하위 호환성)
+  productPrice?: number  // 선택적 (하위 호환성)
+  productImage?: string  // 선택적 (하위 호환성)
   items: CartItemOption[]  // 여러 옵션 조합을 배열로 저장
-  totalPrice: number  // 합계 금액
+  totalProductPrice: number  // 상품 총액
+  totalQuantity: number  // 총 수량
+  totalPrice?: number  // 선택적 (하위 호환성)
+  deliveryMethod?: string  // 배송 방법
+  request?: string  // 요청사항
   createdAt: Date | Timestamp
+  updatedAt: Date | Timestamp
 }
 
 // 하위 호환성을 위한 레거시 타입 (기존 단일 옵션 구조)
@@ -98,7 +104,8 @@ export const addCartItem = async (cartData: Omit<CartItem, 'id'>): Promise<strin
   try {
     const docRef = await addDoc(collection(db, COLLECTION_NAME), {
       ...cartData,
-      createdAt: new Date()
+      createdAt: new Date(),
+      updatedAt: new Date()
     })
     return docRef.id
   } catch (error) {

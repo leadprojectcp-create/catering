@@ -408,7 +408,6 @@ export default function PaymentsPage() {
           totalQuantity: cartData.totalQuantity,
           deliveryMethod: cartData.deliveryMethod,
           request: cartData.request,
-          status: 'pending',
           createdAt: cartData.createdAt || new Date(),
           updatedAt: new Date()
         }

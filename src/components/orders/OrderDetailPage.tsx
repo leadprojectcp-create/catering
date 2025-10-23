@@ -214,22 +214,25 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
     if (!user || !order) return
 
     try {
-      const firstItem = order.items[0]
-
-      await addCartItem({
+      // 주문 정보를 장바구니에 추가 (주문하기와 동일한 구조)
+      const cartData = {
         uid: user.uid,
         storeId: order.storeId,
-        productId: firstItem.productId,
-        productName: firstItem.productName,
-        productPrice: firstItem.price,
-        productImage: firstItem.productImage || '',
+        storeName: order.storeName,
+        productId: order.items[0].productId,
         items: order.items.map(item => ({
           options: item.options,
           quantity: item.quantity
         })),
-        totalPrice: order.totalPrice,
-        createdAt: new Date()
-      })
+        totalProductPrice: order.totalProductPrice,
+        totalQuantity: order.items.reduce((sum, item) => sum + item.quantity, 0),
+        deliveryMethod: order.deliveryMethod,
+        request: order.request,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
+
+      await addCartItem(cartData as any)
 
       alert('장바구니에 담았습니다.')
       router.push('/cart')
