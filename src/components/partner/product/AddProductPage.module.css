@@ -1,17 +1,12 @@
 .container {
-  background-color: white;
-  padding: 32px 16px;
-  padding-top: 80px;
-  display: flex;
-  justify-content: center;
-  min-height: 100vh;
+  margin: 0 auto;
+  max-width: 800px;
 }
 
 .formCard {
   background: white;
   padding: 0;
   width: 100%;
-  max-width: 800px;
 }
 
 .title {

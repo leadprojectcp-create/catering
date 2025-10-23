@@ -88,12 +88,19 @@ const calculateItemPrice = (
   const basePrice = product.discountedPrice || product.price
   let optionPrice = 0
 
-  Object.values(options).forEach(optionValue => {
-    product.options?.forEach(group => {
-      const selected = group.values.find(v => v.name === optionValue)
-      if (selected) {
-        optionPrice += selected.price
-      }
+  Object.entries(options).forEach(([groupName, optionValue]) => {
+    // 쉼표로 구분된 여러 옵션이 있을 수 있으므로 split
+    const optionNames = optionValue.split(',').map(name => name.trim())
+
+    optionNames.forEach(optionName => {
+      product.options?.forEach(group => {
+        if (group.groupName === groupName) {
+          const selected = group.values.find(v => v.name === optionName)
+          if (selected) {
+            optionPrice += selected.price
+          }
+        }
+      })
     })
   })
 
@@ -115,18 +122,27 @@ const createOptionsWithPrices = (
 ): { [key: string]: { name: string; price: number } } => {
   const optionsWithPrices: { [key: string]: { name: string; price: number } } = {}
 
-  Object.entries(options).forEach(([groupName, optionName]) => {
-    product.options?.forEach(group => {
-      if (group.groupName === groupName) {
-        const selected = group.values.find(v => v.name === optionName)
-        if (selected) {
-          optionsWithPrices[groupName] = {
-            name: selected.name,
-            price: selected.price
+  Object.entries(options).forEach(([groupName, optionValue]) => {
+    // 쉼표로 구분된 여러 옵션이 있을 수 있으므로 split
+    const optionNames = optionValue.split(',').map(name => name.trim())
+    let totalPrice = 0
+
+    optionNames.forEach(optionName => {
+      product.options?.forEach(group => {
+        if (group.groupName === groupName) {
+          const selected = group.values.find(v => v.name === optionName)
+          if (selected) {
+            totalPrice += selected.price
           }
         }
-      }
+      })
     })
+
+    // 여러 옵션이면 쉼표로 구분된 이름 그대로 저장, 총 가격 합산
+    optionsWithPrices[groupName] = {
+      name: optionValue, // 쉼표로 구분된 전체 옵션명
+      price: totalPrice
+    }
   })
 
   return optionsWithPrices
@@ -138,14 +154,21 @@ export const getOptionPrice = (
   optionValue: string
 ): number => {
   let optionPrice = 0
-  product.options?.forEach(group => {
-    if (group.groupName === groupName) {
-      const selected = group.values.find(v => v.name === optionValue)
-      if (selected) {
-        optionPrice = selected.price
+
+  // 쉼표로 구분된 여러 옵션이 있을 수 있으므로 split
+  const optionNames = optionValue.split(',').map(name => name.trim())
+
+  optionNames.forEach(optionName => {
+    product.options?.forEach(group => {
+      if (group.groupName === groupName) {
+        const selected = group.values.find(v => v.name === optionName)
+        if (selected) {
+          optionPrice += selected.price
+        }
       }
-    }
+    })
   })
+
   return optionPrice
 }
 
@@ -368,28 +391,22 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
       return
     }
 
-    // 선택된 각 옵션을 개별 아이템으로 추가
+    // 선택된 모든 옵션을 하나의 객체로 묶기
+    const optionsObj: { [key: string]: string } = {}
     selectedOptions.forEach(selectedOption => {
-      const optionObj = { [selectedOption.groupName]: selectedOption.optionName }
-
-      // 같은 옵션이 이미 있는지 확인
-      const existingIndex = cartItems.findIndex(item =>
-        JSON.stringify(item.options) === JSON.stringify(optionObj)
-      )
-
-      if (existingIndex !== -1) {
-        // 같은 옵션이 있으면 수량만 증가
-        setCartItems(prev => prev.map((item, i) =>
-          i === existingIndex ? { ...item, quantity: item.quantity + 1 } : item
-        ))
+      // 같은 그룹에 여러 옵션이 있으면 쉼표로 구분하여 저장
+      if (optionsObj[selectedOption.groupName]) {
+        optionsObj[selectedOption.groupName] += `, ${selectedOption.optionName}`
       } else {
-        // 새로운 옵션이면 추가 (초기 수량 1개)
-        setCartItems(prev => [...prev, {
-          options: optionObj,
-          quantity: 1
-        }])
+        optionsObj[selectedOption.groupName] = selectedOption.optionName
       }
     })
+
+    // 새로운 cartItem으로 추가 (초기 수량 1개)
+    setCartItems(prev => [...prev, {
+      options: optionsObj,
+      quantity: 1
+    }])
 
     setSelectedOptions([])
   }
@@ -668,6 +685,7 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
                 onSelectOption={handleOptionSelect}
                 onReset={resetOptions}
                 onAddToCart={addToCart}
+                hasCartItems={cartItems.length > 0}
               />
 
               {cartItems.length > 0 && (

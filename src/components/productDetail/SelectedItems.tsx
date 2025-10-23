@@ -52,15 +52,25 @@ export default function SelectedItems({
               </button>
             </div>
             {Object.entries(item.options).map(([groupName, optionValue]) => {
-              const optionPrice = getOptionPrice(product, groupName, optionValue)
+              // 쉼표로 구분된 여러 옵션을 분리
+              const optionNames = optionValue.split(',').map(name => name.trim())
 
               return (
-                <div key={groupName} className={styles.selectedOption}>
-                  <div>
-                    <span className={styles.optionGroupName}>[{groupName}]</span>
-                    <span>{optionValue}</span>
-                  </div>
-                  <span className={styles.optionPrice}>+{optionPrice.toLocaleString()}원</span>
+                <div key={groupName}>
+                  {optionNames.map((optionName, idx) => {
+                    // 각 옵션의 가격을 개별적으로 가져오기
+                    const optionPrice = getOptionPrice(product, groupName, optionName)
+
+                    return (
+                      <div key={`${groupName}-${idx}`} className={styles.selectedOption}>
+                        <div>
+                          <span className={styles.optionGroupName}>[{groupName}]</span>
+                          <span>{optionName}</span>
+                        </div>
+                        <span className={styles.optionPrice}>+{optionPrice.toLocaleString()}원</span>
+                      </div>
+                    )
+                  })}
                 </div>
               )
             })}

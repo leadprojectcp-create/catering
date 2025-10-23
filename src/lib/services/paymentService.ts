@@ -1,7 +1,7 @@
 import * as PortOne from '@portone/browser-sdk/v2'
 
 // 결제 수단 타입
-export type PayMethod = 'CARD' | 'VIRTUAL_ACCOUNT' | 'TRANSFER'
+export type PayMethod = 'CARD' | 'VIRTUAL_ACCOUNT' | 'TRANSFER' | 'EASY_PAY'
 
 // 결제 요청 파라미터 타입
 export interface PaymentRequest {
@@ -12,6 +12,7 @@ export interface PaymentRequest {
   customerEmail?: string // 고객 이메일
   customerPhoneNumber?: string // 고객 전화번호
   payMethod?: PayMethod // 결제 수단 (기본값: CARD)
+  easyPayProvider?: string // 간편결제사 (간편결제 사용 시 필수)
 }
 
 // 결제 결과 타입
@@ -59,6 +60,13 @@ export const requestPayment = async (
         cashReceipt: {
           type: 'PERSONAL', // 개인 소득공제
         },
+      }
+    }
+
+    // 간편결제 시 필수 파라미터 추가
+    if (request.payMethod === 'EASY_PAY') {
+      paymentParams.easyPay = {
+        easyPayProvider: request.easyPayProvider || 'PAYCO', // 간편결제사 지정 (PAYCO, KAKAOPAY, NAVERPAY, SAMSUNGPAY, TOSSPAY 등)
       }
     }
 

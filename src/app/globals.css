@@ -28,6 +28,18 @@ html {
   overflow-x: hidden;
 }
 
+.page-wrapper {
+  padding: 80px 0;
+}
+
+@media (max-width: 768px) {
+  .page-wrapper {
+    padding-top: 60px;
+    padding-left: 15px;
+    padding-right: 15px;
+  }
+}
+
 * {
   -webkit-touch-callout: none;
   -webkit-tap-highlight-color: transparent;

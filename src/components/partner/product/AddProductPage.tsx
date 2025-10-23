@@ -498,10 +498,7 @@ export default function AddProductPage() {
       return
     }
 
-    if (formData.additionalSettings.length === 0) {
-      alert('추가설정을 최소 1개 이상 선택해주세요.')
-      return
-    }
+    // 추가설정은 선택사항이므로 검사하지 않음
 
     if (formData.minOrderDays < 0) {
       alert('최소 주문 날짜를 선택해주세요.')
@@ -1140,7 +1137,7 @@ export default function AddProductPage() {
               </div>
               <input
                 type="text"
-                placeholder="ex) 메인"
+                placeholder="ex) 토핑추가"
                 value={option.groupName}
                 onChange={(e) => updateOptionGroup(groupIndex, e.target.value)}
                 className={styles.textInput}
@@ -1155,7 +1152,7 @@ export default function AddProductPage() {
                   <div key={valueIndex} className={styles.optionValueRow}>
                     <input
                       type="text"
-                      placeholder="ex) 참치샌드위치"
+                      placeholder="ex) 치즈추가"
                       value={value.name}
                       onChange={(e) => updateOptionValue(groupIndex, valueIndex, 'name', e.target.value)}
                       className={styles.textInput}
@@ -1352,6 +1349,7 @@ export default function AddProductPage() {
           <div className={styles.titleWithNumber}>
             <span className={styles.numberCircle}>11</span>
             <span className={styles.sectionTitle}>상품주문 추가설정</span>
+            <span className={styles.optionalLabel}>(선택사항)</span>
           </div>
           <div className={styles.checkboxGroup}>
             <label className={styles.checkboxLabel}>

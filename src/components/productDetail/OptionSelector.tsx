@@ -12,6 +12,7 @@ interface OptionSelectorProps {
   onSelectOption: (groupName: string, optionName: string) => void
   onReset: () => void
   onAddToCart: () => void
+  hasCartItems?: boolean
 }
 
 export default function OptionSelector({
@@ -21,7 +22,8 @@ export default function OptionSelector({
   onToggleOption,
   onSelectOption,
   onReset,
-  onAddToCart
+  onAddToCart,
+  hasCartItems = false
 }: OptionSelectorProps) {
   return (
     <div className={styles.optionSection}>
@@ -89,7 +91,7 @@ export default function OptionSelector({
           초기화
         </button>
         <button className={styles.addToCartButton} onClick={onAddToCart}>
-          담기
+          {hasCartItems ? '추가 담기' : '담기'}
         </button>
       </div>
     </div>

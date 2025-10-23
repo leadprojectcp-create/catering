@@ -20,16 +20,21 @@ import { requestPayment, PayMethod } from '@/lib/services/paymentService'
 import styles from './PaymentsPage.module.css'
 
 // 결제 수단 타입 (UI용)
-type PayMethodUI = 'card' | 'trans' | 'vbank'
+type PayMethodUI = 'card' | 'trans' | 'vbank' | 'payco' | 'samsung' | 'kakao' | 'naver' | 'toss' | 'apple'
 
 // UI 결제 수단을 포트원 API 값으로 매핑
-const mapPayMethodToPortOne = (method: PayMethodUI): PayMethod => {
-  const mapping: Record<PayMethodUI, PayMethod> = {
-    'card': 'CARD',
-    'trans': 'TRANSFER',
-    'vbank': 'VIRTUAL_ACCOUNT'
-  }
-  return mapping[method] || 'CARD'
+const mapPayMethodToPortOne = (method: PayMethodUI): { payMethod: PayMethod; easyPayProvider?: string } => {
+  if (method === 'card') return { payMethod: 'CARD' }
+  if (method === 'trans') return { payMethod: 'TRANSFER' }
+  if (method === 'vbank') return { payMethod: 'VIRTUAL_ACCOUNT' }
+  if (method === 'payco') return { payMethod: 'EASY_PAY', easyPayProvider: 'PAYCO' }
+  if (method === 'samsung') return { payMethod: 'EASY_PAY', easyPayProvider: 'SAMSUNGPAY' }
+  if (method === 'kakao') return { payMethod: 'EASY_PAY', easyPayProvider: 'KAKAOPAY' }
+  if (method === 'naver') return { payMethod: 'EASY_PAY', easyPayProvider: 'NAVERPAY' }
+  if (method === 'toss') return { payMethod: 'EASY_PAY', easyPayProvider: 'TOSSPAY' }
+  if (method === 'apple') return { payMethod: 'EASY_PAY', easyPayProvider: 'APPLEPAY' }
+
+  return { payMethod: 'CARD' }
 }
 
 export default function PaymentsPage() {
@@ -146,6 +151,69 @@ export default function PaymentsPage() {
         }
 
         setOrderData(data)
+
+        // orders 컬렉션에서 가져온 경우 기존 주문 정보 복원
+        if (orderIdParam && orderDocData) {
+          // 배송 정보 복원
+          if (orderDocData.deliveryInfo) {
+            const deliveryInfo = orderDocData.deliveryInfo
+            setAddressName(deliveryInfo.addressName || '')
+
+            // detailAddress에서 상세주소와 공동현관 비밀번호 분리
+            let detailAddr = deliveryInfo.detailAddress || ''
+            let entranceCodeValue = ''
+            const match = detailAddr.match(/^(.+?)\s*\((.+)\)$/)
+            if (match) {
+              detailAddr = match[1].trim()
+              entranceCodeValue = match[2].trim()
+            }
+
+            setOrderInfo(prev => ({
+              ...prev,
+              deliveryDate: deliveryInfo.deliveryDate || '',
+              deliveryTime: deliveryInfo.deliveryTime || '',
+              address: deliveryInfo.address || '',
+              detailAddress: detailAddr
+            }))
+            setEntranceCode(entranceCodeValue)
+            setRecipient(deliveryInfo.recipient || '')
+            setDeliveryRequest(deliveryInfo.deliveryRequest || '')
+            setDetailedRequest(deliveryInfo.detailedRequest || '')
+          } else {
+            // 이전 형식의 데이터 복원
+            let detailAddr = orderDocData.detailAddress || ''
+            let entranceCodeValue = ''
+            const match = detailAddr.match(/^(.+?)\s*\((.+)\)$/)
+            if (match) {
+              detailAddr = match[1].trim()
+              entranceCodeValue = match[2].trim()
+            }
+
+            setOrderInfo(prev => ({
+              ...prev,
+              deliveryDate: orderDocData.deliveryDate || '',
+              deliveryTime: orderDocData.deliveryTime || '',
+              address: orderDocData.address || '',
+              detailAddress: detailAddr
+            }))
+            setEntranceCode(entranceCodeValue)
+            setRecipient(orderDocData.recipient || '')
+            setDeliveryRequest(orderDocData.request || '')
+            setDetailedRequest(orderDocData.detailedRequest || '')
+          }
+
+          // 주문자 정보 복원
+          setOrderInfo(prev => ({
+            ...prev,
+            orderer: orderDocData.orderer || prev.orderer,
+            phone: orderDocData.phone || prev.phone
+          }))
+
+          // 배송 방법 복원
+          if (orderDocData.deliveryMethod) {
+            setDeliveryMethod(orderDocData.deliveryMethod)
+          }
+        }
 
         // Firestore에서 저장된 배송지 목록 및 사용자 정보 불러오기
         if (user) {
@@ -405,6 +473,7 @@ export default function PaymentsPage() {
       console.log('orderInfo.phone:', orderInfo.phone)
 
       // 포트원 결제 요청
+      const paymentConfig = mapPayMethodToPortOne(payMethod)
       const paymentResult = await requestPayment({
         orderName: `${orderData.productName} ${orderData.items.length > 1 ? `외 ${orderData.items.length - 1}건` : ''}`,
         amount: totalPrice,
@@ -412,7 +481,8 @@ export default function PaymentsPage() {
         customerName: orderInfo.orderer,
         customerEmail: userEmail,
         customerPhoneNumber: orderInfo.phone,
-        payMethod: mapPayMethodToPortOne(payMethod),
+        payMethod: paymentConfig.payMethod,
+        easyPayProvider: paymentConfig.easyPayProvider,
       })
 
       if (!paymentResult.success) {
@@ -843,19 +913,55 @@ export default function PaymentsPage() {
               className={`${styles.paymentMethodBox} ${payMethod === 'card' ? styles.paymentMethodBoxSelected : ''}`}
               onClick={() => setPayMethod('card')}
             >
-              <span>신용/체크카드</span>
+              <span>신용카드</span>
             </div>
             <div
               className={`${styles.paymentMethodBox} ${payMethod === 'trans' ? styles.paymentMethodBoxSelected : ''}`}
               onClick={() => setPayMethod('trans')}
             >
-              <span>계좌이체</span>
+              <span>퀵계좌이체</span>
             </div>
             <div
               className={`${styles.paymentMethodBox} ${payMethod === 'vbank' ? styles.paymentMethodBoxSelected : ''}`}
               onClick={() => setPayMethod('vbank')}
             >
               <span>가상계좌</span>
+            </div>
+            <div
+              className={`${styles.paymentMethodBox} ${payMethod === 'payco' ? styles.paymentMethodBoxSelected : ''}`}
+              onClick={() => setPayMethod('payco')}
+            >
+              <span>PAYCO</span>
+            </div>
+            <div
+              className={`${styles.paymentMethodBox} ${payMethod === 'samsung' ? styles.paymentMethodBoxSelected : ''}`}
+              onClick={() => setPayMethod('samsung')}
+            >
+              <span>SAMSUNGPAY</span>
+            </div>
+            <div
+              className={`${styles.paymentMethodBox} ${payMethod === 'kakao' ? styles.paymentMethodBoxSelected : ''}`}
+              onClick={() => setPayMethod('kakao')}
+            >
+              <span>KAKAOPAY</span>
+            </div>
+            <div
+              className={`${styles.paymentMethodBox} ${payMethod === 'naver' ? styles.paymentMethodBoxSelected : ''}`}
+              onClick={() => setPayMethod('naver')}
+            >
+              <span>NAVERPAY</span>
+            </div>
+            <div
+              className={`${styles.paymentMethodBox} ${payMethod === 'toss' ? styles.paymentMethodBoxSelected : ''}`}
+              onClick={() => setPayMethod('toss')}
+            >
+              <span>TOSSPAY</span>
+            </div>
+            <div
+              className={`${styles.paymentMethodBox} ${payMethod === 'apple' ? styles.paymentMethodBoxSelected : ''}`}
+              onClick={() => setPayMethod('apple')}
+            >
+              <span>APPLEPAY</span>
             </div>
           </div>
         </section>

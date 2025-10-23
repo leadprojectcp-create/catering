@@ -56,9 +56,21 @@ interface OrderItem {
   productImage?: string
 }
 
+interface DeliveryInfo {
+  addressName?: string
+  deliveryDate: string
+  deliveryTime: string
+  address: string
+  detailAddress?: string
+  recipient: string
+  recipientPhone: string
+  deliveryRequest?: string
+  detailedRequest?: string
+}
+
 interface Order {
   id: string
-  userId: string
+  uid: string
   storeId: string
   storeName: string
   items: OrderItem[]
@@ -68,11 +80,13 @@ interface Order {
   orderStatus: string
   paymentStatus: string
   deliveryMethod: string
-  deliveryDate: string
-  deliveryTime: string
-  address: string
+  deliveryInfo?: DeliveryInfo
+  // 이전 형식 호환을 위한 필드들
+  deliveryDate?: string
+  deliveryTime?: string
+  address?: string
   detailAddress?: string
-  recipient: string
+  recipient?: string
   orderer: string
   phone: string
   request?: string
@@ -120,7 +134,7 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
         const orderData = orderDoc.data()
 
         // 본인의 주문인지 확인
-        if (orderData.userId !== user.uid) {
+        if (orderData.uid !== user.uid) {
           alert('접근 권한이 없습니다.')
           router.push('/orders')
           return
@@ -282,7 +296,9 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
             </div>
             <div className={styles.orderInfoRow}>
               <span className={styles.orderInfoLabel}>예약날짜</span>
-              <span className={styles.orderInfoValue}>{order.deliveryDate} {order.deliveryTime}</span>
+              <span className={styles.orderInfoValue}>
+                {order.deliveryInfo?.deliveryDate || order.deliveryDate} {order.deliveryInfo?.deliveryTime || order.deliveryTime}
+              </span>
             </div>
             <div className={styles.orderInfoRow}>
               <span className={styles.orderInfoLabel}>결제상태</span>
@@ -364,18 +380,22 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
           <div className={styles.deliveryInfoSection}>
             <div className={styles.infoRow}>
               <span className={styles.infoLabel}>수령인</span>
-              <span className={styles.infoValue}>{order.recipient}</span>
+              <span className={styles.infoValue}>
+                {order.deliveryInfo?.recipient || order.recipient}
+              </span>
             </div>
             <div className={styles.infoRow}>
               <span className={styles.infoLabel}>연락처</span>
-              <span className={styles.infoValue}>{order.phone}</span>
+              <span className={styles.infoValue}>
+                {order.deliveryInfo?.recipientPhone || order.phone}
+              </span>
             </div>
             {order.deliveryMethod === '퀵업체 배송' && (
               <div className={styles.infoRow}>
                 <span className={styles.infoLabel}>주소</span>
                 <span className={styles.infoValue}>
-                  {order.address}
-                  {order.detailAddress && ` ${order.detailAddress}`}
+                  {order.deliveryInfo?.address || order.address}
+                  {(order.deliveryInfo?.detailAddress || order.detailAddress) && ` ${order.deliveryInfo?.detailAddress || order.detailAddress}`}
                 </span>
               </div>
             )}
@@ -383,20 +403,24 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
               <div className={styles.infoRow}>
                 <span className={styles.infoLabel}>픽업날짜</span>
                 <span className={styles.infoValue}>
-                  {order.deliveryDate} {order.deliveryTime}
+                  {order.deliveryInfo?.deliveryDate || order.deliveryDate} {order.deliveryInfo?.deliveryTime || order.deliveryTime}
                 </span>
               </div>
             )}
           </div>
 
-          {(order.deliveryRequest || order.detailedRequest) && order.deliveryMethod === '퀵업체 배송' && (
+          {((order.deliveryInfo?.deliveryRequest || order.deliveryRequest) ||
+            (order.deliveryInfo?.detailedRequest || order.detailedRequest)) &&
+            order.deliveryMethod === '퀵업체 배송' && (
             <>
               <div className={styles.divider}></div>
               <div className={styles.requestSection}>
                 <div className={styles.requestLabel}>배송 요청사항</div>
                 <div className={styles.requestValue}>
-                  {order.deliveryRequest && <div>{order.deliveryRequest}</div>}
-                  {order.detailedRequest && <div>{order.detailedRequest}</div>}
+                  {(order.deliveryInfo?.deliveryRequest || order.deliveryRequest) &&
+                    <div>{order.deliveryInfo?.deliveryRequest || order.deliveryRequest}</div>}
+                  {(order.deliveryInfo?.detailedRequest || order.detailedRequest) &&
+                    <div>{order.deliveryInfo?.detailedRequest || order.detailedRequest}</div>}
                 </div>
               </div>
             </>
@@ -426,7 +450,22 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
 
         {/* 하단 버튼 */}
         <div className={styles.buttonGroup}>
-          {order.orderStatus === 'delivered' ? (
+          {order.paymentStatus === 'unpaid' || order.paymentStatus === 'failed' ? (
+            <>
+              <button
+                className={styles.cancelButton}
+                onClick={() => setCancelOrderId(order.id)}
+              >
+                주문취소
+              </button>
+              <button
+                className={styles.payButton}
+                onClick={() => router.push(`/payments?orderId=${order.id}`)}
+              >
+                결제하기
+              </button>
+            </>
+          ) : order.orderStatus === 'delivered' ? (
             <>
               <button className={styles.detailButton} onClick={handleAddToCart}>
                 장바구니 담기
