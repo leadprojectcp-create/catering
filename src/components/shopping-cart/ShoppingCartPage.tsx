@@ -168,7 +168,7 @@ export default function ShoppingCartPage() {
 
     // items 배열에 itemPrice가 있으면 합산
     if (item.items && item.items.length > 0) {
-      return item.items.reduce((sum, cartItem: any) => {
+      return item.items.reduce((sum, cartItem: CartItemOption & { itemPrice?: number }) => {
         if (cartItem.itemPrice) {
           return sum + cartItem.itemPrice
         }
@@ -245,7 +245,7 @@ export default function ShoppingCartPage() {
       productId: firstItem.productId,
       items: firstItem.items,  // 이미 올바른 구조 (productId, productName, options, optionsWithPrices, quantity, price, itemPrice 포함)
       totalProductPrice: firstItem.totalProductPrice || calculateTotalPrice(),
-      totalQuantity: firstItem.totalQuantity || firstItem.items.reduce((sum: number, item: any) => sum + item.quantity, 0),
+      totalQuantity: firstItem.totalQuantity || firstItem.items.reduce((sum: number, item: CartItemOption) => sum + item.quantity, 0),
       deliveryMethod: firstItem.deliveryMethod || '',
       request: firstItem.request || ''
     }

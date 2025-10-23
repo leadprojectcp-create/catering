@@ -455,7 +455,7 @@ export default function OrdersPage() {
         updatedAt: new Date()
       }
 
-      await addCartItem(cartData as any)
+      await addCartItem(cartData)
 
       alert('장바구니에 담았습니다.')
       router.push('/cart')
