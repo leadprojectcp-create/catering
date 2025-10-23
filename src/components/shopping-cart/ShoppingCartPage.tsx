@@ -281,11 +281,21 @@ export default function ShoppingCartPage() {
           <h1 className={styles.title}>장바구니</h1>
           <div className={styles.headerActions}>
             <button onClick={handleSelectAll} className={styles.selectAllButton}>
-              {selectedItems.length === cartItems.length ? '전체 해제' : '전체 선택'}
+              <input
+                type="checkbox"
+                checked={selectedItems.length === cartItems.length}
+                onChange={handleSelectAll}
+                className={styles.checkbox}
+                readOnly
+              />
+              전체선택
             </button>
-            <button onClick={handleDeleteSelected} className={styles.deleteSelectedButton}>
-              선택 삭제
-            </button>
+            {selectedItems.length > 0 && (
+              <button onClick={handleDeleteSelected} className={styles.deleteSelectedButton}>
+                <img src="/icons/close.png" alt="삭제" width="24" height="24" />
+                선택삭제
+              </button>
+            )}
           </div>
         </div>
 

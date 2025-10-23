@@ -5,53 +5,58 @@
 
 .header {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 30px;
+  flex-direction: column;
+  gap: 20px;
   padding-bottom: 20px;
-  border-bottom: 2px solid #e5e5e5;
 }
 
 .title {
-  font-size: 28px;
-  font-weight: 700;
+  color: #333;
+  font-size: 24px;
+  font-weight: 600;
   margin: 0;
 }
 
 .headerActions {
   display: flex;
-  gap: 10px;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-radius: 20px;
+  border: 1px solid #F4F4F4;
+  background: white;
 }
 
-.selectAllButton,
+.selectAllButton {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #333;
+  font-size: 16px;
+  font-weight: 700;
+}
+
 .deleteSelectedButton {
-  padding: 10px 20px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 5px;
+  border: 1px solid #F0F0F3;
   background: white;
   cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
-  transition: all 0.3s ease;
-}
-
-.selectAllButton:hover {
-  background: #f5f5f5;
-  border-color: #025BD9;
-  color: #025BD9;
-}
-
-.deleteSelectedButton:hover {
-  background: #fff5f5;
-  border-color: #ff4444;
-  color: #ff4444;
+  color: #333;
+  font-size: 15px;
+  font-weight: 600;
 }
 
 .itemsList {
   display: flex;
   flex-direction: column;
   gap: 20px;
-  padding-bottom: 180px; /* 하단 결제 정보 공간 확보 */
+  padding-bottom: 20px;
 }
 
 .cartItem {
@@ -61,18 +66,23 @@
   border: 1px solid #e5e5e5;
   border-radius: 12px;
   background: white;
-  transition: all 0.3s ease;
-}
-
-.cartItem:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .checkbox {
-  width: 20px;
-  height: 20px;
+  appearance: none;
+  width: 24px;
+  height: 24px;
   cursor: pointer;
   flex-shrink: 0;
+  background-image: url('/icons/check_empty.png');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  border: none;
+}
+
+.checkbox:checked {
+  background-image: url('/icons/check_active.png');
 }
 
 .itemImage {
@@ -224,36 +234,53 @@
 
 /* 결제 정보 섹션 */
 .paymentSection {
-  position: fixed;
-  bottom: 0;
+  position: sticky;
+  bottom: 76px; /* 바텀 네비게이터(60px) + 여백(16px) */
   left: 0;
   right: 0;
-  padding: 20px;
-  border-radius: 0;
-  background: #FFF;
-  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.08);
+  width: 100%;
+  max-width: 800px;
+  padding: 16px 20px;
+  border-radius: 8px;
+  border: 1px solid #e5e5e5;
   z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
 }
 
 .paymentRow {
   display: flex;
-  justify-content: space-between;
+  flex-direction: row;
   align-items: center;
-  padding: 8px 0;
+  gap: 8px;
   font-size: 14px;
   color: #666;
 }
 
-.paymentTotal {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8px 0 12px 0;
-  border-top: 1px solid #F0F0F0;
-  font-size: 15px;
+.paymentRow span:first-child {
+  font-size: 13px;
+  color: #666;
+}
+
+.paymentRow span:last-child {
+  font-size: 14px;
   font-weight: 600;
   color: #333;
-  margin-top: 4px;
+}
+
+.paymentTotal {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+
+.paymentTotal span:first-child {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
 }
 
 .totalPrice {
@@ -263,16 +290,16 @@
 }
 
 .orderButton {
-  width: 100%;
-  padding: 12px;
+  padding: 14px 32px;
   background: #025BD9;
   border: none;
   border-radius: 8px;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 700;
   color: #fff;
   cursor: pointer;
-  margin-top: 12px;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .orderButton:hover {
@@ -316,11 +343,6 @@
 }
 
 @media (max-width: 768px) {
-  .container {
-    margin-top: 70px;
-    padding: 15px;
-  }
-
   .header {
     flex-direction: column;
     gap: 15px;
@@ -348,10 +370,45 @@
   }
 
   .itemsList {
-    padding-bottom: 200px; /* 모바일에서 더 많은 공간 확보 */
+    padding-bottom: 20px;
   }
 
   .paymentSection {
-    padding: 15px;
+    padding: 12px 15px;
+    margin: 20px 0 0;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .paymentRow {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    flex: 1;
+    min-width: calc(33% - 10px);
+  }
+
+  .paymentRow span:first-child {
+    font-size: 12px;
+    color: #999;
+  }
+
+  .paymentTotal {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    flex: 1;
+    min-width: calc(33% - 10px);
+  }
+
+  .paymentTotal span:first-child {
+    font-size: 12px;
+    color: #999;
+    font-weight: 400;
+  }
+
+  .orderButton {
+    width: 100%;
+    padding: 12px;
   }
 }

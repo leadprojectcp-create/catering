@@ -157,20 +157,17 @@ export default function StoreList({ selectedCategory }: StoreListProps) {
                       className={styles.storeSwiper}
                     >
                       {images.map((image, index) => {
-                        // Bunny CDN 이미지 최적화: 썸네일 크기로 리사이징 + WebP 변환
-                        const optimizedImageUrl = `${image}?width=300&quality=100&format=webp`
-
                         return (
                           <SwiperSlide key={index}>
                             <div className={styles.imageWrapper}>
                               <OptimizedImage
-                                src={optimizedImageUrl}
+                                src={image}
                                 alt={`${store.storeName || '가게'} 이미지 ${index + 1}`}
                                 fill
+                                sizes="130px"
                                 className={styles.cardImage}
                                 style={{ objectFit: 'cover' }}
-                                priority
-                                sizes="150px"
+                                priority={index === 0}
                               />
                             </div>
                           </SwiperSlide>
