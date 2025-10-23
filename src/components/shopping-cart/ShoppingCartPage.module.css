@@ -1,5 +1,5 @@
 .container {
-  max-width: 1200px;
+  max-width: 800px;
   margin: 0 auto;
 }
 
@@ -47,16 +47,11 @@
   color: #ff4444;
 }
 
-.content {
-  display: grid;
-  grid-template-columns: 1fr 350px;
-  gap: 30px;
-}
-
 .itemsList {
   display: flex;
   flex-direction: column;
   gap: 20px;
+  padding-bottom: 180px; /* 하단 결제 정보 공간 확보 */
 }
 
 .cartItem {
@@ -227,61 +222,61 @@
   color: white;
 }
 
-.summary {
-  position: sticky;
-  top: 100px;
-  height: fit-content;
-  padding: 30px;
-  border: 1px solid #e5e5e5;
-  border-radius: 12px;
-  background: white;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+/* 결제 정보 섹션 */
+.paymentSection {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 20px;
+  border-radius: 0;
+  background: #FFF;
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.08);
+  z-index: 100;
 }
 
-.summaryRow {
+.paymentRow {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 15px;
-  font-size: 15px;
+  align-items: center;
+  padding: 8px 0;
+  font-size: 14px;
   color: #666;
 }
 
-.summaryDivider {
-  height: 1px;
-  background: #e5e5e5;
-  margin: 20px 0;
-}
-
-.summaryTotal {
+.paymentTotal {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 25px;
-  font-size: 18px;
-  font-weight: 700;
+  align-items: center;
+  padding: 8px 0 12px 0;
+  border-top: 1px solid #F0F0F0;
+  font-size: 15px;
+  font-weight: 600;
+  color: #333;
+  margin-top: 4px;
 }
 
 .totalPrice {
+  font-size: 18px;
+  font-weight: 700;
   color: #025BD9;
-  font-size: 24px;
 }
 
 .orderButton {
   width: 100%;
-  padding: 16px;
+  padding: 12px;
+  background: #025BD9;
   border: none;
   border-radius: 8px;
-  background: #025BD9;
-  color: white;
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 700;
+  color: #fff;
   cursor: pointer;
-  transition: all 0.3s ease;
+  margin-top: 12px;
 }
 
 .orderButton:hover {
   background: #014aa8;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(2, 91, 217, 0.3);
 }
 
 .empty {
@@ -320,16 +315,6 @@
   transform: translateY(-2px);
 }
 
-@media (max-width: 1024px) {
-  .content {
-    grid-template-columns: 1fr;
-  }
-
-  .summary {
-    position: static;
-  }
-}
-
 @media (max-width: 768px) {
   .container {
     margin-top: 70px;
@@ -360,5 +345,13 @@
     flex-direction: row;
     justify-content: space-between;
     width: 100%;
+  }
+
+  .itemsList {
+    padding-bottom: 200px; /* 모바일에서 더 많은 공간 확보 */
+  }
+
+  .paymentSection {
+    padding: 15px;
   }
 }

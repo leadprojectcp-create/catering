@@ -1,4 +1,3 @@
-import Header from '@/components/Header'
 import ProductDetailPage from '@/components/productDetail/ProductDetailPage'
 
 interface PageProps {
@@ -14,10 +13,5 @@ export default async function Page({ params, searchParams }: PageProps) {
   const { productId } = await params
   const { storeId } = await searchParams
 
-  return (
-    <>
-      <Header />
-      <ProductDetailPage productId={productId} storeId={storeId || ''} />
-    </>
-  )
+  return <ProductDetailPage productId={productId} storeId={storeId || ''} />
 }

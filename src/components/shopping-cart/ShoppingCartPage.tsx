@@ -4,10 +4,9 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { useAuth } from '@/contexts/AuthContext'
-import { getCartItems, deleteCartItem, updateCartItem, type CartItem } from '@/lib/services/cartService'
+import { getCartItems, deleteCartItem, updateCartItem, type CartItem, type CartItemOption } from '@/lib/services/cartService'
 import { doc, getDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
-import Header from '@/components/Header'
 import Loading from '@/components/Loading'
 import styles from './ShoppingCartPage.module.css'
 
@@ -255,39 +254,29 @@ export default function ShoppingCartPage() {
   }
 
   if (loading) {
-    return (
-      <>
-        <Header />
-        <Loading />
-      </>
-    )
+    return <Loading />
   }
 
   if (cartItems.length === 0) {
     return (
-      <>
-        <Header />
-        <div className={styles.container}>
-          <div className={styles.empty}>
-            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="9" cy="21" r="1"></circle>
-              <circle cx="20" cy="21" r="1"></circle>
-              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
-            </svg>
-            <p>장바구니가 비어있습니다.</p>
-            <button onClick={() => router.push('/')} className={styles.goShoppingButton}>
-              쇼핑 계속하기
-            </button>
-          </div>
+      <div className={styles.container}>
+        <div className={styles.empty}>
+          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="9" cy="21" r="1"></circle>
+            <circle cx="20" cy="21" r="1"></circle>
+            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+          </svg>
+          <p>장바구니가 비어있습니다.</p>
+          <button onClick={() => router.push('/')} className={styles.goShoppingButton}>
+            쇼핑 계속하기
+          </button>
         </div>
-      </>
+      </div>
     )
   }
 
   return (
-    <>
-      <Header />
-      <div className={styles.container}>
+    <div className={styles.container}>
         <div className={styles.header}>
           <h1 className={styles.title}>장바구니</h1>
           <div className={styles.headerActions}>
@@ -300,9 +289,8 @@ export default function ShoppingCartPage() {
           </div>
         </div>
 
-        <div className={styles.content}>
-          <div className={styles.itemsList}>
-            {cartItems.map(item => (
+        <div className={styles.itemsList}>
+          {cartItems.map(item => (
               <div key={item.id} className={styles.cartItem}>
                 <input
                   type="checkbox"
@@ -312,10 +300,10 @@ export default function ShoppingCartPage() {
                 />
 
                 <div className={styles.itemImage}>
-                  {(products[item.productId]?.images?.[0] || item.productImage || item.items[0]?.productImage) && (
+                  {(products[item.productId]?.images?.[0] || item.productImage) && (
                     <Image
-                      src={products[item.productId]?.images?.[0] || item.productImage || item.items[0]?.productImage || ''}
-                      alt={item.productName || item.items[0]?.productName || '상품'}
+                      src={products[item.productId]?.images?.[0] || item.productImage || ''}
+                      alt={item.productName || '상품'}
                       fill
                       style={{ objectFit: 'cover' }}
                     />
@@ -323,7 +311,7 @@ export default function ShoppingCartPage() {
                 </div>
 
                 <div className={styles.itemInfo}>
-                  <h3 className={styles.itemName}>{item.productName || item.items[0]?.productName || '상품'}</h3>
+                  <h3 className={styles.itemName}>{item.productName || '상품'}</h3>
                   <p className={styles.storeName}>{item.storeName}</p>
                   {/* items 배열의 모든 옵션 표시 */}
                   {item.items.map((itemOption, index) => (
@@ -361,42 +349,38 @@ export default function ShoppingCartPage() {
                 </div>
               </div>
             ))}
-          </div>
+        </div>
 
-          <div className={styles.summary}>
-            <div className={styles.summaryRow}>
-              <span>선택 상품 수</span>
-              <span>{selectedItems.length}개</span>
-            </div>
-            <div className={styles.summaryRow}>
-              <span>총 수량</span>
-              <span>
-                {cartItems
-                  .filter(item => selectedItems.includes(item.id!))
-                  .reduce((sum, item) => {
-                    // 새로운 구조에서는 totalQuantity 사용
-                    if (item.totalQuantity) {
-                      return sum + item.totalQuantity
-                    }
-                    // 하위 호환: items 배열에서 계산
-                    const itemTotal = item.items.reduce((itemSum, opt) => itemSum + opt.quantity, 0)
-                    return sum + itemTotal
-                  }, 0)}개
-              </span>
-            </div>
-            <div className={styles.summaryDivider} />
-            <div className={styles.summaryTotal}>
-              <span>총 결제금액</span>
-              <span className={styles.totalPrice}>
-                {calculateTotalPrice().toLocaleString()}원
-              </span>
-            </div>
-            <button onClick={handleOrder} className={styles.orderButton}>
-              주문하기
-            </button>
+        {/* 하단 고정 결제 정보 */}
+        <div className={styles.paymentSection}>
+          <div className={styles.paymentRow}>
+            <span>선택 상품</span>
+            <span>{selectedItems.length}개</span>
           </div>
+          <div className={styles.paymentRow}>
+            <span>총 수량</span>
+            <span>
+              {cartItems
+                .filter(item => selectedItems.includes(item.id!))
+                .reduce((sum, item) => {
+                  if (item.totalQuantity) {
+                    return sum + item.totalQuantity
+                  }
+                  const itemTotal = item.items.reduce((itemSum, opt) => itemSum + opt.quantity, 0)
+                  return sum + itemTotal
+                }, 0)}개
+            </span>
+          </div>
+          <div className={styles.paymentTotal}>
+            <span>총 결제금액</span>
+            <span className={styles.totalPrice}>
+              {calculateTotalPrice().toLocaleString()}원
+            </span>
+          </div>
+          <button onClick={handleOrder} className={styles.orderButton}>
+            주문하기
+          </button>
         </div>
       </div>
-    </>
   )
 }

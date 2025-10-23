@@ -7,7 +7,6 @@ import Script from 'next/script'
 import { doc, getDoc, setDoc, updateDoc, addDoc, collection } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { useAuth } from '@/contexts/AuthContext'
-import Header from '@/components/Header'
 import Loading from '@/components/Loading'
 import DeliveryInfo from './DeliveryInfo'
 import DateTimePicker from './DateTimePicker'
@@ -629,12 +628,7 @@ export default function PaymentsPage() {
     : 0
 
   if (loading) {
-    return (
-      <>
-        <Header />
-        <Loading />
-      </>
-    )
+    return <Loading />
   }
 
   return (
@@ -643,7 +637,6 @@ export default function PaymentsPage() {
         src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"
         onLoad={handlePostcodeLoad}
       />
-      <Header />
       <div className={styles.container}>
         <h1 className={styles.title}>결제하기</h1>
 

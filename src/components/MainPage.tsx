@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import Header from './Header'
 import MainTitle from './home/MainTitle'
 import Banner from './home/Banner'
 import StoreList from './home/StoreList'
@@ -25,7 +24,6 @@ export default function MainPage() {
 
   return (
     <div className={styles.container}>
-      <Header />
 
       {/* 메인 컨텐츠 영역 */}
       <main className={styles.main}>

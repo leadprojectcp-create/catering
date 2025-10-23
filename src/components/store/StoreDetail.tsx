@@ -9,7 +9,6 @@ import { toggleStoreLike, checkUserLiked } from '@/lib/services/storeService'
 import { getPublishedNoticesByPartner, Notice } from '@/lib/services/partnerNoticeService'
 import { createOrGetChatRoom } from '@/lib/services/chatService'
 import { useAuth } from '@/contexts/AuthContext'
-import Header from '@/components/Header'
 import Loading from '@/components/Loading'
 import ProductList from '@/components/store/ProductList'
 import styles from './StoreDetail.module.css'
@@ -94,22 +93,14 @@ export default function StoreDetail({ storeId }: StoreDetailProps) {
   }, [storeId, user])
 
   if (loading) {
-    return (
-      <>
-        <Header />
-        <Loading />
-      </>
-    )
+    return <Loading />
   }
 
   if (!store) {
     return (
-      <>
-        <Header />
-        <div className={styles.container}>
-          <div className={styles.error}>가게를 찾을 수 없습니다.</div>
-        </div>
-      </>
+      <div className={styles.container}>
+        <div className={styles.error}>가게를 찾을 수 없습니다.</div>
+      </div>
     )
   }
 
@@ -178,9 +169,7 @@ export default function StoreDetail({ storeId }: StoreDetailProps) {
   }
 
   return (
-    <>
-      <Header />
-      <div className={styles.container}>
+    <div className={styles.container}>
       {/* 상단 섹션: 이미지 + 정보 */}
       <div className={styles.topSection}>
         {/* 이미지 슬라이더 */}
@@ -325,7 +314,6 @@ export default function StoreDetail({ storeId }: StoreDetailProps) {
 
       {/* 상품 목록 */}
       <ProductList storeId={storeId} />
-      </div>
-    </>
+    </div>
   )
 }

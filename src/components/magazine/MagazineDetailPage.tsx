@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { getMagazine, incrementViewCount, toggleLike } from '@/lib/services/magazineService'
 import type { Magazine } from '@/lib/services/magazineService'
-import Header from '@/components/Header'
 import Loading from '@/components/Loading'
 import styles from './MagazineDetailPage.module.css'
 
@@ -83,27 +82,15 @@ export default function MagazineDetailPage({ magazineId }: MagazineDetailPagePro
   }
 
   if (loading) {
-    return (
-      <>
-        <Header />
-        <Loading />
-      </>
-    )
+    return <Loading />
   }
 
   if (!magazine) {
-    return (
-      <>
-        <Header />
-        <div>매거진을 찾을 수 없습니다.</div>
-      </>
-    )
+    return <div>매거진을 찾을 수 없습니다.</div>
   }
 
   return (
-    <>
-      <Header />
-      <div className={styles.container}>
+    <div className={styles.container}>
       <div className={styles.header}>
         <button
           className={styles.backButton}
@@ -185,7 +172,6 @@ export default function MagazineDetailPage({ magazineId }: MagazineDetailPagePro
           </button>
         </div>
       </article>
-      </div>
-    </>
+    </div>
   )
 }
