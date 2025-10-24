@@ -3,7 +3,6 @@ import { db } from '@/lib/firebase'
 import { doc, updateDoc, getDoc, setDoc } from 'firebase/firestore'
 import * as PortOne from '@portone/server-sdk'
 import { sendKakaoAlimtalk } from '@/lib/services/smsService'
-import { requestQuickDelivery, createQuickDeliveryData } from '@/lib/services/quickDeliveryService'
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic'
@@ -197,10 +196,51 @@ export async function POST(request: NextRequest) {
                 if (orderData?.deliveryMethod === '퀵업체 배송') {
                   console.log('[Webhook] 퀵 배송 요청 시작...')
                   try {
-                    const quickDeliveryData = createQuickDeliveryData(orderData, storeData)
-                    const quickResult = await requestQuickDelivery(quickDeliveryData)
+                    // 퀵 배송 데이터 생성
+                    const deliveryInfo = orderData?.deliveryInfo || {}
+                    const startAddress = storeData?.address
+                      ? `${storeData.address.city || ''} ${storeData.address.district || ''} ${storeData.address.dong || ''}`.trim()
+                      : ''
 
-                    if (quickResult && quickResult.code === '1') {
+                    const reservDatetimeUp = deliveryInfo.deliveryDate && deliveryInfo.deliveryTime
+                      ? `${deliveryInfo.deliveryDate} ${deliveryInfo.deliveryTime}:00`
+                      : undefined
+
+                    const quickDeliveryData = {
+                      serviceType: 'damas',
+                      startCName: storeData?.storeName || '',
+                      startManager: storeData?.storeName || '',
+                      startPhone: storeData?.phone || '',
+                      startAddress: startAddress,
+                      startAddressDetail: storeData?.address?.detail || '',
+                      destCName: deliveryInfo.addressName || '',
+                      destManager: deliveryInfo.recipient || '',
+                      destPhone: deliveryInfo.recipientPhone || '',
+                      destAddress: deliveryInfo.address || '',
+                      destAddressDetail: deliveryInfo.detailAddress || '',
+                      runtype: 0,
+                      payType: 'contract',
+                      reservDatetimeUp,
+                      hddMemo: deliveryInfo.detailedRequest || '',
+                      upWay: 'free_customer',
+                      downWay: 'free_customer',
+                      deliveryItem: {
+                        bgBox: 1
+                      }
+                    }
+
+                    // API 호출
+                    const quickResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/quick-delivery`, {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                      },
+                      body: JSON.stringify(quickDeliveryData),
+                    })
+
+                    const quickResult = await quickResponse.json()
+
+                    if (quickResponse.ok && quickResult.code === '1') {
                       console.log('[Webhook] 퀵 배송 요청 성공:', quickResult)
 
                       // quickDeliveries 컬렉션에 저장
@@ -231,7 +271,7 @@ export async function POST(request: NextRequest) {
                         orderId: orderId,
                         status: 'failed',
                         errorCode: quickResult?.code || 'unknown',
-                        errorMessage: quickResult?.message || 'Unknown error',
+                        errorMessage: quickResult?.message || quickResult?.error || 'Unknown error',
                         requestData: quickDeliveryData,
                         responseData: quickResult,
                         createdAt: new Date(),
@@ -240,7 +280,7 @@ export async function POST(request: NextRequest) {
 
                       await updateDoc(orderRef, {
                         quickDeliveryStatus: 'failed',
-                        quickDeliveryError: quickResult?.message || 'Unknown error',
+                        quickDeliveryError: quickResult?.message || quickResult?.error || 'Unknown error',
                       })
                     }
                   } catch (error) {

@@ -40,6 +40,13 @@
   min-width: 0;
 }
 
+.requiredWarning {
+  margin-bottom: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #E65100;
+}
+
 .selectedName {
   font-size: 15px;
   font-weight: 600;

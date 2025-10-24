@@ -208,10 +208,6 @@
 }
 
 @media (max-width: 768px) {
-  .container {
-    padding: 20px 16px;
-  }
-
   .card {
     flex-wrap: wrap;
     position: relative;
@@ -227,12 +223,14 @@
 
   .badgeContainerMobile {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     order: 3;
     width: 100%;
-    align-items: flex-end;
+    align-items: flex-start;
     margin-top: 8px;
     gap: 4px;
+    flex-wrap: nowrap;
+    overflow-x: auto;
   }
 
   .imageWrapper {

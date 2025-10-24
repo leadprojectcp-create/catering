@@ -122,13 +122,30 @@ export async function updateProduct(productId: string, productData: Partial<Prod
     throw new Error('수정 권한이 없습니다.')
   }
 
-  // undefined 값 제거
+  // undefined 값만 제거 (빈 배열은 유효한 값이므로 유지)
   const updateData = Object.fromEntries(
     Object.entries({
       ...productData,
       updatedAt: new Date().toISOString()
     }).filter(([_, v]) => v !== undefined)
   )
+
+  // 배열 필드는 명시적으로 덮어쓰기 (병합이 아닌 교체)
+  if (productData.additionalSettings !== undefined) {
+    updateData.additionalSettings = productData.additionalSettings
+  }
+  if (productData.deliveryMethods !== undefined) {
+    updateData.deliveryMethods = productData.deliveryMethods
+  }
+  if (productData.productTypes !== undefined) {
+    updateData.productTypes = productData.productTypes
+  }
+  if (productData.options !== undefined) {
+    updateData.options = productData.options
+  }
+  if (productData.origin !== undefined) {
+    updateData.origin = productData.origin
+  }
 
   await updateDoc(productRef, updateData)
 }

@@ -19,6 +19,7 @@ interface OptionValue {
 interface ProductOption {
   groupName: string
   values: OptionValue[]
+  isRequired?: boolean
 }
 
 interface CategoryOption {
@@ -514,6 +515,13 @@ export default function EditProductPage({ productId }: { productId: string }) {
       return
     }
 
+    // 필수선택사항 검사 - 최소 1개 이상 필수
+    const hasRequiredOption = validOptions.some(option => option.isRequired)
+    if (!hasRequiredOption) {
+      alert('옵션 중 최소 1개는 필수선택사항으로 지정해주세요.')
+      return
+    }
+
     if (!formData.description || formData.description.trim() === '' || formData.description === '<p><br></p>') {
       alert('상품설명을 작성해주세요.')
       return
@@ -728,7 +736,7 @@ export default function EditProductPage({ productId }: { productId: string }) {
           <div className={styles.titleWithNumber}>
             <span className={styles.numberCircle}>3</span>
             <span className={styles.sectionTitle}>상품 타입 설정</span>
-            <span className={styles.optionalLabel}>(선택사항, 최대 2개)</span>
+            <span className={styles.optionalLabel}>(선택사항, 상품별 1개만 선택가능)</span>
           </div>
           <div className={styles.checkboxGroup}>
             <label className={styles.checkboxLabel}>
@@ -737,18 +745,14 @@ export default function EditProductPage({ productId }: { productId: string }) {
                 checked={formData.productTypes.includes('대표상품')}
                 onChange={(e) => {
                   if (e.target.checked) {
-                    if (formData.productTypes.length >= 2) {
-                      alert('상품 타입은 최대 2개까지만 선택 가능합니다.')
-                      return
-                    }
                     setFormData(prev => ({
                       ...prev,
-                      productTypes: [...prev.productTypes, '대표상품']
+                      productTypes: ['대표상품']
                     }))
                   } else {
                     setFormData(prev => ({
                       ...prev,
-                      productTypes: prev.productTypes.filter(t => t !== '대표상품')
+                      productTypes: []
                     }))
                   }
                 }}
@@ -768,18 +772,14 @@ export default function EditProductPage({ productId }: { productId: string }) {
                 checked={formData.productTypes.includes('추천상품')}
                 onChange={(e) => {
                   if (e.target.checked) {
-                    if (formData.productTypes.length >= 2) {
-                      alert('상품 타입은 최대 2개까지만 선택 가능합니다.')
-                      return
-                    }
                     setFormData(prev => ({
                       ...prev,
-                      productTypes: [...prev.productTypes, '추천상품']
+                      productTypes: ['추천상품']
                     }))
                   } else {
                     setFormData(prev => ({
                       ...prev,
-                      productTypes: prev.productTypes.filter(t => t !== '추천상품')
+                      productTypes: []
                     }))
                   }
                 }}
@@ -799,18 +799,14 @@ export default function EditProductPage({ productId }: { productId: string }) {
                 checked={formData.productTypes.includes('시즌상품')}
                 onChange={(e) => {
                   if (e.target.checked) {
-                    if (formData.productTypes.length >= 2) {
-                      alert('상품 타입은 최대 2개까지만 선택 가능합니다.')
-                      return
-                    }
                     setFormData(prev => ({
                       ...prev,
-                      productTypes: [...prev.productTypes, '시즌상품']
+                      productTypes: ['시즌상품']
                     }))
                   } else {
                     setFormData(prev => ({
                       ...prev,
-                      productTypes: prev.productTypes.filter(t => t !== '시즌상품')
+                      productTypes: []
                     }))
                   }
                 }}
@@ -1168,18 +1164,44 @@ export default function EditProductPage({ productId }: { productId: string }) {
             <div key={groupIndex} className={styles.optionCard}>
               <div className={styles.optionGroupHeader}>
                 <label className={styles.optionLabel}>옵션그룹명</label>
-                {formData.options.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => removeOptionGroup(groupIndex)}
-                    className={styles.removeGroupButton}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
-                      <path d="M9.33464 6.66667V11.3333M6.66797 6.66667V11.3333M4.0013 4V11.8667C4.0013 12.6134 4.0013 12.9865 4.14663 13.2717C4.27446 13.5226 4.47828 13.727 4.72917 13.8548C5.0141 14 5.3873 14 6.13258 14H9.87003C10.6153 14 10.988 14 11.2729 13.8548C11.5238 13.727 11.7283 13.5226 11.8561 13.2717C12.0013 12.9868 12.0013 12.614 12.0013 11.8687V4M4.0013 4H5.33464M4.0013 4H2.66797M5.33464 4H10.668M5.33464 4C5.33464 3.37874 5.33464 3.06827 5.43613 2.82324C5.57145 2.49654 5.83085 2.23682 6.15755 2.10149C6.40258 2 6.71338 2 7.33464 2H8.66797C9.28922 2 9.59985 2 9.84488 2.10149C10.1716 2.23682 10.4311 2.49654 10.5664 2.82324C10.6679 3.06827 10.668 3.37875 10.668 4M10.668 4H12.0013M12.0013 4H13.3346" stroke="#999999" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                    옵션 삭제
-                  </button>
-                )}
+                <div className={styles.headerActions}>
+                  <label className={styles.requiredCheckbox}>
+                    <input
+                      type="checkbox"
+                      checked={option.isRequired || false}
+                      onChange={(e) => {
+                        const newOptions = [...formData.options]
+                        newOptions[groupIndex] = {
+                          ...newOptions[groupIndex],
+                          isRequired: e.target.checked
+                        }
+                        setFormData({ ...formData, options: newOptions })
+                      }}
+                      className={styles.hiddenCheckbox}
+                    />
+                    <div className={styles.customCheckbox}>
+                      <Image
+                        src={option.isRequired ? "/icons/check_active.png" : "/icons/check.png"}
+                        alt="체크박스"
+                        width={24}
+                        height={24}
+                      />
+                    </div>
+                    <span>필수선택사항</span>
+                  </label>
+                  {formData.options.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removeOptionGroup(groupIndex)}
+                      className={styles.removeGroupButton}
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M9.33464 6.66667V11.3333M6.66797 6.66667V11.3333M4.0013 4V11.8667C4.0013 12.6134 4.0013 12.9865 4.14663 13.2717C4.27446 13.5226 4.47828 13.727 4.72917 13.8548C5.0141 14 5.3873 14 6.13258 14H9.87003C10.6153 14 10.988 14 11.2729 13.8548C11.5238 13.727 11.7283 13.5226 11.8561 13.2717C12.0013 12.9868 12.0013 12.614 12.0013 11.8687V4M4.0013 4H5.33464M4.0013 4H2.66797M5.33464 4H10.668M5.33464 4C5.33464 3.37874 5.33464 3.06827 5.43613 2.82324C5.57145 2.49654 5.83085 2.23682 6.15755 2.10149C6.40258 2 6.71338 2 7.33464 2H8.66797C9.28922 2 9.59985 2 9.84488 2.10149C10.1716 2.23682 10.4311 2.49654 10.5664 2.82324C10.6679 3.06827 10.668 3.37875 10.668 4M10.668 4H12.0013M12.0013 4H13.3346" stroke="#999999" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                      옵션 삭제
+                    </button>
+                  )}
+                </div>
               </div>
               <input
                 type="text"
@@ -1370,6 +1392,26 @@ export default function EditProductPage({ productId }: { productId: string }) {
             <label className={styles.checkboxLabel}>
               <input
                 type="checkbox"
+                checked={formData.deliveryMethods.includes('택배 배송')}
+                onChange={(e) => setFormData(prev => ({
+                  ...prev,
+                  deliveryMethods: e.target.checked
+                    ? [...prev.deliveryMethods, '택배 배송']
+                    : prev.deliveryMethods.filter(m => m !== '택배 배송')
+                }))}
+                className={styles.hiddenCheckbox}
+              />
+              <span className={styles.customCheckbox}>
+                <img
+                  src={formData.deliveryMethods.includes('택배 배송') ? "/icons/check_active.png" : "/icons/check.png"}
+                  alt="체크박스"
+                />
+              </span>
+              택배 배송
+            </label>
+            <label className={styles.checkboxLabel}>
+              <input
+                type="checkbox"
                 checked={formData.deliveryMethods.includes('매장 픽업')}
                 onChange={(e) => setFormData(prev => ({
                   ...prev,
@@ -1397,28 +1439,7 @@ export default function EditProductPage({ productId }: { productId: string }) {
             <span className={styles.sectionTitle}>상품주문 추가설정</span>
             <span className={styles.optionalLabel}>(선택사항)</span>
           </div>
-          <div className={styles.checkboxGroup}>
-            <label className={styles.checkboxLabel}>
-              <input
-                type="checkbox"
-                checked={formData.additionalSettings.includes('당일배송가능')}
-                onChange={(e) => setFormData(prev => ({
-                  ...prev,
-                  additionalSettings: e.target.checked
-                    ? [...prev.additionalSettings, '당일배송가능']
-                    : prev.additionalSettings.filter(s => s !== '당일배송가능'),
-                  minOrderDays: e.target.checked ? 0 : 3
-                }))}
-                className={styles.hiddenCheckbox}
-              />
-              <span className={styles.customCheckbox}>
-                <img
-                  src={formData.additionalSettings.includes('당일배송가능') ? "/icons/check_active.png" : "/icons/check.png"}
-                  alt="체크박스"
-                />
-              </span>
-              당일배송가능
-            </label>
+          <div className={styles.additionalSettingsGroup}>
             <label className={styles.checkboxLabel}>
               <input
                 type="checkbox"
@@ -1488,18 +1509,39 @@ export default function EditProductPage({ productId }: { productId: string }) {
             <span className={styles.numberCircle}>12</span>
             <span className={styles.sectionTitle}>최소 주문 날짜</span>
           </div>
-          <div className={styles.inputWithUnit}>
-            <input
-              type="number"
-              value={formData.minOrderDays}
-              onChange={(e) => setFormData(prev => ({ ...prev, minOrderDays: Number(e.target.value) }))}
-              min="1"
-              className={styles.textInput}
-              disabled={formData.additionalSettings.includes('당일배송가능')}
-              required
-            />
-            <span className={styles.inputUnit}>일</span>
+          <div className={styles.checkboxGroup}>
+            <label className={styles.checkboxLabel}>
+              <input
+                type="checkbox"
+                checked={formData.minOrderDays === 0}
+                onChange={(e) => setFormData(prev => ({
+                  ...prev,
+                  minOrderDays: e.target.checked ? 0 : 3
+                }))}
+                className={styles.hiddenCheckbox}
+              />
+              <span className={styles.customCheckbox}>
+                <img
+                  src={formData.minOrderDays === 0 ? "/icons/check_active.png" : "/icons/check.png"}
+                  alt="체크박스"
+                />
+              </span>
+              당일배송 가능
+            </label>
           </div>
+          {formData.minOrderDays > 0 && (
+            <div className={styles.minOrderDaysInput}>
+              <input
+                type="number"
+                value={formData.minOrderDays}
+                onChange={(e) => setFormData(prev => ({ ...prev, minOrderDays: Number(e.target.value) }))}
+                min="1"
+                className={styles.textInput}
+                required
+              />
+              <span className={styles.inputUnit}>일</span>
+            </div>
+          )}
         </div>
 
         {/* 버튼 영역 */}

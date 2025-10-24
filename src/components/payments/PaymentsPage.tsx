@@ -77,6 +77,8 @@ export default function PaymentsPage() {
   const [usePoint, setUsePoint] = useState(0)
   const [availablePoint, setAvailablePoint] = useState(0)
   const [minOrderDays, setMinOrderDays] = useState(0)
+  const [deliveryFeeFromAPI, setDeliveryFeeFromAPI] = useState<number | null>(null)
+  const [isLoadingDeliveryFee, setIsLoadingDeliveryFee] = useState(false)
 
   useEffect(() => {
     const loadData = async () => {
@@ -617,15 +619,113 @@ export default function PaymentsPage() {
     }
   }
 
-  // 퀵업체 배송만 20,000원 추가
-  const deliveryFee = deliveryMethod === '퀵업체 배송' ? 20000 : 0
+  // 배송비 조회 함수
+  const handleDeliveryFeeInquiry = async () => {
+    if (deliveryMethod !== '퀵업체 배송') {
+      alert('퀵업체 배송만 요금 조회가 가능합니다.')
+      return
+    }
+
+    if (!orderInfo.address) {
+      alert('배송지 주소를 먼저 입력해주세요.')
+      return
+    }
+
+    if (!orderInfo.deliveryDate) {
+      alert('배송 날짜를 먼저 선택해주세요.')
+      return
+    }
+
+    if (!orderInfo.deliveryTime) {
+      alert('배송 시간을 먼저 선택해주세요.')
+      return
+    }
+
+    if (!orderData?.storeId) {
+      alert('가게 정보를 찾을 수 없습니다.')
+      return
+    }
+
+    setIsLoadingDeliveryFee(true)
+    try {
+      // 가게 정보 가져오기
+      const storeDoc = await getDoc(doc(db, 'stores', orderData.storeId))
+      if (!storeDoc.exists()) {
+        alert('가게 정보를 찾을 수 없습니다.')
+        setIsLoadingDeliveryFee(false)
+        return
+      }
+
+      const storeData = storeDoc.data()
+
+      // 출발지 주소 (가게 주소)
+      const startAddress = storeData?.address
+        ? `${storeData.address.city || ''} ${storeData.address.district || ''} ${storeData.address.dong || ''}`.trim()
+        : ''
+
+      if (!startAddress) {
+        alert('가게 주소 정보를 찾을 수 없습니다.')
+        setIsLoadingDeliveryFee(false)
+        return
+      }
+
+      // 도착지 주소
+      const destAddress = orderInfo.address
+
+      // 예약일시
+      const reservDatetimeUp = orderInfo.deliveryDate && orderInfo.deliveryTime
+        ? `${orderInfo.deliveryDate} ${orderInfo.deliveryTime}:00`
+        : undefined
+
+      console.log('[배송비 조회] 배송날짜:', orderInfo.deliveryDate)
+      console.log('[배송비 조회] 배송시간:', orderInfo.deliveryTime)
+      console.log('[배송비 조회] reservDatetimeUp:', reservDatetimeUp)
+
+      const response = await fetch('/api/quick-delivery/charge', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          serviceType: 'damas',
+          startAddress,
+          destAddress,
+          runtype: 0,
+          reservDatetimeUp,
+          upWay: 'free_customer',
+          downWay: 'free_customer',
+          deliveryItem: {
+            bgBox: 1
+          }
+        }),
+      })
+
+      const result = await response.json()
+
+      if (response.ok && result.data?.feeDetails?.feeTotal) {
+        setDeliveryFeeFromAPI(result.data.feeDetails.feeTotal)
+      } else {
+        alert(`배송비 조회 실패: ${result.errMsg || result.error || '알 수 없는 오류'}`)
+      }
+    } catch (error) {
+      console.error('배송비 조회 에러:', error)
+      alert('배송비 조회에 실패했습니다.')
+    } finally {
+      setIsLoadingDeliveryFee(false)
+    }
+  }
+
+  // 퀵업체 배송일 때만 배송비 적용 (API 조회 값이 있으면 그 값 사용, 없으면 0)
+  const deliveryFee = deliveryMethod === '퀵업체 배송' ? (deliveryFeeFromAPI || 0) : 0
+  // 배송비 프로모션 (퀵업체 배송이고 배송비가 조회되었을 때만 적용)
+  const deliveryPromotion = deliveryMethod === '퀵업체 배송' && deliveryFeeFromAPI ? 10000 : 0
   const totalProductPrice = orderData
     ? orderData.items.reduce((sum, item) => {
         // itemPrice가 있으면 그것을 사용, 없으면 기본 가격 * 수량
         return sum + (item.itemPrice || (orderData.productPrice * item.quantity))
       }, 0)
     : 0
-  const totalPrice = totalProductPrice + deliveryFee - usePoint
+  const totalPrice = totalProductPrice + deliveryFee - deliveryPromotion - usePoint
   const totalQuantity = orderData
     ? orderData.items.reduce((sum, item) => sum + item.quantity, 0)
     : 0
@@ -1009,10 +1109,36 @@ export default function PaymentsPage() {
               <span className={styles.paymentLabel}>총 상품금액</span>
               <span className={styles.paymentValue}>{totalProductPrice.toLocaleString()}원</span>
             </div>
-            <div className={styles.paymentRow}>
-              <span className={styles.paymentLabel}>배송비</span>
-              <span className={styles.paymentValue}>+{deliveryFee.toLocaleString()}원</span>
-            </div>
+            {deliveryMethod === '퀵업체 배송' && !deliveryFeeFromAPI && (
+              <div className={styles.paymentRow}>
+                <div>
+                  <div className={styles.paymentLabel}>배송비</div>
+                  <div className={styles.deliveryFeeNotice}>
+                    퀵 배송 선택 시, 반드시 배송비조회를 클릭해주세요!
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleDeliveryFeeInquiry}
+                  disabled={isLoadingDeliveryFee}
+                  className={styles.deliveryFeeInquiryButton}
+                >
+                  {isLoadingDeliveryFee ? '조회 중...' : '배송비 조회'}
+                </button>
+              </div>
+            )}
+            {deliveryMethod === '퀵업체 배송' && deliveryFeeFromAPI && (
+              <>
+                <div className={styles.paymentRow}>
+                  <span className={styles.paymentLabel}>배송비</span>
+                  <span className={styles.paymentValue}>+{deliveryFee.toLocaleString()}원</span>
+                </div>
+                <div className={styles.paymentRow}>
+                  <span className={styles.paymentLabel}>배송비 프로모션</span>
+                  <span className={styles.promotionValue}>-10,000원</span>
+                </div>
+              </>
+            )}
             <div className={styles.paymentRowPoint}>
               <span className={styles.paymentLabel}>포인트</span>
               <div className={styles.pointInputContainer}>

@@ -18,7 +18,6 @@
 
 .optionGroupExpanded {
   border-bottom: 1px solid #F5F5F5;
-  padding: 0 4px;
 }
 
 .optionHeader {
@@ -31,6 +30,18 @@
   color: #333;
   padding: 15px 20px;
   background: #F5F7F9;
+}
+
+.optionHeaderLeft {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.requiredBadge {
+  font-size: 12px;
+  font-weight: 500;
+  color: #EA4335;
 }
 
 .optionList {

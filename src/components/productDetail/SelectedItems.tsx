@@ -31,11 +31,28 @@ export default function SelectedItems({
   calculateItemPrice,
   calculateTotalPrice
 }: SelectedItemsProps) {
+  // 각 항목이 필수 옵션을 포함하는지 확인
+  const checkRequiredOptions = (item: CartItem) => {
+    if (!product.options) return true
+
+    const requiredOptions = product.options.filter(opt => opt.isRequired)
+    for (const requiredOption of requiredOptions) {
+      const optionValue = item.options[requiredOption.groupName]
+      if (!optionValue || optionValue.trim() === '') {
+        return false
+      }
+    }
+    return true
+  }
+
   return (
     <div className={styles.selectedSection}>
       <h3 className={styles.selectedTitle}>선택된 상품</h3>
       <div className={styles.selectedItem}>
-        {cartItems.map((item, index) => (
+        {cartItems.map((item, index) => {
+          const hasRequiredOptions = checkRequiredOptions(item)
+
+          return (
           <div key={index} className={styles.cartItemWrapper}>
             <div className={styles.selectedHeader}>
               <div className={styles.selectedName}>{product.name}</div>
@@ -51,6 +68,11 @@ export default function SelectedItems({
                 />
               </button>
             </div>
+            {!hasRequiredOptions && (
+              <div className={styles.requiredWarning}>
+                ⚠️ 필수 선택 사항이 포함되어야 합니다
+              </div>
+            )}
             {Object.entries(item.options).map(([groupName, optionValue]) => {
               // 쉼표로 구분된 여러 옵션을 분리
               const optionNames = optionValue.split(',').map(name => name.trim())
@@ -100,7 +122,8 @@ export default function SelectedItems({
               {calculateItemPrice(item.options, item.quantity).toLocaleString()}원
             </div>
           </div>
-        ))}
+          )
+        })}
       </div>
 
       {/* 매장 요청사항 */}

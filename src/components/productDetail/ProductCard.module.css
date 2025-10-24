@@ -13,7 +13,7 @@
 .productInfo {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
   padding: 0;
   flex: 1;
 }
@@ -27,18 +27,23 @@
 
 .categoryInfo {
   flex: 1;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
 }
 
 .productTypesContainer {
   display: flex;
   gap: 4px;
+  flex-shrink: 0;
 }
 
 .productTypeBadge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 4px 12px;
+  padding: 4px 6px;
   border-radius: 30px;
   background: #FFA813;
   color: #FFF;
@@ -53,9 +58,33 @@
   font-weight: 600;
   color: #333;
   margin: 0;
-  word-wrap: break-word;
-  word-break: break-word;
-  white-space: normal;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rating {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0;
+}
+
+.starIcon {
+  width: 16px;
+  height: 16px;
+}
+
+.ratingScore {
+  color: #333;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.reviewCount {
+  color: #999;
+  font-size: 14px;
+  font-weight: 500;
 }
 
 .priceSection {
@@ -95,18 +124,24 @@
   font-weight: 700;
 }
 
-.orderQuantity {
-  color: #999;
-  font-size: 12px;
-  font-weight: 500;
-  margin: 0;
+.orderQuantityRow {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
 }
 
-.minOrderDays {
+.orderLabel {
   color: #999;
-  font-size: 12px;
-  font-weight: 500;
-  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.orderValue {
+  color: #333;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: right;
 }
 
 .badgeContainerDesktop {
@@ -114,7 +149,6 @@
   gap: 6px;
   flex-wrap: wrap;
   margin: 0;
-  padding-top: 5px;
 }
 
 .badgeContainerMobile {
@@ -230,7 +264,6 @@
 .actionButtons {
   display: flex;
   gap: 8px;
-  margin-top: 8px;
 }
 
 .actionButton {
@@ -328,10 +361,6 @@
     width: 100%;
     aspect-ratio: 1 / 1;
     height: auto;
-  }
-
-  .productInfo {
-    padding: 16px 0;
   }
 
   .badgeContainerDesktop {

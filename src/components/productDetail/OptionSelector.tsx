@@ -38,7 +38,12 @@ export default function OptionSelector({
               className={styles.optionHeader}
               onClick={() => onToggleOption(option.groupName)}
             >
-              <span>{option.groupName}</span>
+              <div className={styles.optionHeaderLeft}>
+                <span>{option.groupName}</span>
+                {option.isRequired && (
+                  <span className={styles.requiredBadge}>*필수선택사항</span>
+                )}
+              </div>
               <Image
                 src={isExpanded ? '/icons/chevron-up.svg' : '/icons/chevron-down.svg'}
                 alt={isExpanded ? '접기' : '펼치기'}

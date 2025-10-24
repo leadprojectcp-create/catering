@@ -1,7 +1,6 @@
 'use client'
 
 import { memo } from 'react'
-import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { Product, Store } from './ProductDetailPage'
 import OptimizedImage from '@/components/common/OptimizedImage'
@@ -40,7 +39,7 @@ const ProductCard = memo(function ProductCard({
         <div className={styles.imageWrapper}>
           {product.images && product.images.length > 0 ? (
             <>
-              <Image
+              <OptimizedImage
                 src={product.images[currentImageIndex]}
                 alt={product.name}
                 fill
@@ -88,6 +87,7 @@ const ProductCard = memo(function ProductCard({
                   ))}
                 </div>
               )}
+              <h1 className={styles.productName}>{product.name}</h1>
             </div>
             <button
               className={`${styles.likeButton} ${isLiked ? styles.liked : ''}`}
@@ -101,7 +101,25 @@ const ProductCard = memo(function ProductCard({
               />
             </button>
           </div>
-          <h1 className={styles.productName}>{product.name}</h1>
+
+          {/* 별점 정보 */}
+          {product.reviewCount !== undefined && (
+            <div className={styles.rating}>
+              <OptimizedImage
+                src="/icons/star.png"
+                alt="별점"
+                width={16}
+                height={16}
+                className={styles.starIcon}
+              />
+              <span className={styles.ratingScore}>
+                {product.averageRating?.toFixed(1) || '0.0'}
+              </span>
+              <span className={styles.reviewCount}>
+                ({product.reviewCount?.toLocaleString() || '0'})
+              </span>
+            </div>
+          )}
 
           {/* 가격 정보 */}
           {product.discount && product.discountedPrice && product.discount.discountPercent > 0 ? (
@@ -112,20 +130,6 @@ const ProductCard = memo(function ProductCard({
             </div>
           ) : (
             <span className={styles.regularPrice}>{product.price.toLocaleString()}원</span>
-          )}
-
-          {/* 주문 가능 수량 */}
-          {product.minOrderQuantity && product.maxOrderQuantity && (
-            <div className={styles.orderQuantity}>
-              최소 {product.minOrderQuantity}개 ~ 최대 {product.maxOrderQuantity}개 주문가능
-            </div>
-          )}
-
-          {/* 최소 주문일 정보 */}
-          {product.minOrderDays && product.minOrderDays > 0 && (
-            <div className={styles.minOrderDays}>
-              최소 {product.minOrderDays}일 전 주문 가능
-            </div>
           )}
 
           {/* 추가 설정 - PC용 */}
@@ -141,6 +145,26 @@ const ProductCard = memo(function ProductCard({
               <span key={index} className={styles.settingBadge}>{setting}</span>
             ))}
           </div>
+
+          {/* 주문 가능 수량 */}
+          {product.minOrderQuantity && product.maxOrderQuantity && (
+            <div className={styles.orderQuantityRow}>
+              <span className={styles.orderLabel}>주문가능수량</span>
+              <span className={styles.orderValue}>
+                최소 {product.minOrderQuantity}개 ~ 최대 {product.maxOrderQuantity}개
+              </span>
+            </div>
+          )}
+
+          {/* 최소 주문일 정보 */}
+          {product.minOrderDays !== undefined && (
+            <div className={styles.orderQuantityRow}>
+              <span className={styles.orderLabel}>최소주문날짜</span>
+              <span className={styles.orderValue}>
+                {product.minOrderDays === 0 ? '당일 배송 가능' : `최소 ${product.minOrderDays}일 전 주문`}
+              </span>
+            </div>
+          )}
 
           {/* 채팅 및 가게 버튼 */}
           <div className={styles.actionButtons}>

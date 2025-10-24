@@ -139,6 +139,13 @@
   padding-left: 8px;
 }
 
+.additionalSettingsGroup {
+  display: flex;
+  flex-direction: row;
+  gap: 24px;
+  padding-left: 8px;
+}
+
 .checkboxLabel {
   display: flex;
   align-items: center;
@@ -226,7 +233,6 @@
 .inputWithUnit {
   position: relative;
   min-width: 200px;
-  width: fit-content;
 }
 
 .inputWithUnit .textInput {
@@ -243,6 +249,18 @@
   font-weight: 500;
   color: #999;
   pointer-events: none;
+}
+
+.minOrderDaysInput {
+  position: relative;
+  min-width: 200px;
+  width: -moz-fit-content;
+  width: fit-content;
+}
+
+.minOrderDaysInput .textInput {
+  padding-right: 40px;
+  min-width: 200px;
 }
 
 .imageSection {
@@ -432,6 +450,47 @@
   font-size: 14px;
   font-weight: 400;
   color: #333;
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.requiredCheckbox {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+  cursor: pointer;
+}
+
+.hiddenCheckbox {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.customCheckbox {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+}
+
+.customCheckbox img {
+  width: 20px;
+  height: 20px;
+}
+
+.requiredCheckbox span {
+  user-select: none;
 }
 
 .removeGroupButton {
@@ -834,17 +893,12 @@
 
 /* 반응형 */
 @media (max-width: 640px) {
-  .container {
-    padding: 12px;
-  }
-
-
   .categoryGrid {
     grid-template-columns: repeat(4, 1fr);
   }
 
   .quantityGrid {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
     gap: 12px;
   }
 
@@ -870,6 +924,19 @@
 
   .inputWithUnit .textInput {
     width: 100%;
+  }
+
+  .requiredCheckbox {
+    font-size: 13px;
+  }
+
+  .removeGroupButton {
+    font-size: 11px;
+  }
+
+  .additionalSettingsGroup {
+    flex-direction: column;
+    gap: 16px;
   }
 }
 

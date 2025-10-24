@@ -53,9 +53,12 @@ export interface Product {
   origin?: { ingredient: string; origin: string }[]
   storeId: string
   productTypes?: string[]
+  averageRating?: number
+  reviewCount?: number
   options?: {
     groupName: string
     values: { name: string; price: number }[]
+    isRequired?: boolean
   }[]
 }
 
@@ -188,10 +191,35 @@ const fetchProduct = async (productId: string): Promise<Product | null> => {
   try {
     const productDoc = await getDoc(doc(db, 'products', productId))
     if (productDoc.exists()) {
-      return {
+      const productData = {
         id: productDoc.id,
         ...productDoc.data()
       } as Product
+
+      // 리뷰 정보 가져오기
+      try {
+        const reviewsQuery = query(
+          collection(db, 'reviews'),
+          where('productId', '==', productId)
+        )
+        const reviewsSnapshot = await getDocs(reviewsQuery)
+        const reviews = reviewsSnapshot.docs.map(doc => doc.data())
+
+        if (reviews.length > 0) {
+          const totalRating = reviews.reduce((sum, review) => sum + (review.rating || 0), 0)
+          productData.averageRating = totalRating / reviews.length
+          productData.reviewCount = reviews.length
+        } else {
+          productData.averageRating = 0
+          productData.reviewCount = 0
+        }
+      } catch (error) {
+        console.error('리뷰 정보 가져오기 실패:', error)
+        productData.averageRating = 0
+        productData.reviewCount = 0
+      }
+
+      return productData
     }
     return null
   } catch (error) {
@@ -454,6 +482,23 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
       return
     }
 
+    // 필수 옵션 검증 - cartItems 중 최소 1개라도 필수 옵션을 포함하는지 확인
+    if (product.options) {
+      const requiredOptions = product.options.filter(opt => opt.isRequired)
+
+      for (const requiredOption of requiredOptions) {
+        const hasRequiredOption = cartItems.some(item => {
+          const optionValue = item.options[requiredOption.groupName]
+          return optionValue && optionValue.trim() !== ''
+        })
+
+        if (!hasRequiredOption) {
+          alert(`${requiredOption.groupName}을(를) 포함한 항목이 최소 1개 이상 필요합니다.`)
+          return
+        }
+      }
+    }
+
     // 전체 주문 수량 검증
     const totalQuantity = cartItems.reduce((total, item) => total + item.quantity, 0)
     const minQty = product.minOrderQuantity || 1
@@ -550,6 +595,23 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
     if (!deliveryMethod) {
       alert('배송방법을 선택해주세요.')
       return
+    }
+
+    // 필수 옵션 검증 - cartItems 중 최소 1개라도 필수 옵션을 포함하는지 확인
+    if (product.options) {
+      const requiredOptions = product.options.filter(opt => opt.isRequired)
+
+      for (const requiredOption of requiredOptions) {
+        const hasRequiredOption = cartItems.some(item => {
+          const optionValue = item.options[requiredOption.groupName]
+          return optionValue && optionValue.trim() !== ''
+        })
+
+        if (!hasRequiredOption) {
+          alert(`${requiredOption.groupName}을(를) 포함한 항목이 최소 1개 이상 필요합니다.`)
+          return
+        }
+      }
     }
 
     // 전체 주문 수량 검증

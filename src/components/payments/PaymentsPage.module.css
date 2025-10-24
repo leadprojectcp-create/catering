@@ -432,12 +432,46 @@
   border: 1px solid #F4F4F4;
   padding: 16px;
   background: white;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .paymentRow {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 8px;
+}
+
+.deliveryFeeInquiryButton {
+  display: inline-flex;
+  padding: 5px 10px;
+  justify-content: center;
+  align-items: center;
+  border-radius: 5px;
+  background: #F5F7F9;
+  border: none;
+  color: #025BD9;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.deliveryFeeInquiryButton:hover:not(:disabled) {
+  background: #E8ECF0;
+}
+
+.deliveryFeeInquiryButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.deliveryFeeNotice {
+  color: #EA4335;
+  font-size: 14px;
+  font-weight: 500;
+  margin-top: -4px;
+  padding-left: 0;
 }
 
 .paymentLabel {
@@ -449,6 +483,12 @@
 
 .paymentValue {
   color: #333;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.promotionValue {
+  color: #FF070B;
   font-size: 16px;
   font-weight: 600;
 }
