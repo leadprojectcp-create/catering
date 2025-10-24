@@ -21,7 +21,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px 20px;
+  padding: 10px 14px;
   border-radius: 20px;
   border: 1px solid #F4F4F4;
   background: white;
@@ -61,17 +61,24 @@
 
 .cartItem {
   display: flex;
-  gap: 20px;
-  padding: 20px;
+  flex-direction: column;
+  gap: 16px;
+  padding: 15px;
   border: 1px solid #e5e5e5;
   border-radius: 12px;
   background: white;
 }
 
+.itemTop {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
 .checkbox {
   appearance: none;
-  width: 24px;
-  height: 24px;
+  width: 20px;
+  height: 20px;
   cursor: pointer;
   flex-shrink: 0;
   background-image: url('/icons/check_empty.png');
@@ -79,6 +86,7 @@
   background-repeat: no-repeat;
   background-position: center;
   border: none;
+  align-self: center;
 }
 
 .checkbox:checked {
@@ -87,8 +95,8 @@
 
 .itemImage {
   position: relative;
-  width: 120px;
-  height: 120px;
+  width: 100px;
+  height: 100px;
   border-radius: 8px;
   overflow: hidden;
   background: #f5f5f5;
@@ -99,65 +107,173 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  justify-content: space-between;
+  height: 100px;
+}
+
+.storeName {
+  color: #999;
+  font-size: 14px;
+  font-weight: 500;
 }
 
 .itemName {
-  font-size: 18px;
-  font-weight: 600;
-  margin: 0;
   color: #333;
-}
-
-.itemOptionGroup {
-  margin-bottom: 8px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid #f0f0f0;
-}
-
-.itemOptionGroup:last-child {
-  border-bottom: none;
-  margin-bottom: 0;
-  padding-bottom: 0;
-}
-
-.itemOptions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  align-items: center;
-}
-
-.optionTag {
-  padding: 4px 12px;
-  background: #f5f5f5;
-  border-radius: 6px;
-  font-size: 13px;
-  color: #666;
-}
-
-.optionQuantity {
-  padding: 4px 8px;
-  background: #025BD9;
-  color: white;
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 16px;
+  font-weight: 700;
 }
 
 .itemPrice {
-  font-size: 20px;
+  color: #333;
+  font-size: 16px;
   font-weight: 700;
-  color: #025BD9;
-  margin-top: auto;
+  margin-top: 4px;
+}
+
+.optionsContainer {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.itemOptionGroup {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  background: #F5F7F9;
+  border-radius: 8px;
+}
+
+.optionsList {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.optionText {
+  color: #333;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.optionGroupName {
+  color: #999;
+}
+
+.optionQuantity {
+  color: #333;
+  font-size: 14px;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.divider {
+  width: 100%;
+  height: 1px;
+  background: #F0F0F3;
+}
+
+.itemPaymentInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.paymentHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.paymentTitle {
+  color: #333;
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.quoteButtons {
+  display: flex;
+  gap: 8px;
+}
+
+.quoteShareButton {
+  border-radius: 5px;
+  border: 1px solid #999;
+  background: white;
+  color: #4E5968;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+
+.quotePrintButton {
+  border-radius: 5px;
+  border: none;
+  background: #F5F7F9;
+  color: #4E5968;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+
+.itemPaymentRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.itemPaymentRow span:first-child {
+  color: #333;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.itemPaymentRow span:last-child {
+  color: #666;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.quantityValue {
+  color: #333 !important;
+  font-size: 16px !important;
+  font-weight: 600 !important;
+}
+
+.priceValue {
+  color: #025BD9 !important;
+  font-size: 16px !important;
+  font-weight: 700 !important;
+}
+
+.itemOrderButton {
+  width: 100%;
+  padding: 14px;
+  background: #025BD9;
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.itemOrderButton:hover {
+  background: #014aa8;
 }
 
 .itemActions {
   display: flex;
-  flex-direction: column;
-  gap: 15px;
-  align-items: flex-end;
-  justify-content: space-between;
+  gap: 8px;
+  align-items: flex-start;
 }
 
 .actionButtons {
@@ -199,37 +315,35 @@
 }
 
 .editButton {
-  padding: 8px 16px;
-  border: 1px solid #025BD9;
-  border-radius: 6px;
+  padding: 4px 8px;
+  border-radius: 5px;
+  border: 1px solid #F0F0F3;
   background: white;
-  color: #025BD9;
+  color: #333;
   cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
+  font-size: 15px;
+  font-weight: 600;
   transition: all 0.3s ease;
 }
 
 .editButton:hover {
-  background: #025BD9;
-  color: white;
+  background: #f5f5f5;
 }
 
 .deleteButton {
-  padding: 8px 16px;
-  border: 1px solid #ff4444;
-  border-radius: 6px;
+  padding: 4px 8px;
+  border-radius: 5px;
+  border: 1px solid #F0F0F3;
   background: white;
-  color: #ff4444;
+  color: #333;
   cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
+  font-size: 15px;
+  font-weight: 600;
   transition: all 0.3s ease;
 }
 
 .deleteButton:hover {
-  background: #ff4444;
-  color: white;
+  background: #f5f5f5;
 }
 
 /* 결제 정보 섹션 */
@@ -353,20 +467,36 @@
     font-size: 24px;
   }
 
+  .headerActions {
+    width: 100%;
+  }
+
   .cartItem {
     flex-direction: column;
     gap: 15px;
   }
 
-  .itemImage {
-    width: 100%;
-    height: 200px;
+  .itemTop {
+    flex-wrap: wrap;
+    gap: 10px 10px;
+    row-gap: 0;
   }
 
   .itemActions {
-    flex-direction: row;
-    justify-content: space-between;
+    order: -1;
     width: 100%;
+    justify-content: flex-end;
+    margin-bottom: 10px;
+  }
+
+  .itemImage {
+    width: 100px;
+    height: 100px;
+  }
+
+  .itemInfo {
+    flex: 1;
+    min-width: 0;
   }
 
   .itemsList {

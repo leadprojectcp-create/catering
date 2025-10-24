@@ -498,6 +498,8 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
           storeId: product.storeId,
           storeName: storeData?.storeName || '',
           productId: productId,
+          productName: product.name,
+          productImage: product.images?.[0] || '',
           items: orderItems,
           totalProductPrice: totalPrice,
           totalQuantity: totalQuantity,
@@ -571,6 +573,8 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
       const cartDoc = await addDoc(collection(db, 'shoppingCart'), {
         uid: user.uid,
         productId: productId,
+        productName: product.name,
+        productImage: product.images?.[0] || '',
         storeId: product.storeId,
         storeName: store?.storeName || '',
         items: orderItems,

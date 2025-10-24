@@ -34,9 +34,7 @@ html {
 
 @media (max-width: 768px) {
   .page-wrapper {
-    padding-top: 80px;
-    padding-left: 15px;
-    padding-right: 15px;
+    padding: 80px 15px 20px;
   }
 }
 
@@ -47,4 +45,15 @@ html {
 
 input, textarea, select {
   touch-action: manipulation;
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  .quote-estimate-overlay,
+  .quote-estimate-overlay * {
+    visibility: visible;
+  }
 }

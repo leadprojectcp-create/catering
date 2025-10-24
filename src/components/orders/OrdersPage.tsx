@@ -10,7 +10,6 @@ import { createOrGetChatRoom } from '@/lib/services/chatService'
 import { addCartItem } from '@/lib/services/cartService'
 import Loading from '@/components/Loading'
 import OrderCancelModal from './OrderCancelModal'
-import TaxInvoiceModal from './TaxInvoiceModal'
 import { ChevronDown, ChevronLeft, ChevronRight, Calendar } from 'lucide-react'
 import styles from './OrdersPage.module.css'
 
@@ -71,7 +70,6 @@ export default function OrdersPage() {
   const [loading, setLoading] = useState(true)
   const [orders, setOrders] = useState<Order[]>([])
   const [cancelOrderId, setCancelOrderId] = useState<string | null>(null)
-  const [taxInvoiceOrder, setTaxInvoiceOrder] = useState<{ orderId: string; paymentId: string; totalAmount: number } | null>(null)
   const [filterStatus, setFilterStatus] = useState<'all' | 'unpaid' | 'pending' | 'preparing' | 'shipping' | 'completed' | 'cancelled'>('all')
   const [deliveryMethodFilter, setDeliveryMethodFilter] = useState<'all' | '퀵업체 배송' | '매장 픽업'>('all')
   const [dateRange, setDateRange] = useState<{ start: Date | null; end: Date | null }>({ start: null, end: null })
@@ -443,6 +441,8 @@ export default function OrdersPage() {
         storeId: order.storeId,
         storeName: order.storeName,
         productId: order.items[0].productId,
+        productName: order.items[0].productName,
+        productImage: order.items[0].productImage,
         items: order.items.map(item => ({
           options: item.options,
           quantity: item.quantity
@@ -750,26 +750,18 @@ export default function OrdersPage() {
                     <>
                       <button
                         className={styles.detailButton}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          router.push(`/orders/${order.id}`)
+                        }}
+                      >
+                        주문상세
+                      </button>
+                      <button
+                        className={styles.detailButton}
                         onClick={(e) => handleAddToCart(order, e)}
                       >
                         장바구니 담기
-                      </button>
-                      <button
-                        className={styles.taxInvoiceButton}
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          if (!order.paymentId) {
-                            alert('결제 정보가 없습니다.')
-                            return
-                          }
-                          setTaxInvoiceOrder({
-                            orderId: order.id,
-                            paymentId: order.paymentId,
-                            totalAmount: order.totalPrice,
-                          })
-                        }}
-                      >
-                        세금계산서
                       </button>
                       {order.hasReview ? (
                         <button
@@ -858,17 +850,6 @@ export default function OrdersPage() {
             // 주문 목록 새로고침
             window.location.reload()
           }}
-        />
-      )}
-
-      {/* 세금계산서 발급 모달 */}
-      {taxInvoiceOrder && (
-        <TaxInvoiceModal
-          isOpen={!!taxInvoiceOrder}
-          onClose={() => setTaxInvoiceOrder(null)}
-          orderId={taxInvoiceOrder.orderId}
-          paymentId={taxInvoiceOrder.paymentId}
-          totalAmount={taxInvoiceOrder.totalAmount}
         />
       )}
     </>

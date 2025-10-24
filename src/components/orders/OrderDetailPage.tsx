@@ -9,6 +9,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { addCartItem } from '@/lib/services/cartService'
 import Loading from '@/components/Loading'
 import OrderCancelModal from './OrderCancelModal'
+import TaxInvoiceModal from './TaxInvoiceModal'
 import styles from './OrderDetailPage.module.css'
 
 interface KakaoShareOptions {
@@ -97,10 +98,31 @@ interface Order {
   orderNumber?: string
   createdAt: Date
   paidAt?: Date
+  payMethod?: string
+  usedPoint?: number
 }
 
 interface OrderDetailPageProps {
   params: Promise<{ id: string }>
+}
+
+// 결제수단 표시 변환 함수
+const getPayMethodName = (payMethod?: string): string => {
+  if (!payMethod) return '알 수 없음'
+
+  const payMethodMap: { [key: string]: string } = {
+    'card': '신용카드',
+    'trans': '퀵계좌이체',
+    'vbank': '가상계좌',
+    'payco': 'PAYCO',
+    'samsung': 'SAMSUNG PAY',
+    'kakao': '카카오페이',
+    'naver': '네이버페이',
+    'toss': '토스페이',
+    'apple': 'APPLE PAY'
+  }
+
+  return payMethodMap[payMethod] || payMethod
 }
 
 export default function OrderDetailPage({ params }: OrderDetailPageProps) {
@@ -110,6 +132,7 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
   const [order, setOrder] = useState<Order | null>(null)
   const [loading, setLoading] = useState(true)
   const [cancelOrderId, setCancelOrderId] = useState<string | null>(null)
+  const [showTaxInvoiceModal, setShowTaxInvoiceModal] = useState(false)
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -220,6 +243,8 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
         storeId: order.storeId,
         storeName: order.storeName,
         productId: order.items[0].productId,
+        productName: order.items[0].productName,
+        productImage: order.items[0].productImage,
         items: order.items.map(item => ({
           options: item.options,
           quantity: item.quantity
@@ -433,7 +458,15 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
 
         {/* 결제 정보 */}
         <div className={styles.sectionWrapper}>
-          <h2 className={styles.sectionTitle}>결제정보</h2>
+          <div className={styles.sectionHeader}>
+            <h2 className={styles.sectionTitle}>결제정보</h2>
+            <button
+              className={styles.taxInvoiceButton}
+              onClick={() => setShowTaxInvoiceModal(true)}
+            >
+              세금계산서 요청
+            </button>
+          </div>
           <section className={styles.paymentSection}>
             <div className={styles.infoRow}>
               <span className={styles.infoLabel}>상품금액</span>
@@ -441,9 +474,30 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
             </div>
             <div className={styles.infoRow}>
               <span className={styles.infoLabel}>배송비</span>
-              <span className={styles.infoValue}>{order.deliveryFee.toLocaleString()}원</span>
+              <span className={styles.infoValue}>+{order.deliveryFee.toLocaleString()}원</span>
             </div>
+            {order.usedPoint && order.usedPoint > 0 && (
+              <div className={styles.infoRow}>
+                <span className={styles.infoLabel}>포인트 사용</span>
+                <span className={styles.infoValue}>-{order.usedPoint.toLocaleString()}원</span>
+              </div>
+            )}
             <div className={styles.divider}></div>
+            {order.paidAt && (
+              <div className={styles.paymentDateInfo}>
+                {new Date(order.paidAt).toLocaleDateString('ko-KR', {
+                  year: 'numeric',
+                  month: '2-digit',
+                  day: '2-digit',
+                  weekday: 'short'
+                }).replace(/\. /g, '.').replace(/\.$/, '')} {new Date(order.paidAt).toLocaleTimeString('ko-KR', {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  second: '2-digit',
+                  hour12: false
+                })} {getPayMethodName(order.payMethod)} 결제
+              </div>
+            )}
             <div className={styles.infoRow}>
               <span className={styles.totalLabel}>총 결제금액</span>
               <span className={styles.totalValue}>{order.totalPrice.toLocaleString()}원</span>
@@ -503,6 +557,16 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
           onCancel={() => {
             router.push('/orders')
           }}
+        />
+      )}
+
+      {/* 세금계산서 모달 */}
+      {showTaxInvoiceModal && order && order.paymentId && (
+        <TaxInvoiceModal
+          orderId={order.id}
+          paymentId={order.paymentId}
+          totalAmount={order.totalPrice}
+          onClose={() => setShowTaxInvoiceModal(false)}
         />
       )}
     </div>

@@ -1,0 +1,324 @@
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.container {
+  background: white;
+  border-radius: 8px;
+  max-width: 900px;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+}
+
+.actions {
+  position: sticky;
+  top: 0;
+  background: white;
+  padding: 16px;
+  border-bottom: 1px solid #e5e5e5;
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  z-index: 10;
+}
+
+.printButton {
+  padding: 8px 16px;
+  background: #025BD9;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.closeButton {
+  padding: 8px 16px;
+  background: #f5f5f5;
+  color: #333;
+  border: none;
+  border-radius: 5px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* A4 용지 (210mm x 297mm) */
+.a4Page {
+  width: 210mm;
+  min-height: 297mm;
+  padding: 20mm;
+  margin: 0 auto;
+  background: white;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.title {
+  text-align: center;
+  font-size: 28px;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid #025BD9;
+}
+
+.header {
+  display: flex;
+  gap: 30px;
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.leftSection {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.dividerLine {
+  width: 1px;
+  background: #e5e5e5;
+  align-self: stretch;
+}
+
+.sectionLabel {
+  font-size: 16px;
+  font-weight: 700;
+  color: #025BD9;
+  margin-bottom: 8px;
+}
+
+.dateInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.supplierInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: right;
+}
+
+.headerLabel {
+  font-size: 14px;
+  font-weight: 600;
+  color: #666;
+}
+
+.headerValue {
+  font-size: 16px;
+  font-weight: 700;
+  color: #333;
+}
+
+.supplierDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.supplierName {
+  font-size: 16px;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 4px;
+}
+
+.supplierText {
+  font-size: 13px;
+  font-weight: 400;
+  color: #666;
+  line-height: 1.4;
+}
+
+.ceoLine {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.stampContainer {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stampText {
+  font-size: 13px;
+  font-weight: 400;
+  color: #666;
+  z-index: 1;
+}
+
+.stampImage {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+}
+
+.recipientLine {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.fieldLine {
+  width: 200px;
+  border-bottom: 1px solid #999;
+  height: 24px;
+}
+
+.recipientText {
+  font-size: 16px;
+  font-weight: 700;
+  color: #333;
+}
+
+.section {
+  margin-bottom: 30px;
+}
+
+.sectionTitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.infoRow {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.label {
+  font-weight: 600;
+  color: #666;
+}
+
+.value {
+  color: #333;
+}
+
+.optionsTable {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 12px;
+}
+
+.optionsTable th {
+  background: #f5f5f5;
+  padding: 12px;
+  text-align: left;
+  font-weight: 600;
+  color: #333;
+  border: 1px solid #e5e5e5;
+}
+
+.optionsTable td {
+  padding: 12px;
+  border: 1px solid #e5e5e5;
+  color: #333;
+}
+
+.optionsTable tbody tr:hover {
+  background: #f9f9f9;
+}
+
+.summaryRow {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.summaryLabel {
+  font-weight: 600;
+  color: #333;
+}
+
+.summaryValue {
+  color: #333;
+  font-weight: 600;
+}
+
+.totalAmount {
+  color: #025BD9;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.footer {
+  margin-top: 50px;
+  padding-top: 20px;
+  border-top: 1px solid #e5e5e5;
+  text-align: center;
+  color: #666;
+  font-size: 14px;
+}
+
+.date {
+  margin-top: 8px;
+  color: #999;
+}
+
+/* 인쇄 스타일 */
+@media print {
+  .overlay {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    background: white;
+    padding: 0;
+  }
+
+  .container {
+    max-width: none;
+    max-height: none;
+    box-shadow: none;
+    border-radius: 0;
+  }
+
+  .actions {
+    display: none;
+  }
+
+  .a4Page {
+    width: 210mm;
+    min-height: 297mm;
+    padding: 20mm;
+    margin: 0;
+    box-shadow: none;
+    page-break-after: always;
+  }
+
+  @page {
+    size: A4;
+    margin: 0;
+  }
+}

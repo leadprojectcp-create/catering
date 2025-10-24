@@ -441,6 +441,8 @@ export default function PaymentsPage() {
         totalProductPrice: totalProductPrice,
         deliveryFee: deliveryFee,
         deliveryMethod: deliveryMethod,
+        payMethod: payMethod, // 선택한 결제 수단 저장
+        usedPoint: usePoint, // 사용한 포인트 저장
         // 배송 정보를 Map 형태로 저장
         deliveryInfo: {
           addressName: addressName, // 배송지명

@@ -6,7 +6,6 @@ import { getTaxInvoiceInfo, saveTaxInvoiceInfo } from '@/lib/services/taxInvoice
 import styles from './TaxInvoiceModal.module.css'
 
 interface TaxInvoiceModalProps {
-  isOpen: boolean
   onClose: () => void
   paymentId: string
   orderId: string
@@ -14,7 +13,6 @@ interface TaxInvoiceModalProps {
 }
 
 export default function TaxInvoiceModal({
-  isOpen,
   onClose,
   paymentId,
   orderId,
@@ -34,7 +32,7 @@ export default function TaxInvoiceModal({
   // 저장된 세금계산서 정보 불러오기
   useEffect(() => {
     const loadTaxInvoiceInfo = async () => {
-      if (!user?.uid || !isOpen) return
+      if (!user?.uid) return
 
       setIsLoading(true)
       try {
@@ -56,9 +54,7 @@ export default function TaxInvoiceModal({
     }
 
     loadTaxInvoiceInfo()
-  }, [user?.uid, isOpen])
-
-  if (!isOpen) return null
+  }, [user?.uid])
 
   // 사업자등록번호 포맷팅 함수 (000-00-00000)
   const formatBusinessNumber = (value: string) => {

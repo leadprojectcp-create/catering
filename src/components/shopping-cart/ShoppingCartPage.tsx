@@ -8,6 +8,7 @@ import { getCartItems, deleteCartItem, updateCartItem, type CartItem, type CartI
 import { doc, getDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import Loading from '@/components/Loading'
+import QuoteEstimate from './QuoteEstimate'
 import styles from './ShoppingCartPage.module.css'
 
 interface Product {
@@ -25,6 +26,7 @@ export default function ShoppingCartPage() {
   const [cartItems, setCartItems] = useState<CartItem[]>([])
   const [selectedItems, setSelectedItems] = useState<string[]>([])
   const [products, setProducts] = useState<{ [key: string]: Product }>({})
+  const [quoteItem, setQuoteItem] = useState<CartItem | null>(null)
 
   useEffect(() => {
     if (!user) {
@@ -302,95 +304,120 @@ export default function ShoppingCartPage() {
         <div className={styles.itemsList}>
           {cartItems.map(item => (
               <div key={item.id} className={styles.cartItem}>
-                <input
-                  type="checkbox"
-                  checked={selectedItems.includes(item.id!)}
-                  onChange={() => handleSelectItem(item.id!)}
-                  className={styles.checkbox}
-                />
+                <div className={styles.itemTop}>
+                  <input
+                    type="checkbox"
+                    checked={selectedItems.includes(item.id!)}
+                    onChange={() => handleSelectItem(item.id!)}
+                    className={styles.checkbox}
+                  />
 
-                <div className={styles.itemImage}>
-                  {(products[item.productId]?.images?.[0] || item.productImage) && (
-                    <Image
-                      src={products[item.productId]?.images?.[0] || item.productImage || ''}
-                      alt={item.productName || '상품'}
-                      fill
-                      style={{ objectFit: 'cover' }}
-                    />
-                  )}
-                </div>
-
-                <div className={styles.itemInfo}>
-                  <h3 className={styles.itemName}>{item.productName || '상품'}</h3>
-                  <p className={styles.storeName}>{item.storeName}</p>
-                  {/* items 배열의 모든 옵션 표시 */}
-                  {item.items.map((itemOption, index) => (
-                    <div key={index} className={styles.itemOptionGroup}>
-                      <div className={styles.itemOptions}>
-                        {Object.entries(itemOption.options).map(([groupName, value]) => (
-                          <span key={groupName} className={styles.optionTag}>
-                            {groupName}: {value}
-                          </span>
-                        ))}
-                        <span className={styles.optionQuantity}>x {itemOption.quantity}</span>
-                      </div>
-                    </div>
-                  ))}
-                  <div className={styles.itemPrice}>
-                    합계: {(item.totalProductPrice || calculateItemPrice(item)).toLocaleString()}원
+                  <div className={styles.itemImage}>
+                    {item.productImage && (
+                      <Image
+                        src={item.productImage}
+                        alt={item.productName || '상품'}
+                        width={100}
+                        height={100}
+                        style={{ objectFit: 'cover' }}
+                      />
+                    )}
                   </div>
-                </div>
 
-                <div className={styles.itemActions}>
-                  <div className={styles.actionButtons}>
+                  <div className={styles.itemInfo}>
+                    <div className={styles.storeName}>{item.storeName}</div>
+                    <div className={styles.itemName}>{item.productName || '상품'}</div>
+                    <div className={styles.itemPrice}>
+                      {(item.totalProductPrice || calculateItemPrice(item)).toLocaleString()}원
+                    </div>
+                  </div>
+
+                  <div className={styles.itemActions}>
                     <button
                       onClick={() => handleEditItem(item)}
                       className={styles.editButton}
                     >
-                      수정
+                      주문수정
                     </button>
                     <button
                       onClick={() => handleDeleteItem(item.id!)}
                       className={styles.deleteButton}
                     >
-                      삭제
+                      주문삭제
                     </button>
                   </div>
+                </div>
+
+                {/* items 배열의 모든 옵션 표시 */}
+                <div className={styles.optionsContainer}>
+                  {item.items.map((itemOption, index) => (
+                    <div key={index} className={styles.itemOptionGroup}>
+                      <div className={styles.optionsList}>
+                        {Object.entries(itemOption.options).map(([groupName, value]) => {
+                          // 옵션 가격 찾기
+                          let optionPrice = 0
+                          if (itemOption.optionsWithPrices && itemOption.optionsWithPrices[groupName]) {
+                            optionPrice = itemOption.optionsWithPrices[groupName].price
+                          }
+                          return (
+                            <div key={groupName} className={styles.optionText}>
+                              <span className={styles.optionGroupName}>[{groupName}]</span> {value} +{optionPrice.toLocaleString()}원
+                            </div>
+                          )
+                        })}
+                      </div>
+                      <span className={styles.optionQuantity}>{itemOption.quantity}개</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* 구분선 */}
+                <div className={styles.divider}></div>
+
+                {/* 개별 주문 정보 */}
+                <div className={styles.itemPaymentInfo}>
+                  <div className={styles.paymentHeader}>
+                    <h3 className={styles.paymentTitle}>결제 예상 금액</h3>
+                    <div className={styles.quoteButtons}>
+                      <button className={styles.quoteShareButton}>견적서 공유</button>
+                      <button
+                        className={styles.quotePrintButton}
+                        onClick={() => setQuoteItem(item)}
+                      >
+                        견적서 출력
+                      </button>
+                    </div>
+                  </div>
+                  <div className={styles.itemPaymentRow}>
+                    <span>총 상품수량</span>
+                    <span className={styles.quantityValue}>{item.totalQuantity || item.items.reduce((sum, opt) => sum + opt.quantity, 0)}개</span>
+                  </div>
+                  <div className={styles.itemPaymentRow}>
+                    <span>총 결제금액</span>
+                    <span className={styles.priceValue}>
+                      {(item.totalProductPrice || calculateItemPrice(item)).toLocaleString()}원
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setSelectedItems([item.id!])
+                      handleOrder()
+                    }}
+                    className={styles.itemOrderButton}
+                  >
+                    주문하기
+                  </button>
                 </div>
               </div>
             ))}
         </div>
 
-        {/* 하단 고정 결제 정보 */}
-        <div className={styles.paymentSection}>
-          <div className={styles.paymentRow}>
-            <span>선택 상품</span>
-            <span>{selectedItems.length}개</span>
-          </div>
-          <div className={styles.paymentRow}>
-            <span>총 수량</span>
-            <span>
-              {cartItems
-                .filter(item => selectedItems.includes(item.id!))
-                .reduce((sum, item) => {
-                  if (item.totalQuantity) {
-                    return sum + item.totalQuantity
-                  }
-                  const itemTotal = item.items.reduce((itemSum, opt) => itemSum + opt.quantity, 0)
-                  return sum + itemTotal
-                }, 0)}개
-            </span>
-          </div>
-          <div className={styles.paymentTotal}>
-            <span>총 결제금액</span>
-            <span className={styles.totalPrice}>
-              {calculateTotalPrice().toLocaleString()}원
-            </span>
-          </div>
-          <button onClick={handleOrder} className={styles.orderButton}>
-            주문하기
-          </button>
-        </div>
+        {quoteItem && (
+          <QuoteEstimate
+            item={quoteItem}
+            onClose={() => setQuoteItem(null)}
+          />
+        )}
       </div>
   )
 }
