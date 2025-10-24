@@ -11,6 +11,7 @@ import { createOrGetChatRoom } from '@/lib/services/chatService'
 import { useAuth } from '@/contexts/AuthContext'
 import Loading from '@/components/Loading'
 import ProductList from '@/components/store/ProductList'
+import OptimizedImage from '@/components/common/OptimizedImage'
 import styles from './StoreDetail.module.css'
 
 interface Store {
@@ -233,8 +234,8 @@ export default function StoreDetail({ storeId }: StoreDetailProps) {
               className={`${styles.likeButton} ${isLiked ? styles.liked : ''}`}
               onClick={handleLikeToggle}
             >
-              <Image
-                src={isLiked ? "/icons/heart-filled.png" : "/icons/heart.png"}
+              <OptimizedImage
+                src={isLiked ? "/icons/heart_active.png" : "/icons/heart.png"}
                 alt="좋아요"
                 width={24}
                 height={24}

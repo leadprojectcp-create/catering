@@ -16,6 +16,7 @@ import PrivacyPolicy from '@/components/terms/PrivacyPolicy'
 import RefundPolicy from '@/components/terms/RefundPolicy'
 import PaymentTerms from './PaymentTerms'
 import { requestPayment, PayMethod } from '@/lib/services/paymentService'
+import OptimizedImage from '@/components/common/OptimizedImage'
 import styles from './PaymentsPage.module.css'
 
 // 결제 수단 타입 (UI용)
@@ -907,7 +908,7 @@ export default function PaymentsPage() {
               className={`${styles.paymentMethodBox} ${payMethod === 'card' ? styles.paymentMethodBoxSelected : ''}`}
               onClick={() => setPayMethod('card')}
             >
-              <span>신용카드</span>
+              <span>신용•체크카드</span>
             </div>
             <div
               className={`${styles.paymentMethodBox} ${payMethod === 'trans' ? styles.paymentMethodBoxSelected : ''}`}
@@ -925,37 +926,73 @@ export default function PaymentsPage() {
               className={`${styles.paymentMethodBox} ${payMethod === 'payco' ? styles.paymentMethodBoxSelected : ''}`}
               onClick={() => setPayMethod('payco')}
             >
-              <span>PAYCO</span>
+              <OptimizedImage
+                src="/payments-icons/payco.png"
+                alt="PAYCO"
+                width={120}
+                height={45}
+                style={{ objectFit: 'contain' }}
+              />
             </div>
             <div
               className={`${styles.paymentMethodBox} ${payMethod === 'samsung' ? styles.paymentMethodBoxSelected : ''}`}
               onClick={() => setPayMethod('samsung')}
             >
-              <span>SAMSUNGPAY</span>
+              <OptimizedImage
+                src="/payments-icons/samsungpay.png"
+                alt="SAMSUNG PAY"
+                width={120}
+                height={45}
+                style={{ objectFit: 'contain' }}
+              />
             </div>
             <div
               className={`${styles.paymentMethodBox} ${payMethod === 'kakao' ? styles.paymentMethodBoxSelected : ''}`}
               onClick={() => setPayMethod('kakao')}
             >
-              <span>KAKAOPAY</span>
+              <OptimizedImage
+                src="/payments-icons/kakaopay.png"
+                alt="KAKAO PAY"
+                width={120}
+                height={45}
+                style={{ objectFit: 'contain' }}
+              />
             </div>
             <div
               className={`${styles.paymentMethodBox} ${payMethod === 'naver' ? styles.paymentMethodBoxSelected : ''}`}
               onClick={() => setPayMethod('naver')}
             >
-              <span>NAVERPAY</span>
+              <OptimizedImage
+                src="/payments-icons/npay.png"
+                alt="NAVER PAY"
+                width={120}
+                height={45}
+                style={{ objectFit: 'contain' }}
+              />
             </div>
             <div
               className={`${styles.paymentMethodBox} ${payMethod === 'toss' ? styles.paymentMethodBoxSelected : ''}`}
               onClick={() => setPayMethod('toss')}
             >
-              <span>TOSSPAY</span>
+              <OptimizedImage
+                src="/payments-icons/tosspay.png"
+                alt="TOSS PAY"
+                width={120}
+                height={45}
+                style={{ objectFit: 'contain' }}
+              />
             </div>
             <div
               className={`${styles.paymentMethodBox} ${payMethod === 'apple' ? styles.paymentMethodBoxSelected : ''}`}
               onClick={() => setPayMethod('apple')}
             >
-              <span>APPLEPAY</span>
+              <OptimizedImage
+                src="/payments-icons/applepay.png"
+                alt="APPLE PAY"
+                width={120}
+                height={45}
+                style={{ objectFit: 'contain' }}
+              />
             </div>
           </div>
         </section>

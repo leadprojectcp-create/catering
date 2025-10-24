@@ -47,7 +47,27 @@ export default function QuoteEstimate({ item, onClose }: QuoteEstimateProps) {
 
         {/* A4 용지 */}
         <div className={styles.a4Page}>
-          <h1 className={styles.title}>견적서</h1>
+          {/* 워터마크 */}
+          <div className={styles.watermark}>
+            <Image
+              src="/assets/logo.png"
+              alt="워터마크"
+              width={600}
+              height={600}
+              className={styles.watermarkImage}
+            />
+          </div>
+
+          <div className={styles.titleSection}>
+            <Image
+              src="/assets/logo.png"
+              alt="로고"
+              width={80}
+              height={80}
+              className={styles.titleLogo}
+            />
+            <h1 className={styles.title}>견적서</h1>
+          </div>
 
           {/* 날짜와 공급자 정보 */}
           <div className={styles.header}>
@@ -111,22 +131,33 @@ export default function QuoteEstimate({ item, onClose }: QuoteEstimateProps) {
                 </tr>
               </thead>
               <tbody>
-                {item.items.map((itemOption, index) => (
-                  <React.Fragment key={index}>
-                    {Object.entries(itemOption.options).map(([groupName, value]) => {
-                      const optionPrice = itemOption.optionsWithPrices?.[groupName]?.price || 0
-                      const subtotal = optionPrice * itemOption.quantity
-                      return (
-                        <tr key={groupName}>
-                          <td>[{groupName}] {value}</td>
-                          <td>+{optionPrice.toLocaleString()}원</td>
-                          <td>{itemOption.quantity}개</td>
-                          <td>{subtotal.toLocaleString()}원</td>
-                        </tr>
-                      )
-                    })}
-                  </React.Fragment>
-                ))}
+                {item.items.map((itemOption, index) => {
+                  const optionEntries = Object.entries(itemOption.options)
+                  const totalPrice = optionEntries.reduce((sum, [groupName]) => {
+                    const optionPrice = itemOption.optionsWithPrices?.[groupName]?.price || 0
+                    return sum + optionPrice
+                  }, 0) * itemOption.quantity
+
+                  return (
+                    <React.Fragment key={index}>
+                      {optionEntries.map(([groupName, value], optionIndex) => {
+                        const optionPrice = itemOption.optionsWithPrices?.[groupName]?.price || 0
+                        return (
+                          <tr key={groupName}>
+                            <td>[{groupName}] {value}</td>
+                            <td>+{optionPrice.toLocaleString()}원</td>
+                            {optionIndex === 0 && (
+                              <>
+                                <td rowSpan={optionEntries.length}>{itemOption.quantity}개</td>
+                                <td rowSpan={optionEntries.length}>{totalPrice.toLocaleString()}원</td>
+                              </>
+                            )}
+                          </tr>
+                        )
+                      })}
+                    </React.Fragment>
+                  )
+                })}
               </tbody>
             </table>
           </div>
@@ -143,9 +174,6 @@ export default function QuoteEstimate({ item, onClose }: QuoteEstimateProps) {
             </div>
           </div>
 
-          <div className={styles.footer}>
-            <p>본 견적서는 참고용입니다.</p>
-          </div>
         </div>
       </div>
     </div>

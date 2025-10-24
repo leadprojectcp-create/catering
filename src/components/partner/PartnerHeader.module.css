@@ -231,6 +231,7 @@
     top: 60px;
     right: calc(50% - 640px + 20px);
     width: 280px;
+    max-height: calc(100vh - 80px);
     overflow-y: auto;
     border-radius: 12px;
     transform: translateY(-10px);
