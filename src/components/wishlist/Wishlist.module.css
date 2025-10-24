@@ -1,17 +1,414 @@
 .container {
-  max-width: 1280px;
+  max-width: 800px;
   margin: 0 auto;
 }
 
-.content {
-  padding: 20px 0;
+.title {
+  color: #333;
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 24px;
 }
 
-.title {
-  font-size: 32px;
+.tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+  border-radius: 10px;
+  background: #F4F4F4;
+  padding: 4px;
+}
+
+.tab {
+  flex: 1;
+  padding: 12px 24px;
+  border-radius: 10px;
+  border: 1px solid #F4F4F4;
+  background: #FFF;
+  color: #999;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.tab:hover {
+  color: #666;
+}
+
+.activeTab {
+  border-radius: 10px;
+  border: 2px solid #025BD9 !important;
+  background: #FFF;
+  color: #025BD9 !important;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+/* StoreList 스타일 - 찜한 가게용 */
+.storeGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 5px;
+}
+
+.storeCard {
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  max-width: 400px;
+}
+
+.imageSlider {
+  position: relative;
+  width: 100%;
+  height: auto;
+  background-color: white;
+  overflow: visible;
+  display: flex;
+  align-items: center;
+}
+
+.storeSwiper {
+  width: 100%;
+  height: auto;
+}
+
+.storeSwiper :global(.swiper-slide) {
+  width: calc((100% - 10px) / 3) !important;
+  height: auto !important;
+  aspect-ratio: 1 / 1;
+}
+
+.imageWrapper {
+  position: relative;
+  width: 100% !important;
+  height: 100% !important;
+  aspect-ratio: 1 / 1;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.cardImage {
+  object-fit: cover;
+  border-radius: 10px;
+}
+
+.placeholderImage {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 48px;
+  background-color: #F5F5F5;
+}
+
+/* Swiper 네비게이션 커스텀 */
+.storeSwiper :global(.swiper-button-prev),
+.storeSwiper :global(.swiper-button-next) {
+  width: 30px !important;
+  height: 30px !important;
+  background: rgba(255, 255, 255, 0.5) !important;
+  border-radius: 50% !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08) !important;
+  transition: all 0.3s ease !important;
+}
+
+.storeSwiper :global(.swiper-button-prev):hover,
+.storeSwiper :global(.swiper-button-next):hover {
+  background: rgba(255, 255, 255, 0.95) !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15) !important;
+}
+
+.storeSwiper :global(.swiper-button-prev svg),
+.storeSwiper :global(.swiper-button-next svg) {
+  display: none !important;
+}
+
+.storeSwiper :global(.swiper-button-prev)::after,
+.storeSwiper :global(.swiper-button-next)::after {
+  content: '' !important;
+}
+
+.storeSwiper :global(.swiper-button-prev)::before {
+  content: '‹' !important;
+  font-size: 18px !important;
+  color: #666 !important;
+  font-weight: normal !important;
+  transition: color 0.3s ease !important;
+}
+
+.storeSwiper :global(.swiper-button-next)::before {
+  content: '›' !important;
+  font-size: 18px !important;
+  color: #666 !important;
+  font-weight: normal !important;
+  transition: color 0.3s ease !important;
+}
+
+.storeSwiper :global(.swiper-button-prev):hover::before,
+.storeSwiper :global(.swiper-button-next):hover::before {
+  color: #333 !important;
+}
+
+.storeSwiper :global(.swiper-button-prev) {
+  left: 5px !important;
+  z-index: 10 !important;
+  pointer-events: auto !important;
+}
+
+.storeSwiper :global(.swiper-button-next) {
+  right: 5px !important;
+  z-index: 10 !important;
+  pointer-events: auto !important;
+}
+
+.storeSwiper :global(.swiper-button-disabled) {
+  opacity: 0.3;
+  display: none;
+}
+
+.cardInfo {
+  padding: 12px 0;
+}
+
+.categoryRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.district {
+  color: #999;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  margin-left: auto;
+}
+
+.category {
+  color: #237AF2;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.cardTitle {
+  font-size: 16px;
   font-weight: 700;
   color: #333;
-  margin-bottom: 32px;
+  margin: 0;
+  flex: 1;
+}
+
+.ratingRow {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.star {
+  font-size: 14px;
+}
+
+.ratingNumber {
+  font-size: 14px;
+  font-weight: 700;
+  color: #333;
+}
+
+.reviewCount {
+  font-size: 14px;
+  color: #999;
+}
+
+/* CategoryProductList 스타일 - 찜한 상품용 */
+.productGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 40px;
+  justify-items: center;
+  align-items: start;
+}
+
+.productCard {
+  display: flex;
+  flex-direction: column;
+  width: 180px;
+  background: white;
+  cursor: pointer;
+  border: none;
+  padding: 0;
+}
+
+.productImageWrapper {
+  position: relative;
+  width: 180px;
+  height: 180px;
+  background: #f5f5f5;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.image {
+  object-fit: cover;
+}
+
+.productPlaceholderImage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  background: #f5f5f5;
+  color: #999;
+  font-size: 14px;
+}
+
+.info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.storeName {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #999;
+  font-size: 12px;
+  font-weight: 500;
+  margin: 0;
+}
+
+.productName {
+  color: #333;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 150%;
+  margin: 0;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  word-break: break-word;
+  min-width: 0;
+}
+
+.minOrderDays {
+  color: #999;
+  font-size: 12px;
+  font-weight: 500;
+  margin: 0;
+}
+
+.rating {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0;
+}
+
+.starIcon {
+  width: 16px;
+  height: 16px;
+}
+
+.ratingScore {
+  color: #333;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.reviewCount {
+  color: #999;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.priceSection {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+}
+
+.originalPrice {
+  color: #999;
+  font-size: 11px;
+  font-weight: 500;
+  text-decoration: line-through;
+}
+
+.discountRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.discountedPrice {
+  color: #333;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.discountPercent {
+  color: #EA4335;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.regularPrice {
+  color: #333;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.orderQuantity {
+  color: #999;
+  font-size: 12px;
+  font-weight: 500;
+  margin: 0;
+}
+
+.badgeContainerDesktop {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin: 0;
+  padding-top: 5px;
+}
+
+.badgeContainerMobile {
+  display: none;
+}
+
+.settingBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 8px;
+  background: transparent;
+  color: #025BD9;
+  border-radius: 3px;
+  border: 1px solid #025BD9;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
 }
 
 .emptyState {
@@ -37,13 +434,39 @@
 }
 
 @media (max-width: 768px) {
-  .container {
-    padding: 24px 16px;
-    padding-bottom: 80px; /* 바텀 네비게이터 공간 확보 */
-  }
-
   .title {
     font-size: 24px;
+  }
+
+  .storeGrid {
+    grid-template-columns: repeat(1, 1fr);
+    gap: 12px;
+  }
+
+  .productGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .productCard {
+    width: 100%;
+  }
+
+  .productImageWrapper {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1 / 1;
+  }
+
+  .badgeContainerDesktop {
+    display: none;
+  }
+
+  .badgeContainerMobile {
+    display: flex;
+    width: 100%;
+    gap: 6px;
+    flex-wrap: wrap;
   }
 
   .emptyState {

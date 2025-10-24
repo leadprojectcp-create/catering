@@ -47,6 +47,30 @@ service cloud.firestore {
 
       // 관리자는 모든 필드 수정 가능
       allow update: if isAdmin();
+
+      // likedStores subcollection - 사용자가 좋아요한 가게
+      match /likedStores/{storeId} {
+        // 본인만 읽기 가능
+        allow read: if isSignedIn() && isOwner(userId);
+
+        // 본인만 생성/삭제 가능
+        allow create, delete: if isSignedIn() && isOwner(userId);
+
+        // 수정 불가
+        allow update: if false;
+      }
+
+      // likedProducts subcollection - 사용자가 좋아요한 상품
+      match /likedProducts/{productId} {
+        // 본인만 읽기 가능
+        allow read: if isSignedIn() && isOwner(userId);
+
+        // 본인만 생성/삭제 가능
+        allow create, delete: if isSignedIn() && isOwner(userId);
+
+        // 수정 불가
+        allow update: if false;
+      }
     }
 
     // Products collection (상품)
@@ -60,6 +84,10 @@ service cloud.firestore {
       // 본인 상품만 수정/삭제 가능
       allow update, delete: if isSignedIn() &&
         resource.data.partnerId == request.auth.uid;
+
+      // likeCount 업데이트는 로그인한 사용자만 가능
+      allow update: if isSignedIn() &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likeCount']);
 
       // 관리자는 모든 상품 수정/삭제 가능
       allow update, delete: if isAdmin();

@@ -1,5 +1,5 @@
 import { db } from '@/lib/firebase'
-import { collection, addDoc, doc, getDoc, getDocs, query, where, updateDoc, deleteDoc, orderBy, limit } from 'firebase/firestore'
+import { collection, addDoc, doc, getDoc, getDocs, query, where, updateDoc, deleteDoc, orderBy, limit, increment, serverTimestamp } from 'firebase/firestore'
 import { auth } from '@/lib/firebase'
 
 export interface ProductData {
@@ -272,4 +272,111 @@ export async function updateProductStatus(productId: string, status: 'active' | 
     status,
     updatedAt: new Date().toISOString()
   })
+}
+
+/**
+ * 사용자가 특정 제품을 좋아요했는지 확인
+ */
+export async function checkUserLikedProduct(userId: string, productId: string): Promise<boolean> {
+  try {
+    const q = query(
+      collection(db, 'likes'),
+      where('userId', '==', userId),
+      where('productId', '==', productId)
+    )
+    const querySnapshot = await getDocs(q)
+    return !querySnapshot.empty
+  } catch (error) {
+    console.error('좋아요 상태 확인 실패:', error)
+    return false
+  }
+}
+
+/**
+ * 제품 좋아요 추가
+ */
+export async function addProductLike(
+  userId: string,
+  productId: string,
+  productName: string,
+  productImage?: string
+): Promise<void> {
+  try {
+    // likes 컬렉션에 추가
+    await addDoc(collection(db, 'likes'), {
+      userId,
+      productId,
+      productName,
+      productImage: productImage || null,
+      likedAt: serverTimestamp()
+    })
+
+    // products의 likeCount 증가
+    const productRef = doc(db, 'products', productId)
+    await updateDoc(productRef, {
+      likeCount: increment(1)
+    })
+
+    console.log(`User ${userId} liked product ${productId}`)
+  } catch (error) {
+    console.error('좋아요 추가 실패:', error)
+    throw error
+  }
+}
+
+/**
+ * 제품 좋아요 제거
+ */
+export async function removeProductLike(userId: string, productId: string): Promise<void> {
+  try {
+    // likes 컬렉션에서 찾아서 삭제
+    const q = query(
+      collection(db, 'likes'),
+      where('userId', '==', userId),
+      where('productId', '==', productId)
+    )
+    const querySnapshot = await getDocs(q)
+
+    // 모든 매칭되는 문서 삭제 (보통 1개)
+    const deletePromises = querySnapshot.docs.map(docSnapshot =>
+      deleteDoc(doc(db, 'likes', docSnapshot.id))
+    )
+    await Promise.all(deletePromises)
+
+    // products의 likeCount 감소
+    const productRef = doc(db, 'products', productId)
+    await updateDoc(productRef, {
+      likeCount: increment(-1)
+    })
+
+    console.log(`User ${userId} unliked product ${productId}`)
+  } catch (error) {
+    console.error('좋아요 제거 실패:', error)
+    throw error
+  }
+}
+
+/**
+ * 제품 좋아요 토글 (추가/제거)
+ */
+export async function toggleProductLike(
+  userId: string,
+  productId: string,
+  productName: string,
+  productImage?: string
+): Promise<boolean> {
+  try {
+    const isLiked = await checkUserLikedProduct(userId, productId)
+
+    if (isLiked) {
+      await removeProductLike(userId, productId)
+      return false
+    } else {
+      await addProductLike(userId, productId, productName, productImage)
+      return true
+    }
+  } catch (error) {
+    console.error('좋아요 토글 실패:', error)
+    throw error
+  }
 }

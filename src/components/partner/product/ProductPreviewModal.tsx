@@ -49,6 +49,10 @@ export default function ProductPreviewModal({ product, onClose }: ProductPreview
     setIsDescriptionExpanded(prev => !prev)
   }
 
+  const handleLikeToggle = () => {
+    // Preview modal doesn't have like functionality
+  }
+
   // ProductCard에 맞는 형식으로 변환
   // 할인이 실제로 적용되어 있는지 확인
   const hasValidDiscount = product.discountedPrice && product.discount && product.discount.discountPercent > 0
@@ -79,9 +83,11 @@ export default function ProductPreviewModal({ product, onClose }: ProductPreview
             user={null}
             currentImageIndex={currentImageIndex}
             isDescriptionExpanded={isDescriptionExpanded}
+            isLiked={false}
             onPrevImage={handlePrevImage}
             onNextImage={handleNextImage}
             onToggleDescription={handleToggleDescription}
+            onLikeToggle={handleLikeToggle}
           />
         </div>
       </div>

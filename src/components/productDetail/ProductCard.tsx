@@ -4,6 +4,7 @@ import { memo } from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { Product, Store } from './ProductDetailPage'
+import OptimizedImage from '@/components/common/OptimizedImage'
 import styles from './ProductCard.module.css'
 
 interface ProductCardProps {
@@ -12,9 +13,11 @@ interface ProductCardProps {
   user: { uid: string } | null
   currentImageIndex: number
   isDescriptionExpanded: boolean
+  isLiked: boolean
   onPrevImage: () => void
   onNextImage: () => void
   onToggleDescription: () => void
+  onLikeToggle: () => void
 }
 
 const ProductCard = memo(function ProductCard({
@@ -22,9 +25,11 @@ const ProductCard = memo(function ProductCard({
   user,
   currentImageIndex,
   isDescriptionExpanded,
+  isLiked,
   onPrevImage,
   onNextImage,
-  onToggleDescription
+  onToggleDescription,
+  onLikeToggle
 }: ProductCardProps) {
   const router = useRouter()
 
@@ -72,15 +77,30 @@ const ProductCard = memo(function ProductCard({
         </div>
 
         <div className={styles.productInfo}>
-          {product.productTypes && product.productTypes.length > 0 && (
-            <div className={styles.productTypesContainer}>
-              {product.productTypes.map((type, index) => (
-                <span key={index} className={styles.productTypeBadge}>
-                  {type.replace('상품', '')}
-                </span>
-              ))}
+          <div className={styles.topRow}>
+            <div className={styles.categoryInfo}>
+              {product.productTypes && product.productTypes.length > 0 && (
+                <div className={styles.productTypesContainer}>
+                  {product.productTypes.map((type, index) => (
+                    <span key={index} className={styles.productTypeBadge}>
+                      {type.replace('상품', '')}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
-          )}
+            <button
+              className={`${styles.likeButton} ${isLiked ? styles.liked : ''}`}
+              onClick={onLikeToggle}
+            >
+              <OptimizedImage
+                src={isLiked ? "/icons/heart_active.png" : "/icons/heart.png"}
+                alt="좋아요"
+                width={24}
+                height={24}
+              />
+            </button>
+          </div>
           <h1 className={styles.productName}>{product.name}</h1>
 
           {/* 가격 정보 */}

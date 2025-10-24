@@ -26,9 +26,7 @@ export default function MainPage() {
     <div className={styles.container}>
 
       {/* 메인 컨텐츠 영역 */}
-      <main className={styles.main}>
-        <div className={styles.mainContent}>
-          {/* 메인 타이틀 */}
+      <main className={styles.main}>        
           <MainTitle />
 
           {/* 카테고리 선택 */}
@@ -44,7 +42,6 @@ export default function MainPage() {
 
           {/* 레스토랑 리스트 */}
           <StoreList selectedCategory="전체" />
-        </div>
       </main>
     </div>
   )

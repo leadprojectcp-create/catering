@@ -5,10 +5,10 @@ import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { doc, getDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
-import { toggleStoreLike, checkUserLiked } from '@/lib/services/storeService'
 import { getPublishedNoticesByPartner, Notice } from '@/lib/services/partnerNoticeService'
 import { createOrGetChatRoom } from '@/lib/services/chatService'
 import { useAuth } from '@/contexts/AuthContext'
+import { useStoreLike } from '@/hooks/useStoreLike'
 import Loading from '@/components/Loading'
 import ProductList from '@/components/store/ProductList'
 import OptimizedImage from '@/components/common/OptimizedImage'
@@ -46,10 +46,16 @@ export default function StoreDetail({ storeId }: StoreDetailProps) {
   const [store, setStore] = useState<Store | null>(null)
   const [loading, setLoading] = useState(true)
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
-  const [isLiked, setIsLiked] = useState(false)
-  const [likeCount, setLikeCount] = useState(0)
   const [notices, setNotices] = useState<Notice[]>([])
   const [noticesLoading, setNoticesLoading] = useState(true)
+
+  // 좋아요 훅 사용
+  const { isLiked, likeCount, setLikeCount, handleLikeToggle } = useStoreLike({
+    storeId,
+    storeName: store?.storeName || '',
+    storeImage: store?.storeImages?.[0],
+    initialLikeCount: 0
+  })
 
   useEffect(() => {
     const fetchStore = async () => {
@@ -73,11 +79,6 @@ export default function StoreDetail({ storeId }: StoreDetailProps) {
 
     fetchStore()
 
-    // 사용자가 로그인했으면 좋아요 상태 확인
-    if (user) {
-      checkUserLiked(user.uid, storeId).then(setIsLiked)
-    }
-
     // 공지사항 로드
     const fetchNotices = async () => {
       try {
@@ -91,7 +92,7 @@ export default function StoreDetail({ storeId }: StoreDetailProps) {
     }
 
     fetchNotices()
-  }, [storeId, user])
+  }, [storeId, user, setLikeCount])
 
   if (loading) {
     return <Loading />
@@ -106,42 +107,6 @@ export default function StoreDetail({ storeId }: StoreDetailProps) {
   }
 
   const images = store.storeImages && store.storeImages.length > 0 ? store.storeImages : []
-
-  const handleLikeToggle = async () => {
-    // 로그인 체크
-    if (!user) {
-      alert('로그인이 필요한 기능입니다.')
-      router.push('/auth/login')
-      return
-    }
-
-    if (!store) return
-
-    try {
-      const prevLikedState = isLiked
-
-      // 낙관적 업데이트
-      setIsLiked(!isLiked)
-      setLikeCount(prev => !isLiked ? prev + 1 : prev - 1)
-
-      // DB 업데이트
-      const newLikedState = await toggleStoreLike(
-        user.uid,
-        storeId,
-        store.storeName,
-        store.storeImages?.[0]
-      )
-
-      // DB 결과로 상태 동기화
-      setIsLiked(newLikedState)
-    } catch (error) {
-      console.error('좋아요 처리 실패:', error)
-      // 실패 시 원래 상태로 롤백
-      setIsLiked(isLiked)
-      setLikeCount(prev => isLiked ? prev + 1 : prev - 1)
-      alert('좋아요 처리에 실패했습니다.')
-    }
-  }
 
   const handleChatClick = async () => {
     if (!user) {

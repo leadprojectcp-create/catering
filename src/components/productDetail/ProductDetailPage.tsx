@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { collection, addDoc, updateDoc, doc, getDoc, query, where, getDocs, orderBy } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { useAuth } from '@/contexts/AuthContext'
+import { useProductLike } from '@/hooks/useProductLike'
 import Loading from '@/components/Loading'
 import ProductCard from './ProductCard'
 import ReviewSection from './ReviewSection'
@@ -281,12 +282,27 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
   const [storeRequest, setStoreRequest] = useState('')
   const [deliveryMethod, setDeliveryMethod] = useState('')
 
+  // 제품 좋아요 훅
+  const { isLiked, likeCount, setLikeCount, handleLikeToggle } = useProductLike({
+    productId,
+    productName: product?.name || '',
+    productImage: product?.images?.[0],
+    initialLikeCount: 0
+  })
+
   useEffect(() => {
     const loadProduct = async () => {
       try {
         const productData = await fetchProduct(productId)
         if (productData) {
           setProduct(productData)
+
+          // likeCount 설정
+          const productDoc = await getDoc(doc(db, 'products', productId))
+          if (productDoc.exists()) {
+            const data = productDoc.data()
+            setLikeCount(data.likeCount || 0)
+          }
 
           // 장바구니에서 수정 중인 아이템 데이터 확인
           const editCartItemData = sessionStorage.getItem('editCartItem')
@@ -689,9 +705,11 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
               user={user}
               currentImageIndex={currentImageIndex}
               isDescriptionExpanded={isDescriptionExpanded}
+              isLiked={isLiked}
               onPrevImage={handlePrevImage}
               onNextImage={handleNextImage}
               onToggleDescription={handleToggleDescription}
+              onLikeToggle={handleLikeToggle}
             />
 
             <ReviewSection

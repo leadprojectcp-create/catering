@@ -18,6 +18,17 @@
   flex: 1;
 }
 
+.topRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.categoryInfo {
+  flex: 1;
+}
+
 .productTypesContainer {
   display: flex;
   gap: 4px;
@@ -137,6 +148,24 @@
 
 .productImage {
   object-fit: cover;
+}
+
+.likeButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+  transition: all 0.3s ease;
+}
+
+.likeButton:hover {
+  transform: scale(1.1);
 }
 
 .prevButton,
