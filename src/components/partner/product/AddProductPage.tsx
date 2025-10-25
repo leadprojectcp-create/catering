@@ -318,12 +318,24 @@ export default function AddProductPage() {
         values: option.values.filter(v => v.name.trim() !== '')
       }))
 
+      // 추가상품 옵션 필터링 (비어있지 않은 옵션만)
+      const filteredAdditionalOptions = formData.additionalOptions
+        .filter(option =>
+          option.groupName.trim() !== '' &&
+          option.values.some(v => v.name.trim() !== '')
+        )
+        .map(option => ({
+          ...option,
+          values: option.values.filter(v => v.name.trim() !== '')
+        }))
+
       // orderType을 'single'로 고정하여 전송
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const submitData: any = {
         ...formData,
         images: uploadedImageUrls, // File 객체 대신 업로드된 URL들
         options: filteredOptions, // 유효성 검사 통과한 옵션들
+        additionalOptions: filteredAdditionalOptions.length > 0 ? filteredAdditionalOptions : undefined, // 비어있으면 undefined
         orderType: 'single', // 항상 단건주문으로 설정
         createdAt: new Date().toISOString()
       }

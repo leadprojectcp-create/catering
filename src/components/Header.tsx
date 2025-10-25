@@ -9,35 +9,6 @@ import { useAuth } from '@/contexts/AuthContext'
 import { getCartItemCount } from '@/lib/services/cartService'
 import { subscribeToUnreadCount } from '@/lib/services/chatService'
 
-const menuItems = [
-  {
-    category: '마이페이지',
-    icon: (
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-        <circle cx="12" cy="7" r="4"></circle>
-      </svg>
-    ),
-    items: [
-      { name: '채팅', path: '/chat' },
-      { name: '주문내역', path: '/orders' }
-    ]
-  },
-  {
-    category: '고객센터',
-    icon: (
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-      </svg>
-    ),
-    items: [
-      { name: '공지사항', path: '/notices' },
-      { name: '자주묻는질문', path: '/faq' },
-      { name: '문의하기', path: '/contact' }
-    ]
-  }
-]
-
 // 페이지 경로에 따른 타이틀 매핑
 const getPageTitle = (path: string): string => {
   if (path.startsWith('/category/')) {
@@ -59,6 +30,7 @@ const getPageTitle = (path: string): string => {
   if (path === '/magazine') return '매거진'
   if (path.startsWith('/magazine/')) return '매거진'
   if (path.startsWith('/reviews/write')) return '리뷰 작성'
+  if (path === '/reviews') return '리뷰 관리'
   return ''
 }
 
@@ -350,50 +322,89 @@ export default function Header({ chatRoomTitle, chatRoomPhone, chatRoomMenu }: H
         </div>
 
         <nav className={styles.drawerNav}>
-          {/* 파트너 페이지 링크 (partner일 경우만 표시) */}
-          {userData && userData.type === 'partner' && (
-            <div className={styles.menuCategory}>
-              <h3 className={styles.categoryTitle}>
-                <span className={styles.categoryIcon}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
-                    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
-                  </svg>
-                </span>
-                파트너
-              </h3>
-              <div className={styles.categoryItems}>
-                <Link
-                  href="/partner/dashboard"
-                  className={`${styles.drawerMenuItem} ${pathname === '/partner/dashboard' ? styles.drawerMenuItemActive : ''}`}
-                  onClick={closeDrawer}
-                >
-                  파트너 페이지
-                </Link>
+          {/* 사용자 정보 */}
+          {userData && (
+            <>
+              <div className={styles.userName}>
+                <span>{userData.name || '사용자'}</span>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M9 18l6-6-6-6"/>
+                </svg>
               </div>
-            </div>
+              <div className={styles.userPoints}>
+                <span>내 포인트</span>
+                <span>{(userData.point || 0).toLocaleString()}P</span>
+              </div>
+            </>
           )}
 
-          {menuItems.map((category) => (
-            <div key={category.category} className={styles.menuCategory}>
-              <h3 className={styles.categoryTitle}>
-                <span className={styles.categoryIcon}>{category.icon}</span>
-                {category.category}
-              </h3>
-              <div className={styles.categoryItems}>
-                {category.items.map((item) => (
-                  <Link
-                    key={item.path}
-                    href={item.path}
-                    className={`${styles.drawerMenuItem} ${pathname === item.path ? styles.drawerMenuItemActive : ''}`}
-                    onClick={closeDrawer}
-                  >
-                    {item.name}
-                  </Link>
-                ))}
-              </div>
-            </div>
-          ))}
+          <Link
+            href="/wishlist"
+            className={`${styles.drawerMenuItem} ${pathname === '/wishlist' ? styles.drawerMenuItemActive : ''}`}
+            onClick={closeDrawer}
+          >
+            찜
+          </Link>
+          <Link
+            href="/orders"
+            className={`${styles.drawerMenuItem} ${pathname === '/orders' ? styles.drawerMenuItemActive : ''}`}
+            onClick={closeDrawer}
+          >
+            주문내역
+          </Link>
+          <Link
+            href="/cart"
+            className={`${styles.drawerMenuItem} ${pathname === '/cart' ? styles.drawerMenuItemActive : ''}`}
+            onClick={closeDrawer}
+          >
+            장바구니
+          </Link>
+          <Link
+            href="/chat"
+            className={`${styles.drawerMenuItem} ${pathname === '/chat' || pathname.startsWith('/chat/') ? styles.drawerMenuItemActive : ''}`}
+            onClick={closeDrawer}
+          >
+            채팅
+          </Link>
+          <Link
+            href="/reviews"
+            className={`${styles.drawerMenuItem} ${pathname === '/reviews' ? styles.drawerMenuItemActive : ''}`}
+            onClick={closeDrawer}
+          >
+            리뷰관리
+          </Link>
+          <Link
+            href="/contact"
+            className={`${styles.drawerMenuItem} ${pathname === '/contact' ? styles.drawerMenuItemActive : ''}`}
+            onClick={closeDrawer}
+          >
+            고객센터
+          </Link>
+          <Link
+            href="/notices"
+            className={`${styles.drawerMenuItem} ${pathname === '/notices' ? styles.drawerMenuItemActive : ''}`}
+            onClick={closeDrawer}
+          >
+            공지사항
+          </Link>
+          <Link
+            href="/settings"
+            className={`${styles.drawerMenuItem} ${pathname === '/settings' ? styles.drawerMenuItemActive : ''}`}
+            onClick={closeDrawer}
+          >
+            설정
+          </Link>
+
+          {/* 파트너 페이지 링크 (partner일 경우만 표시) */}
+          {userData && userData.type === 'partner' && (
+            <Link
+              href="/partner/dashboard"
+              className={`${styles.drawerMenuItem} ${pathname.startsWith('/partner') ? styles.drawerMenuItemActive : ''}`}
+              onClick={closeDrawer}
+            >
+              파트너 페이지
+            </Link>
+          )}
         </nav>
 
         <div className={styles.drawerFooter}>

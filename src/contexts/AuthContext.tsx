@@ -15,6 +15,7 @@ interface UserData {
   phone?: string
   registrationComplete?: boolean
   storeId?: string
+  point?: number
 }
 
 interface AuthContextType {
@@ -63,7 +64,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               type: data.type,
               companyName: data.companyName,
               phone: data.phone,
-              registrationComplete: data.registrationComplete || false
+              registrationComplete: data.registrationComplete || false,
+              point: data.point || 0
             })
           } else {
             // 사용자 문서가 없으면 null로 설정

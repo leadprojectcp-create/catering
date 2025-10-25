@@ -155,7 +155,7 @@ export default function OptionSection({ options, onChange, onShowHelpModal, enab
                     }}
                     className={styles.textInput}
                   />
-                  {valueIndex === option.values.length - 1 ? (
+                  {option.values.length === 1 ? (
                     <button
                       type="button"
                       onClick={() => addOptionValue(groupIndex)}
@@ -164,13 +164,22 @@ export default function OptionSection({ options, onChange, onShowHelpModal, enab
                       +
                     </button>
                   ) : (
-                    <button
-                      type="button"
-                      onClick={() => removeOptionValue(groupIndex, valueIndex)}
-                      className={styles.removeOptionValueButton}
-                    >
-                      −
-                    </button>
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => addOptionValue(groupIndex)}
+                        className={styles.addOptionValueButton}
+                      >
+                        +
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => removeOptionValue(groupIndex, valueIndex)}
+                        className={styles.removeOptionValueButton}
+                      >
+                        −
+                      </button>
+                    </>
                   )}
                 </div>
               </div>

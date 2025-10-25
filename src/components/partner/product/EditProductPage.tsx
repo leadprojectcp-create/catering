@@ -348,12 +348,24 @@ export default function EditProductPage({ productId }: { productId: string }) {
         values: option.values.filter(v => v.name.trim() !== '')
       }))
 
+      // 추가상품 옵션 필터링 (비어있지 않은 옵션만)
+      const filteredAdditionalOptions = formData.additionalOptions
+        .filter(option =>
+          option.groupName.trim() !== '' &&
+          option.values.some(v => v.name.trim() !== '')
+        )
+        .map(option => ({
+          ...option,
+          values: option.values.filter(v => v.name.trim() !== '')
+        }))
+
       // 수정된 데이터 준비
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const submitData: any = {
         ...formData,
         images: uploadedImageUrls,
         options: filteredOptions, // 유효성 검사 통과한 옵션들
+        additionalOptions: filteredAdditionalOptions.length > 0 ? filteredAdditionalOptions : [], // 비어있으면 빈 배열로 덮어쓰기
         updatedAt: new Date().toISOString()
       }
 
@@ -464,7 +476,16 @@ export default function EditProductPage({ productId }: { productId: string }) {
           onChange={(options) => setFormData(prev => ({ ...prev, options }))}
           onShowHelpModal={() => setShowOptionHelpModal(true)}
           enabled={optionsEnabled}
-          onToggle={setOptionsEnabled}
+          onToggle={(enabled) => {
+            setOptionsEnabled(enabled)
+            // 설정을 켤 때 빈 배열이면 기본 옵션 카드 추가
+            if (enabled && formData.options.length === 0) {
+              setFormData(prev => ({
+                ...prev,
+                options: [{ groupName: '', values: [{ name: '', price: 0 }] }]
+              }))
+            }
+          }}
         />
 
         {/* 추가상품 옵션 */}
@@ -473,7 +494,16 @@ export default function EditProductPage({ productId }: { productId: string }) {
           onChange={(additionalOptions) => setFormData(prev => ({ ...prev, additionalOptions }))}
           onShowHelpModal={() => setShowOptionHelpModal(true)}
           enabled={additionalOptionsEnabled}
-          onToggle={setAdditionalOptionsEnabled}
+          onToggle={(enabled) => {
+            setAdditionalOptionsEnabled(enabled)
+            // 설정을 켤 때 빈 배열이면 기본 옵션 카드 추가
+            if (enabled && formData.additionalOptions.length === 0) {
+              setFormData(prev => ({
+                ...prev,
+                additionalOptions: [{ groupName: '', values: [{ name: '', price: 0 }] }]
+              }))
+            }
+          }}
         />
 
         {/* 상품설명 작성 */}

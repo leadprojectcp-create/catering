@@ -72,12 +72,15 @@ export const getPartnerReviews = async (partnerId: string): Promise<Review[]> =>
         reviewsSnapshot.docs.map(async (reviewDoc) => {
           const data = reviewDoc.data()
 
-          // userId로 users 컬렉션에서 name 가져오기
+          // uid로 users 컬렉션에서 name 가져오기
           let userName = data.userName || '알 수 없음'
+          const userId = data.uid || data.userId // uid 또는 userId 사용
           try {
-            const userDoc = await getDoc(doc(db, 'users', data.userId))
-            if (userDoc.exists()) {
-              userName = userDoc.data().name || '알 수 없음'
+            if (userId) {
+              const userDoc = await getDoc(doc(db, 'users', userId))
+              if (userDoc.exists()) {
+                userName = userDoc.data().name || '알 수 없음'
+              }
             }
           } catch (error) {
             console.error('사용자 정보 가져오기 실패:', error)
@@ -86,7 +89,7 @@ export const getPartnerReviews = async (partnerId: string): Promise<Review[]> =>
           return {
             id: reviewDoc.id,
             orderId: data.orderId,
-            userId: data.userId,
+            userId: userId,
             userName: userName,
             storeId: data.storeId,
             storeName: data.storeName,

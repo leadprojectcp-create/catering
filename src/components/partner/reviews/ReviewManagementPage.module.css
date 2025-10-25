@@ -64,10 +64,16 @@
 .reviewCard {
   display: flex;
   flex-direction: column;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #F0F0F0;
+}
+
+.reviewCard:last-child {
+  border-bottom: none;
 }
 
 .reviewBody {
-  padding: 0 32px;
+  padding: 15px 32px 0 32px;
   display: flex;
   flex-direction: column;
   gap: 12px;

@@ -321,5 +321,25 @@ service cloud.firestore {
       // 본인만 읽기/쓰기 가능
       allow read, write: if isSignedIn() && isOwner(userId);
     }
+
+    // Points collection - 포인트 적립/사용 내역
+    match /points/{pointId} {
+      // 본인의 포인트 내역만 읽기 가능
+      allow read: if isSignedIn() &&
+        resource.data.uid == request.auth.uid;
+
+      // 관리자는 모든 포인트 내역 읽기 가능
+      allow read: if isAdmin();
+
+      // 로그인한 사용자만 자신의 포인트 내역 생성 가능
+      allow create: if isSignedIn() &&
+        request.resource.data.uid == request.auth.uid;
+
+      // 수정/삭제 불가 (포인트 내역은 변경 불가)
+      allow update, delete: if false;
+
+      // 관리자는 모든 포인트 내역 수정 가능
+      allow update: if isAdmin();
+    }
   }
 }

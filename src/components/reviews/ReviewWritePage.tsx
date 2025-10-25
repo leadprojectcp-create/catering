@@ -2,11 +2,11 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import Image from 'next/image'
-import { doc, getDoc, collection, addDoc, updateDoc, serverTimestamp, query, where, getDocs, limit } from 'firebase/firestore'
+import { doc, getDoc, collection, addDoc, updateDoc, serverTimestamp, query, where, getDocs, limit, increment } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { useAuth } from '@/contexts/AuthContext'
 import Loading from '@/components/Loading'
+import OptimizedImage from '@/components/common/OptimizedImage'
 import styles from './ReviewWritePage.module.css'
 
 interface OrderItem {
@@ -257,6 +257,8 @@ export default function ReviewWritePage() {
         updatedAt: serverTimestamp(),
       })
 
+      let hasImages = false
+
       // 이미지가 있으면 업로드
       if (images.length > 0) {
         setUploading(true)
@@ -268,6 +270,7 @@ export default function ReviewWritePage() {
             images: imageUrls,
             updatedAt: serverTimestamp(),
           })
+          hasImages = true
         } catch (uploadError) {
           console.error('이미지 업로드 실패:', uploadError)
           alert('리뷰는 등록되었으나 일부 이미지 업로드에 실패했습니다.')
@@ -276,7 +279,36 @@ export default function ReviewWritePage() {
         }
       }
 
-      alert('리뷰가 등록되었습니다.')
+      // 포인트 지급
+      const pointAmount = hasImages ? 1000 : 500
+      const pointReason = hasImages ? '포토 리뷰 작성' : '리뷰 작성'
+
+      try {
+        // users 컬렉션의 point 필드 업데이트
+        const userRef = doc(db, 'users', user.uid)
+        await updateDoc(userRef, {
+          point: increment(pointAmount)
+        })
+
+        // points 컬렉션에 포인트 적립 내역 저장
+        await addDoc(collection(db, 'points'), {
+          uid: user.uid,
+          amount: pointAmount,
+          type: 'earned',
+          reason: pointReason,
+          reviewId: reviewRef.id,
+          orderId: order.id,
+          productId: order.items[0]?.productId || '',
+          productName: order.items[0]?.productName || '',
+          createdAt: serverTimestamp()
+        })
+
+        alert(`리뷰가 등록되었습니다. ${pointAmount}포인트가 적립되었습니다!`)
+      } catch (pointError) {
+        console.error('포인트 지급 실패:', pointError)
+        alert('리뷰는 등록되었으나 포인트 지급에 실패했습니다.')
+      }
+
       router.push('/orders')
     } catch (error) {
       console.error('리뷰 등록 실패:', error)
@@ -301,9 +333,11 @@ export default function ReviewWritePage() {
       <div className={styles.orderInfo}>
         <div className={styles.orderItem}>
           {order.items[0]?.productImage && (
-            <img
+            <OptimizedImage
               src={order.items[0].productImage}
               alt={order.items[0].productName}
+              width={70}
+              height={70}
               className={styles.productImage}
             />
           )}
@@ -337,13 +371,11 @@ export default function ReviewWritePage() {
                 className={styles.starButton}
                 onClick={() => setRating(star)}
               >
-                <Image
+                <OptimizedImage
                   src={star <= rating ? '/icons/review_star_active.png' : '/icons/review_star.png'}
                   alt={`${star}점`}
                   width={35}
                   height={35}
-                  quality={100}
-                  unoptimized
                   className={styles.starImage}
                 />
               </button>
@@ -361,7 +393,13 @@ export default function ReviewWritePage() {
             <div className={styles.imagePreviewContainer}>
               {imagePreviews.map((preview, index) => (
                 <div key={index} className={styles.imagePreviewItem}>
-                  <img src={preview} alt={`미리보기 ${index + 1}`} className={styles.previewImage} />
+                  <OptimizedImage
+                    src={preview}
+                    alt={`미리보기 ${index + 1}`}
+                    width={100}
+                    height={100}
+                    className={styles.previewImage}
+                  />
                   <button
                     type="button"
                     className={styles.removeImageButton}

@@ -1,7 +1,7 @@
 'use client'
 
 import Image from 'next/image'
-import { Product, CartItem, getOptionPrice } from './ProductDetailPage'
+import { Product, CartItem, getOptionPrice, getAdditionalOptionPrice } from './ProductDetailPage'
 import styles from './SelectedItems.module.css'
 
 interface SelectedItemsProps {
@@ -14,7 +14,7 @@ interface SelectedItemsProps {
   onStoreRequestChange: (value: string) => void
   onSaveToCart: () => void
   onOrder: () => void
-  calculateItemPrice: (options: { [key: string]: string }, qty: number) => number
+  calculateItemPrice: (options: { [key: string]: string }, qty: number, additionalOptions?: { [key: string]: string }) => number
   calculateTotalPrice: () => number
 }
 
@@ -31,27 +31,11 @@ export default function SelectedItems({
   calculateItemPrice,
   calculateTotalPrice
 }: SelectedItemsProps) {
-  // 각 항목이 필수 옵션을 포함하는지 확인
-  const checkRequiredOptions = (item: CartItem) => {
-    if (!product.options) return true
-
-    const requiredOptions = product.options.filter(opt => opt.isRequired)
-    for (const requiredOption of requiredOptions) {
-      const optionValue = item.options[requiredOption.groupName]
-      if (!optionValue || optionValue.trim() === '') {
-        return false
-      }
-    }
-    return true
-  }
-
   return (
     <div className={styles.selectedSection}>
       <h3 className={styles.selectedTitle}>선택된 상품</h3>
       <div className={styles.selectedItem}>
         {cartItems.map((item, index) => {
-          const hasRequiredOptions = checkRequiredOptions(item)
-
           return (
           <div key={index} className={styles.cartItemWrapper}>
             <div className={styles.selectedHeader}>
@@ -68,11 +52,6 @@ export default function SelectedItems({
                 />
               </button>
             </div>
-            {!hasRequiredOptions && (
-              <div className={styles.requiredWarning}>
-                ⚠️ 필수 선택 사항이 포함되어야 합니다
-              </div>
-            )}
             {Object.entries(item.options).map(([groupName, optionValue]) => {
               // 쉼표로 구분된 여러 옵션을 분리
               const optionNames = optionValue.split(',').map(name => name.trim())
@@ -85,6 +64,29 @@ export default function SelectedItems({
 
                     return (
                       <div key={`${groupName}-${idx}`} className={styles.selectedOption}>
+                        <div>
+                          <span className={styles.optionGroupName}>[{groupName}]</span>
+                          <span>{optionName}</span>
+                        </div>
+                        <span className={styles.optionPrice}>+{optionPrice.toLocaleString()}원</span>
+                      </div>
+                    )
+                  })}
+                </div>
+              )
+            })}
+            {item.additionalOptions && Object.entries(item.additionalOptions).map(([groupName, optionValue]) => {
+              // 쉼표로 구분된 여러 옵션을 분리
+              const optionNames = optionValue.split(',').map(name => name.trim())
+
+              return (
+                <div key={`additional-${groupName}`}>
+                  {optionNames.map((optionName, idx) => {
+                    // 각 추가옵션의 가격을 가져오기 (additionalOptions에서)
+                    const optionPrice = getAdditionalOptionPrice(product, groupName, optionName)
+
+                    return (
+                      <div key={`additional-${groupName}-${idx}`} className={styles.selectedOption}>
                         <div>
                           <span className={styles.optionGroupName}>[{groupName}]</span>
                           <span>{optionName}</span>
@@ -119,7 +121,7 @@ export default function SelectedItems({
               </button>
             </div>
             <div className={styles.itemPrice}>
-              {calculateItemPrice(item.options, item.quantity).toLocaleString()}원
+              {calculateItemPrice(item.options, item.quantity, item.additionalOptions).toLocaleString()}원
             </div>
           </div>
           )

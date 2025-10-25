@@ -60,10 +60,15 @@ export interface Product {
     values: { name: string; price: number }[]
     isRequired?: boolean
   }[]
+  additionalOptions?: {
+    groupName: string
+    values: { name: string; price: number }[]
+  }[]
 }
 
 export interface CartItem {
   options: { [key: string]: string }
+  additionalOptions?: { [key: string]: string }
   quantity: number
 }
 
@@ -86,7 +91,8 @@ interface ProductDetailPageProps {
 const calculateItemPrice = (
   product: Product | null,
   options: { [key: string]: string },
-  qty: number
+  qty: number,
+  additionalOptions?: { [key: string]: string }
 ): number => {
   if (!product) return 0
   const basePrice = product.discountedPrice || product.price
@@ -108,6 +114,24 @@ const calculateItemPrice = (
     })
   })
 
+  // 추가상품 옵션 가격 계산
+  if (additionalOptions) {
+    Object.entries(additionalOptions).forEach(([groupName, optionValue]) => {
+      const optionNames = optionValue.split(',').map(name => name.trim())
+
+      optionNames.forEach(optionName => {
+        product.additionalOptions?.forEach(group => {
+          if (group.groupName === groupName) {
+            const selected = group.values.find(v => v.name === optionName)
+            if (selected) {
+              optionPrice += selected.price
+            }
+          }
+        })
+      })
+    })
+  }
+
   return (basePrice + optionPrice) * qty
 }
 
@@ -116,7 +140,7 @@ const calculateTotalPrice = (
   cartItems: CartItem[]
 ): number => {
   return cartItems.reduce((total, item) => {
-    return total + calculateItemPrice(product, item.options, item.quantity)
+    return total + calculateItemPrice(product, item.options, item.quantity, item.additionalOptions)
   }, 0)
 }
 
@@ -164,6 +188,30 @@ export const getOptionPrice = (
 
   optionNames.forEach(optionName => {
     product.options?.forEach(group => {
+      if (group.groupName === groupName) {
+        const selected = group.values.find(v => v.name === optionName)
+        if (selected) {
+          optionPrice += selected.price
+        }
+      }
+    })
+  })
+
+  return optionPrice
+}
+
+export const getAdditionalOptionPrice = (
+  product: Product,
+  groupName: string,
+  optionValue: string
+): number => {
+  let optionPrice = 0
+
+  // 쉼표로 구분된 여러 옵션이 있을 수 있으므로 split
+  const optionNames = optionValue.split(',').map(name => name.trim())
+
+  optionNames.forEach(optionName => {
+    product.additionalOptions?.forEach(group => {
       if (group.groupName === groupName) {
         const selected = group.values.find(v => v.name === optionName)
         if (selected) {
@@ -295,6 +343,7 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
   const [loading, setLoading] = useState(true)
   const [quantity, setQuantity] = useState(10)
   const [selectedOptions, setSelectedOptions] = useState<Array<{ groupName: string; optionName: string }>>([])
+  const [selectedAdditionalOptions, setSelectedAdditionalOptions] = useState<Array<{ groupName: string; optionName: string }>>([])
   const [cartItems, setCartItems] = useState<CartItem[]>([])
   const [expandedOptions, setExpandedOptions] = useState<{ [key: string]: boolean }>({})
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false)
@@ -423,8 +472,26 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
     })
   }
 
+  const handleAdditionalOptionSelect = (groupName: string, optionName: string) => {
+    setSelectedAdditionalOptions(prev => {
+      // 이미 선택된 옵션인지 확인
+      const existingIndex = prev.findIndex(
+        opt => opt.groupName === groupName && opt.optionName === optionName
+      )
+
+      if (existingIndex !== -1) {
+        // 이미 선택되어 있으면 제거 (체크 해제)
+        return prev.filter((_, index) => index !== existingIndex)
+      } else {
+        // 선택되어 있지 않으면 추가 (체크)
+        return [...prev, { groupName, optionName }]
+      }
+    })
+  }
+
   const resetOptions = () => {
     setSelectedOptions([])
+    setSelectedAdditionalOptions([])
     setQuantity(product?.minOrderQuantity || 10)
     setCartItems([])
   }
@@ -446,13 +513,25 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
       }
     })
 
+    // 선택된 추가상품 옵션을 객체로 묶기
+    const additionalOptionsObj: { [key: string]: string } = {}
+    selectedAdditionalOptions.forEach(selectedOption => {
+      if (additionalOptionsObj[selectedOption.groupName]) {
+        additionalOptionsObj[selectedOption.groupName] += `, ${selectedOption.optionName}`
+      } else {
+        additionalOptionsObj[selectedOption.groupName] = selectedOption.optionName
+      }
+    })
+
     // 새로운 cartItem으로 추가 (초기 수량 1개)
     setCartItems(prev => [...prev, {
       options: optionsObj,
+      additionalOptions: Object.keys(additionalOptionsObj).length > 0 ? additionalOptionsObj : undefined,
       quantity: 1
     }])
 
     setSelectedOptions([])
+    setSelectedAdditionalOptions([])
   }
 
   const removeFromCart = (index: number) => {
@@ -482,21 +561,14 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
       return
     }
 
-    // 필수 옵션 검증 - cartItems 중 최소 1개라도 필수 옵션을 포함하는지 확인
-    if (product.options) {
-      const requiredOptions = product.options.filter(opt => opt.isRequired)
+    // 옵션 검증 - options는 필수, additionalOptions는 선택
+    const hasEmptyOptions = cartItems.some(item => {
+      return !item.options || Object.keys(item.options).length === 0
+    })
 
-      for (const requiredOption of requiredOptions) {
-        const hasRequiredOption = cartItems.some(item => {
-          const optionValue = item.options[requiredOption.groupName]
-          return optionValue && optionValue.trim() !== ''
-        })
-
-        if (!hasRequiredOption) {
-          alert(`${requiredOption.groupName}을(를) 포함한 항목이 최소 1개 이상 필요합니다.`)
-          return
-        }
-      }
+    if (hasEmptyOptions) {
+      alert('상품 옵션을 선택해주세요.')
+      return
     }
 
     // 전체 주문 수량 검증
@@ -597,21 +669,14 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
       return
     }
 
-    // 필수 옵션 검증 - cartItems 중 최소 1개라도 필수 옵션을 포함하는지 확인
-    if (product.options) {
-      const requiredOptions = product.options.filter(opt => opt.isRequired)
+    // 옵션 검증 - options는 필수, additionalOptions는 선택
+    const hasEmptyOptions = cartItems.some(item => {
+      return !item.options || Object.keys(item.options).length === 0
+    })
 
-      for (const requiredOption of requiredOptions) {
-        const hasRequiredOption = cartItems.some(item => {
-          const optionValue = item.options[requiredOption.groupName]
-          return optionValue && optionValue.trim() !== ''
-        })
-
-        if (!hasRequiredOption) {
-          alert(`${requiredOption.groupName}을(를) 포함한 항목이 최소 1개 이상 필요합니다.`)
-          return
-        }
-      }
+    if (hasEmptyOptions) {
+      alert('상품 옵션을 선택해주세요.')
+      return
     }
 
     // 전체 주문 수량 검증
@@ -734,8 +799,8 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
     }
   }, [isDragging, startY, startHeight, modalHeight])
 
-  const getItemPrice = (options: { [key: string]: string }, qty: number) => {
-    return calculateItemPrice(product, options, qty)
+  const getItemPrice = (options: { [key: string]: string }, qty: number, additionalOptions?: { [key: string]: string }) => {
+    return calculateItemPrice(product, options, qty, additionalOptions)
   }
 
   const getTotalPrice = () => {
@@ -802,8 +867,10 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
                 product={product}
                 expandedOptions={expandedOptions}
                 selectedOptions={selectedOptions}
+                selectedAdditionalOptions={selectedAdditionalOptions}
                 onToggleOption={toggleOption}
                 onSelectOption={handleOptionSelect}
+                onSelectAdditionalOption={handleAdditionalOptionSelect}
                 onReset={resetOptions}
                 onAddToCart={addToCart}
                 hasCartItems={cartItems.length > 0}

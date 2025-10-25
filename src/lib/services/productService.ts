@@ -150,11 +150,15 @@ export async function updateProduct(productId: string, productData: Partial<Prod
   if (productData.options !== undefined) {
     updateData.options = productData.options
   }
-  if (productData.additionalOptions !== undefined) {
-    updateData.additionalOptions = productData.additionalOptions
+  // additionalOptions는 명시적으로 전달된 경우 덮어쓰기 (빈 배열 포함)
+  if ('additionalOptions' in productData) {
+    updateData.additionalOptions = productData.additionalOptions || []
   }
   if (productData.origin !== undefined) {
     updateData.origin = productData.origin
+  }
+  if (productData.images !== undefined) {
+    updateData.images = productData.images
   }
 
   await updateDoc(productRef, updateData)

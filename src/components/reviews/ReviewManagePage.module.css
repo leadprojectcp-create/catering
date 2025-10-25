@@ -1,0 +1,153 @@
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.titleSection {
+  margin-bottom: 30px;
+}
+
+.title {
+  color: #333;
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.subtitle {
+  color: #4E5968;
+  font-size: 14px;
+  font-weight: 400;
+  margin: 0;
+}
+
+.emptyState {
+  text-align: center;
+  padding: 60px 20px;
+  color: #999;
+  font-size: 16px;
+}
+
+.reviewList {
+  display: flex;
+  flex-direction: column;
+}
+
+.reviewCard {
+  padding-bottom: 20px;
+  border-bottom: 1px solid #F0F0F0;
+}
+
+.reviewCard:last-child {
+  border-bottom: none;
+}
+
+.reviewHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 15px;
+}
+
+.storeInfo {
+  flex: 1;
+}
+
+.storeNameRow {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.storeName {
+  font-size: 18px;
+  font-weight: 700;
+  color: #333;
+  margin: 0;
+}
+
+.storeArrow {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  color: #999;
+}
+
+.rating {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.reviewDate {
+  font-size: 14px;
+  color: #999;
+  white-space: nowrap;
+  margin-left: 12px;
+}
+
+.imageContainer {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 15px;
+  overflow-x: auto;
+}
+
+.reviewImage {
+  border-radius: 8px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.reviewContent {
+  font-size: 15px;
+  color: #333;
+  line-height: 1.6;
+  margin-bottom: 15px;
+  word-break: break-word;
+}
+
+.reviewActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.deleteButton {
+  padding: 8px 16px;
+  border-radius: 5px;
+  border: 1px solid #E4E4E4;
+  background: white;
+  color: #FF4444;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.deleteButton:hover {
+  background-color: #FFF5F5;
+  border-color: #FF4444;
+}
+
+@media (max-width: 768px) {
+ .title {
+    font-size: 20px;
+  }
+
+  .subtitle {
+    font-size: 12px;
+  }
+
+  .reviewCard {
+    padding-bottom: 15px;
+  }
+
+  .storeName {
+    font-size: 16px;
+  }
+
+  .reviewContent {
+    font-size: 14px;
+  }
+}
