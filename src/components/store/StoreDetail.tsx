@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import Image from 'next/image'
 import { doc, getDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { getPublishedNoticesByPartner, Notice } from '@/lib/services/partnerNoticeService'
@@ -143,12 +142,14 @@ export default function StoreDetail({ storeId }: StoreDetailProps) {
         {images.length > 0 ? (
           <>
             <div className={styles.mainImage}>
-              <Image
+              <OptimizedImage
                 src={images[currentImageIndex]}
                 alt={store.storeName}
                 fill
+                sizes="(max-width: 768px) 100vw, 390px"
                 className={styles.image}
                 style={{ objectFit: 'cover' }}
+                priority
               />
             </div>
 
@@ -221,7 +222,7 @@ export default function StoreDetail({ storeId }: StoreDetailProps) {
         <div className={styles.detailsSection}>
           {store.address && (
             <div className={styles.detailItem}>
-              <Image src="/icons/map_pin.png" alt="주소" width={24} height={24} />
+              <OptimizedImage src="/icons/map_pin.png" alt="주소" width={24} height={24} />
               <span className={styles.detailValue}>
                 {store.address.fullAddress}
                 {store.address.detail && ` ${store.address.detail}`}
@@ -231,14 +232,14 @@ export default function StoreDetail({ storeId }: StoreDetailProps) {
 
           {store.openingHours && (
             <div className={styles.detailItem}>
-              <Image src="/icons/clock.png" alt="운영시간" width={24} height={24} />
+              <OptimizedImage src="/icons/clock.png" alt="운영시간" width={24} height={24} />
               <span className={styles.detailValue}>{store.openingHours}</span>
             </div>
           )}
 
           {store.closedDays && store.closedDays.length > 0 && (
             <div className={styles.detailItem}>
-              <Image src="/icons/clock.png" alt="휴무일" width={24} height={24} />
+              <OptimizedImage src="/icons/clock.png" alt="휴무일" width={24} height={24} />
               <span className={styles.detailValue}>
                 {store.closedDays.join(', ')} 휴무
               </span>
@@ -248,12 +249,12 @@ export default function StoreDetail({ storeId }: StoreDetailProps) {
 
         <div className={styles.actionButtons}>
           <button className={styles.chatButton} onClick={handleChatClick}>
-            <Image src="/icons/chat.png" alt="채팅" width={20} height={20} />
+            <OptimizedImage src="/icons/chat.png" alt="채팅" width={20} height={20} />
             <span>채팅</span>
           </button>
           {store.phone && (
             <a href={`tel:${store.phone}`} className={styles.phoneButton}>
-              <Image src="/icons/phone.png" alt="전화" width={20} height={20} />
+              <OptimizedImage src="/icons/phone.png" alt="전화" width={20} height={20} />
               <span>전화</span>
             </a>
           )}

@@ -156,17 +156,15 @@
 }
 
 .settingBadge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 4px 8px;
-  background: transparent;
-  color: #025BD9;
   border-radius: 3px;
-  border: 1px solid #025BD9;
-  font-size: 11px;
+  background: #025BD9;
+  display: inline-flex;
+  padding: 3px 10px;
+  justify-content: center;
+  align-items: center;
+  color: #FFF;
+  font-size: 13px;
   font-weight: 700;
-  line-height: 1;
 }
 
 /* 이미지 관련 */
