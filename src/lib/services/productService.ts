@@ -15,6 +15,13 @@ export interface ProductData {
       price: number
     }[]
   }[]
+  additionalOptions?: {
+    groupName: string
+    values: {
+      name: string
+      price: number
+    }[]
+  }[]
   description: string
   minOrderQuantity: number
   maxOrderQuantity: number
@@ -142,6 +149,9 @@ export async function updateProduct(productId: string, productData: Partial<Prod
   }
   if (productData.options !== undefined) {
     updateData.options = productData.options
+  }
+  if (productData.additionalOptions !== undefined) {
+    updateData.additionalOptions = productData.additionalOptions
   }
   if (productData.origin !== undefined) {
     updateData.origin = productData.origin
