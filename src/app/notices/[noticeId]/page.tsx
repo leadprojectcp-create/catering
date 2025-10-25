@@ -1,5 +1,6 @@
 import NoticeDetail from '@/components/notices/NoticeDetail'
 
-export default function NoticeDetailPage({ params }: { params: { noticeId: string } }) {
-  return <NoticeDetail noticeId={params.noticeId} />
+export default async function NoticeDetailPage({ params }: { params: Promise<{ noticeId: string }> }) {
+  const { noticeId } = await params
+  return <NoticeDetail noticeId={noticeId} />
 }

@@ -1,5 +1,6 @@
 import ReviewEditPage from '@/components/reviews/ReviewEditPage'
 
-export default function ReviewEditRoute({ params }: { params: { reviewId: string } }) {
-  return <ReviewEditPage reviewId={params.reviewId} />
+export default async function ReviewEditRoute({ params }: { params: Promise<{ reviewId: string }> }) {
+  const { reviewId } = await params
+  return <ReviewEditPage reviewId={reviewId} />
 }
