@@ -1,0 +1,348 @@
+.container {
+  max-width: 980px;
+  margin: 0 auto;
+}
+
+.header {
+  margin-bottom: 24px;
+}
+
+.title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #333;
+  margin: 0 0 8px 0;
+}
+
+.contactBox {
+  border-radius: 10px;
+  background: #F5F7FA;
+  padding: 30px 20px;
+  margin-bottom: 30px;
+}
+
+.contactInfo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+
+.phoneSection {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.phoneRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.phoneIcon {
+  width: 24px;
+  height: 24px;
+}
+
+.phoneNumber {
+  color: #333;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.phoneHours {
+  color: #999;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.chatButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border-radius: 5px;
+  border: 1px solid #F2F3F7;
+  background: #FFF;
+  color: #333;
+  font-size: 16px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.chatIcon {
+  width: 24px;
+  height: 24px;
+}
+
+.faqTitle {
+  color: #333;
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0 0 20px 0;
+}
+
+.categoryTabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 30px;
+  overflow-x: auto;
+  padding-bottom: 10px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.categoryTabs::-webkit-scrollbar {
+  display: none;
+}
+
+.categoryTab {
+  padding: 10px 20px;
+  background-color: transparent;
+  color: #4E5968;
+  border-radius: 30px;
+  border: 1px solid #F0F0F3;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.categoryTab.active {
+  border-radius: 30px;
+  border: 1px solid #237AF2;
+  background: #F0F6FF;
+  color: #237AF2;
+}
+
+.faqList {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.faqItem {
+  background: white;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.faqItem:last-child {
+  border-bottom: none;
+}
+
+.faqQuestion {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  cursor: pointer;
+  user-select: none;
+  gap: 12px;
+}
+
+.questionIcon {
+  width: 22px;
+  height: 26px;
+  flex-shrink: 0;
+}
+
+.questionContent {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.categoryBadge {
+  display: inline-block;
+  padding: 4px 12px;
+  background-color: #dbeafe;
+  color: #1e40af;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.questionText {
+  font-size: 16px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.arrow {
+  flex-shrink: 0;
+  transition: transform 0.2s;
+}
+
+.arrow.open {
+  transform: rotate(180deg);
+}
+
+.arrow path {
+  fill: #1B1C1F;
+}
+
+.faqAnswer {
+  margin: 0 20px 20px 20px;
+  padding: 20px;
+  border-radius: 10px;
+  background: #F5F7FA;
+  color: #4E5968;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 150%;
+  animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.faqAnswer h1,
+.faqAnswer h2,
+.faqAnswer h3 {
+  margin-top: 20px;
+  margin-bottom: 12px;
+  color: #111827;
+}
+
+.faqAnswer p {
+  margin-bottom: 12px;
+}
+
+.faqAnswer ul,
+.faqAnswer ol {
+  margin-bottom: 12px;
+  padding-left: 24px;
+}
+
+.faqAnswer li {
+  margin-bottom: 6px;
+}
+
+.faqAnswer img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin: 16px 0;
+}
+
+.faqAnswer a {
+  color: #025BD9;
+  text-decoration: underline;
+}
+
+.faqAnswer a:hover {
+  color: #014a9e;
+}
+
+.empty {
+  text-align: center;
+  padding: 60px 20px;
+  color: #9ca3af;
+  font-size: 16px;
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 16px;
+    padding-top: 80px;
+  }
+
+  .title {
+    font-size: 20px;
+  }
+
+  .contactBox {
+    padding: 16px;
+  }
+
+  .contactInfo {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+  }
+
+  .phoneSection {
+    gap: 8px;
+  }
+
+  .phoneRow {
+    gap: 6px;
+  }
+
+  .phoneIcon {
+    width: 20px;
+    height: 20px;
+  }
+
+  .phoneNumber {
+    font-size: 18px;
+  }
+
+  .phoneHours {
+    font-size: 13px;
+  }
+
+  .chatButton {
+    justify-content: center;
+    padding: 14px 20px;
+    font-size: 15px;
+  }
+
+  .chatIcon {
+    width: 20px;
+    height: 20px;
+  }
+
+  .faqTitle {
+    font-size: 18px;
+    margin: 0 0 16px 0;
+  }
+
+  .categoryTabs {
+    gap: 6px;
+  }
+
+  .categoryTab {
+    padding: 8px 16px;
+    font-size: 13px;
+  }
+
+  .faqQuestion {
+    padding: 16px;
+    gap: 8px;
+  }
+
+  .questionIcon {
+    width: 18px;
+    height: 22px;
+  }
+
+  .questionContent {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .questionText {
+    font-size: 14px;
+  }
+
+  .faqAnswer {
+    margin: 0 16px 16px 16px;
+    padding: 16px;
+    font-size: 14px;
+  }
+}

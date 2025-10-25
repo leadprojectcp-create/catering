@@ -22,7 +22,8 @@ const getPageTitle = (path: string): string => {
   if (path === '/orders') return '주문/배송내역'
   if (path.startsWith('/orders/')) return '주문상세'
   if (path === '/notices') return '공지사항'
-  if (path === '/faq') return '자주묻는질문'
+  if (path.startsWith('/notices/')) return '공지사항'
+  if (path === '/faq') return '고객센터'
   if (path === '/contact') return '문의하기'
   if (path.startsWith('/productDetail/')) return '상품 주문'
   if (path === '/payments') return '결제하기'
@@ -30,6 +31,7 @@ const getPageTitle = (path: string): string => {
   if (path === '/magazine') return '매거진'
   if (path.startsWith('/magazine/')) return '매거진'
   if (path.startsWith('/reviews/write')) return '리뷰 작성'
+  if (path.startsWith('/reviews/edit/')) return '리뷰 수정'
   if (path === '/reviews') return '리뷰 관리'
   return ''
 }
@@ -374,15 +376,15 @@ export default function Header({ chatRoomTitle, chatRoomPhone, chatRoomMenu }: H
             리뷰관리
           </Link>
           <Link
-            href="/contact"
-            className={`${styles.drawerMenuItem} ${pathname === '/contact' ? styles.drawerMenuItemActive : ''}`}
+            href="/faq"
+            className={`${styles.drawerMenuItem} ${pathname === '/faq' ? styles.drawerMenuItemActive : ''}`}
             onClick={closeDrawer}
           >
             고객센터
           </Link>
           <Link
             href="/notices"
-            className={`${styles.drawerMenuItem} ${pathname === '/notices' ? styles.drawerMenuItemActive : ''}`}
+            className={`${styles.drawerMenuItem} ${pathname === '/notices' || pathname.startsWith('/notices/') ? styles.drawerMenuItemActive : ''}`}
             onClick={closeDrawer}
           >
             공지사항

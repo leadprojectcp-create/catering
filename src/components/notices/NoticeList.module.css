@@ -1,0 +1,233 @@
+.container {
+  max-width: 980px;
+  margin: 0 auto;
+}
+
+.pageHeader {
+  margin-bottom: 24px;
+}
+
+.pageHeader h1 {
+  font-size: 24px;
+  font-weight: 700;
+  color: #333;
+  margin: 0 0 8px 0;
+}
+
+.subtitle {
+  color: #999;
+  font-size: 16px;
+  font-weight: 500;
+  margin: 0;
+}
+
+.loading,
+.empty {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 400px;
+  font-size: 16px;
+  color: #6b7280;
+}
+
+.noticeList {
+  display: flex;
+  flex-direction: column;
+}
+
+.noticeItem {
+  padding: 20px 0;
+  border-bottom: 1px solid #e5e5e5;
+  cursor: pointer;
+  background-color: #fff;
+}
+
+.noticeItem:last-child {
+  border-bottom: none;
+}
+
+.noticeHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.titleWrapper {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  flex: 1;
+}
+
+.categoryBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 5px;
+  background: #F2F3F7;
+  color: #333;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.noticeTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+  flex: 1;
+}
+
+.noticeDate {
+  font-size: 14px;
+  font-weight: 400;
+  color: #999;
+  white-space: nowrap;
+}
+
+.noticeSummary {
+  font-size: 14px;
+  color: #666;
+  margin: 10px 0 0 0;
+  line-height: 1.5;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+/* 페이지네이션 */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin-top: 40px;
+  padding: 20px 0;
+}
+
+.arrowButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid #e5e5e5;
+  border-radius: 6px;
+  background: white;
+  color: #333;
+  font-size: 18px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.arrowButton:hover {
+  background: #f9f9f9;
+  border-color: #025BD9;
+  color: #025BD9;
+}
+
+.pageNumbers {
+  display: flex;
+  gap: 8px;
+}
+
+.pageButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid #e5e5e5;
+  border-radius: 6px;
+  background: white;
+  color: #333;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.pageButton:hover {
+  background: #f9f9f9;
+  border-color: #025BD9;
+  color: #025BD9;
+}
+
+.pageButtonActive {
+  background: #025BD9;
+  border-color: #025BD9;
+  color: white;
+  font-weight: 600;
+}
+
+.pageButtonActive:hover {
+  background: #014a9e;
+  border-color: #014a9e;
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 16px;
+    padding-top: 80px;
+  }
+
+  .pageHeader h1 {
+    font-size: 20px;
+  }
+
+  .subtitle {
+    font-size: 14px;
+  }
+
+  .noticeHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
+  }
+
+  .titleWrapper {
+    width: 100%;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  .categoryBadge {
+    font-size: 13px;
+    padding: 3px 8px;
+  }
+
+  .noticeTitle {
+    font-size: 16px;
+  }
+
+  .noticeDate {
+    font-size: 13px;
+  }
+
+  .pagination {
+    gap: 8px;
+    margin-top: 30px;
+  }
+
+  .arrowButton {
+    width: 32px;
+    height: 32px;
+    font-size: 16px;
+  }
+
+  .pageButton {
+    min-width: 32px;
+    height: 32px;
+    padding: 0 10px;
+    font-size: 13px;
+  }
+}

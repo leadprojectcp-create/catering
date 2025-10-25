@@ -7,6 +7,7 @@ import { db } from '@/lib/firebase'
 import { useAuth } from '@/contexts/AuthContext'
 import Loading from '@/components/Loading'
 import OptimizedImage from '@/components/common/OptimizedImage'
+import DeleteConfirmModal from './DeleteConfirmModal'
 import styles from './ReviewManagePage.module.css'
 
 interface Review {
@@ -19,6 +20,11 @@ interface Review {
   content: string
   images: string[]
   createdAt: { toDate: () => Date } | string
+  reply?: {
+    content: string
+    createdAt: { toDate: () => Date } | string
+    partnerId: string
+  }
 }
 
 export default function ReviewManagePage() {
@@ -26,6 +32,8 @@ export default function ReviewManagePage() {
   const { user, loading: authLoading } = useAuth()
   const [reviews, setReviews] = useState<Review[]>([])
   const [loading, setLoading] = useState(true)
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false)
+  const [reviewToDelete, setReviewToDelete] = useState<string | null>(null)
 
   useEffect(() => {
     const loadReviews = async () => {
@@ -65,17 +73,31 @@ export default function ReviewManagePage() {
     loadReviews()
   }, [user, authLoading, router])
 
-  const handleDelete = async (reviewId: string) => {
-    if (!confirm('리뷰를 삭제하시겠습니까?')) return
+  const handleDeleteClick = (reviewId: string) => {
+    setReviewToDelete(reviewId)
+    setDeleteModalOpen(true)
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (!reviewToDelete) return
 
     try {
-      await deleteDoc(doc(db, 'reviews', reviewId))
-      setReviews(reviews.filter(review => review.id !== reviewId))
+      await deleteDoc(doc(db, 'reviews', reviewToDelete))
+      setReviews(reviews.filter(review => review.id !== reviewToDelete))
+      setDeleteModalOpen(false)
+      setReviewToDelete(null)
       alert('리뷰가 삭제되었습니다.')
     } catch (error) {
       console.error('리뷰 삭제 실패:', error)
       alert('리뷰 삭제에 실패했습니다.')
+      setDeleteModalOpen(false)
+      setReviewToDelete(null)
     }
+  }
+
+  const handleDeleteCancel = () => {
+    setDeleteModalOpen(false)
+    setReviewToDelete(null)
   }
 
   const formatDate = (timestamp: { toDate: () => Date } | string) => {
@@ -87,6 +109,25 @@ export default function ReviewManagePage() {
     const month = String(date.getMonth() + 1).padStart(2, '0')
     const day = String(date.getDate()).padStart(2, '0')
     return `${year}.${month}.${day} 작성`
+  }
+
+  // 7일 이내 작성 여부 확인
+  const canEdit = (createdAt: { toDate: () => Date } | string): boolean => {
+    const reviewDate = typeof createdAt === 'object' && 'toDate' in createdAt
+      ? createdAt.toDate()
+      : new Date(createdAt)
+    const now = new Date()
+    const diffTime = now.getTime() - reviewDate.getTime()
+    const diffDays = diffTime / (1000 * 60 * 60 * 24)
+    return diffDays <= 7
+  }
+
+  const handleEdit = (reviewId: string, createdAt: { toDate: () => Date } | string) => {
+    if (!canEdit(createdAt)) {
+      alert('작성한 지 7일이 지난 리뷰는 수정할 수 없습니다.')
+      return
+    }
+    router.push(`/reviews/edit/${reviewId}`)
   }
 
   if (authLoading || loading) {
@@ -130,10 +171,15 @@ export default function ReviewManagePage() {
                   </div>
                 </div>
                 <div className={styles.actionButtons}>
-                  <button className={styles.editButton}>수정</button>
+                  <button
+                    className={styles.editButton}
+                    onClick={() => handleEdit(review.id, review.createdAt)}
+                  >
+                    수정
+                  </button>
                   <button
                     className={styles.deleteButton}
-                    onClick={() => handleDelete(review.id)}
+                    onClick={() => handleDeleteClick(review.id)}
                   >
                     삭제
                   </button>
@@ -156,9 +202,28 @@ export default function ReviewManagePage() {
               )}
 
               <p className={styles.reviewContent}>{review.content}</p>
+
+              {/* 파트너 답글 */}
+              {review.reply && (
+                <div className={styles.replySection}>
+                  <div className={styles.replyHeader}>
+                    <span className={styles.replyLabel}>{review.storeName} 사장님</span>
+                    <span className={styles.replyDate}>{formatDate(review.reply.createdAt)}</span>
+                  </div>
+                  <p className={styles.replyContent}>{review.reply.content}</p>
+                </div>
+              )}
             </div>
           ))}
         </div>
+      )}
+
+      {/* 삭제 확인 모달 */}
+      {deleteModalOpen && (
+        <DeleteConfirmModal
+          onConfirm={handleDeleteConfirm}
+          onCancel={handleDeleteCancel}
+        />
       )}
     </div>
   )
