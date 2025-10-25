@@ -73,17 +73,29 @@
   color: #999;
 }
 
+.ratingRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .rating {
   display: flex;
   align-items: center;
   gap: 4px;
 }
 
-.reviewDate {
+.ratingText {
+  color: #333;
   font-size: 14px;
-  color: #999;
+  font-weight: 700;
+}
+
+.reviewDate {
+  color: #4E5968;
+  font-size: 12px;
+  font-weight: 400;
   white-space: nowrap;
-  margin-left: 12px;
 }
 
 .imageContainer {
@@ -107,27 +119,32 @@
   word-break: break-word;
 }
 
-.reviewActions {
+.actionButtons {
   display: flex;
-  justify-content: flex-end;
-  gap: 8px;
+  gap: 5px;
 }
 
+.editButton,
 .deleteButton {
-  padding: 8px 16px;
   border-radius: 5px;
-  border: 1px solid #E4E4E4;
-  background: white;
-  color: #FF4444;
+  background: #F5F7F9;
+  display: flex;
+  padding: 5px 12px;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+  color: #333;
   font-size: 14px;
   font-weight: 600;
+  border: none;
   cursor: pointer;
   transition: all 0.3s;
 }
 
+.editButton:hover,
 .deleteButton:hover {
-  background-color: #FFF5F5;
-  border-color: #FF4444;
+  background: #E8EBED;
 }
 
 @media (max-width: 768px) {

@@ -18,7 +18,7 @@ interface Review {
   rating: number
   content: string
   images: string[]
-  createdAt: any
+  createdAt: { toDate: () => Date } | string
 }
 
 export default function ReviewManagePage() {
@@ -78,14 +78,15 @@ export default function ReviewManagePage() {
     }
   }
 
-  const formatDate = (timestamp: any) => {
+  const formatDate = (timestamp: { toDate: () => Date } | string) => {
     if (!timestamp) return ''
-    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp)
-    return date.toLocaleDateString('ko-KR', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    })
+    const date = typeof timestamp === 'object' && 'toDate' in timestamp
+      ? timestamp.toDate()
+      : new Date(timestamp)
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    return `${year}.${month}.${day} 작성`
   }
 
   if (authLoading || loading) {
@@ -115,19 +116,28 @@ export default function ReviewManagePage() {
                       <path d="M9 18l6-6-6-6"/>
                     </svg>
                   </div>
-                  <div className={styles.rating}>
-                    {[1, 2, 3, 4, 5].map((star) => (
+                  <div className={styles.ratingRow}>
+                    <div className={styles.rating}>
                       <OptimizedImage
-                        key={star}
-                        src={star <= review.rating ? '/icons/review_star_active.png' : '/icons/review_star.png'}
-                        alt={`${star}점`}
+                        src="/icons/review_star_active.png"
+                        alt="별점"
                         width={16}
                         height={16}
                       />
-                    ))}
+                      <span className={styles.ratingText}>{review.rating}/5</span>
+                    </div>
+                    <div className={styles.reviewDate}>{formatDate(review.createdAt)}</div>
                   </div>
                 </div>
-                <div className={styles.reviewDate}>{formatDate(review.createdAt)}</div>
+                <div className={styles.actionButtons}>
+                  <button className={styles.editButton}>수정</button>
+                  <button
+                    className={styles.deleteButton}
+                    onClick={() => handleDelete(review.id)}
+                  >
+                    삭제
+                  </button>
+                </div>
               </div>
 
               {review.images && review.images.length > 0 && (
@@ -146,15 +156,6 @@ export default function ReviewManagePage() {
               )}
 
               <p className={styles.reviewContent}>{review.content}</p>
-
-              <div className={styles.reviewActions}>
-                <button
-                  className={styles.deleteButton}
-                  onClick={() => handleDelete(review.id)}
-                >
-                  삭제
-                </button>
-              </div>
             </div>
           ))}
         </div>
