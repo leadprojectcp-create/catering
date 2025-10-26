@@ -66,6 +66,13 @@ export interface Product {
     groupName: string
     values: { name: string; price: number }[]
   }[]
+  deliveryFeeSettings?: {
+    type: '무료' | '조건부 무료' | '유료' | '수량별'
+    baseFee?: number
+    freeCondition?: number
+    paymentMethods?: ('선결제' | '착불')[]
+    perQuantity?: number
+  }
 }
 
 export interface CartItem {
@@ -394,6 +401,7 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
   const [editingCartItemId, setEditingCartItemId] = useState<string | null>(null)
   const [storeRequest, setStoreRequest] = useState('')
   const [deliveryMethod, setDeliveryMethod] = useState('')
+  const [parcelPaymentMethod, setParcelPaymentMethod] = useState<'선결제' | '착불'>('선결제')
 
   // 제품 좋아요 훅
   const { isLiked, likeCount, setLikeCount, handleLikeToggle } = useProductLike({
@@ -457,6 +465,11 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
           // 배송방법 초기화 (첫 번째 배송방법 선택)
           if (productData.deliveryMethods && productData.deliveryMethods.length > 0) {
             setDeliveryMethod(productData.deliveryMethods[0])
+          }
+
+          // deliveryFeeSettings의 첫 번째 결제 방식을 기본값으로 설정
+          if (productData.deliveryFeeSettings?.paymentMethods && productData.deliveryFeeSettings.paymentMethods.length > 0) {
+            setParcelPaymentMethod(productData.deliveryFeeSettings.paymentMethods[0])
           }
 
           // Fetch store data
@@ -607,14 +620,16 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
       return
     }
 
-    // 옵션 검증 - options는 필수, additionalOptions는 선택
-    const hasEmptyOptions = cartItems.some(item => {
-      return !item.options || Object.keys(item.options).length === 0
-    })
+    // 옵션 검증 - optionsEnabled가 true일 때만 검증
+    if (product.optionsEnabled) {
+      const hasEmptyOptions = cartItems.some(item => {
+        return !item.options || Object.keys(item.options).length === 0
+      })
 
-    if (hasEmptyOptions) {
-      alert('상품 옵션을 선택해주세요.')
-      return
+      if (hasEmptyOptions) {
+        alert('상품 옵션을 선택해주세요.')
+        return
+      }
     }
 
     // 전체 주문 수량 검증
@@ -687,8 +702,10 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
           items: orderItems,
           totalProductPrice: totalPrice,
           totalQuantity: totalQuantity,
-          deliveryMethod: '',  // 장바구니에서는 나중에 선택
-          request: '',
+          deliveryMethod: deliveryMethod || '',
+          request: storeRequest || '',
+          deliveryFeeSettings: product.deliveryFeeSettings,
+          parcelPaymentMethod: parcelPaymentMethod,
           createdAt: new Date(),
           updatedAt: new Date()
         })
@@ -720,14 +737,16 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
       return
     }
 
-    // 옵션 검증 - options는 필수, additionalOptions는 선택
-    const hasEmptyOptions = cartItems.some(item => {
-      return !item.options || Object.keys(item.options).length === 0
-    })
+    // 옵션 검증 - optionsEnabled가 true일 때만 검증
+    if (product.optionsEnabled) {
+      const hasEmptyOptions = cartItems.some(item => {
+        return !item.options || Object.keys(item.options).length === 0
+      })
 
-    if (hasEmptyOptions) {
-      alert('상품 옵션을 선택해주세요.')
-      return
+      if (hasEmptyOptions) {
+        alert('상품 옵션을 선택해주세요.')
+        return
+      }
     }
 
     // 전체 주문 수량 검증
@@ -781,6 +800,8 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
         totalQuantity: totalQuantity,
         deliveryMethod: deliveryMethod,
         request: storeRequest,
+        deliveryFeeSettings: product.deliveryFeeSettings,
+        parcelPaymentMethod: parcelPaymentMethod,
         createdAt: new Date(),
         updatedAt: new Date()
       })
@@ -946,12 +967,15 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
                   product={product}
                   cartItems={cartItems}
                   storeRequest={storeRequest}
+                  deliveryMethod={deliveryMethod}
+                  parcelPaymentMethod={parcelPaymentMethod}
                   onRemoveItem={removeFromCart}
                   onUpdateQuantity={updateCartQuantity}
                   onQuantityInputChange={handleQuantityInputChange}
                   onStoreRequestChange={setStoreRequest}
                   onSaveToCart={saveToShoppingCart}
                   onOrder={handleOrder}
+                  onParcelPaymentMethodChange={setParcelPaymentMethod}
                   calculateItemPrice={getItemPrice}
                   calculateTotalPrice={getTotalPrice}
                 />

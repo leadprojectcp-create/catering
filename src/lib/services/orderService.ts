@@ -40,6 +40,9 @@ export interface Order {
     detailAddress?: string
     zipCode?: string
     addressName?: string
+    entrancePassword?: string
+    deliveryRequest?: string
+    detailedRequest?: string
   }
   address: string
   detailAddress: string
@@ -49,6 +52,8 @@ export interface Order {
   request?: string
   detailedRequest?: string
   cancelReason?: string
+  carrier?: string
+  trackingNumber?: string
   createdAt?: Date | Timestamp | FieldValue
   updatedAt?: Date | Timestamp | FieldValue
 }
@@ -131,7 +136,9 @@ export const getOrdersByStatus = async (status: OrderStatus): Promise<Order[]> =
 export const updateOrderStatus = async (
   orderId: string,
   status: OrderStatus,
-  cancelReason?: string
+  cancelReason?: string,
+  carrier?: string,
+  trackingNumber?: string
 ): Promise<void> => {
   try {
     const orderRef = doc(db, COLLECTION_NAME, orderId)
@@ -143,6 +150,14 @@ export const updateOrderStatus = async (
     // 취소 사유가 있으면 추가
     if (cancelReason) {
       updateData.cancelReason = cancelReason
+    }
+
+    // 택배 정보가 있으면 추가
+    if (carrier) {
+      updateData.carrier = carrier
+    }
+    if (trackingNumber) {
+      updateData.trackingNumber = trackingNumber
     }
 
     await updateDoc(orderRef, updateData)

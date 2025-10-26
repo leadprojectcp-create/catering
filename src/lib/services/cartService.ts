@@ -35,6 +35,14 @@ export interface CartItem {
   totalPrice?: number  // 선택적 (하위 호환성)
   deliveryMethod?: string  // 배송 방법
   request?: string  // 요청사항
+  deliveryFeeSettings?: {
+    type: '무료' | '조건부 무료' | '유료' | '수량별'
+    baseFee?: number
+    freeCondition?: number
+    paymentMethods?: ('선결제' | '착불')[]
+    perQuantity?: number
+  }
+  parcelPaymentMethod?: '선결제' | '착불'  // 택배 결제 방식
   createdAt: Date | Timestamp
   updatedAt: Date | Timestamp
 }

@@ -8,12 +8,15 @@ interface SelectedItemsProps {
   product: Product
   cartItems: CartItem[]
   storeRequest: string
+  deliveryMethod: string
+  parcelPaymentMethod?: '선결제' | '착불'
   onRemoveItem: (index: number) => void
   onUpdateQuantity: (index: number, newQuantity: number) => void
   onQuantityInputChange: (index: number, value: string) => void
   onStoreRequestChange: (value: string) => void
   onSaveToCart: () => void
   onOrder: () => void
+  onParcelPaymentMethodChange?: (method: '선결제' | '착불') => void
   calculateItemPrice: (options: { [key: string]: string }, qty: number, additionalOptions?: { [key: string]: string }) => number
   calculateTotalPrice: () => number
 }
@@ -22,12 +25,15 @@ export default function SelectedItems({
   product,
   cartItems,
   storeRequest,
+  deliveryMethod,
+  parcelPaymentMethod,
   onRemoveItem,
   onUpdateQuantity,
   onQuantityInputChange,
   onStoreRequestChange,
   onSaveToCart,
   onOrder,
+  onParcelPaymentMethodChange,
   calculateItemPrice,
   calculateTotalPrice
 }: SelectedItemsProps) {
@@ -140,19 +146,55 @@ export default function SelectedItems({
       </div>
 
       {/* 매장 요청사항 */}
-      <div className={styles.requestSection}>
+      <div className={styles.requestWrapper}>
         <h3 className={styles.requestTitle}>매장 요청사항</h3>
-        <textarea
-          className={styles.requestTextarea}
-          placeholder="매장에 전달할 요청사항을 입력해주세요"
-          value={storeRequest}
-          onChange={(e) => onStoreRequestChange(e.target.value)}
-          maxLength={500}
-        />
-        <div className={styles.requestCount}>
-          {storeRequest.length}/500
+        <div className={styles.requestSection}>
+          <textarea
+            className={styles.requestTextarea}
+            placeholder="매장에 전달할 요청사항을 입력해주세요"
+            value={storeRequest}
+            onChange={(e) => onStoreRequestChange(e.target.value)}
+            maxLength={500}
+          />
+          <div className={styles.requestCount}>
+            {storeRequest.length}/500
+          </div>
         </div>
       </div>
+
+      {/* 택배 배송 결제 방식 */}
+      {deliveryMethod === '택배 배송' && product.deliveryFeeSettings && product.deliveryFeeSettings.paymentMethods && product.deliveryFeeSettings.paymentMethods.length > 0 && (
+        <div className={styles.parcelPaymentWrapper}>
+          <h3 className={styles.parcelPaymentTitle}>배송비 결제 방식</h3>
+          <div className={styles.parcelPaymentSection}>
+            <div className={styles.paymentMethodGroup}>
+              {product.deliveryFeeSettings.paymentMethods.map((method) => (
+                <label key={method} className={styles.paymentMethodLabel}>
+                  <input
+                    type="radio"
+                    name="parcelPaymentMethod"
+                    value={method}
+                    checked={parcelPaymentMethod === method}
+                    onChange={() => onParcelPaymentMethodChange?.(method)}
+                    className={styles.hiddenRadio}
+                  />
+                  <span className={styles.customRadio}>
+                    {parcelPaymentMethod === method ? '●' : '○'}
+                  </span>
+                  {method}
+                </label>
+              ))}
+            </div>
+            {product.deliveryFeeSettings.type === '조건부 무료' && (
+              <div className={styles.feeConditionNotice}>
+                {calculateTotalPrice() >= (product.deliveryFeeSettings.freeCondition || 0)
+                  ? `${product.deliveryFeeSettings.freeCondition?.toLocaleString()}원 이상 구매로 배송비 무료!`
+                  : `${product.deliveryFeeSettings.freeCondition?.toLocaleString()}원 이상 구매 시 배송비 무료`}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* 결제 정보 */}
       <div className={styles.paymentSection}>

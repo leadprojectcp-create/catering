@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 import Script from 'next/script'
-import { doc, getDoc, setDoc, updateDoc, addDoc, collection, increment, serverTimestamp } from 'firebase/firestore'
+import { doc, getDoc, setDoc, updateDoc, addDoc, collection, increment, serverTimestamp, deleteDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { useAuth } from '@/contexts/AuthContext'
 import Loading from '@/components/Loading'
@@ -78,6 +78,8 @@ export default function PaymentsPage() {
   const [minOrderDays, setMinOrderDays] = useState(0)
   const [deliveryFeeFromAPI, setDeliveryFeeFromAPI] = useState<number | null>(null)
   const [isLoadingDeliveryFee, setIsLoadingDeliveryFee] = useState(false)
+  const [deliveryFeeSettings, setDeliveryFeeSettings] = useState<any>(null)
+  const [parcelPaymentMethod, setParcelPaymentMethod] = useState<'선결제' | '착불'>('선결제')
 
   useEffect(() => {
     const loadData = async () => {
@@ -128,6 +130,15 @@ export default function PaymentsPage() {
             setMinOrderDays(productData.minOrderDays)
           }
 
+          // deliveryFeeSettings 가져오기
+          if (productData.deliveryFeeSettings) {
+            setDeliveryFeeSettings(productData.deliveryFeeSettings)
+            // paymentMethods가 있으면 첫 번째 값을 기본값으로 설정
+            if (productData.deliveryFeeSettings.paymentMethods && productData.deliveryFeeSettings.paymentMethods.length > 0) {
+              setParcelPaymentMethod(productData.deliveryFeeSettings.paymentMethods[0])
+            }
+          }
+
           // orderDocData에서 저장된 배송방법 확인
           if (orderDocData.deliveryMethod) {
             setDeliveryMethod(orderDocData.deliveryMethod)
@@ -160,23 +171,14 @@ export default function PaymentsPage() {
             const deliveryInfo = orderDocData.deliveryInfo
             setAddressName(deliveryInfo.addressName || '')
 
-            // detailAddress에서 상세주소와 공동현관 비밀번호 분리
-            let detailAddr = deliveryInfo.detailAddress || ''
-            let entranceCodeValue = ''
-            const match = detailAddr.match(/^(.+?)\s*\((.+)\)$/)
-            if (match) {
-              detailAddr = match[1].trim()
-              entranceCodeValue = match[2].trim()
-            }
-
             setOrderInfo(prev => ({
               ...prev,
               deliveryDate: deliveryInfo.deliveryDate || '',
               deliveryTime: deliveryInfo.deliveryTime || '',
               address: deliveryInfo.address || '',
-              detailAddress: detailAddr
+              detailAddress: deliveryInfo.detailAddress || ''
             }))
-            setEntranceCode(entranceCodeValue)
+            setEntranceCode(deliveryInfo.entrancePassword || '')
             setRecipient(deliveryInfo.recipient || '')
             setDeliveryRequest(deliveryInfo.deliveryRequest || '')
             setDetailedRequest(deliveryInfo.detailedRequest || '')
@@ -452,7 +454,8 @@ export default function PaymentsPage() {
           deliveryDate: orderInfo.deliveryDate,
           deliveryTime: orderInfo.deliveryTime,
           address: orderInfo.address,
-          detailAddress: `${orderInfo.detailAddress}${entranceCode ? ` (${entranceCode})` : ''}`,
+          detailAddress: orderInfo.detailAddress,
+          entrancePassword: entranceCode || '', // 공동현관 비밀번호
           recipient: recipient,
           recipientPhone: orderInfo.phone, // 받는 사람 연락처
           deliveryRequest: deliveryRequest, // 배달 요청사항 (드롭다운)
@@ -550,6 +553,18 @@ export default function PaymentsPage() {
       }
 
       // 퀵 배송은 웹훅에서 자동으로 처리됨
+
+      // 장바구니에서 온 경우 장바구니 삭제
+      if (cartIdParam) {
+        try {
+          const cartDocRef = doc(db, 'shoppingCart', cartIdParam)
+          await deleteDoc(cartDocRef)
+          console.log('장바구니 삭제 완료:', cartIdParam)
+        } catch (cartDeleteError) {
+          console.error('장바구니 삭제 실패:', cartDeleteError)
+          // 장바구니 삭제 실패해도 주문은 완료된 상태이므로 계속 진행
+        }
+      }
 
       // 세션 스토리지 클리어
       sessionStorage.removeItem('orderData')
@@ -743,20 +758,48 @@ export default function PaymentsPage() {
     }
   }
 
-  // 퀵업체 배송일 때만 배송비 적용 (API 조회 값이 있으면 그 값 사용, 없으면 0)
-  const deliveryFee = deliveryMethod === '퀵업체 배송' ? (deliveryFeeFromAPI || 0) : 0
-  // 배송비 프로모션 (퀵업체 배송이고 배송비가 조회되었을 때만 적용)
-  const deliveryPromotion = deliveryMethod === '퀵업체 배송' && deliveryFeeFromAPI ? 10000 : 0
+  // 먼저 총 상품금액과 수량 계산
   const totalProductPrice = orderData
     ? orderData.items.reduce((sum, item) => {
         // itemPrice가 있으면 그것을 사용, 없으면 기본 가격 * 수량
         return sum + (item.itemPrice || (orderData.productPrice * item.quantity))
       }, 0)
     : 0
-  const totalPrice = totalProductPrice + deliveryFee - deliveryPromotion - usePoint
   const totalQuantity = orderData
     ? orderData.items.reduce((sum, item) => sum + item.quantity, 0)
     : 0
+
+  // 배송비 계산
+  const calculateParcelDeliveryFee = () => {
+    if (!deliveryFeeSettings) return 0
+    if (parcelPaymentMethod === '착불') return 0 // 착불은 배송비 0원
+
+    const { type, baseFee = 0, freeCondition = 0, perQuantity = 0 } = deliveryFeeSettings
+
+    if (type === '무료') return 0
+    if (type === '조건부 무료') {
+      return totalProductPrice >= freeCondition ? 0 : baseFee
+    }
+    if (type === '유료') return baseFee
+    if (type === '수량별') {
+      if (perQuantity > 0) {
+        const times = Math.ceil(totalQuantity / perQuantity)
+        return baseFee * times
+      }
+      return baseFee
+    }
+    return 0
+  }
+
+  // 퀵업체 배송일 때는 API 조회 값, 택배 배송일 때는 계산된 값
+  const deliveryFee = deliveryMethod === '퀵업체 배송'
+    ? (deliveryFeeFromAPI || 0)
+    : deliveryMethod === '택배 배송'
+    ? calculateParcelDeliveryFee()
+    : 0
+  // 배송비 프로모션 (퀵업체 배송이고 배송비가 조회되었을 때만 적용)
+  const deliveryPromotion = deliveryMethod === '퀵업체 배송' && deliveryFeeFromAPI ? 10000 : 0
+  const totalPrice = totalProductPrice + deliveryFee - deliveryPromotion - usePoint
 
   if (loading) {
     return <Loading />
@@ -795,57 +838,66 @@ export default function PaymentsPage() {
                       </div>
                     )}
                     <div className={styles.productInfo}>
-                      <div className={styles.productName}>{orderData.productName}</div>
-
-                      <div className={styles.productDetailsBox}>
-                        <div className={styles.productDetailsLeft}>
-                          {/* 상품 옵션 */}
-                          {Object.keys(item.options).length > 0 && (
-                            <div className={styles.optionSection}>
-                              <div className={styles.optionSectionTitle}>상품 옵션</div>
-                              <div className={styles.productOptions}>
-                                {Object.entries(item.options).map(([key, value]) => {
-                                  let optionPrice = 0
-                                  if (item.optionsWithPrices && item.optionsWithPrices[key]) {
-                                    optionPrice = item.optionsWithPrices[key].price
-                                  }
-                                  return (
-                                    <div key={key} className={styles.optionItem}>
-                                      <span className={styles.optionGroup}>[{key}]</span>
-                                      <span>{value} +{optionPrice.toLocaleString()}원</span>
-                                    </div>
-                                  )
-                                })}
-                              </div>
-                            </div>
-                          )}
-
-                          {/* 추가상품 */}
-                          {item.additionalOptions && Object.keys(item.additionalOptions).length > 0 && (
-                            <div className={styles.optionSection}>
-                              <div className={styles.optionSectionTitle}>추가상품</div>
-                              <div className={styles.productOptions}>
-                                {Object.entries(item.additionalOptions).map(([key, value]) => {
-                                  let optionPrice = 0
-                                  if (item.additionalOptionsWithPrices && item.additionalOptionsWithPrices[key]) {
-                                    optionPrice = item.additionalOptionsWithPrices[key].price
-                                  }
-                                  return (
-                                    <div key={key} className={styles.optionItem}>
-                                      <span className={styles.optionGroup}>[{key}]</span>
-                                      <span>{value} +{optionPrice.toLocaleString()}원</span>
-                                    </div>
-                                  )
-                                })}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-
-                        <div className={styles.productDetailsRight}>
+                      <div className={styles.productNameRow}>
+                        <div className={styles.productName}>{orderData.productName}</div>
+                        {/* 옵션이 없을 때는 수량을 상품명 옆에 표시 */}
+                        {Object.keys(item.options).length === 0 && (!item.additionalOptions || Object.keys(item.additionalOptions).length === 0) && (
                           <div className={styles.productQuantity}>{item.quantity}개</div>
-                        </div>
+                        )}
                       </div>
+
+                      {/* 옵션이나 추가상품이 있을 때만 productDetailsBox 표시 */}
+                      {(Object.keys(item.options).length > 0 || (item.additionalOptions && Object.keys(item.additionalOptions).length > 0)) && (
+                        <div className={styles.productDetailsBox}>
+                          <div className={styles.productDetailsLeft}>
+                            {/* 상품 옵션 */}
+                            {Object.keys(item.options).length > 0 && (
+                              <div className={styles.optionSection}>
+                                <div className={styles.optionSectionTitle}>상품 옵션</div>
+                                <div className={styles.productOptions}>
+                                  {Object.entries(item.options).map(([key, value]) => {
+                                    let optionPrice = 0
+                                    if (item.optionsWithPrices && item.optionsWithPrices[key]) {
+                                      optionPrice = item.optionsWithPrices[key].price
+                                    }
+                                    return (
+                                      <div key={key} className={styles.optionItem}>
+                                        <span className={styles.optionGroup}>[{key}]</span>
+                                        <span>{value} +{optionPrice.toLocaleString()}원</span>
+                                      </div>
+                                    )
+                                  })}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* 추가상품 */}
+                            {item.additionalOptions && Object.keys(item.additionalOptions).length > 0 && (
+                              <div className={styles.optionSection}>
+                                <div className={styles.optionSectionTitle}>추가상품</div>
+                                <div className={styles.productOptions}>
+                                  {Object.entries(item.additionalOptions).map(([key, value]) => {
+                                    let optionPrice = 0
+                                    if (item.additionalOptionsWithPrices && item.additionalOptionsWithPrices[key]) {
+                                      optionPrice = item.additionalOptionsWithPrices[key].price
+                                    }
+                                    return (
+                                      <div key={key} className={styles.optionItem}>
+                                        <span className={styles.optionGroup}>[{key}]</span>
+                                        <span>{value} +{optionPrice.toLocaleString()}원</span>
+                                      </div>
+                                    )
+                                  })}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+
+                          <div className={styles.productDetailsRight}>
+                            <div className={styles.productQuantity}>{item.quantity}개</div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -1202,6 +1254,18 @@ export default function PaymentsPage() {
                   <span className={styles.promotionValue}>-10,000원</span>
                 </div>
               </>
+            )}
+            {deliveryMethod === '택배 배송' && (
+              <div className={styles.paymentRow}>
+                <span className={styles.paymentLabel}>배송비</span>
+                <span className={styles.paymentValue}>
+                  {parcelPaymentMethod === '착불'
+                    ? '착불 (0원)'
+                    : deliveryFeeSettings?.type === '무료'
+                    ? '무료'
+                    : `+${deliveryFee.toLocaleString()}원`}
+                </span>
+              </div>
             )}
             <div className={styles.paymentRowPoint}>
               <span className={styles.paymentLabel}>포인트</span>

@@ -62,7 +62,7 @@ export interface ProductData {
     baseFee?: number
     freeCondition?: number
     paymentMethods?: ('선결제' | '착불')[]
-    perQuantity?: boolean
+    perQuantity?: number
   }
 }
 

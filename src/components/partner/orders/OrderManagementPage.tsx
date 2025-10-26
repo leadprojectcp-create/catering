@@ -2,16 +2,17 @@
 
 import { useState, useEffect } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
-import { getStoreOrders, updateOrderStatus } from '@/lib/services/orderService'
+import { updateOrderStatus } from '@/lib/services/orderService'
 import type { Order, OrderStatus } from '@/lib/services/orderService'
 import type { Timestamp, FieldValue } from 'firebase/firestore'
 import { auth, db } from '@/lib/firebase'
-import { doc, getDoc } from 'firebase/firestore'
+import { doc, getDoc, collection, query, where, orderBy as firestoreOrderBy, onSnapshot } from 'firebase/firestore'
 import { createOrGetChatRoom } from '@/lib/services/chatService'
 import { ChevronDown, Calendar } from 'lucide-react'
 import Image from 'next/image'
 import Loading from '@/components/Loading'
 import OrderCancelModal from './OrderCancelModal'
+import TrackingNumberModal from './TrackingNumberModal'
 import styles from './OrderManagementPage.module.css'
 
 type FilterStatus = 'all' | 'pending' | 'cancelled_rejected' | 'preparing' | 'shipping' | 'completed'
@@ -33,6 +34,8 @@ export default function OrderManagementPage() {
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null)
   const [showCancelModal, setShowCancelModal] = useState(false)
   const [cancelOrderId, setCancelOrderId] = useState<string | null>(null)
+  const [showTrackingModal, setShowTrackingModal] = useState(false)
+  const [trackingOrderId, setTrackingOrderId] = useState<string | null>(null)
 
   useEffect(() => {
     // URL 파라미터에서 filter 값 읽기
@@ -43,27 +46,43 @@ export default function OrderManagementPage() {
   }, [searchParams])
 
   useEffect(() => {
-    // 현재 사용자의 storeId 가져오기 (파트너의 UID를 storeId로 사용)
+    // 현재 사용자의 storeId 가져오기 및 실시간 리스너 설정
     const user = auth.currentUser
-    if (user) {
-      setStoreId(user.uid)
-      loadOrders(user.uid)
-    }
+    if (!user) return
+
+    setStoreId(user.uid)
+
+    // Firestore 실시간 리스너 설정
+    const ordersQuery = query(
+      collection(db, 'orders'),
+      where('storeId', '==', user.uid),
+      firestoreOrderBy('createdAt', 'desc')
+    )
+
+    const unsubscribe = onSnapshot(
+      ordersQuery,
+      (snapshot) => {
+        const ordersData = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        })) as Order[]
+        setOrders(ordersData)
+        setLoading(false)
+      },
+      (error) => {
+        console.error('주문 목록 실시간 로드 실패:', error)
+        setLoading(false)
+      }
+    )
+
+    // 컴포넌트 언마운트 시 리스너 해제
+    return () => unsubscribe()
   }, [])
 
-  const loadOrders = async (sid: string) => {
-    if (!sid) return
-
-    try {
-      setLoading(true)
-      const data = await getStoreOrders(sid)
-      setOrders(data)
-    } catch (error) {
-      console.error('주문 목록 로드 실패:', error)
-      alert('주문 목록을 불러오는데 실패했습니다.')
-    } finally {
-      setLoading(false)
-    }
+  const handleFilterChange = (newFilter: FilterStatus) => {
+    setFilter(newFilter)
+    // URL 업데이트하여 새로고침 시에도 탭 유지
+    router.push(`/partner/order/history?filter=${newFilter}`)
   }
 
   const getStatusLabel = (status: OrderStatus) => {
@@ -118,6 +137,26 @@ export default function OrderManagementPage() {
   const handleCancelModalClose = () => {
     setShowCancelModal(false)
     setCancelOrderId(null)
+  }
+
+  const handleTrackingSubmit = async (carrier: string, trackingNumber: string) => {
+    if (!trackingOrderId) return
+
+    try {
+      await updateOrderStatus(trackingOrderId, 'shipping', undefined, carrier, trackingNumber)
+      setOrders(orders.map(o => o.id === trackingOrderId ? { ...o, orderStatus: 'shipping', carrier, trackingNumber } : o))
+      setShowTrackingModal(false)
+      setTrackingOrderId(null)
+      alert('택배 정보가 저장되고 주문 상태가 변경되었습니다.')
+    } catch (error) {
+      console.error('택배 정보 저장 실패:', error)
+      alert('택배 정보 저장에 실패했습니다.')
+    }
+  }
+
+  const handleTrackingModalClose = () => {
+    setShowTrackingModal(false)
+    setTrackingOrderId(null)
   }
 
   const handleChatClick = async (order: Order) => {
@@ -312,37 +351,37 @@ export default function OrderManagementPage() {
           <div className={styles.filters}>
             <button
               className={`${styles.filterBtn} ${filter === 'all' ? styles.active : ''}`}
-              onClick={() => setFilter('all')}
+              onClick={() => handleFilterChange('all')}
             >
               전체 <span className={styles.filterCount}>{orders.length}건</span>
             </button>
             <button
               className={`${styles.filterBtn} ${filter === 'pending' ? styles.active : ''}`}
-              onClick={() => setFilter('pending')}
+              onClick={() => handleFilterChange('pending')}
             >
               신규 주문 <span className={styles.filterCount}>{orders.filter(o => o.orderStatus === 'pending').length}건</span>
             </button>
             <button
               className={`${styles.filterBtn} ${filter === 'cancelled_rejected' ? styles.active : ''}`}
-              onClick={() => setFilter('cancelled_rejected')}
+              onClick={() => handleFilterChange('cancelled_rejected')}
             >
               주문 취소 <span className={styles.filterCount}>{orders.filter(o => o.orderStatus === 'rejected' || o.orderStatus === 'cancelled').length}건</span>
             </button>
             <button
               className={`${styles.filterBtn} ${filter === 'preparing' ? styles.active : ''}`}
-              onClick={() => setFilter('preparing')}
+              onClick={() => handleFilterChange('preparing')}
             >
               준비중 <span className={styles.filterCount}>{orders.filter(o => o.orderStatus === 'preparing').length}건</span>
             </button>
             <button
               className={`${styles.filterBtn} ${filter === 'shipping' ? styles.active : ''}`}
-              onClick={() => setFilter('shipping')}
+              onClick={() => handleFilterChange('shipping')}
             >
               배송·픽업중 <span className={styles.filterCount}>{orders.filter(o => o.orderStatus === 'shipping').length}건</span>
             </button>
             <button
               className={`${styles.filterBtn} ${filter === 'completed' ? styles.active : ''}`}
-              onClick={() => setFilter('completed')}
+              onClick={() => handleFilterChange('completed')}
             >
               완료 <span className={styles.filterCount}>{orders.filter(o => o.orderStatus === 'completed').length}건</span>
             </button>
@@ -495,7 +534,7 @@ export default function OrderManagementPage() {
               const productSummary = `${firstProduct} 외 ${totalCount}개`
 
               // 배송방법 텍스트
-              const deliveryMethodText = order.deliveryMethod === '퀵업체 배송' ? '퀵업체 배송' : '매장 픽업'
+              const deliveryMethodText = order.deliveryMethod || '매장 픽업'
 
               // 주문 상태 텍스트 및 스타일
               const getOrderStatusBadge = () => {
@@ -621,7 +660,14 @@ export default function OrderManagementPage() {
                               </button>
                               <button
                                 className={`${styles.actionBtn} ${styles.acceptBtn}`}
-                                onClick={() => handleStatusChange(order.id!, 'shipping')}
+                                onClick={() => {
+                                  if (order.deliveryMethod === '택배 배송') {
+                                    setTrackingOrderId(order.id!)
+                                    setShowTrackingModal(true)
+                                  } else {
+                                    handleStatusChange(order.id!, 'shipping')
+                                  }
+                                }}
                               >
                                 준비완료
                               </button>
@@ -657,7 +703,7 @@ export default function OrderManagementPage() {
 
                           <div className={styles.detailSectionDivider}></div>
 
-                          <h3 className={styles.detailTitle}>주문내역</h3>
+                          <h3 className={styles.detailTitle}>주문상품상세</h3>
                           {order.items.map((item, index) => {
                             const showProductName = index === 0 || order.items[index - 1].productName !== item.productName
                             return (
@@ -666,56 +712,61 @@ export default function OrderManagementPage() {
                                   <span className={styles.orderItemName}>{item.productName}</span>
                                 )}
 
-                                <div className={styles.orderItemContent}>
-                                  <div className={styles.orderItemLeft}>
-                                    {/* 상품 옵션 */}
-                                    {Object.keys(item.options).length > 0 && (
-                                      <div className={styles.optionGroup}>
-                                        <div className={styles.optionGroupTitle}>상품 옵션</div>
-                                        {Object.entries(item.options).map(([key, value], optIdx) => {
-                                          let optionPrice = 0
-                                          if (item.optionsWithPrices && item.optionsWithPrices[key]) {
-                                            optionPrice = item.optionsWithPrices[key].price
-                                          }
-                                          return (
-                                            <div key={optIdx} className={styles.orderItemOption}>
-                                              [{key}] {value} {optionPrice > 0 && `+${optionPrice.toLocaleString()}원`}
-                                            </div>
-                                          )
-                                        })}
-                                      </div>
-                                    )}
+                                {/* 옵션이나 추가상품이 있을 때만 orderItemContent 표시 */}
+                                {(Object.keys(item.options).length > 0 || (item.additionalOptions && Object.keys(item.additionalOptions).length > 0)) && (
+                                  <div className={styles.orderItemContent}>
+                                    <div className={styles.orderItemLeft}>
+                                      {/* 상품 옵션 */}
+                                      {Object.keys(item.options).length > 0 && (
+                                        <div className={styles.optionGroup}>
+                                          <div className={styles.optionGroupTitle}>상품 옵션</div>
+                                          {Object.entries(item.options).map(([key, value], optIdx) => {
+                                            let optionPrice = 0
+                                            if (item.optionsWithPrices && item.optionsWithPrices[key]) {
+                                              optionPrice = item.optionsWithPrices[key].price
+                                            }
+                                            return (
+                                              <div key={optIdx} className={styles.orderItemOption}>
+                                                [{key}] {value} {optionPrice > 0 && `+${optionPrice.toLocaleString()}원`}
+                                              </div>
+                                            )
+                                          })}
+                                        </div>
+                                      )}
 
-                                    {/* 추가상품 */}
-                                    {item.additionalOptions && Object.keys(item.additionalOptions).length > 0 && (
-                                      <div className={styles.optionGroup}>
-                                        <div className={styles.optionGroupTitle}>추가상품</div>
-                                        {Object.entries(item.additionalOptions).map(([key, value], optIdx) => {
-                                          let optionPrice = 0
-                                          if (item.additionalOptionsWithPrices && item.additionalOptionsWithPrices[key]) {
-                                            optionPrice = item.additionalOptionsWithPrices[key].price
-                                          }
-                                          return (
-                                            <div key={optIdx} className={styles.orderItemOption}>
-                                              [{key}] {value} {optionPrice > 0 && `+${optionPrice.toLocaleString()}원`}
-                                            </div>
-                                          )
-                                        })}
-                                      </div>
-                                    )}
-                                  </div>
+                                      {/* 추가상품 */}
+                                      {item.additionalOptions && Object.keys(item.additionalOptions).length > 0 && (
+                                        <div className={styles.optionGroup}>
+                                          <div className={styles.optionGroupTitle}>추가상품</div>
+                                          {Object.entries(item.additionalOptions).map(([key, value], optIdx) => {
+                                            let optionPrice = 0
+                                            if (item.additionalOptionsWithPrices && item.additionalOptionsWithPrices[key]) {
+                                              optionPrice = item.additionalOptionsWithPrices[key].price
+                                            }
+                                            return (
+                                              <div key={optIdx} className={styles.orderItemOption}>
+                                                [{key}] {value} {optionPrice > 0 && `+${optionPrice.toLocaleString()}원`}
+                                              </div>
+                                            )
+                                          })}
+                                        </div>
+                                      )}
+                                    </div>
 
-                                  <div className={styles.orderItemRight}>
-                                    <span className={styles.orderItemQuantity}>{item.quantity}개</span>
-                                    <span className={styles.orderItemPrice}>{formatCurrency(item.price * item.quantity)}</span>
+                                    <div className={styles.orderItemRight}>
+                                      <span className={styles.orderItemQuantity}>{item.quantity}개</span>
+                                      <span className={styles.orderItemPrice}>{formatCurrency(item.price * item.quantity)}</span>
+                                    </div>
                                   </div>
-                                </div>
+                                )}
+
                               </div>
                             )
                           })}
 
                           <div className={styles.detailSectionDivider}></div>
 
+                          <h3 className={styles.detailTitle}>결제정보</h3>
                           <div className={styles.totalSection}>
                             <div className={styles.totalRow}>
                               <span className={styles.totalLabel}>총 상품갯수</span>
@@ -779,26 +830,153 @@ export default function OrderManagementPage() {
                               </div>
                               <div className={styles.detailRow}>
                                 <span className={styles.detailLabel}>배송주소</span>
-                                <span className={styles.detailValue}>{order.address}</span>
+                                <span className={styles.detailValue}>
+                                  {order.deliveryInfo?.address || order.address}
+                                </span>
                               </div>
                               <div className={styles.detailRow}>
                                 <span className={styles.detailLabel}>상세주소</span>
-                                <span className={styles.detailValue}>{order.detailAddress || '-'}</span>
+                                <span className={styles.detailValue}>
+                                  {order.deliveryInfo?.detailAddress || order.detailAddress || '-'}
+                                </span>
                               </div>
                               <div className={styles.detailRow}>
+                                <span className={styles.detailLabel}>주소명</span>
+                                <span className={styles.detailValue}>
+                                  {order.deliveryInfo?.addressName || '-'}
+                                </span>
+                              </div>
+                              {order.deliveryInfo?.entrancePassword && (
+                                <div className={styles.detailRow}>
+                                  <span className={styles.detailLabel}>공동현관 비밀번호</span>
+                                  <span className={styles.detailValue}>
+                                    {order.deliveryInfo.entrancePassword}
+                                  </span>
+                                </div>
+                              )}
+                              <div className={styles.detailRow}>
                                 <span className={styles.detailLabel}>수령인</span>
-                                <span className={styles.detailValue}>{order.deliveryInfo?.recipient || order.recipient}</span>
+                                <span className={styles.detailValue}>
+                                  {order.deliveryInfo?.recipient || order.recipient}
+                                </span>
                               </div>
                               <div className={styles.detailRow}>
                                 <span className={styles.detailLabel}>전화번호</span>
-                                <span className={styles.detailValue}>{order.deliveryInfo?.recipientPhone || order.phone}</span>
+                                <span className={styles.detailValue}>
+                                  {order.deliveryInfo?.recipientPhone || order.phone}
+                                </span>
                               </div>
 
                               <div className={styles.detailSectionDivider}></div>
 
                               <h3 className={styles.detailTitle}>배송요청</h3>
                               <div className={styles.requestText}>
-                                {order.request || order.detailedRequest || '요청사항이 없습니다.'}
+                                {order.deliveryInfo?.deliveryRequest || order.deliveryInfo?.detailedRequest || order.request || order.detailedRequest || '요청사항이 없습니다.'}
+                              </div>
+                            </div>
+                          </>
+                        ) : order.deliveryMethod === '택배 배송' ? (
+                          <>
+                            {/* 택배 배송 */}
+                            <div className={styles.detailCard}>
+                              <h3 className={styles.detailTitle}>배송날짜</h3>
+                              <div className={styles.detailRow}>
+                                <span className={styles.detailLabel}>배송날짜</span>
+                                <span className={styles.detailValue}>
+                                  {actualDeliveryDate ? (() => {
+                                    const date = new Date(actualDeliveryDate)
+                                    const year = date.getFullYear()
+                                    const month = date.getMonth() + 1
+                                    const day = date.getDate()
+                                    const weekdays = ['일', '월', '화', '수', '목', '금', '토']
+                                    const weekday = weekdays[date.getDay()]
+                                    return `${year}년 ${month}월 ${day}일 (${weekday})`
+                                  })() : '-'}
+                                </span>
+                              </div>
+
+                              <div className={styles.detailSectionDivider}></div>
+
+                              <h3 className={styles.detailTitle}>배송정보</h3>
+                              <div className={styles.detailRow}>
+                                <span className={styles.detailLabel}>배송방법</span>
+                                <span className={styles.detailValue}>택배 배송</span>
+                              </div>
+                              <div className={styles.detailRow}>
+                                <span className={styles.detailLabel}>결제방식</span>
+                                <span className={styles.detailValue}>
+                                  {order.deliveryFee && order.deliveryFee > 0 ? '선결제' : '착불'}
+                                </span>
+                              </div>
+                              <div className={styles.detailRow}>
+                                <span className={styles.detailLabel}>배송주소</span>
+                                <span className={styles.detailValue}>
+                                  {order.deliveryInfo?.address || order.address}
+                                </span>
+                              </div>
+                              <div className={styles.detailRow}>
+                                <span className={styles.detailLabel}>상세주소</span>
+                                <span className={styles.detailValue}>
+                                  {order.deliveryInfo?.detailAddress || order.detailAddress || '-'}
+                                </span>
+                              </div>
+                              <div className={styles.detailRow}>
+                                <span className={styles.detailLabel}>주소명</span>
+                                <span className={styles.detailValue}>
+                                  {order.deliveryInfo?.addressName || '-'}
+                                </span>
+                              </div>
+                              {order.deliveryInfo?.entrancePassword && (
+                                <div className={styles.detailRow}>
+                                  <span className={styles.detailLabel}>공동현관 비밀번호</span>
+                                  <span className={styles.detailValue}>
+                                    {order.deliveryInfo.entrancePassword}
+                                  </span>
+                                </div>
+                              )}
+                              <div className={styles.detailRow}>
+                                <span className={styles.detailLabel}>수령인</span>
+                                <span className={styles.detailValue}>
+                                  {order.deliveryInfo?.recipient || order.recipient}
+                                </span>
+                              </div>
+                              <div className={styles.detailRow}>
+                                <span className={styles.detailLabel}>전화번호</span>
+                                <span className={styles.detailValue}>
+                                  {order.deliveryInfo?.recipientPhone || order.phone}
+                                </span>
+                              </div>
+
+                              <div className={styles.detailSectionDivider}></div>
+
+                              <h3 className={styles.detailTitle}>택배정보</h3>
+                              <div className={styles.detailRow}>
+                                <span className={styles.detailLabel}>택배사</span>
+                                <span className={styles.detailValue}>{order.carrier || '-'}</span>
+                              </div>
+                              <div className={styles.detailRow}>
+                                <span className={styles.detailLabel}>송장번호</span>
+                                <div className={styles.trackingNumberRow}>
+                                  <span className={styles.detailValue}>{order.trackingNumber || '-'}</span>
+                                  <button
+                                    className={styles.editTrackingBtn}
+                                    onClick={() => {
+                                      setTrackingOrderId(order.id!)
+                                      setShowTrackingModal(true)
+                                    }}
+                                  >
+                                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                      <path d="M11.334 2.00004C11.5091 1.82494 11.7169 1.68605 11.9457 1.59129C12.1745 1.49653 12.4197 1.44775 12.6673 1.44775C12.9149 1.44775 13.1601 1.49653 13.3889 1.59129C13.6177 1.68605 13.8256 1.82494 14.0007 2.00004C14.1758 2.17513 14.3147 2.383 14.4094 2.61178C14.5042 2.84055 14.553 3.08575 14.553 3.33337C14.553 3.58099 14.5042 3.82619 14.4094 4.05497C14.3147 4.28374 14.1758 4.49161 14.0007 4.66671L5.00065 13.6667L1.33398 14.6667L2.33398 11L11.334 2.00004Z" stroke="#666" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                    </svg>
+                                  </button>
+                                </div>
+                              </div>
+
+                              <div className={styles.detailSectionDivider}></div>
+
+                              <h3 className={styles.detailTitle}>배송요청</h3>
+                              <div className={styles.requestText}>
+                                {order.deliveryInfo?.deliveryRequest || order.deliveryInfo?.detailedRequest || order.request || order.detailedRequest || '요청사항이 없습니다.'}
                               </div>
                             </div>
                           </>
@@ -862,6 +1040,14 @@ export default function OrderManagementPage() {
         onClose={handleCancelModalClose}
         onConfirm={handleCancelConfirm}
       />
+
+      {/* 택배 정보 입력 모달 */}
+      {showTrackingModal && (
+        <TrackingNumberModal
+          onClose={handleTrackingModalClose}
+          onSubmit={handleTrackingSubmit}
+        />
+      )}
     </div>
   )
 }

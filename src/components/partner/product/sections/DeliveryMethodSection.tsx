@@ -6,7 +6,7 @@ export interface DeliveryFeeSettings {
   baseFee?: number
   freeCondition?: number
   paymentMethods?: ('선결제' | '착불')[]
-  perQuantity?: boolean
+  perQuantity?: number  // 몇 개마다 배송비를 반복 부과할지
 }
 
 interface DeliveryMethodSectionProps {
@@ -305,22 +305,16 @@ export default function DeliveryMethodSection({
                 />
                 <span>원</span>
               </div>
-              <div className={styles.checkboxRow}>
-                <label className={styles.checkboxLabel}>
-                  <input
-                    type="checkbox"
-                    checked={deliveryFeeSettings.perQuantity || false}
-                    onChange={(e) => handleFeeSettingChange('perQuantity', e.target.checked)}
-                    className={styles.hiddenCheckbox}
-                  />
-                  <span className={styles.customCheckbox}>
-                    <img
-                      src={deliveryFeeSettings.perQuantity ? "/icons/check_active.png" : "/icons/check.png"}
-                      alt="체크박스"
-                    />
-                  </span>
-                  개마다 기본배송비 반복 부과
-                </label>
+              <div className={styles.inputRow}>
+                <label className={styles.inputLabel}>반복 부과 수량</label>
+                <input
+                  type="number"
+                  placeholder="예: 5"
+                  value={deliveryFeeSettings.perQuantity || ''}
+                  onChange={(e) => handleFeeSettingChange('perQuantity', Number(e.target.value))}
+                  className={styles.input}
+                />
+                <span>개마다</span>
               </div>
               <div className={styles.inputRow}>
                 <label className={styles.inputLabel}>결제 방식</label>

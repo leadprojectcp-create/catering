@@ -168,10 +168,9 @@
 
 /* 매장 요청사항 */
 .requestSection {
-  padding: 20px;
   border-radius: 20px;
-  background: #FFF;
-  margin-bottom: 16px;
+  margin-left: 20px;
+  margin-right: 20px;
 }
 
 .requestTitle {
@@ -179,6 +178,7 @@
   font-weight: 700;
   color: #333;
   margin: 0 0 12px 0;
+  padding: 0 20px;
 }
 
 .requestTextarea {
@@ -280,4 +280,54 @@
   font-weight: 700;
   color: #fff;
   cursor: pointer;
+}
+
+.parcelPaymentSection {
+  padding: 20px 20px;
+  border-radius: 20px;
+  background: #F9F9F9;
+  margin-bottom: 16px;
+  margin-left: 20px;
+  margin-right: 20px;
+}
+
+.parcelPaymentTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: #333;
+  margin: 0 0 12px 0;
+  padding: 0 20px;
+}
+
+.paymentMethodGroup {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 12px;
+}
+
+.paymentMethodLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #333;
+  cursor: pointer;
+}
+
+.hiddenRadio {
+  display: none;
+}
+
+.customRadio {
+  font-size: 18px;
+  color: #237AF2;
+}
+
+.feeConditionNotice {
+  font-size: 13px;
+  color: #237AF2;
+  padding: 8px 12px;
+  background: #F0F6FF;
+  border-radius: 5px;
+  margin-top: 8px;
 }

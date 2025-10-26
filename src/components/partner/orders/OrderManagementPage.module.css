@@ -791,6 +791,32 @@
   font-weight: 600;
 }
 
+.trackingNumberRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.editTrackingBtn {
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.editTrackingBtn:hover {
+  background: #F5F5F5;
+}
+
+.editTrackingBtn svg {
+  display: block;
+}
+
 .orderItemSection {
   margin-bottom: 16px;
 }
@@ -893,7 +919,7 @@
 
 .totalLabel {
   color: #333;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
 }
 

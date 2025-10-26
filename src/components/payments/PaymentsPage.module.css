@@ -215,13 +215,23 @@
 .productInfo {
   flex: 1;
   min-width: 0;
+  height: 100px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.productNameRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
 }
 
 .productName {
   font-size: 14px;
   font-weight: 700;
   color: #333;
-  margin-bottom: 4px;
 }
 
 .productOptionWrapper {
@@ -1074,4 +1084,37 @@
   .paymentMethodBox span {
     font-size: 13px;
   }
+}
+
+.paymentMethodGroup {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 12px;
+}
+
+.paymentMethodLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #333;
+  cursor: pointer;
+}
+
+.hiddenRadio {
+  display: none;
+}
+
+.customRadio {
+  font-size: 18px;
+  color: #237AF2;
+}
+
+.feeConditionNotice {
+  font-size: 13px;
+  color: #237AF2;
+  padding: 8px 12px;
+  background: #F0F6FF;
+  border-radius: 5px;
+  margin-top: 8px;
 }

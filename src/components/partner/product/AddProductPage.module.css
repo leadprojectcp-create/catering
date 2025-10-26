@@ -452,6 +452,18 @@
   color: #333;
 }
 
+.optionInputGroup {
+  display: contents;
+}
+
+.mobileOptionLabel {
+  display: none;
+  font-size: 14px;
+  font-weight: 400;
+  color: #333;
+  margin-bottom: 8px;
+}
+
 .headerActions {
   display: flex;
   align-items: center;
@@ -535,6 +547,12 @@
   grid-template-columns: 1fr 1fr;
   gap: 16px;
   margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #F0F0F0;
+}
+
+.optionValueRow:last-child {
+  border-bottom: none;
 }
 
 .priceInputWrapper {
@@ -937,6 +955,30 @@
   .additionalSettingsGroup {
     flex-direction: column;
     gap: 16px;
+  }
+
+
+  .optionValuesHeader {
+    display: none;
+  }
+
+  .optionInputGroup {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .mobileOptionLabel {
+    display: block;
+  }
+
+  .optionValueRow {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .originRow {
+    grid-template-columns: 1fr;
+    gap: 12px;
   }
 }
 

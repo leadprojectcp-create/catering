@@ -136,35 +136,31 @@ export default function OptionSection({ options, onChange, onShowHelpModal, enab
             </div>
             {option.values.map((value, valueIndex) => (
               <div key={valueIndex} className={styles.optionValueRow}>
-                <input
-                  type="text"
-                  placeholder="ex) 기본"
-                  value={value.name}
-                  onChange={(e) => updateOptionValue(groupIndex, valueIndex, 'name', e.target.value)}
-                  className={styles.textInput}
-                />
-                <div className={styles.priceInputWrapper}>
+                <div className={styles.optionInputGroup}>
+                  <label className={styles.mobileOptionLabel}>옵션명</label>
                   <input
                     type="text"
-                    placeholder="ex) +1,000"
-                    value={value.price !== undefined && value.price !== null ? `+${formatNumberWithCommas(value.price)}` : ''}
-                    onChange={(e) => {
-                      const cleanedValue = e.target.value.replace('+', '').replace(',', '')
-                      const numValue = cleanedValue === '' ? 0 : parseFormattedNumber(cleanedValue)
-                      updateOptionValue(groupIndex, valueIndex, 'price', numValue)
-                    }}
+                    placeholder="ex) 기본"
+                    value={value.name}
+                    onChange={(e) => updateOptionValue(groupIndex, valueIndex, 'name', e.target.value)}
                     className={styles.textInput}
                   />
-                  {option.values.length === 1 ? (
-                    <button
-                      type="button"
-                      onClick={() => addOptionValue(groupIndex)}
-                      className={styles.addOptionValueButton}
-                    >
-                      +
-                    </button>
-                  ) : (
-                    <>
+                </div>
+                <div className={styles.optionInputGroup}>
+                  <label className={styles.mobileOptionLabel}>옵션가격</label>
+                  <div className={styles.priceInputWrapper}>
+                    <input
+                      type="text"
+                      placeholder="ex) +1,000"
+                      value={value.price !== undefined && value.price !== null ? `+${formatNumberWithCommas(value.price)}` : ''}
+                      onChange={(e) => {
+                        const cleanedValue = e.target.value.replace('+', '').replace(',', '')
+                        const numValue = cleanedValue === '' ? 0 : parseFormattedNumber(cleanedValue)
+                        updateOptionValue(groupIndex, valueIndex, 'price', numValue)
+                      }}
+                      className={styles.textInput}
+                    />
+                    {option.values.length === 1 ? (
                       <button
                         type="button"
                         onClick={() => addOptionValue(groupIndex)}
@@ -172,15 +168,25 @@ export default function OptionSection({ options, onChange, onShowHelpModal, enab
                       >
                         +
                       </button>
-                      <button
-                        type="button"
-                        onClick={() => removeOptionValue(groupIndex, valueIndex)}
-                        className={styles.removeOptionValueButton}
-                      >
-                        −
-                      </button>
-                    </>
-                  )}
+                    ) : (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => addOptionValue(groupIndex)}
+                          className={styles.addOptionValueButton}
+                        >
+                          +
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => removeOptionValue(groupIndex, valueIndex)}
+                          className={styles.removeOptionValueButton}
+                        >
+                          −
+                        </button>
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
             ))}
