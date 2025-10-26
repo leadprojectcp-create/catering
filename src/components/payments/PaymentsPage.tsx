@@ -4,14 +4,13 @@ import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 import Script from 'next/script'
-import { doc, getDoc, setDoc, updateDoc, addDoc, collection } from 'firebase/firestore'
+import { doc, getDoc, setDoc, updateDoc, addDoc, collection, increment, serverTimestamp } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { useAuth } from '@/contexts/AuthContext'
 import Loading from '@/components/Loading'
 import DeliveryInfo from './DeliveryInfo'
 import DateTimePicker from './DateTimePicker'
 import { OrderData, DeliveryAddress, DaumPostcodeData, OrderInfo } from './types'
-import { createOrder } from '@/lib/services/paymentsService'
 import PrivacyPolicy from '@/components/terms/PrivacyPolicy'
 import RefundPolicy from '@/components/terms/RefundPolicy'
 import PaymentTerms from './PaymentTerms'
@@ -364,7 +363,8 @@ export default function PaymentsPage() {
       return
     }
 
-    if (!orderInfo.deliveryTime) {
+    // 택배 배송이 아닐 때만 시간 검증
+    if (deliveryMethod !== '택배 배송' && !orderInfo.deliveryTime) {
       alert('배송 시간을 선택해주세요.')
       return
     }
@@ -520,6 +520,34 @@ export default function PaymentsPage() {
         paidAt: new Date(),
         verifiedAt: new Date()
       }, { merge: true })
+
+      // 포인트 사용한 경우 처리
+      if (usePoint > 0 && user) {
+        try {
+          // users 컬렉션에서 포인트 차감
+          const userRef = doc(db, 'users', user.uid)
+          await updateDoc(userRef, {
+            point: increment(-usePoint)
+          })
+
+          // points 컬렉션에 포인트 사용 내역 저장
+          await addDoc(collection(db, 'points'), {
+            uid: user.uid,
+            amount: -usePoint,
+            type: 'used',
+            reason: '주문 결제 시 포인트 사용',
+            orderId: finalOrderId,
+            productId: orderData?.productId || '',
+            productName: orderData?.productName || '',
+            createdAt: serverTimestamp()
+          })
+
+          console.log('포인트 사용 처리 완료:', usePoint)
+        } catch (pointError) {
+          console.error('포인트 사용 처리 실패:', pointError)
+          // 포인트 처리 실패해도 결제는 완료된 상태이므로 계속 진행
+        }
+      }
 
       // 퀵 배송은 웹훅에서 자동으로 처리됨
 
@@ -768,23 +796,57 @@ export default function PaymentsPage() {
                     )}
                     <div className={styles.productInfo}>
                       <div className={styles.productName}>{orderData.productName}</div>
-                      {Object.entries(item.options).map(([key, value]) => {
-                        // 옵션 가격 찾기
-                        let optionPrice = 0
-                        if (item.optionsWithPrices && item.optionsWithPrices[key]) {
-                          optionPrice = item.optionsWithPrices[key].price
-                        }
-                        return (
-                          <div key={key} className={styles.productOptionWrapper}>
-                            <div className={styles.productOptionGroup}>[{key}]</div>
-                            <div className={styles.productOption}>
-                              {value} +{optionPrice.toLocaleString()}원
+
+                      <div className={styles.productDetailsBox}>
+                        <div className={styles.productDetailsLeft}>
+                          {/* 상품 옵션 */}
+                          {Object.keys(item.options).length > 0 && (
+                            <div className={styles.optionSection}>
+                              <div className={styles.optionSectionTitle}>상품 옵션</div>
+                              <div className={styles.productOptions}>
+                                {Object.entries(item.options).map(([key, value]) => {
+                                  let optionPrice = 0
+                                  if (item.optionsWithPrices && item.optionsWithPrices[key]) {
+                                    optionPrice = item.optionsWithPrices[key].price
+                                  }
+                                  return (
+                                    <div key={key} className={styles.optionItem}>
+                                      <span className={styles.optionGroup}>[{key}]</span>
+                                      <span>{value} +{optionPrice.toLocaleString()}원</span>
+                                    </div>
+                                  )
+                                })}
+                              </div>
                             </div>
-                          </div>
-                        )
-                      })}
+                          )}
+
+                          {/* 추가상품 */}
+                          {item.additionalOptions && Object.keys(item.additionalOptions).length > 0 && (
+                            <div className={styles.optionSection}>
+                              <div className={styles.optionSectionTitle}>추가상품</div>
+                              <div className={styles.productOptions}>
+                                {Object.entries(item.additionalOptions).map(([key, value]) => {
+                                  let optionPrice = 0
+                                  if (item.additionalOptionsWithPrices && item.additionalOptionsWithPrices[key]) {
+                                    optionPrice = item.additionalOptionsWithPrices[key].price
+                                  }
+                                  return (
+                                    <div key={key} className={styles.optionItem}>
+                                      <span className={styles.optionGroup}>[{key}]</span>
+                                      <span>{value} +{optionPrice.toLocaleString()}원</span>
+                                    </div>
+                                  )
+                                })}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className={styles.productDetailsRight}>
+                          <div className={styles.productQuantity}>{item.quantity}개</div>
+                        </div>
+                      </div>
                     </div>
-                    <div className={styles.productQuantity}>{item.quantity}개</div>
                   </div>
                 ))}
               </div>
@@ -848,6 +910,7 @@ export default function PaymentsPage() {
                     deliveryDate={orderInfo.deliveryDate}
                     deliveryTime={orderInfo.deliveryTime}
                     minOrderDays={minOrderDays}
+                    deliveryMethod={deliveryMethod}
                     onDateChange={(date) => setOrderInfo({...orderInfo, deliveryDate: date})}
                     onTimeChange={(time) => setOrderInfo({...orderInfo, deliveryTime: time})}
                   />
@@ -857,8 +920,8 @@ export default function PaymentsPage() {
           </>
         )}
 
-        {/* 퀵업체 배송 선택시 배송지 설정 표시 */}
-        {deliveryMethod === '퀵업체 배송' && (
+        {/* 퀵업체 배송 또는 택배 배송 선택시 배송지 설정 표시 */}
+        {(deliveryMethod === '퀵업체 배송' || deliveryMethod === '택배 배송') && (
           <>
             {/* 배송지 설정 */}
             <DeliveryInfo
@@ -878,7 +941,7 @@ export default function PaymentsPage() {
             {/* 배송날짜 및 시간설정 */}
             <section className={styles.section}>
               <h2 className={styles.sectionTitle}>
-                배송날짜 및 시간설정
+                {deliveryMethod === '택배 배송' ? '배송날짜설정' : '배송날짜 및 시간설정'}
                 <button
                   className={styles.infoButton}
                   onClick={() => setShowDateInfoModal(true)}
@@ -898,6 +961,7 @@ export default function PaymentsPage() {
                     deliveryDate={orderInfo.deliveryDate}
                     deliveryTime={orderInfo.deliveryTime}
                     minOrderDays={minOrderDays}
+                    deliveryMethod={deliveryMethod}
                     onDateChange={(date) => setOrderInfo({...orderInfo, deliveryDate: date})}
                     onTimeChange={(time) => setOrderInfo({...orderInfo, deliveryTime: time})}
                   />
@@ -990,7 +1054,7 @@ export default function PaymentsPage() {
                   <label className={styles.label}>상세요청</label>
                   <textarea
                     className={styles.textareaFull}
-                    placeholder="판매자에게 필요한 상세 요청사항을 적어주세요."
+                    placeholder="배달기사님에게 필요한 상세 요청사항을 적어주세요."
                     value={detailedRequest}
                     onChange={(e) => setDetailedRequest(e.target.value)}
                   />

@@ -14,8 +14,10 @@ import { db } from '@/lib/firebase'
 
 export interface CartItemOption {
   options: { [key: string]: string }
+  additionalOptions?: { [key: string]: string }
   quantity: number
   optionsWithPrices?: { [key: string]: { name: string; price: number } }
+  additionalOptionsWithPrices?: { [key: string]: { name: string; price: number } }
 }
 
 export interface CartItem {

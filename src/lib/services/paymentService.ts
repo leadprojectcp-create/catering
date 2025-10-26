@@ -103,8 +103,6 @@ export const requestPayment = async (
 // 결제 검증 (서버사이드에서 호출해야 함)
 export const verifyPayment = async (paymentId: string): Promise<boolean> => {
   try {
-    // TODO: 서버 API를 통해 포트원 결제 검증
-    // 실제로는 백엔드에서 PortOne API를 호출하여 검증해야 함
     const response = await fetch('/api/payments/verify', {
       method: 'POST',
       headers: {

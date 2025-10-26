@@ -58,6 +58,20 @@
   max-width: 250px;
 }
 
+.optionSection {
+  margin-top: 12px;
+  margin-bottom: 12px;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+.optionSectionTitle {
+  color: #333;
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
 .optionGroupName {
   color: #999;
   font-size: 14px;

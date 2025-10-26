@@ -284,11 +284,6 @@
 }
 
 @media (max-width: 768px) {
-  .container {
-    padding: 32px 16px;
-    padding-bottom: 80px; /* 바텀 네비게이터 공간 확보 */
-  }
-
   .filterSection {
     flex-direction: column;
     align-items: flex-start;

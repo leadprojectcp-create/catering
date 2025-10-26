@@ -27,6 +27,7 @@ export interface ProductData {
   maxOrderQuantity: number
   deliveryMethods: {
     quick: boolean
+    parcel: boolean
     pickup: boolean
   }
   additionalSettings: {
@@ -54,6 +55,13 @@ export interface ProductData {
     isAlwaysActive: boolean
   }
   discountedPrice?: number
+  deliveryFeeSettings?: {
+    type: '무료' | '조건부 무료' | '유료' | '수량별'
+    baseFee?: number
+    freeCondition?: number
+    paymentMethods?: ('선결제' | '착불')[]
+    perQuantity?: boolean
+  }
 }
 
 // 상품 등록

@@ -176,6 +176,38 @@ const createOptionsWithPrices = (
   return optionsWithPrices
 }
 
+export const createAdditionalOptionsWithPrices = (
+  product: Product,
+  additionalOptions: { [key: string]: string }
+): { [key: string]: { name: string; price: number } } => {
+  const additionalOptionsWithPrices: { [key: string]: { name: string; price: number } } = {}
+
+  Object.entries(additionalOptions).forEach(([groupName, optionValue]) => {
+    // 쉼표로 구분된 여러 옵션이 있을 수 있으므로 split
+    const optionNames = optionValue.split(',').map(name => name.trim())
+    let totalPrice = 0
+
+    optionNames.forEach(optionName => {
+      product.additionalOptions?.forEach(group => {
+        if (group.groupName === groupName) {
+          const selected = group.values.find(v => v.name === optionName)
+          if (selected) {
+            totalPrice += selected.price
+          }
+        }
+      })
+    })
+
+    // 여러 옵션이면 쉼표로 구분된 이름 그대로 저장, 총 가격 합산
+    additionalOptionsWithPrices[groupName] = {
+      name: optionValue, // 쉼표로 구분된 전체 옵션명
+      price: totalPrice
+    }
+  })
+
+  return additionalOptionsWithPrices
+}
+
 export const getOptionPrice = (
   product: Product,
   groupName: string,
@@ -306,20 +338,22 @@ const fetchReviews = async (productId: string): Promise<Review[]> => {
       const data = docSnap.data()
 
       let userName = '익명'
-      try {
-        const userDoc = await getDoc(doc(db, 'users', data.userId))
-        if (userDoc.exists()) {
-          const userData = userDoc.data()
-          const rawName = userData.name || '익명'
-          userName = maskUserName(rawName)
+      if (data.uid) {
+        try {
+          const userDoc = await getDoc(doc(db, 'users', data.uid))
+          if (userDoc.exists()) {
+            const userData = userDoc.data()
+            const rawName = userData.name || '익명'
+            userName = maskUserName(rawName)
+          }
+        } catch (error) {
+          console.error('사용자 정보 로딩 실패:', error)
         }
-      } catch (error) {
-        console.error('사용자 정보 로딩 실패:', error)
       }
 
       reviewsData.push({
         id: docSnap.id,
-        userId: data.userId,
+        userId: data.uid || data.userId,
         userName,
         rating: data.rating,
         content: data.content,
@@ -612,15 +646,20 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
         // 주문하기와 동일한 구조로 저장
         const orderItems = cartItems.map(item => {
           const optionsWithPrices = createOptionsWithPrices(product, item.options)
+          const additionalOptionsWithPrices = item.additionalOptions
+            ? createAdditionalOptionsWithPrices(product, item.additionalOptions)
+            : undefined
 
           return {
             productId: productId,
             productName: product.name,
             options: item.options,
+            additionalOptions: item.additionalOptions,
             optionsWithPrices: optionsWithPrices,
+            additionalOptionsWithPrices: additionalOptionsWithPrices,
             quantity: item.quantity,
             price: product.discountedPrice || product.price,
-            itemPrice: calculateItemPrice(product, item.options, item.quantity)
+            itemPrice: calculateItemPrice(product, item.options, item.quantity, item.additionalOptions)
           }
         })
 
@@ -700,6 +739,9 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
       // Firestore에 저장할 주문 항목 데이터
       const orderItems = cartItems.map(item => {
         const optionsWithPrices = createOptionsWithPrices(product, item.options)
+        const additionalOptionsWithPrices = item.additionalOptions
+          ? createAdditionalOptionsWithPrices(product, item.additionalOptions)
+          : undefined
 
         return {
           productId: productId,
@@ -707,8 +749,10 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
           price: product.discountedPrice || product.price,
           quantity: item.quantity,
           options: item.options,
+          additionalOptions: item.additionalOptions,
           optionsWithPrices: optionsWithPrices,
-          itemPrice: calculateItemPrice(product, item.options, item.quantity)
+          additionalOptionsWithPrices: additionalOptionsWithPrices,
+          itemPrice: calculateItemPrice(product, item.options, item.quantity, item.additionalOptions)
         }
       })
 

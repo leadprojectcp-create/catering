@@ -52,52 +52,62 @@ export default function SelectedItems({
                 />
               </button>
             </div>
-            {Object.entries(item.options).map(([groupName, optionValue]) => {
-              // 쉼표로 구분된 여러 옵션을 분리
-              const optionNames = optionValue.split(',').map(name => name.trim())
+            {Object.keys(item.options).length > 0 && (
+              <div className={styles.optionSection}>
+                <div className={styles.optionSectionTitle}>상품 옵션</div>
+                {Object.entries(item.options).map(([groupName, optionValue]) => {
+                  // 쉼표로 구분된 여러 옵션을 분리
+                  const optionNames = optionValue.split(',').map(name => name.trim())
 
-              return (
-                <div key={groupName}>
-                  {optionNames.map((optionName, idx) => {
-                    // 각 옵션의 가격을 개별적으로 가져오기
-                    const optionPrice = getOptionPrice(product, groupName, optionName)
+                  return (
+                    <div key={groupName}>
+                      {optionNames.map((optionName, idx) => {
+                        // 각 옵션의 가격을 개별적으로 가져오기
+                        const optionPrice = getOptionPrice(product, groupName, optionName)
 
-                    return (
-                      <div key={`${groupName}-${idx}`} className={styles.selectedOption}>
-                        <div>
-                          <span className={styles.optionGroupName}>[{groupName}]</span>
-                          <span>{optionName}</span>
-                        </div>
-                        <span className={styles.optionPrice}>+{optionPrice.toLocaleString()}원</span>
-                      </div>
-                    )
-                  })}
-                </div>
-              )
-            })}
-            {item.additionalOptions && Object.entries(item.additionalOptions).map(([groupName, optionValue]) => {
-              // 쉼표로 구분된 여러 옵션을 분리
-              const optionNames = optionValue.split(',').map(name => name.trim())
+                        return (
+                          <div key={`${groupName}-${idx}`} className={styles.selectedOption}>
+                            <div>
+                              <span className={styles.optionGroupName}>[{groupName}]</span>
+                              <span>{optionName}</span>
+                            </div>
+                            <span className={styles.optionPrice}>+{optionPrice.toLocaleString()}원</span>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+            {item.additionalOptions && Object.keys(item.additionalOptions).length > 0 && (
+              <div className={styles.optionSection}>
+                <div className={styles.optionSectionTitle}>추가상품</div>
+                {Object.entries(item.additionalOptions).map(([groupName, optionValue]) => {
+                  // 쉼표로 구분된 여러 옵션을 분리
+                  const optionNames = optionValue.split(',').map(name => name.trim())
 
-              return (
-                <div key={`additional-${groupName}`}>
-                  {optionNames.map((optionName, idx) => {
-                    // 각 추가옵션의 가격을 가져오기 (additionalOptions에서)
-                    const optionPrice = getAdditionalOptionPrice(product, groupName, optionName)
+                  return (
+                    <div key={`additional-${groupName}`}>
+                      {optionNames.map((optionName, idx) => {
+                        // 각 추가옵션의 가격을 가져오기 (additionalOptions에서)
+                        const optionPrice = getAdditionalOptionPrice(product, groupName, optionName)
 
-                    return (
-                      <div key={`additional-${groupName}-${idx}`} className={styles.selectedOption}>
-                        <div>
-                          <span className={styles.optionGroupName}>[{groupName}]</span>
-                          <span>{optionName}</span>
-                        </div>
-                        <span className={styles.optionPrice}>+{optionPrice.toLocaleString()}원</span>
-                      </div>
-                    )
-                  })}
-                </div>
-              )
-            })}
+                        return (
+                          <div key={`additional-${groupName}-${idx}`} className={styles.selectedOption}>
+                            <div>
+                              <span className={styles.optionGroupName}>[{groupName}]</span>
+                              <span>{optionName}</span>
+                            </div>
+                            <span className={styles.optionPrice}>+{optionPrice.toLocaleString()}원</span>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )
+                })}
+              </div>
+            )}
             <div className={styles.quantityControl}>
               <button
                 onClick={() => onUpdateQuantity(index, item.quantity - 1)}

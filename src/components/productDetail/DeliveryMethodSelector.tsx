@@ -20,9 +20,11 @@ export default function DeliveryMethodSelector({
   const getDeliveryDescription = (method: string): string => {
     switch (method) {
       case '매장 픽업':
-        return '매장 픽업이 가능한 업체 입니다.'
+        return '고객이 직접 매장에 픽업'
       case '퀵업체 배송':
-        return '배달 위치에 따라서 가격이 차등 적용됩니다.'
+        return '원하는 날짜와 시간에 맞춰 배송'
+      case '택배 배송':
+        return '원하는 날짜에 배송'
       default:
         return ''
     }

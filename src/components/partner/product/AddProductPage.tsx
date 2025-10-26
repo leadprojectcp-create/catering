@@ -18,7 +18,7 @@ import OptionSection from './sections/OptionSection'
 import AdditionalOptionSection from './sections/AdditionalOptionSection'
 import DescriptionSection from './sections/DescriptionSection'
 import OriginSection from './sections/OriginSection'
-import DeliveryMethodSection from './sections/DeliveryMethodSection'
+import DeliveryMethodSection, { DeliveryFeeSettings } from './sections/DeliveryMethodSection'
 import AdditionalSettingsSection from './sections/AdditionalSettingsSection'
 import MinOrderDaysSection from './sections/MinOrderDaysSection'
 import { ProductFormData, ProductOption, categories } from './types'
@@ -35,6 +35,7 @@ export default function AddProductPage() {
   const [showOptionHelpModal, setShowOptionHelpModal] = useState(false)
   const [optionsEnabled, setOptionsEnabled] = useState(false)
   const [additionalOptionsEnabled, setAdditionalOptionsEnabled] = useState(false)
+  const [deliveryFeeSettings, setDeliveryFeeSettings] = useState<DeliveryFeeSettings>({ type: '무료' })
   const [formData, setFormData] = useState<ProductFormData>({
     name: '',
     images: [],
@@ -337,6 +338,7 @@ export default function AddProductPage() {
         options: filteredOptions, // 유효성 검사 통과한 옵션들
         additionalOptions: filteredAdditionalOptions.length > 0 ? filteredAdditionalOptions : undefined, // 비어있으면 undefined
         orderType: 'single', // 항상 단건주문으로 설정
+        deliveryFeeSettings: formData.deliveryMethods.includes('택배 배송') ? deliveryFeeSettings : undefined, // 택배 배송일 때만 배송비 설정 저장
         createdAt: new Date().toISOString()
       }
 
@@ -464,7 +466,9 @@ export default function AddProductPage() {
         {/* 상품 배송 설정 */}
         <DeliveryMethodSection
           deliveryMethods={formData.deliveryMethods}
+          deliveryFeeSettings={deliveryFeeSettings}
           onChange={(deliveryMethods) => setFormData(prev => ({ ...prev, deliveryMethods }))}
+          onDeliveryFeeChange={setDeliveryFeeSettings}
         />
 
         {/* 상품주문 추가설정 */}

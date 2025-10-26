@@ -5,6 +5,9 @@ export interface OrderItem {
   productId: string
   productName: string
   options: { [key: string]: string }
+  additionalOptions?: { [key: string]: string }
+  optionsWithPrices?: { [key: string]: { name: string; price: number } }
+  additionalOptionsWithPrices?: { [key: string]: { name: string; price: number } }
   quantity: number
   price: number
 }
@@ -31,6 +34,12 @@ export interface Order {
   deliveryInfo?: {
     deliveryDate?: string
     deliveryTime?: string
+    recipient?: string
+    recipientPhone?: string
+    address?: string
+    detailAddress?: string
+    zipCode?: string
+    addressName?: string
   }
   address: string
   detailAddress: string

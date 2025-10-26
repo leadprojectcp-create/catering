@@ -352,20 +352,50 @@ export default function ShoppingCartPage() {
                 <div className={styles.optionsContainer}>
                   {item.items.map((itemOption, index) => (
                     <div key={index} className={styles.itemOptionGroup}>
-                      <div className={styles.optionsList}>
-                        {Object.entries(itemOption.options).map(([groupName, value]) => {
-                          // 옵션 가격 찾기
-                          let optionPrice = 0
-                          if (itemOption.optionsWithPrices && itemOption.optionsWithPrices[groupName]) {
-                            optionPrice = itemOption.optionsWithPrices[groupName].price
-                          }
-                          return (
-                            <div key={groupName} className={styles.optionText}>
-                              <span className={styles.optionGroupName}>[{groupName}]</span> {value} +{optionPrice.toLocaleString()}원
+                      <div className={styles.optionsWrapper}>
+                        {/* 상품 옵션 */}
+                        {Object.keys(itemOption.options).length > 0 && (
+                          <div className={styles.optionSection}>
+                            <div className={styles.optionSectionTitle}>상품 옵션</div>
+                            <div className={styles.optionsList}>
+                              {Object.entries(itemOption.options).map(([groupName, value]) => {
+                                // 옵션 가격 찾기
+                                let optionPrice = 0
+                                if (itemOption.optionsWithPrices && itemOption.optionsWithPrices[groupName]) {
+                                  optionPrice = itemOption.optionsWithPrices[groupName].price
+                                }
+                                return (
+                                  <div key={groupName} className={styles.optionText}>
+                                    <span className={styles.optionGroupName}>[{groupName}]</span> {value} +{optionPrice.toLocaleString()}원
+                                  </div>
+                                )
+                              })}
                             </div>
-                          )
-                        })}
+                          </div>
+                        )}
+
+                        {/* 추가상품 */}
+                        {itemOption.additionalOptions && Object.keys(itemOption.additionalOptions).length > 0 && (
+                          <div className={styles.optionSection}>
+                            <div className={styles.optionSectionTitle}>추가상품</div>
+                            <div className={styles.optionsList}>
+                              {Object.entries(itemOption.additionalOptions).map(([groupName, value]) => {
+                                // 추가옵션 가격 찾기
+                                let optionPrice = 0
+                                if (itemOption.additionalOptionsWithPrices && itemOption.additionalOptionsWithPrices[groupName]) {
+                                  optionPrice = itemOption.additionalOptionsWithPrices[groupName].price
+                                }
+                                return (
+                                  <div key={groupName} className={styles.optionText}>
+                                    <span className={styles.optionGroupName}>[{groupName}]</span> {value} +{optionPrice.toLocaleString()}원
+                                  </div>
+                                )
+                              })}
+                            </div>
+                          </div>
+                        )}
                       </div>
+
                       <span className={styles.optionQuantity}>{itemOption.quantity}개</span>
                     </div>
                   ))}

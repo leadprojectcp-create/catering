@@ -7,6 +7,7 @@ import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firesto
 import { db } from '@/lib/firebase'
 import Image from 'next/image'
 import OptimizedImage from '@/components/common/OptimizedImage'
+import Loading from '@/components/Loading'
 import { Swiper, SwiperSlide } from 'swiper/react'
 import { Navigation } from 'swiper/modules'
 import 'swiper/css'
@@ -153,13 +154,7 @@ export default function Wishlist() {
   }, [user, router])
 
   if (!user || loading) {
-    return (
-      <div className={styles.container}>
-        <div className={styles.emptyState}>
-          <p className={styles.emptyText}>로딩 중...</p>
-        </div>
-      </div>
-    )
+    return <Loading />
   }
 
   const currentItems = activeTab === 'stores' ? likedStores : likedProducts

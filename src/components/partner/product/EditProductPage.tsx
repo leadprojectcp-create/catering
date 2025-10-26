@@ -16,7 +16,7 @@ import OptionSection from './sections/OptionSection'
 import AdditionalOptionSection from './sections/AdditionalOptionSection'
 import DescriptionSection from './sections/DescriptionSection'
 import OriginSection from './sections/OriginSection'
-import DeliveryMethodSection from './sections/DeliveryMethodSection'
+import DeliveryMethodSection, { DeliveryFeeSettings } from './sections/DeliveryMethodSection'
 import AdditionalSettingsSection from './sections/AdditionalSettingsSection'
 import MinOrderDaysSection from './sections/MinOrderDaysSection'
 import { ProductFormData } from './types'
@@ -40,6 +40,7 @@ export default function EditProductPage({ productId }: { productId: string }) {
   const [showOptionHelpModal, setShowOptionHelpModal] = useState(false)
   const [optionsEnabled, setOptionsEnabled] = useState(false)
   const [additionalOptionsEnabled, setAdditionalOptionsEnabled] = useState(false)
+  const [deliveryFeeSettings, setDeliveryFeeSettings] = useState<DeliveryFeeSettings>({ type: '무료' })
   const [formData, setFormData] = useState<EditProductFormData>({
     name: '',
     images: [],
@@ -155,6 +156,7 @@ export default function EditProductPage({ productId }: { productId: string }) {
             } else {
               // Convert from old object format to array
               if (product.deliveryMethods.quick) deliveryMethodsArray.push('퀵업체 배송')
+              if (product.deliveryMethods.parcel) deliveryMethodsArray.push('택배 배송')
               if (product.deliveryMethods.pickup) deliveryMethodsArray.push('매장 픽업')
             }
           }
@@ -176,6 +178,11 @@ export default function EditProductPage({ productId }: { productId: string }) {
           // storeId 저장
           if (product.storeId) {
             setStoreId(product.storeId)
+          }
+
+          // deliveryFeeSettings 불러오기
+          if (product.deliveryFeeSettings) {
+            setDeliveryFeeSettings(product.deliveryFeeSettings as DeliveryFeeSettings)
           }
 
           setFormData({
@@ -366,6 +373,7 @@ export default function EditProductPage({ productId }: { productId: string }) {
         images: uploadedImageUrls,
         options: filteredOptions, // 유효성 검사 통과한 옵션들
         additionalOptions: filteredAdditionalOptions.length > 0 ? filteredAdditionalOptions : [], // 비어있으면 빈 배열로 덮어쓰기
+        deliveryFeeSettings: formData.deliveryMethods.includes('택배 배송') ? deliveryFeeSettings : null, // 택배 배송일 때만 배송비 설정 저장, 아니면 제거
         updatedAt: new Date().toISOString()
       }
 
@@ -523,7 +531,9 @@ export default function EditProductPage({ productId }: { productId: string }) {
         {/* 상품 배송 설정 */}
         <DeliveryMethodSection
           deliveryMethods={formData.deliveryMethods}
+          deliveryFeeSettings={deliveryFeeSettings}
           onChange={(deliveryMethods) => setFormData(prev => ({ ...prev, deliveryMethods }))}
+          onDeliveryFeeChange={setDeliveryFeeSettings}
         />
 
         {/* 상품주문 추가설정 */}

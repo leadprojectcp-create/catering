@@ -1,6 +1,8 @@
 export interface OrderItem {
   options: { [key: string]: string }
   optionsWithPrices?: { [key: string]: { name: string; price: number } }
+  additionalOptions?: { [key: string]: string }
+  additionalOptionsWithPrices?: { [key: string]: { name: string; price: number } }
   quantity: number
   price?: number
   itemPrice?: number

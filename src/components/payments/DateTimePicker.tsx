@@ -9,6 +9,7 @@ interface DateTimePickerProps {
   deliveryDate: string
   deliveryTime: string
   minOrderDays?: number
+  deliveryMethod?: string
   onDateChange: (date: string) => void
   onTimeChange: (time: string) => void
 }
@@ -17,6 +18,7 @@ export default function DateTimePicker({
   deliveryDate,
   deliveryTime,
   minOrderDays = 0,
+  deliveryMethod,
   onDateChange,
   onTimeChange
 }: DateTimePickerProps) {
@@ -167,70 +169,72 @@ export default function DateTimePicker({
         </div>
       </div>
 
-      {/* 시간 선택 */}
-      <div className={styles.formRow}>
-        <label className={styles.label}>시간선택</label>
-        <div className={styles.pickerWrapper}>
-          <input
-            type="text"
-            className={styles.input}
-            placeholder="배송시간을 선택해주세요"
-            value={deliveryTime}
-            onClick={() => {
-              if (deliveryTime) {
-                const [h, m] = deliveryTime.split(':')
-                setPickerValue({ hour: h, minute: m })
-              }
-              setShowTimePicker(!showTimePicker)
-            }}
-            readOnly
-          />
-          {showTimePicker && (
-            <div className={styles.timeModal}>
-              <div className={styles.timeHeader}>
-                <span>시간 선택</span>
-                <button onClick={() => setShowTimePicker(false)}>✕</button>
+      {/* 시간 선택 - 택배 배송이 아닐 때만 표시 */}
+      {deliveryMethod !== '택배 배송' && (
+        <div className={styles.formRow}>
+          <label className={styles.label}>시간선택</label>
+          <div className={styles.pickerWrapper}>
+            <input
+              type="text"
+              className={styles.input}
+              placeholder="배송시간을 선택해주세요"
+              value={deliveryTime}
+              onClick={() => {
+                if (deliveryTime) {
+                  const [h, m] = deliveryTime.split(':')
+                  setPickerValue({ hour: h, minute: m })
+                }
+                setShowTimePicker(!showTimePicker)
+              }}
+              readOnly
+            />
+            {showTimePicker && (
+              <div className={styles.timeModal}>
+                <div className={styles.timeHeader}>
+                  <span>시간 선택</span>
+                  <button onClick={() => setShowTimePicker(false)}>✕</button>
+                </div>
+                <div className={styles.pickerContainer}>
+                  <Picker
+                    value={pickerValue}
+                    onChange={setPickerValue}
+                    wheelMode="natural"
+                    height={200}
+                    itemHeight={40}
+                  >
+                    {Object.keys(pickerSelections).map((name) => (
+                      <Picker.Column key={name} name={name}>
+                        {pickerSelections[name as keyof typeof pickerSelections].map((option) => (
+                          <Picker.Item
+                            key={option}
+                            value={option}
+                            style={{
+                              color: pickerValue[name as keyof typeof pickerValue] === option ? '#025BD9' : '#ccc',
+                              fontSize: pickerValue[name as keyof typeof pickerValue] === option ? '20px' : '14px',
+                              fontWeight: pickerValue[name as keyof typeof pickerValue] === option ? 600 : 400,
+                              transition: 'all 0.2s ease'
+                            }}
+                          >
+                            {option}
+                          </Picker.Item>
+                        ))}
+                      </Picker.Column>
+                    ))}
+                  </Picker>
+                  <div className={styles.timeSeparator}>:</div>
+                </div>
+                <div className={styles.timeFooter}>
+                  <button onClick={() => {
+                    const time = `${pickerValue.hour}:${pickerValue.minute}`
+                    onTimeChange(time)
+                    setShowTimePicker(false)
+                  }}>확인</button>
+                </div>
               </div>
-              <div className={styles.pickerContainer}>
-                <Picker
-                  value={pickerValue}
-                  onChange={setPickerValue}
-                  wheelMode="natural"
-                  height={200}
-                  itemHeight={40}
-                >
-                  {Object.keys(pickerSelections).map((name) => (
-                    <Picker.Column key={name} name={name}>
-                      {pickerSelections[name as keyof typeof pickerSelections].map((option) => (
-                        <Picker.Item
-                          key={option}
-                          value={option}
-                          style={{
-                            color: pickerValue[name as keyof typeof pickerValue] === option ? '#025BD9' : '#ccc',
-                            fontSize: pickerValue[name as keyof typeof pickerValue] === option ? '20px' : '14px',
-                            fontWeight: pickerValue[name as keyof typeof pickerValue] === option ? 600 : 400,
-                            transition: 'all 0.2s ease'
-                          }}
-                        >
-                          {option}
-                        </Picker.Item>
-                      ))}
-                    </Picker.Column>
-                  ))}
-                </Picker>
-                <div className={styles.timeSeparator}>:</div>
-              </div>
-              <div className={styles.timeFooter}>
-                <button onClick={() => {
-                  const time = `${pickerValue.hour}:${pickerValue.minute}`
-                  onTimeChange(time)
-                  setShowTimePicker(false)
-                }}>확인</button>
-              </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
-      </div>
+      )}
     </>
   )
 }

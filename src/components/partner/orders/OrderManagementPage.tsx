@@ -70,7 +70,7 @@ export default function OrderManagementPage() {
     const labels: Record<OrderStatus, string> = {
       pending: '신규 주문',
       preparing: '준비중',
-      shipping: '배송중',
+      shipping: '배송·픽업중',
       completed: '완료',
       rejected: '거부됨',
       cancelled: '취소됨'
@@ -545,10 +545,7 @@ export default function OrderManagementPage() {
                       <div className={styles.productName}>{productSummary}</div>
                       <div className={styles.orderInfo}>예약날짜 {formattedReservation}</div>
                       <div className={styles.orderInfo}>
-                        결제완료 {order.deliveryMethod === '퀵업체 배송'
-                          ? formatCurrency(order.totalPrice - order.deliveryFee)
-                          : formatCurrency(order.totalPrice)
-                        }
+                        결제완료 {formatCurrency(order.totalProductPrice)}
                       </div>
                     </div>
                     <div className={styles.cardRight}>
@@ -626,7 +623,7 @@ export default function OrderManagementPage() {
                                 className={`${styles.actionBtn} ${styles.acceptBtn}`}
                                 onClick={() => handleStatusChange(order.id!, 'shipping')}
                               >
-                                배송·픽업중
+                                준비완료
                               </button>
                             </>
                           )}
@@ -661,20 +658,61 @@ export default function OrderManagementPage() {
                           <div className={styles.detailSectionDivider}></div>
 
                           <h3 className={styles.detailTitle}>주문내역</h3>
-                          {order.items.map((item, index) => (
-                            <div key={index} className={styles.orderItemSection}>
-                              <div className={styles.orderItemHeader}>
-                                <span className={styles.orderItemName}>{item.productName}</span>
-                                <span className={styles.orderItemQuantity}>{item.quantity}개</span>
-                                <span className={styles.orderItemPrice}>{formatCurrency(item.price * item.quantity)}</span>
-                              </div>
-                              {Object.entries(item.options).map(([key, value], optIdx) => (
-                                <div key={optIdx} className={styles.orderItemOption}>
-                                  [{key}] {value}
+                          {order.items.map((item, index) => {
+                            const showProductName = index === 0 || order.items[index - 1].productName !== item.productName
+                            return (
+                              <div key={index} className={styles.orderItemSection}>
+                                {showProductName && (
+                                  <span className={styles.orderItemName}>{item.productName}</span>
+                                )}
+
+                                <div className={styles.orderItemContent}>
+                                  <div className={styles.orderItemLeft}>
+                                    {/* 상품 옵션 */}
+                                    {Object.keys(item.options).length > 0 && (
+                                      <div className={styles.optionGroup}>
+                                        <div className={styles.optionGroupTitle}>상품 옵션</div>
+                                        {Object.entries(item.options).map(([key, value], optIdx) => {
+                                          let optionPrice = 0
+                                          if (item.optionsWithPrices && item.optionsWithPrices[key]) {
+                                            optionPrice = item.optionsWithPrices[key].price
+                                          }
+                                          return (
+                                            <div key={optIdx} className={styles.orderItemOption}>
+                                              [{key}] {value} {optionPrice > 0 && `+${optionPrice.toLocaleString()}원`}
+                                            </div>
+                                          )
+                                        })}
+                                      </div>
+                                    )}
+
+                                    {/* 추가상품 */}
+                                    {item.additionalOptions && Object.keys(item.additionalOptions).length > 0 && (
+                                      <div className={styles.optionGroup}>
+                                        <div className={styles.optionGroupTitle}>추가상품</div>
+                                        {Object.entries(item.additionalOptions).map(([key, value], optIdx) => {
+                                          let optionPrice = 0
+                                          if (item.additionalOptionsWithPrices && item.additionalOptionsWithPrices[key]) {
+                                            optionPrice = item.additionalOptionsWithPrices[key].price
+                                          }
+                                          return (
+                                            <div key={optIdx} className={styles.orderItemOption}>
+                                              [{key}] {value} {optionPrice > 0 && `+${optionPrice.toLocaleString()}원`}
+                                            </div>
+                                          )
+                                        })}
+                                      </div>
+                                    )}
+                                  </div>
+
+                                  <div className={styles.orderItemRight}>
+                                    <span className={styles.orderItemQuantity}>{item.quantity}개</span>
+                                    <span className={styles.orderItemPrice}>{formatCurrency(item.price * item.quantity)}</span>
+                                  </div>
                                 </div>
-                              ))}
-                            </div>
-                          ))}
+                              </div>
+                            )
+                          })}
 
                           <div className={styles.detailSectionDivider}></div>
 
@@ -684,12 +722,9 @@ export default function OrderManagementPage() {
                               <span className={styles.totalValue}>{order.items.reduce((sum, item) => sum + item.quantity, 0)}개</span>
                             </div>
                             <div className={styles.totalRow}>
-                              <span className={styles.totalLabel}>총 결제금액</span>
+                              <span className={styles.totalLabel}>총 상품금액</span>
                               <span className={styles.totalValue}>
-                                {order.deliveryMethod === '퀵업체 배송'
-                                  ? formatCurrency(order.totalPrice - order.deliveryFee)
-                                  : formatCurrency(order.totalPrice)
-                                }
+                                {formatCurrency(order.totalProductPrice)}
                               </span>
                             </div>
                           </div>
@@ -752,11 +787,11 @@ export default function OrderManagementPage() {
                               </div>
                               <div className={styles.detailRow}>
                                 <span className={styles.detailLabel}>수령인</span>
-                                <span className={styles.detailValue}>{order.recipient}</span>
+                                <span className={styles.detailValue}>{order.deliveryInfo?.recipient || order.recipient}</span>
                               </div>
                               <div className={styles.detailRow}>
                                 <span className={styles.detailLabel}>전화번호</span>
-                                <span className={styles.detailValue}>{order.phone}</span>
+                                <span className={styles.detailValue}>{order.deliveryInfo?.recipientPhone || order.phone}</span>
                               </div>
 
                               <div className={styles.detailSectionDivider}></div>
@@ -803,11 +838,11 @@ export default function OrderManagementPage() {
                               <h3 className={styles.detailTitle}>수령인 정보</h3>
                               <div className={styles.detailRow}>
                                 <span className={styles.detailLabel}>수령인</span>
-                                <span className={styles.detailValue}>{order.recipient}</span>
+                                <span className={styles.detailValue}>{order.deliveryInfo?.recipient || order.recipient}</span>
                               </div>
                               <div className={styles.detailRow}>
                                 <span className={styles.detailLabel}>전화번호</span>
-                                <span className={styles.detailValue}>{order.phone}</span>
+                                <span className={styles.detailValue}>{order.deliveryInfo?.recipientPhone || order.phone}</span>
                               </div>
                             </div>
                           </>

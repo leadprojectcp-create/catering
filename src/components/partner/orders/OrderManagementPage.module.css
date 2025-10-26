@@ -207,6 +207,13 @@
   background: #F4F4F4;
 }
 
+.filtersWrapper {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
 .filters {
   display: flex;
   gap: 0;
@@ -217,8 +224,8 @@
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE and Edge */
   border-bottom: 1px solid #F5F5F5;
-  position: relative;
 }
+
 
 .filters::-webkit-scrollbar {
   display: none; /* Chrome, Safari, Opera */
@@ -788,18 +795,38 @@
   margin-bottom: 16px;
 }
 
-.orderItemHeader {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 8px;
-}
-
 .orderItemName {
   color: #333;
   font-size: 14px;
   font-weight: 600;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.orderItemContent {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  background: #F5F7F9;
+  padding: 12px;
+  border-radius: 8px;
+  gap: 12px;
+}
+
+.orderItemLeft {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.orderItemRight {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
 }
 
 .orderItemQuantity {
@@ -812,6 +839,18 @@
   color: #333;
   font-size: 14px;
   font-weight: 700;
+}
+
+.optionGroup {
+  display: flex;
+  flex-direction: column;
+}
+
+.optionGroupTitle {
+  color: #333;
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 4px;
 }
 
 .orderItemOption {
@@ -881,10 +920,6 @@
 }
 
 @media (max-width: 768px) {
-  .container {
-    padding: 20px 15px;
-    padding-top: 85px;
-  }
 
   .title {
     font-size: 24px;
@@ -915,6 +950,7 @@
     overflow-x: scroll;
     -webkit-overflow-scrolling: touch;
   }
+
 
   .calendar {
     left: 50%;

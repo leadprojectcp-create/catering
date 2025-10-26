@@ -52,6 +52,9 @@ interface OrderItem {
   productId: string
   productName: string
   options: { [key: string]: string }
+  additionalOptions?: { [key: string]: string }
+  optionsWithPrices?: { [key: string]: { name: string; price: number } }
+  additionalOptionsWithPrices?: { [key: string]: { name: string; price: number } }
   quantity: number
   price: number
   productImage?: string
@@ -339,33 +342,93 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
           <div className={styles.divider}></div>
 
           {/* 상품 목록 */}
-          {order.items.map((item, index) => (
-            <div key={index} className={styles.productItem}>
-              {item.productImage && (
-                <Image
-                  src={item.productImage}
-                  alt={item.productName}
-                  width={100}
-                  height={100}
-                  quality={100}
-                  className={styles.productImage}
-                />
-              )}
-              <div className={styles.productInfo}>
-                <div className={styles.productName}>{item.productName}</div>
-                {Object.entries(item.options).length > 0 && (
-                  <div className={styles.productOptions}>
-                    {Object.entries(item.options).map(([key, value]) => (
-                      <div key={key} className={styles.optionItem}>
-                        <div className={styles.optionGroup}>[{key}]</div>
-                        <div className={styles.optionValue}>{value} +{item.price?.toLocaleString() || 0}원 {item.quantity}개</div>
-                      </div>
-                    ))}
+          {(() => {
+            const groupedItems: { [key: string]: OrderItem[] } = {}
+            order.items.forEach(item => {
+              if (!groupedItems[item.productName]) {
+                groupedItems[item.productName] = []
+              }
+              groupedItems[item.productName].push(item)
+            })
+
+            return Object.entries(groupedItems).map(([productName, items], groupIndex) => {
+              const firstItem = items[0]
+              return (
+                <div key={groupIndex} className={styles.productItem}>
+                  {firstItem.productImage && (
+                    <Image
+                      src={firstItem.productImage}
+                      alt={productName}
+                      width={100}
+                      height={100}
+                      quality={100}
+                      className={styles.productImage}
+                    />
+                  )}
+
+                  <div className={styles.productInfo}>
+                    <div className={styles.productName}>{productName}</div>
+
+                    {items.map((item, itemIndex) => {
+                      const itemTotalPrice = item.price * item.quantity
+                      return (
+                        <div key={itemIndex} className={styles.productDetailsBox}>
+                          <div className={styles.productDetailsLeft}>
+                            {/* 상품 옵션 */}
+                            {Object.keys(item.options).length > 0 && (
+                              <div className={styles.optionSection}>
+                                <div className={styles.optionSectionTitle}>상품 옵션</div>
+                                <div className={styles.productOptions}>
+                                  {Object.entries(item.options).map(([key, value]) => {
+                                    let optionPrice = 0
+                                    if (item.optionsWithPrices && item.optionsWithPrices[key]) {
+                                      optionPrice = item.optionsWithPrices[key].price
+                                    }
+                                    return (
+                                      <div key={key} className={styles.optionItem}>
+                                        <span className={styles.optionGroup}>[{key}]</span>
+                                        <span>{value} +{optionPrice.toLocaleString()}원</span>
+                                      </div>
+                                    )
+                                  })}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* 추가상품 */}
+                            {item.additionalOptions && Object.keys(item.additionalOptions).length > 0 && (
+                              <div className={styles.optionSection}>
+                                <div className={styles.optionSectionTitle}>추가상품</div>
+                                <div className={styles.productOptions}>
+                                  {Object.entries(item.additionalOptions).map(([key, value]) => {
+                                    let optionPrice = 0
+                                    if (item.additionalOptionsWithPrices && item.additionalOptionsWithPrices[key]) {
+                                      optionPrice = item.additionalOptionsWithPrices[key].price
+                                    }
+                                    return (
+                                      <div key={key} className={styles.optionItem}>
+                                        <span className={styles.optionGroup}>[{key}]</span>
+                                        <span>{value} +{optionPrice.toLocaleString()}원</span>
+                                      </div>
+                                    )
+                                  })}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+
+                          <div className={styles.productDetailsRight}>
+                            <div className={styles.quantityInfo}>{item.quantity}개</div>
+                            <div className={styles.priceInfo}>{itemTotalPrice.toLocaleString()}원</div>
+                          </div>
+                        </div>
+                      )
+                    })}
                   </div>
-                )}
-              </div>
-            </div>
-          ))}
+                </div>
+              )
+            })
+          })()}
 
           {order.request && (
             <>
@@ -476,12 +539,10 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
               <span className={styles.infoLabel}>배송비</span>
               <span className={styles.infoValue}>+{order.deliveryFee.toLocaleString()}원</span>
             </div>
-            {order.usedPoint && order.usedPoint > 0 && (
-              <div className={styles.infoRow}>
-                <span className={styles.infoLabel}>포인트 사용</span>
-                <span className={styles.infoValue}>-{order.usedPoint.toLocaleString()}원</span>
-              </div>
-            )}
+            <div className={styles.infoRow}>
+              <span className={styles.infoLabel}>포인트 사용</span>
+              <span className={styles.infoValue}>-{(order.usedPoint ?? 0).toLocaleString()}원</span>
+            </div>
             <div className={styles.divider}></div>
             {order.paidAt && (
               <div className={styles.paymentDateInfo}>
