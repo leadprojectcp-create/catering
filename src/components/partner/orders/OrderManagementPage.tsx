@@ -457,33 +457,42 @@ export default function OrderManagementPage() {
       ) : (
         <div className={styles.orderList}>
             {filteredOrders.map((order) => {
+              // 배송 날짜와 시간 가져오기 (deliveryInfo 우선, 없으면 기본 필드)
+              const actualDeliveryDate = order.deliveryInfo?.deliveryDate || order.deliveryDate
+              const actualDeliveryTime = order.deliveryInfo?.deliveryTime || order.deliveryTime
+
               // D-day 계산
-              const deliveryDateObj = new Date(order.deliveryDate)
-              const today = new Date()
-              const diffTime = deliveryDateObj.getTime() - today.getTime()
-              const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-              const dDay = diffDays >= 0 ? `D-${diffDays}` : `D+${Math.abs(diffDays)}`
+              let dDay = '-'
+              let formattedReservation = '-'
+
+              if (actualDeliveryDate) {
+                const deliveryDateObj = new Date(actualDeliveryDate)
+                const today = new Date()
+                const diffTime = deliveryDateObj.getTime() - today.getTime()
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+                dDay = diffDays >= 0 ? `D-${diffDays}` : `D+${Math.abs(diffDays)}`
+
+                // 예약날짜 포맷
+                const year = deliveryDateObj.getFullYear()
+                const month = deliveryDateObj.getMonth() + 1
+                const day = deliveryDateObj.getDate()
+                const weekdays = ['일', '월', '화', '수', '목', '금', '토']
+                const weekday = weekdays[deliveryDateObj.getDay()]
+
+                formattedReservation = `${year}년 ${month}월 ${day}일 (${weekday})`
+
+                if (actualDeliveryTime) {
+                  const [hour, minute] = actualDeliveryTime.split(':').map(Number)
+                  const period = hour >= 12 ? '오후' : '오전'
+                  const displayHour = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour
+                  formattedReservation += ` ${period} ${displayHour}시 ${minute}분`
+                }
+              }
 
               // 상품명 요약
               const firstProduct = order.items[0]?.productName || ''
               const totalCount = order.items.reduce((sum, item) => sum + item.quantity, 0)
               const productSummary = `${firstProduct} 외 ${totalCount}개`
-
-              // 예약날짜 포맷
-              const reservationDate = new Date(order.deliveryDate)
-              const year = reservationDate.getFullYear()
-              const month = reservationDate.getMonth() + 1
-              const day = reservationDate.getDate()
-              const weekdays = ['일', '월', '화', '수', '목', '금', '토']
-              const weekday = weekdays[reservationDate.getDay()]
-
-              let formattedReservation = `${year}년 ${month}월 ${day}일 (${weekday})`
-              if (order.deliveryTime) {
-                const [hour, minute] = order.deliveryTime.split(':').map(Number)
-                const period = hour >= 12 ? '오후' : '오전'
-                const displayHour = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour
-                formattedReservation += ` ${period} ${displayHour}시 ${minute}분`
-              }
 
               // 배송방법 텍스트
               const deliveryMethodText = order.deliveryMethod === '퀵업체 배송' ? '퀵업체 배송' : '매장 픽업'
@@ -703,26 +712,26 @@ export default function OrderManagementPage() {
                               <div className={styles.detailRow}>
                                 <span className={styles.detailLabel}>배송날짜</span>
                                 <span className={styles.detailValue}>
-                                  {(() => {
-                                    const date = new Date(order.deliveryDate)
+                                  {actualDeliveryDate ? (() => {
+                                    const date = new Date(actualDeliveryDate)
                                     const year = date.getFullYear()
                                     const month = date.getMonth() + 1
                                     const day = date.getDate()
                                     const weekdays = ['일', '월', '화', '수', '목', '금', '토']
                                     const weekday = weekdays[date.getDay()]
                                     return `${year}년 ${month}월 ${day}일 (${weekday})`
-                                  })()}
+                                  })() : '-'}
                                 </span>
                               </div>
                               <div className={styles.detailRow}>
                                 <span className={styles.detailLabel}>배송시간</span>
                                 <span className={styles.detailValue}>
-                                  {(() => {
-                                    const [hour, minute] = order.deliveryTime.split(':').map(Number)
+                                  {actualDeliveryTime ? (() => {
+                                    const [hour, minute] = actualDeliveryTime.split(':').map(Number)
                                     const period = hour >= 12 ? '오후' : '오전'
                                     const displayHour = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour
                                     return `${period} ${displayHour}시 ${minute}분`
-                                  })()}
+                                  })() : '-'}
                                 </span>
                               </div>
 
@@ -766,26 +775,26 @@ export default function OrderManagementPage() {
                               <div className={styles.detailRow}>
                                 <span className={styles.detailLabel}>픽업날짜</span>
                                 <span className={styles.detailValue}>
-                                  {(() => {
-                                    const date = new Date(order.deliveryDate)
+                                  {actualDeliveryDate ? (() => {
+                                    const date = new Date(actualDeliveryDate)
                                     const year = date.getFullYear()
                                     const month = date.getMonth() + 1
                                     const day = date.getDate()
                                     const weekdays = ['일', '월', '화', '수', '목', '금', '토']
                                     const weekday = weekdays[date.getDay()]
                                     return `${year}년 ${month}월 ${day}일 (${weekday})`
-                                  })()}
+                                  })() : '-'}
                                 </span>
                               </div>
                               <div className={styles.detailRow}>
                                 <span className={styles.detailLabel}>픽업시간</span>
                                 <span className={styles.detailValue}>
-                                  {(() => {
-                                    const [hour, minute] = order.deliveryTime.split(':').map(Number)
+                                  {actualDeliveryTime ? (() => {
+                                    const [hour, minute] = actualDeliveryTime.split(':').map(Number)
                                     const period = hour >= 12 ? '오후' : '오전'
                                     const displayHour = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour
                                     return `${period} ${displayHour}시 ${minute}분`
-                                  })()}
+                                  })() : '-'}
                                 </span>
                               </div>
 

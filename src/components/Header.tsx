@@ -33,6 +33,9 @@ const getPageTitle = (path: string): string => {
   if (path.startsWith('/reviews/write')) return '리뷰 작성'
   if (path.startsWith('/reviews/edit/')) return '리뷰 수정'
   if (path === '/reviews') return '리뷰 관리'
+  if (path === '/settings') return '설정'
+  if (path.startsWith('/settings/password-change')) return '비밀번호 변경'
+  if (path.startsWith('/settings/withdrawal')) return '회원탈퇴'
   return ''
 }
 

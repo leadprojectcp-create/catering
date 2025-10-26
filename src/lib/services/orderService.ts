@@ -28,6 +28,10 @@ export interface Order {
   deliveryMethod: string
   deliveryDate: string
   deliveryTime: string
+  deliveryInfo?: {
+    deliveryDate?: string
+    deliveryTime?: string
+  }
   address: string
   detailAddress: string
   recipient: string

@@ -1,0 +1,354 @@
+.container {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #333;
+  margin: 0 0 32px 0;
+}
+
+/* 안내 섹션 */
+.noticeSection {
+  margin-bottom: 40px;
+}
+
+.noticeTitle {
+  color: #333;
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0 0 20px 0;
+}
+
+.noticeList {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.noticeItem {
+  display: flex;
+  gap: 16px;
+}
+
+.noticeContent {
+  flex: 1;
+}
+
+.noticeItemTitle {
+  color: #333;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 150%;
+  margin: 0 0 8px 0;
+}
+
+.noticeText {
+  color: #1B1C1F;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 150%;
+  margin: 0;
+  padding-left: 12px;
+  position: relative;
+}
+
+.noticeText::before {
+  content: '•';
+  position: absolute;
+  left: 0;
+  color: #1B1C1F;
+}
+
+/* 탈퇴 사유 섹션 */
+.reasonSection {
+  margin-bottom: 32px;
+}
+
+.reasonTitle {
+  color: #333;
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0 0 8px 0;
+}
+
+.reasonSubtitle {
+  color: #666;
+  font-size: 14px;
+  font-weight: 400;
+  margin: 0 0 16px 0;
+}
+
+/* 커스텀 드롭다운 */
+.dropdownContainer {
+  position: relative;
+  width: 100%;
+}
+
+.dropdownSelect {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 8px;
+  border: 1px solid #E5E7EB;
+  background: #FFF;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.dropdownSelect:hover {
+  border-color: #237AF2;
+}
+
+.dropdownSelectedText {
+  color: #333;
+  font-size: 15px;
+  font-weight: 500;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dropdownArrow {
+  flex-shrink: 0;
+  transition: transform 0.2s;
+}
+
+.dropdownArrowUp {
+  transform: rotate(180deg);
+}
+
+.dropdownList {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  background: #FFF;
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  z-index: 1000;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.dropdownOption {
+  padding: 14px 16px;
+  color: #333;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.dropdownOption:hover {
+  background: #F5F7FA;
+}
+
+.dropdownOption.dropdownOptionSelected {
+  background: #F0F6FF;
+  color: #237AF2;
+  font-weight: 600;
+}
+
+.textarea {
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  font-size: 15px;
+  color: #333;
+  background-color: white;
+  outline: none;
+  transition: border-color 0.2s;
+  resize: vertical;
+  margin-top: 12px;
+  font-family: inherit;
+  line-height: 1.6;
+}
+
+.textarea:focus {
+  border-color: #237AF2;
+}
+
+.textarea::placeholder {
+  color: #9CA3AF;
+}
+
+/* 동의 섹션 */
+.agreementSection {
+  margin-bottom: 32px;
+}
+
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+}
+
+.customCheckbox {
+  position: relative;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.checkboxInput {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  width: 24px;
+  height: 24px;
+}
+
+.checkboxIcon {
+  width: 24px;
+  height: 24px;
+  pointer-events: none;
+}
+
+.checkboxText {
+  color: #999;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 150%;
+  user-select: none;
+}
+
+/* 버튼 그룹 */
+.buttonGroup {
+  display: flex;
+  gap: 12px;
+}
+
+.continueButton,
+.withdrawButton {
+  flex: 1;
+  padding: 16px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+
+.continueButton {
+  background-color: #F5F5F5;
+  color: #333;
+}
+
+.continueButton:hover {
+  background-color: #E5E5E5;
+}
+
+.withdrawButton {
+  background-color: #DC2626;
+  color: white;
+}
+
+.withdrawButton:hover:not(:disabled) {
+  background-color: #B91C1C;
+}
+
+.withdrawButton:disabled {
+  background-color: #D1D5DB;
+  color: #9CA3AF;
+  cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 16px;
+    padding-top: 80px;
+    padding-bottom: 80px;
+  }
+
+  .title {
+    font-size: 20px;
+    margin: 0 0 24px 0;
+  }
+
+  .noticeSection {
+    margin-bottom: 32px;
+  }
+
+  .noticeTitle {
+    font-size: 16px;
+    margin: 0 0 16px 0;
+  }
+
+  .noticeList {
+    gap: 16px;
+  }
+
+  .noticeItem {
+    gap: 12px;
+  }
+
+  .noticeItemTitle {
+    font-size: 15px;
+    margin: 0 0 6px 0;
+  }
+
+  .noticeText {
+    font-size: 13px;
+    padding-left: 10px;
+  }
+
+  .reasonSection {
+    margin-bottom: 28px;
+  }
+
+  .reasonTitle {
+    font-size: 16px;
+  }
+
+  .reasonSubtitle {
+    font-size: 13px;
+  }
+
+  .dropdownSelect {
+    padding: 12px 14px;
+  }
+
+  .dropdownSelectedText {
+    font-size: 14px;
+  }
+
+  .dropdownOption {
+    padding: 12px 14px;
+    font-size: 14px;
+  }
+
+  .textarea {
+    padding: 12px 14px;
+    font-size: 14px;
+    margin-top: 10px;
+  }
+
+  .agreementSection {
+    margin-bottom: 28px;
+  }
+
+  .checkboxText {
+    font-size: 13px;
+  }
+
+  .buttonGroup {
+    gap: 10px;
+  }
+
+  .continueButton,
+  .withdrawButton {
+    padding: 14px;
+    font-size: 15px;
+  }
+}
