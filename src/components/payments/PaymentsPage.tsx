@@ -78,7 +78,13 @@ export default function PaymentsPage() {
   const [minOrderDays, setMinOrderDays] = useState(0)
   const [deliveryFeeFromAPI, setDeliveryFeeFromAPI] = useState<number | null>(null)
   const [isLoadingDeliveryFee, setIsLoadingDeliveryFee] = useState(false)
-  const [deliveryFeeSettings, setDeliveryFeeSettings] = useState<any>(null)
+  const [deliveryFeeSettings, setDeliveryFeeSettings] = useState<{
+    type: '무료' | '조건부 무료' | '유료' | '수량별'
+    baseFee?: number
+    freeCondition?: number
+    paymentMethods?: ('선결제' | '착불')[]
+    perQuantity?: number
+  } | null>(null)
   const [parcelPaymentMethod, setParcelPaymentMethod] = useState<'선결제' | '착불'>('선결제')
 
   useEffect(() => {
