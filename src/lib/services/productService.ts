@@ -8,6 +8,7 @@ export interface ProductData {
   price: number
   category?: string
   productTypes?: string[]
+  optionsEnabled: boolean
   options: {
     groupName: string
     values: {
@@ -15,6 +16,7 @@ export interface ProductData {
       price: number
     }[]
   }[]
+  additionalOptionsEnabled: boolean
   additionalOptions?: {
     groupName: string
     values: {

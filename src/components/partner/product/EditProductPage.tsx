@@ -219,11 +219,18 @@ export default function EditProductPage({ productId }: { productId: string }) {
             discountedPrice: product.discountedPrice
           })
 
-          // 옵션 토글 상태 초기화
-          if (product.options && product.options.length > 0 && product.options[0].groupName) {
+          // 옵션 토글 상태 초기화 - DB에 저장된 값이 있으면 사용, 없으면 기존 로직
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const productAny = product as any
+          if (productAny.optionsEnabled !== undefined) {
+            setOptionsEnabled(productAny.optionsEnabled)
+          } else if (product.options && product.options.length > 0 && product.options[0].groupName) {
             setOptionsEnabled(true)
           }
-          if (product.additionalOptions && product.additionalOptions.length > 0 && product.additionalOptions[0].groupName) {
+
+          if (productAny.additionalOptionsEnabled !== undefined) {
+            setAdditionalOptionsEnabled(productAny.additionalOptionsEnabled)
+          } else if (product.additionalOptions && product.additionalOptions.length > 0 && product.additionalOptions[0].groupName) {
             setAdditionalOptionsEnabled(true)
           }
         }
@@ -290,15 +297,17 @@ export default function EditProductPage({ productId }: { productId: string }) {
       return
     }
 
-    // 옵션 검사 - 최소 1개 이상 필수
-    const validOptions = formData.options.filter(option =>
-      option.groupName.trim() !== '' &&
-      option.values.some(v => v.name.trim() !== '')
-    )
+    // 옵션 검사 - 설정이 활성화된 경우에만 검사
+    if (optionsEnabled) {
+      const validOptions = formData.options.filter(option =>
+        option.groupName.trim() !== '' &&
+        option.values.some(v => v.name.trim() !== '')
+      )
 
-    if (validOptions.length === 0) {
-      alert('상품 옵션을 최소 1개 이상 등록해주세요.')
-      return
+      if (validOptions.length === 0) {
+        alert('상품 옵션을 최소 1개 이상 등록해주세요.')
+        return
+      }
     }
 
     if (!formData.description || formData.description.trim() === '' || formData.description === '<p><br></p>') {
@@ -349,14 +358,8 @@ export default function EditProductPage({ productId }: { productId: string }) {
         uploadedImageUrls.push(uploadResult.url)
       }
 
-      // 비어있지 않은 옵션만 필터링 (유효성 검사에서 이미 확인했으므로 validOptions는 항상 1개 이상)
-      const filteredOptions = validOptions.map(option => ({
-        ...option,
-        values: option.values.filter(v => v.name.trim() !== '')
-      }))
-
-      // 추가상품 옵션 필터링 (비어있지 않은 옵션만)
-      const filteredAdditionalOptions = formData.additionalOptions
+      // 옵션 필터링 (설정이 활성화된 경우에만)
+      const filteredOptions = optionsEnabled ? formData.options
         .filter(option =>
           option.groupName.trim() !== '' &&
           option.values.some(v => v.name.trim() !== '')
@@ -364,14 +367,27 @@ export default function EditProductPage({ productId }: { productId: string }) {
         .map(option => ({
           ...option,
           values: option.values.filter(v => v.name.trim() !== '')
-        }))
+        })) : []
+
+      // 추가상품 옵션 필터링 (설정이 활성화된 경우에만)
+      const filteredAdditionalOptions = additionalOptionsEnabled ? formData.additionalOptions
+        .filter(option =>
+          option.groupName.trim() !== '' &&
+          option.values.some(v => v.name.trim() !== '')
+        )
+        .map(option => ({
+          ...option,
+          values: option.values.filter(v => v.name.trim() !== '')
+        })) : []
 
       // 수정된 데이터 준비
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const submitData: any = {
         ...formData,
         images: uploadedImageUrls,
+        optionsEnabled, // 옵션 설정 여부 저장
         options: filteredOptions, // 유효성 검사 통과한 옵션들
+        additionalOptionsEnabled, // 추가상품 설정 여부 저장
         additionalOptions: filteredAdditionalOptions.length > 0 ? filteredAdditionalOptions : [], // 비어있으면 빈 배열로 덮어쓰기
         deliveryFeeSettings: formData.deliveryMethods.includes('택배 배송') ? deliveryFeeSettings : null, // 택배 배송일 때만 배송비 설정 저장, 아니면 제거
         updatedAt: new Date().toISOString()

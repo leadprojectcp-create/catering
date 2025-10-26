@@ -107,7 +107,7 @@ export default function AdditionalOptionSection({ options, onChange, onShowHelpM
       {enabled && options.map((option, groupIndex) => (
         <div key={groupIndex} className={styles.optionCard}>
           <div className={styles.optionGroupHeader}>
-            <label className={styles.optionLabel}>옵션그룹명</label>
+            <label className={styles.optionLabel}>추가상품그룹명</label>
             {options.length > 1 && (
               <button
                 type="button"
@@ -131,8 +131,8 @@ export default function AdditionalOptionSection({ options, onChange, onShowHelpM
 
           <div className={styles.optionValuesContainer}>
             <div className={styles.optionValuesHeader}>
-              <label className={styles.optionLabel}>옵션명</label>
-              <label className={styles.optionLabel}>옵션가격</label>
+              <label className={styles.optionLabel}>추가상품명</label>
+              <label className={styles.optionLabel}>추가상품가격</label>
             </div>
             {option.values.map((value, valueIndex) => (
               <div key={valueIndex} className={styles.optionValueRow}>
@@ -194,7 +194,7 @@ export default function AdditionalOptionSection({ options, onChange, onShowHelpM
             onClick={addOptionGroup}
             className={styles.addOptionGroupButton}
           >
-            +옵션그룹추가
+            +추가상품그룹추가
           </button>
         </div>
       )}

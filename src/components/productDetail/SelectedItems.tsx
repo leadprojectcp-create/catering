@@ -52,6 +52,7 @@ export default function SelectedItems({
                 />
               </button>
             </div>
+            {/* 옵션이 있을 때만 표시 */}
             {Object.keys(item.options).length > 0 && (
               <div className={styles.optionSection}>
                 <div className={styles.optionSectionTitle}>상품 옵션</div>

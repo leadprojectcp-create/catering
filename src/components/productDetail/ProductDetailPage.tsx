@@ -55,11 +55,13 @@ export interface Product {
   productTypes?: string[]
   averageRating?: number
   reviewCount?: number
+  optionsEnabled?: boolean
   options?: {
     groupName: string
     values: { name: string; price: number }[]
     isRequired?: boolean
   }[]
+  additionalOptionsEnabled?: boolean
   additionalOptions?: {
     groupName: string
     values: { name: string; price: number }[]
@@ -440,6 +442,16 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
             }
           } else {
             setQuantity(productData.minOrderQuantity || 10)
+
+            // 옵션이 설정되지 않은 경우 자동으로 기본 상품 추가
+            if (!productData.optionsEnabled) {
+              const defaultItem: CartItem = {
+                options: {},
+                additionalOptions: {},
+                quantity: productData.minOrderQuantity || 10
+              }
+              setCartItems([defaultItem])
+            }
           }
 
           // 배송방법 초기화 (첫 번째 배송방법 선택)
@@ -900,13 +912,14 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
           )}
 
           {/* 오른쪽 영역 - 상품 옵션 */}
-          {product.options && product.options.length > 0 && (
-            <BottomModal
-              isOpen={isModalOpen}
-              modalHeight={modalHeight}
-              onClose={() => setIsModalOpen(false)}
-              onDragStart={handleDragStart}
-            >
+          <BottomModal
+            isOpen={isModalOpen}
+            modalHeight={modalHeight}
+            onClose={() => setIsModalOpen(false)}
+            onDragStart={handleDragStart}
+          >
+            {/* 옵션이 설정된 경우에만 OptionSelector 표시 */}
+            {product.optionsEnabled && (
               <OptionSelector
                 product={product}
                 expandedOptions={expandedOptions}
@@ -919,32 +932,32 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
                 onAddToCart={addToCart}
                 hasCartItems={cartItems.length > 0}
               />
+            )}
 
-              {cartItems.length > 0 && (
-                <>
-                  <DeliveryMethodSelector
-                    deliveryMethods={product.deliveryMethods}
-                    selectedMethod={deliveryMethod}
-                    onMethodChange={setDeliveryMethod}
-                  />
+            {cartItems.length > 0 && (
+              <>
+                <DeliveryMethodSelector
+                  deliveryMethods={product.deliveryMethods}
+                  selectedMethod={deliveryMethod}
+                  onMethodChange={setDeliveryMethod}
+                />
 
-                  <SelectedItems
-                    product={product}
-                    cartItems={cartItems}
-                    storeRequest={storeRequest}
-                    onRemoveItem={removeFromCart}
-                    onUpdateQuantity={updateCartQuantity}
-                    onQuantityInputChange={handleQuantityInputChange}
-                    onStoreRequestChange={setStoreRequest}
-                    onSaveToCart={saveToShoppingCart}
-                    onOrder={handleOrder}
-                    calculateItemPrice={getItemPrice}
-                    calculateTotalPrice={getTotalPrice}
-                  />
-                </>
-              )}
-            </BottomModal>
-          )}
+                <SelectedItems
+                  product={product}
+                  cartItems={cartItems}
+                  storeRequest={storeRequest}
+                  onRemoveItem={removeFromCart}
+                  onUpdateQuantity={updateCartQuantity}
+                  onQuantityInputChange={handleQuantityInputChange}
+                  onStoreRequestChange={setStoreRequest}
+                  onSaveToCart={saveToShoppingCart}
+                  onOrder={handleOrder}
+                  calculateItemPrice={getItemPrice}
+                  calculateTotalPrice={getTotalPrice}
+                />
+              </>
+            )}
+          </BottomModal>
         </>
       )}
     </div>

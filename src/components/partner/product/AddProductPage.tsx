@@ -252,15 +252,17 @@ export default function AddProductPage() {
       return
     }
 
-    // 옵션 검사 - 최소 1개 이상 필수
-    const validOptions = formData.options.filter(option =>
-      option.groupName.trim() !== '' &&
-      option.values.some(v => v.name.trim() !== '')
-    )
+    // 옵션 검사 - 설정이 활성화된 경우에만 검사
+    if (optionsEnabled) {
+      const validOptions = formData.options.filter(option =>
+        option.groupName.trim() !== '' &&
+        option.values.some(v => v.name.trim() !== '')
+      )
 
-    if (validOptions.length === 0) {
-      alert('상품 옵션을 최소 1개 이상 등록해주세요.')
-      return
+      if (validOptions.length === 0) {
+        alert('상품 옵션을 최소 1개 이상 등록해주세요.')
+        return
+      }
     }
 
     if (!formData.description || formData.description.trim() === '' || formData.description === '<p><br></p>') {
@@ -313,14 +315,8 @@ export default function AddProductPage() {
         uploadedImageUrls.push(uploadResult.url)
       }
 
-      // 비어있지 않은 옵션만 필터링 (유효성 검사에서 이미 확인했으므로 validOptions는 항상 1개 이상)
-      const filteredOptions = validOptions.map(option => ({
-        ...option,
-        values: option.values.filter(v => v.name.trim() !== '')
-      }))
-
-      // 추가상품 옵션 필터링 (비어있지 않은 옵션만)
-      const filteredAdditionalOptions = formData.additionalOptions
+      // 옵션 필터링 (설정이 활성화된 경우에만)
+      const filteredOptions = optionsEnabled ? formData.options
         .filter(option =>
           option.groupName.trim() !== '' &&
           option.values.some(v => v.name.trim() !== '')
@@ -328,14 +324,27 @@ export default function AddProductPage() {
         .map(option => ({
           ...option,
           values: option.values.filter(v => v.name.trim() !== '')
-        }))
+        })) : []
+
+      // 추가상품 옵션 필터링 (설정이 활성화된 경우에만)
+      const filteredAdditionalOptions = additionalOptionsEnabled ? formData.additionalOptions
+        .filter(option =>
+          option.groupName.trim() !== '' &&
+          option.values.some(v => v.name.trim() !== '')
+        )
+        .map(option => ({
+          ...option,
+          values: option.values.filter(v => v.name.trim() !== '')
+        })) : []
 
       // orderType을 'single'로 고정하여 전송
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const submitData: any = {
         ...formData,
         images: uploadedImageUrls, // File 객체 대신 업로드된 URL들
+        optionsEnabled, // 옵션 설정 여부 저장
         options: filteredOptions, // 유효성 검사 통과한 옵션들
+        additionalOptionsEnabled, // 추가상품 설정 여부 저장
         additionalOptions: filteredAdditionalOptions.length > 0 ? filteredAdditionalOptions : undefined, // 비어있으면 undefined
         orderType: 'single', // 항상 단건주문으로 설정
         deliveryFeeSettings: formData.deliveryMethods.includes('택배 배송') ? deliveryFeeSettings : undefined, // 택배 배송일 때만 배송비 설정 저장

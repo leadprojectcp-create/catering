@@ -31,11 +31,14 @@ export default function OptionSelector({
 }: OptionSelectorProps) {
   return (
     <div className={styles.optionSection}>
-      <h2 className={styles.optionSectionTitle}>
-        상품 옵션 <span className={styles.requiredBadge}>*필수</span>
-      </h2>
+      {/* 옵션이 설정된 경우에만 표시 */}
+      {product.optionsEnabled && (
+        <>
+          <h2 className={styles.optionSectionTitle}>
+            상품 옵션 <span className={styles.requiredBadge}>*필수</span>
+          </h2>
 
-      {product.options?.map((option, index) => {
+          {product.options?.map((option, index) => {
         const isExpanded = expandedOptions[option.groupName]
 
         return (
@@ -86,9 +89,11 @@ export default function OptionSelector({
           </div>
         )
       })}
+        </>
+      )}
 
-      {/* 추가상품 옵션 */}
-      {product.additionalOptions && product.additionalOptions.length > 0 && (
+      {/* 추가상품 옵션 - additionalOptionsEnabled가 true일 때만 표시 */}
+      {product.additionalOptionsEnabled && product.additionalOptions && product.additionalOptions.length > 0 && (
         <>
           <h2 className={styles.optionSectionTitle} style={{ marginTop: '24px' }}>추가상품 (선택사항)</h2>
           {product.additionalOptions.map((option, index) => {
