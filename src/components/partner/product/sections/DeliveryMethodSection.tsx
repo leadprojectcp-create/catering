@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React from 'react'
 import styles from '../AddProductPage.module.css'
 
 export interface DeliveryFeeSettings {
@@ -36,7 +36,7 @@ export default function DeliveryMethodSection({
     }
   }
 
-  const handleFeeSettingChange = (field: keyof DeliveryFeeSettings, value: any) => {
+  const handleFeeSettingChange = (field: keyof DeliveryFeeSettings, value: number | boolean) => {
     if (onDeliveryFeeChange && deliveryFeeSettings) {
       onDeliveryFeeChange({
         ...deliveryFeeSettings,
