@@ -476,10 +476,14 @@ export default function OrderManagementPage() {
               const day = reservationDate.getDate()
               const weekdays = ['일', '월', '화', '수', '목', '금', '토']
               const weekday = weekdays[reservationDate.getDay()]
-              const [hour, minute] = order.deliveryTime.split(':').map(Number)
-              const period = hour >= 12 ? '오후' : '오전'
-              const displayHour = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour
-              const formattedReservation = `${year}년 ${month}월 ${day}일 (${weekday}) ${period} ${displayHour}시 ${minute}분`
+
+              let formattedReservation = `${year}년 ${month}월 ${day}일 (${weekday})`
+              if (order.deliveryTime) {
+                const [hour, minute] = order.deliveryTime.split(':').map(Number)
+                const period = hour >= 12 ? '오후' : '오전'
+                const displayHour = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour
+                formattedReservation += ` ${period} ${displayHour}시 ${minute}분`
+              }
 
               // 배송방법 텍스트
               const deliveryMethodText = order.deliveryMethod === '퀵업체 배송' ? '퀵업체 배송' : '매장 픽업'
