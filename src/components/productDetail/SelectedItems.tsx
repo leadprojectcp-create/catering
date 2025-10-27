@@ -196,7 +196,7 @@ export default function SelectedItems({
               <div className={styles.feeConditionNotice}>
                 <OptimizedImage src="/icons/delivery.svg" alt="배송" width={16} height={16} />
                 <span>
-                  {product.deliveryFeeSettings.perQuantity}개당 {(product.deliveryFeeSettings.baseFee || 0).toLocaleString()}원
+                  상품 {product.deliveryFeeSettings.perQuantity}개당, 배송비 {(product.deliveryFeeSettings.baseFee || 0).toLocaleString()}원
                 </span>
               </div>
             )}
