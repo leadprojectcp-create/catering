@@ -957,32 +957,28 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
               />
             )}
 
-            {cartItems.length > 0 && (
-              <>
-                <DeliveryMethodSelector
-                  deliveryMethods={product.deliveryMethods}
-                  selectedMethod={deliveryMethod}
-                  onMethodChange={setDeliveryMethod}
-                />
+            <DeliveryMethodSelector
+              deliveryMethods={product.deliveryMethods}
+              selectedMethod={deliveryMethod}
+              onMethodChange={setDeliveryMethod}
+            />
 
-                <SelectedItems
-                  product={product}
-                  cartItems={cartItems}
-                  storeRequest={storeRequest}
-                  deliveryMethod={deliveryMethod}
-                  parcelPaymentMethod={parcelPaymentMethod}
-                  onRemoveItem={removeFromCart}
-                  onUpdateQuantity={updateCartQuantity}
-                  onQuantityInputChange={handleQuantityInputChange}
-                  onStoreRequestChange={setStoreRequest}
-                  onSaveToCart={saveToShoppingCart}
-                  onOrder={handleOrder}
-                  onParcelPaymentMethodChange={setParcelPaymentMethod}
-                  calculateItemPrice={getItemPrice}
-                  calculateTotalPrice={getTotalPrice}
-                />
-              </>
-            )}
+            <SelectedItems
+              product={product}
+              cartItems={cartItems}
+              storeRequest={storeRequest}
+              deliveryMethod={deliveryMethod}
+              parcelPaymentMethod={parcelPaymentMethod}
+              onRemoveItem={removeFromCart}
+              onUpdateQuantity={updateCartQuantity}
+              onQuantityInputChange={handleQuantityInputChange}
+              onStoreRequestChange={setStoreRequest}
+              onSaveToCart={saveToShoppingCart}
+              onOrder={handleOrder}
+              onParcelPaymentMethodChange={setParcelPaymentMethod}
+              calculateItemPrice={getItemPrice}
+              calculateTotalPrice={getTotalPrice}
+            />
           </BottomModal>
         </>
       )}

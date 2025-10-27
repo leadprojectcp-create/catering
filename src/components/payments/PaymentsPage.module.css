@@ -215,10 +215,9 @@
 .productInfo {
   flex: 1;
   min-width: 0;
-  height: 100px;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
 }
 
 .productNameRow {
