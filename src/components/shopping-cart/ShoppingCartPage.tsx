@@ -121,10 +121,15 @@ export default function ShoppingCartPage() {
       return
     }
 
-    sessionStorage.setItem('editCartItem', JSON.stringify({
+    const editData = {
       cartItemId: item.id,
       items: item.items  // 전체 items 배열 전달
-    }))
+    }
+
+    console.log('[ShoppingCart] 수정 데이터 저장:', editData)
+    console.log('[ShoppingCart] item.items:', item.items)
+
+    sessionStorage.setItem('editCartItem', JSON.stringify(editData))
 
     // 상품 주문 페이지로 이동
     router.push(`/productDetail/${item.productId}`)

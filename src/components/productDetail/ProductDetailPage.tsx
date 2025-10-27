@@ -435,26 +435,30 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
               }
 
               if (editData.items && Array.isArray(editData.items)) {
+                console.log('[ProductDetail] 장바구니 수정 데이터:', editData.items)
+
                 // 전체 아이템 배열을 그대로 설정 (모든 옵션별 quantity 포함)
                 setCartItems(editData.items)
 
                 // 첫 번째 아이템의 옵션 정보를 UI에 표시하기 위해 변환
                 const firstItem = editData.items[0]
                 if (firstItem) {
+                  console.log('[ProductDetail] 첫 번째 아이템:', firstItem)
+                  console.log('[ProductDetail] quantity:', firstItem.quantity)
                   // options 객체를 배열 형태로 변환
                   if (firstItem.options) {
-                    const optionsArray = Object.entries(firstItem.options).map(([groupName, optionName]: [string, string]) => ({
+                    const optionsArray = Object.entries(firstItem.options).map(([groupName, optionName]) => ({
                       groupName,
-                      optionName
+                      optionName: optionName as string
                     }))
                     setSelectedOptions(optionsArray)
                   }
 
                   // additionalOptions 객체를 배열 형태로 변환
                   if (firstItem.additionalOptions) {
-                    const additionalOptionsArray = Object.entries(firstItem.additionalOptions).map(([groupName, optionName]: [string, string]) => ({
+                    const additionalOptionsArray = Object.entries(firstItem.additionalOptions).map(([groupName, optionName]) => ({
                       groupName,
-                      optionName
+                      optionName: optionName as string
                     }))
                     setSelectedAdditionalOptions(additionalOptionsArray)
                   }
@@ -467,7 +471,7 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
                 setIsModalOpen(true)
               }
 
-              sessionStorage.removeItem('editCartItem')
+              // sessionStorage.removeItem('editCartItem') // 디버깅을 위해 임시로 주석 처리
             } catch (error) {
               console.error('장바구니 수정 데이터 로드 실패:', error)
             }
