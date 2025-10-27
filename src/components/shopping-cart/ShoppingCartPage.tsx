@@ -193,12 +193,6 @@ export default function ShoppingCartPage() {
     return 0
   }
 
-  const calculateTotalPrice = (): number => {
-    return cartItems
-      .filter(item => selectedItems.includes(item.id!))
-      .reduce((total, item) => total + calculateItemPrice(item), 0)
-  }
-
   const handleOrder = () => {
     if (selectedItems.length === 0) {
       alert('주문할 상품을 선택해주세요.')
@@ -239,20 +233,8 @@ export default function ShoppingCartPage() {
 
     const firstItem = selectedCartItems[0]
 
-    // 새로운 구조: items 배열이 이미 올바른 형식으로 저장되어 있음
-    const orderData = {
-      storeId: firstItem.storeId,
-      storeName: firstItem.storeName || '',
-      productId: firstItem.productId,
-      items: firstItem.items,  // 이미 올바른 구조 (productId, productName, options, optionsWithPrices, quantity, price, itemPrice 포함)
-      totalProductPrice: firstItem.totalProductPrice || calculateTotalPrice(),
-      totalQuantity: firstItem.totalQuantity || firstItem.items.reduce((sum: number, item: CartItemOption) => sum + item.quantity, 0),
-      deliveryMethod: firstItem.deliveryMethod || '',
-      request: firstItem.request || ''
-    }
-
-    sessionStorage.setItem('orderData', JSON.stringify(orderData))
-    router.push('/payments')
+    // cartId를 URL 파라미터로 전달하여 PaymentsPage에서 shoppingCart 컬렉션에서 데이터를 가져오도록 함
+    router.push(`/payments?cartId=${firstItem.id}`)
   }
 
   if (loading) {

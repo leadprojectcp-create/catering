@@ -435,11 +435,31 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
               }
 
               if (editData.items && Array.isArray(editData.items)) {
+                // 전체 아이템 배열을 그대로 설정 (모든 옵션별 quantity 포함)
                 setCartItems(editData.items)
 
+                // 첫 번째 아이템의 옵션 정보를 UI에 표시하기 위해 변환
                 const firstItem = editData.items[0]
                 if (firstItem) {
-                  setSelectedOptions(firstItem.options)
+                  // options 객체를 배열 형태로 변환
+                  if (firstItem.options) {
+                    const optionsArray = Object.entries(firstItem.options).map(([groupName, optionName]) => ({
+                      groupName,
+                      optionName
+                    }))
+                    setSelectedOptions(optionsArray)
+                  }
+
+                  // additionalOptions 객체를 배열 형태로 변환
+                  if (firstItem.additionalOptions) {
+                    const additionalOptionsArray = Object.entries(firstItem.additionalOptions).map(([groupName, optionName]) => ({
+                      groupName,
+                      optionName
+                    }))
+                    setSelectedAdditionalOptions(additionalOptionsArray)
+                  }
+
+                  // 첫 번째 아이템의 수량 설정 (UI 표시용)
                   setQuantity(firstItem.quantity)
                 }
               }
