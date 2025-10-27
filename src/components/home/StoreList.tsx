@@ -45,7 +45,6 @@ export default function StoreList({ selectedCategory }: StoreListProps) {
   const router = useRouter()
   const [stores, setStores] = useState<Store[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [displayedStores, setDisplayedStores] = useState<Store[]>([])
 
   useEffect(() => {
     const fetchStores = async () => {
@@ -81,10 +80,10 @@ export default function StoreList({ selectedCategory }: StoreListProps) {
         // 랜덤 셔플
         const shuffledStores = storeData.sort(() => Math.random() - 0.5)
         setStores(shuffledStores)
-        setIsLoading(false)
       } catch (error) {
         console.error('스토어 데이터 가져오기 실패:', error)
         setStores([])
+      } finally {
         setIsLoading(false)
       }
     }
@@ -92,31 +91,9 @@ export default function StoreList({ selectedCategory }: StoreListProps) {
     fetchStores()
   }, [])
 
-  // 순차적으로 스토어 표시 (이미지 로딩 분산)
-  useEffect(() => {
-    if (stores.length === 0) return
-
-    const BATCH_SIZE = 5 // 한 번에 5개씩 표시
-    const DELAY = 100 // 100ms 간격
-
-    let currentIndex = 0
-    const interval = setInterval(() => {
-      if (currentIndex >= stores.length) {
-        clearInterval(interval)
-        return
-      }
-
-      const nextBatch = stores.slice(0, currentIndex + BATCH_SIZE)
-      setDisplayedStores(nextBatch)
-      currentIndex += BATCH_SIZE
-    }, DELAY)
-
-    return () => clearInterval(interval)
-  }, [stores])
-
   const filteredStores = selectedCategory === '전체'
-    ? displayedStores
-    : displayedStores.filter(store => store.businessCategory === selectedCategory)
+    ? stores
+    : stores.filter(store => store.businessCategory === selectedCategory)
 
   if (isLoading) {
     return <Loading />
@@ -181,14 +158,19 @@ export default function StoreList({ selectedCategory }: StoreListProps) {
                       className={styles.storeSwiper}
                     >
                       {images.map((image, index) => {
-                        // 상위 3개 스토어의 첫 번째 이미지만 priority
-                        const shouldPrioritize = storeIndex < 3 && index === 0
+                        // 상위 10개 스토어의 첫 번째 이미지만 priority
+                        const shouldPrioritize = storeIndex < 10 && index === 0
+
+                        // BunnyCDN 이미지 최적화: 260px (레티나 대응), WebP 포맷, 85% 품질
+                        const optimizedImage = image.includes('b-cdn.net')
+                          ? `${image}?width=130&format=webp&quality=100`
+                          : image
 
                         return (
                           <SwiperSlide key={index}>
                             <div className={styles.imageWrapper}>
                               <OptimizedImage
-                                src={image}
+                                src={optimizedImage}
                                 alt={`${store.storeName || '가게'} 이미지 ${index + 1}`}
                                 fill
                                 sizes="130px"
