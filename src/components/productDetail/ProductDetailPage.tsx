@@ -445,7 +445,7 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
 
                 if (cartData.items && Array.isArray(cartData.items)) {
                   // Firestore 데이터를 ProductDetailPage의 CartItem 구조로 변환
-                  const convertedItems = cartData.items.map((item: any) => ({
+                  const convertedItems = cartData.items.map((item: { options?: Record<string, string>; additionalOptions?: Record<string, string>; quantity: number }) => ({
                     options: item.options || {},
                     additionalOptions: item.additionalOptions,
                     quantity: item.quantity
