@@ -140,7 +140,7 @@ export async function POST(request: NextRequest) {
       serviceType: 'damas', // 다마스
       upWay: 'free_customer', // 고객님이 상차
       downWay: 'free_customer', // 고객님이 하차
-      deliveryItem: { bgBox: 1 }, // 대박스 1개
+      deliveryItem: { bgBox: 3 }, // 대박스 1개
       ...body,
     }
 

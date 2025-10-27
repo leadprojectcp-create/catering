@@ -36,6 +36,7 @@ export default function OrderManagementPage() {
   const [cancelOrderId, setCancelOrderId] = useState<string | null>(null)
   const [showTrackingModal, setShowTrackingModal] = useState(false)
   const [trackingOrderId, setTrackingOrderId] = useState<string | null>(null)
+  const [driverInfo, setDriverInfo] = useState<{ [orderId: string]: { rName: string; rMobile: string } }>({})
 
   useEffect(() => {
     // URL 파라미터에서 filter 값 읽기
@@ -201,9 +202,67 @@ export default function OrderManagementPage() {
     window.location.href = `tel:${order.phone}`
   }
 
-  const handleOrderDetailClick = (orderId: string | undefined) => {
+  const handleOrderDetailClick = async (orderId: string | undefined) => {
     if (!orderId) return
-    setExpandedOrderId(expandedOrderId === orderId ? null : orderId)
+
+    const isExpanding = expandedOrderId !== orderId
+    setExpandedOrderId(isExpanding ? orderId : null)
+
+    // 퀵 배송 주문이고 확장할 때만 기사 정보 조회
+    if (isExpanding) {
+      const order = orders.find(o => o.id === orderId)
+      if (order?.deliveryMethod === '퀵업체 배송' && order.quickDeliveryOrderNo && !driverInfo[orderId]) {
+        await fetchDriverInfo(orderId, order)
+      }
+    }
+  }
+
+  const fetchDriverInfo = async (orderId: string, order: Order) => {
+    try {
+      // 주문 생성일을 기준으로 조회 범위 설정 (생성일 ±1일)
+      const createdAt = order.createdAt && typeof order.createdAt === 'object' && 'toDate' in order.createdAt
+        ? (order.createdAt as Timestamp).toDate()
+        : new Date(order.createdAt as string | number | Date)
+
+      const rangeStart = new Date(createdAt)
+      rangeStart.setDate(rangeStart.getDate() - 1)
+      const rangeEnd = new Date(createdAt)
+      rangeEnd.setDate(rangeEnd.getDate() + 1)
+
+      const formatDate = (date: Date) => {
+        const year = date.getFullYear()
+        const month = String(date.getMonth() + 1).padStart(2, '0')
+        const day = String(date.getDate()).padStart(2, '0')
+        return `${year}-${month}-${day}`
+      }
+
+      const response = await fetch('/api/quick-delivery/history', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          rangeStart: formatDate(rangeStart),
+          rangeEnd: formatDate(rangeEnd),
+          orderNo: order.quickDeliveryOrderNo,
+        }),
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        if (data.order && data.order.rName) {
+          setDriverInfo(prev => ({
+            ...prev,
+            [orderId]: {
+              rName: data.order.rName,
+              rMobile: data.order.rMobile,
+            }
+          }))
+        }
+      }
+    } catch (error) {
+      console.error('기사 정보 조회 실패:', error)
+    }
   }
 
   const formatDate = (date: Date | Timestamp | FieldValue | undefined) => {
@@ -837,28 +896,15 @@ export default function OrderManagementPage() {
                                 <span className={styles.detailLabel}>배송주소</span>
                                 <span className={styles.detailValue}>
                                   {order.deliveryInfo?.address || order.address}
+                                  {(order.deliveryInfo?.detailAddress || order.detailAddress) && ` (${order.deliveryInfo?.detailAddress || order.detailAddress})`}
                                 </span>
                               </div>
                               <div className={styles.detailRow}>
-                                <span className={styles.detailLabel}>상세주소</span>
-                                <span className={styles.detailValue}>
-                                  {order.deliveryInfo?.detailAddress || order.detailAddress || '-'}
-                                </span>
-                              </div>
-                              <div className={styles.detailRow}>
-                                <span className={styles.detailLabel}>주소명</span>
+                                <span className={styles.detailLabel}>배송지명</span>
                                 <span className={styles.detailValue}>
                                   {order.deliveryInfo?.addressName || '-'}
                                 </span>
                               </div>
-                              {order.deliveryInfo?.entrancePassword && (
-                                <div className={styles.detailRow}>
-                                  <span className={styles.detailLabel}>공동현관 비밀번호</span>
-                                  <span className={styles.detailValue}>
-                                    {order.deliveryInfo.entrancePassword}
-                                  </span>
-                                </div>
-                              )}
                               <div className={styles.detailRow}>
                                 <span className={styles.detailLabel}>수령인</span>
                                 <span className={styles.detailValue}>
@@ -874,9 +920,47 @@ export default function OrderManagementPage() {
 
                               <div className={styles.detailSectionDivider}></div>
 
+                              {/* 기사 정보 */}
+                              {driverInfo[order.id] && (
+                                <>
+                                  <h3 className={styles.detailTitle}>기사 정보</h3>
+                                  <div className={styles.detailRow}>
+                                    <span className={styles.detailLabel}>기사명</span>
+                                    <span className={styles.detailValue}>
+                                      {driverInfo[order.id].rName}
+                                    </span>
+                                  </div>
+                                  <div className={styles.detailRow}>
+                                    <span className={styles.detailLabel}>연락처</span>
+                                    <span className={styles.detailValue}>
+                                      {driverInfo[order.id].rMobile}
+                                    </span>
+                                  </div>
+
+                                  <div className={styles.detailSectionDivider}></div>
+                                </>
+                              )}
+
                               <h3 className={styles.detailTitle}>배송요청</h3>
-                              <div className={styles.requestText}>
-                                {order.deliveryInfo?.deliveryRequest || order.deliveryInfo?.detailedRequest || order.request || order.detailedRequest || '요청사항이 없습니다.'}
+                              {order.deliveryInfo?.entrancePassword && (
+                                <div className={styles.detailRow}>
+                                  <span className={styles.detailLabel}>공동현관</span>
+                                  <span className={styles.detailValue}>
+                                    {order.deliveryInfo.entrancePassword}
+                                  </span>
+                                </div>
+                              )}
+                              <div className={styles.detailRow}>
+                                <span className={styles.detailLabel}>배송요청</span>
+                                <span className={styles.detailValue}>
+                                  {order.deliveryInfo?.deliveryRequest || '없음'}
+                                </span>
+                              </div>
+                              <div className={styles.detailRow}>
+                                <span className={styles.detailLabel}>상세요청</span>
+                                <span className={styles.detailValue}>
+                                  {order.deliveryInfo?.detailedRequest || '없음'}
+                                </span>
                               </div>
                             </div>
                           </>
@@ -917,28 +1001,15 @@ export default function OrderManagementPage() {
                                 <span className={styles.detailLabel}>배송주소</span>
                                 <span className={styles.detailValue}>
                                   {order.deliveryInfo?.address || order.address}
+                                  {(order.deliveryInfo?.detailAddress || order.detailAddress) && ` (${order.deliveryInfo?.detailAddress || order.detailAddress})`}
                                 </span>
                               </div>
                               <div className={styles.detailRow}>
-                                <span className={styles.detailLabel}>상세주소</span>
-                                <span className={styles.detailValue}>
-                                  {order.deliveryInfo?.detailAddress || order.detailAddress || '-'}
-                                </span>
-                              </div>
-                              <div className={styles.detailRow}>
-                                <span className={styles.detailLabel}>주소명</span>
+                                <span className={styles.detailLabel}>배송지명</span>
                                 <span className={styles.detailValue}>
                                   {order.deliveryInfo?.addressName || '-'}
                                 </span>
                               </div>
-                              {order.deliveryInfo?.entrancePassword && (
-                                <div className={styles.detailRow}>
-                                  <span className={styles.detailLabel}>공동현관 비밀번호</span>
-                                  <span className={styles.detailValue}>
-                                    {order.deliveryInfo.entrancePassword}
-                                  </span>
-                                </div>
-                              )}
                               <div className={styles.detailRow}>
                                 <span className={styles.detailLabel}>수령인</span>
                                 <span className={styles.detailValue}>
@@ -980,8 +1051,25 @@ export default function OrderManagementPage() {
                               <div className={styles.detailSectionDivider}></div>
 
                               <h3 className={styles.detailTitle}>배송요청</h3>
-                              <div className={styles.requestText}>
-                                {order.deliveryInfo?.deliveryRequest || order.deliveryInfo?.detailedRequest || order.request || order.detailedRequest || '요청사항이 없습니다.'}
+                              {order.deliveryInfo?.entrancePassword && (
+                                <div className={styles.detailRow}>
+                                  <span className={styles.detailLabel}>공동현관</span>
+                                  <span className={styles.detailValue}>
+                                    {order.deliveryInfo.entrancePassword}
+                                  </span>
+                                </div>
+                              )}
+                              <div className={styles.detailRow}>
+                                <span className={styles.detailLabel}>배송요청</span>
+                                <span className={styles.detailValue}>
+                                  {order.deliveryInfo?.deliveryRequest || '없음'}
+                                </span>
+                              </div>
+                              <div className={styles.detailRow}>
+                                <span className={styles.detailLabel}>상세요청</span>
+                                <span className={styles.detailValue}>
+                                  {order.deliveryInfo?.detailedRequest || '없음'}
+                                </span>
                               </div>
                             </div>
                           </>

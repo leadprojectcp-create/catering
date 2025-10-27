@@ -261,6 +261,12 @@ export async function POST(request: NextRequest) {
                       await updateDoc(orderRef, {
                         quickDeliveryOrderNo: quickResult.orderNo,
                         quickDeliveryStatus: 'requested',
+                        quickDeliveryInfo: {
+                          code: quickResult.code,
+                          orderNo: quickResult.orderNo,
+                          orderInfo: quickResult.orderInfo || {},
+                          createdAt: new Date(),
+                        }
                       })
                     } else {
                       console.error('[Webhook] 퀵 배송 요청 실패:', quickResult)

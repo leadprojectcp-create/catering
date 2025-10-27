@@ -774,7 +774,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 16px;
+  margin-bottom: 4px;
 }
 
 .detailLabel {
@@ -789,6 +789,14 @@
   color: #333;
   font-size: 15px;
   font-weight: 600;
+  flex: 1;
+  text-align: right;
+}
+
+@media (min-width: 769px) {
+  .detailValue {
+    text-align: left;
+  }
 }
 
 .trackingNumberRow {
