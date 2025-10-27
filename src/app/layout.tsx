@@ -109,6 +109,7 @@ export default function RootLayout({
           crossOrigin="anonymous"
           href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css"
         />
+        <meta name="naver-site-verification" content="a00f1ff3666695b7dd8f581a4622b89ea40925c4" />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
