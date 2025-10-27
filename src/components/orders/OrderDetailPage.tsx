@@ -103,6 +103,29 @@ interface Order {
   paidAt?: Date
   payMethod?: string
   usedPoint?: number
+  // 퀵 배송 관련 필드
+  quickDeliveryOrderNo?: number
+  quickDeliveryStatus?: string
+  quickDeliveryError?: string
+  quickDeliveryInfo?: {
+    code: string
+    orderNo: number
+    orderInfo?: {
+      feeTotal?: number
+      feeDetail?: string
+    }
+    createdAt: Date
+  }
+}
+
+// 퀵 배송 기사 정보
+interface QuickDeliveryDriver {
+  rName: string  // 기사 이름
+  rMobile: string  // 기사 연락처
+  sState: string  // 배차 상태
+  dtAllo: string  // 배차 시간
+  dtPick: string  // 픽업 시간
+  dtEnd: string  // 배송 완료 시간
 }
 
 interface OrderDetailPageProps {
@@ -136,6 +159,8 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
   const [loading, setLoading] = useState(true)
   const [cancelOrderId, setCancelOrderId] = useState<string | null>(null)
   const [showTaxInvoiceModal, setShowTaxInvoiceModal] = useState(false)
+  const [quickDeliveryDriver, setQuickDeliveryDriver] = useState<QuickDeliveryDriver | null>(null)
+  const [loadingDriver, setLoadingDriver] = useState(false)
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -205,6 +230,71 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
 
     fetchOrder()
   }, [user, authLoading, resolvedParams.id, router])
+
+  // 퀵 배송 기사 정보 조회
+  useEffect(() => {
+    const fetchQuickDeliveryDriver = async () => {
+      // 퀵 배송 주문 번호가 없으면 조회하지 않음
+      if (!order?.quickDeliveryOrderNo || !order?.deliveryInfo?.deliveryDate) {
+        return
+      }
+
+      setLoadingDriver(true)
+      try {
+        const deliveryDate = order.deliveryInfo.deliveryDate // 예: "2025-10-31"
+
+        // 날짜 범위 설정 (해당 날짜 기준 ±3일)
+        const targetDate = new Date(deliveryDate)
+        const startDate = new Date(targetDate)
+        startDate.setDate(startDate.getDate() - 3)
+        const endDate = new Date(targetDate)
+        endDate.setDate(endDate.getDate() + 3)
+
+        const rangeStart = startDate.toISOString().split('T')[0] // YYYY-MM-DD
+        const rangeEnd = endDate.toISOString().split('T')[0]
+
+        console.log('[OrderDetail] 기사 정보 조회:', {
+          orderNo: order.quickDeliveryOrderNo,
+          rangeStart,
+          rangeEnd
+        })
+
+        const response = await fetch('/api/quick-delivery/history', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            rangeStart,
+            rangeEnd,
+            orderNo: String(order.quickDeliveryOrderNo)
+          })
+        })
+
+        const result = await response.json()
+        console.log('[OrderDetail] 기사 정보 조회 결과:', result)
+
+        if (response.ok && result.order) {
+          setQuickDeliveryDriver({
+            rName: result.order.rName || '',
+            rMobile: result.order.rMobile || '',
+            sState: result.order.sState || '',
+            dtAllo: result.order.dtAllo || '',
+            dtPick: result.order.dtPick || '',
+            dtEnd: result.order.dtEnd || ''
+          })
+        } else {
+          console.log('[OrderDetail] 기사 정보 없음 또는 조회 실패')
+        }
+      } catch (error) {
+        console.error('[OrderDetail] 기사 정보 조회 실패:', error)
+      } finally {
+        setLoadingDriver(false)
+      }
+    }
+
+    fetchQuickDeliveryDriver()
+  }, [order?.quickDeliveryOrderNo, order?.deliveryInfo?.deliveryDate])
 
   const getStatusText = (orderStatus: string, paymentStatus: string) => {
     if (paymentStatus === 'unpaid') return '결제 미완료'
@@ -482,13 +572,62 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
               </span>
             </div>
             {order.deliveryMethod === '퀵업체 배송' && (
-              <div className={styles.infoRow}>
-                <span className={styles.infoLabel}>주소</span>
-                <span className={styles.infoValue}>
-                  {order.deliveryInfo?.address || order.address}
-                  {(order.deliveryInfo?.detailAddress || order.detailAddress) && ` ${order.deliveryInfo?.detailAddress || order.detailAddress}`}
-                </span>
-              </div>
+              <>
+                <div className={styles.infoRow}>
+                  <span className={styles.infoLabel}>주소</span>
+                  <span className={styles.infoValue}>
+                    {order.deliveryInfo?.address || order.address}
+                    {(order.deliveryInfo?.detailAddress || order.detailAddress) && ` ${order.deliveryInfo?.detailAddress || order.detailAddress}`}
+                  </span>
+                </div>
+
+                {/* 퀵 배송 기사 정보 */}
+                {order.quickDeliveryOrderNo && (
+                  <>
+                    <div className={styles.divider} style={{ margin: '16px 0' }}></div>
+                    <div className={styles.infoRow}>
+                      <span className={styles.infoLabel}>배송 상태</span>
+                      <span className={styles.infoValue}>
+                        {loadingDriver ? (
+                          '조회 중...'
+                        ) : quickDeliveryDriver && quickDeliveryDriver.rName ? (
+                          <>
+                            배차 완료
+                            {quickDeliveryDriver.dtPick && quickDeliveryDriver.dtPick !== '-' && (
+                              <span style={{ marginLeft: '8px', color: '#2196F3' }}>
+                                (픽업완료: {quickDeliveryDriver.dtPick})
+                              </span>
+                            )}
+                            {quickDeliveryDriver.dtEnd && quickDeliveryDriver.dtEnd !== '-' && (
+                              <span style={{ marginLeft: '8px', color: '#4CAF50' }}>
+                                (배송완료: {quickDeliveryDriver.dtEnd})
+                              </span>
+                            )}
+                          </>
+                        ) : (
+                          '퀵기사님 배차중'
+                        )}
+                      </span>
+                    </div>
+                    {quickDeliveryDriver && quickDeliveryDriver.rName && (
+                      <>
+                        <div className={styles.infoRow}>
+                          <span className={styles.infoLabel}>기사님 성함</span>
+                          <span className={styles.infoValue}>{quickDeliveryDriver.rName}</span>
+                        </div>
+                        <div className={styles.infoRow}>
+                          <span className={styles.infoLabel}>기사님 연락처</span>
+                          <span className={styles.infoValue}>
+                            <a href={`tel:${quickDeliveryDriver.rMobile}`} style={{ color: '#2196F3', textDecoration: 'none' }}>
+                              {quickDeliveryDriver.rMobile}
+                            </a>
+                          </span>
+                        </div>
+                      </>
+                    )}
+                  </>
+                )}
+              </>
             )}
             {order.deliveryMethod === '매장 픽업' && (
               <div className={styles.infoRow}>

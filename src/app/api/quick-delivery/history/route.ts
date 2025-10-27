@@ -187,7 +187,18 @@ export async function POST(request: NextRequest) {
     console.log('[QuickDelivery History API] 조회 성공, 주문 수:', result.orderList?.length || 0)
 
     // 4. 특정 orderNo가 있으면 해당 주문만 필터링
-    if (orderNo && result.orderList) {
+    if (orderNo) {
+      // orderList가 없거나 null인 경우 (테스트 환경)
+      if (!result.orderList || result.orderList.length === 0) {
+        console.log('[QuickDelivery History API] orderList가 비어있음 (테스트 환경 또는 배차 대기중)')
+        return NextResponse.json({
+          code: result.code,
+          order: null,
+          message: '배차 대기중입니다.',
+          testing: result.testing || false
+        }, { status: 200 })
+      }
+
       const targetOrder = result.orderList.find(order => order.odrNo === String(orderNo))
 
       if (targetOrder) {
@@ -201,7 +212,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({
           code: result.code,
           order: null,
-          message: '해당 주문을 찾을 수 없습니다.'
+          message: '배차 대기중입니다.'
         }, { status: 200 })
       }
     }

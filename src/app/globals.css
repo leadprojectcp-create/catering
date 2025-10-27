@@ -56,4 +56,9 @@ input, textarea, select {
   .quote-estimate-overlay * {
     visibility: visible;
   }
+
+  .print-order-sheet,
+  .print-order-sheet * {
+    visibility: visible !important;
+  }
 }

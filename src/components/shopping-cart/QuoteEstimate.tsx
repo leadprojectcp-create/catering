@@ -22,7 +22,7 @@ export default function QuoteEstimate({ item, onClose }: QuoteEstimateProps) {
   const calculateItemPrice = (cartItem: CartItem): number => {
     return cartItem.items.reduce((total, itemOption) => {
       // itemPrice가 있으면 그대로 사용
-      if (itemOption.itemPrice) {
+      if (itemOption.itemPrice !== undefined) {
         return total + itemOption.itemPrice
       }
       // 없으면 계산
@@ -162,7 +162,7 @@ export default function QuoteEstimate({ item, onClose }: QuoteEstimateProps) {
                   const totalRows = 1 + displayOptionEntries.length + additionalEntries.length
 
                   // 이 아이템의 총 금액 계산
-                  const itemTotalPrice = itemOption.itemPrice || 0
+                  const itemTotalPrice = itemOption.itemPrice ?? 0
 
                   return (
                     <React.Fragment key={itemIndex}>

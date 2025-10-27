@@ -13,6 +13,7 @@ import Image from 'next/image'
 import Loading from '@/components/Loading'
 import OrderCancelModal from './OrderCancelModal'
 import TrackingNumberModal from './TrackingNumberModal'
+import PrintOrderSheet from './PrintOrderSheet'
 import styles from './OrderManagementPage.module.css'
 
 type FilterStatus = 'all' | 'pending' | 'cancelled_rejected' | 'preparing' | 'shipping' | 'completed'
@@ -407,6 +408,7 @@ export default function OrderManagementPage() {
   }
 
   return (
+    <>
     <div className={styles.container}>
       <div className={styles.header}>
         <h1 className={styles.title}>주문내역</h1>
@@ -921,21 +923,40 @@ export default function OrderManagementPage() {
                               <div className={styles.detailSectionDivider}></div>
 
                               {/* 기사 정보 */}
-                              {driverInfo[order.id] && (
+                              {order.quickDeliveryOrderNo && (
                                 <>
                                   <h3 className={styles.detailTitle}>기사 정보</h3>
-                                  <div className={styles.detailRow}>
-                                    <span className={styles.detailLabel}>기사명</span>
-                                    <span className={styles.detailValue}>
-                                      {driverInfo[order.id].rName}
-                                    </span>
-                                  </div>
-                                  <div className={styles.detailRow}>
-                                    <span className={styles.detailLabel}>연락처</span>
-                                    <span className={styles.detailValue}>
-                                      {driverInfo[order.id].rMobile}
-                                    </span>
-                                  </div>
+                                  {driverInfo[order.id] ? (
+                                    <>
+                                      <div className={styles.detailRow}>
+                                        <span className={styles.detailLabel}>배차 상태</span>
+                                        <span className={styles.detailValue} style={{ color: '#4CAF50', fontWeight: 600 }}>
+                                          배차 완료
+                                        </span>
+                                      </div>
+                                      <div className={styles.detailRow}>
+                                        <span className={styles.detailLabel}>기사명</span>
+                                        <span className={styles.detailValue}>
+                                          {driverInfo[order.id].rName}
+                                        </span>
+                                      </div>
+                                      <div className={styles.detailRow}>
+                                        <span className={styles.detailLabel}>연락처</span>
+                                        <span className={styles.detailValue}>
+                                          <a href={`tel:${driverInfo[order.id].rMobile}`} style={{ color: '#2196F3', textDecoration: 'none' }}>
+                                            {driverInfo[order.id].rMobile}
+                                          </a>
+                                        </span>
+                                      </div>
+                                    </>
+                                  ) : (
+                                    <div className={styles.detailRow}>
+                                      <span className={styles.detailLabel}>배차 상태</span>
+                                      <span className={styles.detailValue} style={{ color: '#FF9800', fontWeight: 600 }}>
+                                        퀵기사님 배차중
+                                      </span>
+                                    </div>
+                                  )}
 
                                   <div className={styles.detailSectionDivider}></div>
                                 </>
@@ -1121,6 +1142,16 @@ export default function OrderManagementPage() {
                       </div>
                     </div>
                   )}
+
+                  {/* 주문서 출력 버튼 */}
+                  {expandedOrderId === order.id && (
+                    <button
+                      className={styles.printOrderButton}
+                      onClick={() => window.print()}
+                    >
+                      주문서 출력
+                    </button>
+                  )}
                 </div>
               )
             })}
@@ -1141,6 +1172,16 @@ export default function OrderManagementPage() {
           onSubmit={handleTrackingSubmit}
         />
       )}
+
     </div>
+
+    {/* 인쇄용 주문서 (화면에는 안 보이고 인쇄할 때만 표시) */}
+    {expandedOrderId && (
+      <PrintOrderSheet
+        order={orders.find(o => o.id === expandedOrderId)!}
+        driverInfo={driverInfo[expandedOrderId] || null}
+      />
+    )}
+    </>
   )
 }
