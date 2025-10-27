@@ -111,7 +111,7 @@ export default function StoreList({ selectedCategory }: StoreListProps) {
             {selectedCategory === '전체' ? '등록된 업체가 없습니다.' : `${selectedCategory} 카테고리에 등록된 업체가 없습니다.`}
           </div>
         ) : (
-          filteredStores.map((store) => {
+          filteredStores.map((store, storeIndex) => {
             const images = store.storeImages && store.storeImages.length > 0 ? store.storeImages : []
 
             // URL 슬러그 생성
@@ -154,9 +154,13 @@ export default function StoreList({ selectedCategory }: StoreListProps) {
                       slidesPerView={3}
                       spaceBetween={5}
                       navigation
+                      watchSlidesProgress={true}
                       className={styles.storeSwiper}
                     >
                       {images.map((image, index) => {
+                        // 상위 3개 스토어의 첫 번째 이미지만 priority
+                        const shouldPrioritize = storeIndex < 3 && index === 0
+
                         return (
                           <SwiperSlide key={index}>
                             <div className={styles.imageWrapper}>
@@ -167,7 +171,8 @@ export default function StoreList({ selectedCategory }: StoreListProps) {
                                 sizes="130px"
                                 className={styles.cardImage}
                                 style={{ objectFit: 'cover' }}
-                                priority={index === 0}
+                                priority={shouldPrioritize}
+                                loading={shouldPrioritize ? undefined : "lazy"}
                               />
                             </div>
                           </SwiperSlide>
