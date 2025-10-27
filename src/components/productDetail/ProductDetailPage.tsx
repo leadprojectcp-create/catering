@@ -516,6 +516,9 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
 
   const handleOptionSelect = (groupName: string, optionName: string) => {
     setSelectedOptions(prev => {
+      // 같은 그룹의 기존 옵션을 제거하고 새로운 옵션으로 교체 (라디오 버튼처럼 동작)
+      const filteredOptions = prev.filter(opt => opt.groupName !== groupName)
+
       // 이미 선택된 옵션인지 확인
       const existingIndex = prev.findIndex(
         opt => opt.groupName === groupName && opt.optionName === optionName
@@ -523,10 +526,10 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
 
       if (existingIndex !== -1) {
         // 이미 선택되어 있으면 제거 (체크 해제)
-        return prev.filter((_, index) => index !== existingIndex)
+        return filteredOptions
       } else {
-        // 선택되어 있지 않으면 추가 (체크)
-        return [...prev, { groupName, optionName }]
+        // 선택되어 있지 않으면 추가 (같은 그룹의 다른 옵션은 제거됨)
+        return [...filteredOptions, { groupName, optionName }]
       }
     })
   }

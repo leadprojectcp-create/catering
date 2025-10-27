@@ -1,5 +1,6 @@
 'use client'
 
+import OptimizedImage from '@/components/common/OptimizedImage'
 import styles from './DeliveryMethodSelector.module.css'
 
 interface DeliveryMethodSelectorProps {
@@ -30,12 +31,26 @@ export default function DeliveryMethodSelector({
     }
   }
 
+  const getDeliveryIcon = (method: string): string => {
+    switch (method) {
+      case '매장 픽업':
+        return '/icons/store_pickup.png'
+      case '퀵업체 배송':
+        return '/icons/quick.png'
+      case '택배 배송':
+        return '/icons/parcel.png'
+      default:
+        return '/icons/store_pickup.png'
+    }
+  }
+
   return (
     <div className={styles.deliverySection}>
       <h3 className={styles.deliveryTitle}>배송방법</h3>
       <div className={styles.deliveryMethodContainer}>
         {deliveryMethods.map((method, index) => {
           const description = getDeliveryDescription(method)
+          const icon = getDeliveryIcon(method)
 
           return (
             <div
@@ -43,6 +58,14 @@ export default function DeliveryMethodSelector({
               className={`${styles.deliveryMethodBox} ${selectedMethod === method ? styles.deliveryMethodBoxSelected : ''}`}
               onClick={() => onMethodChange(method)}
             >
+              <div className={styles.deliveryMethodIcon}>
+                <OptimizedImage
+                  src={icon}
+                  alt={method}
+                  width={48}
+                  height={48}
+                />
+              </div>
               <div className={styles.deliveryMethodContent}>
                 <span>{method}</span>
                 <div className={styles.deliveryMethodDescription}>{description}</div>
