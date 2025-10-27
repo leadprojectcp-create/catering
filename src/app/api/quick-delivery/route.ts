@@ -85,12 +85,19 @@ interface QuickOrderResponse {
 async function loginQuickDelivery(): Promise<HudadaqLoginResponse | null> {
   try {
     console.log('[QuickDelivery API] 로그인 시도...')
+    console.log('[QuickDelivery API] API URL:', `${HUDADAQ_API_BASE_URL}/member/login/`)
+    console.log('[QuickDelivery API] Login ID:', QUICK_LOGIN_ID)
+    console.log('[QuickDelivery API] API Key 존재 여부:', !!HUDADAQ_API_KEY)
+    console.log('[QuickDelivery API] API Key 길이:', HUDADAQ_API_KEY?.length)
+
+    const authHeader = getAuthHeader()
+    console.log('[QuickDelivery API] Base64 인코딩된 Auth Header 길이:', authHeader.length)
 
     const response = await fetch(`${HUDADAQ_API_BASE_URL}/member/login/`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-hudadaq-application-token': getAuthHeader(),
+        'x-hudadaq-application-token': authHeader,
       },
       body: JSON.stringify({
         loginID: QUICK_LOGIN_ID,
@@ -98,8 +105,13 @@ async function loginQuickDelivery(): Promise<HudadaqLoginResponse | null> {
       }),
     })
 
+    console.log('[QuickDelivery API] 로그인 응답 상태:', response.status)
+    console.log('[QuickDelivery API] 로그인 응답 헤더:', Object.fromEntries(response.headers.entries()))
+
     if (!response.ok) {
+      const errorText = await response.text()
       console.error('[QuickDelivery API] 로그인 실패:', response.status, response.statusText)
+      console.error('[QuickDelivery API] 로그인 에러 응답:', errorText.substring(0, 500))
       return null
     }
 
@@ -137,16 +149,19 @@ export async function POST(request: NextRequest) {
       topGroupNo: loginData.userData.topGroupNo,
       groupNo: loginData.userData.groupNo,
       customerNo: loginData.userData.customerNo,
-      serviceType: 'damas', // 다마스
-      upWay: 'free_customer', // 고객님이 상차
-      downWay: 'free_customer', // 고객님이 하차
-      deliveryItem: { bgBox: 3 }, // 대박스 1개
+      serviceType: body.serviceType || 'damas', // 다마스 (기본값)
+      runtype: body.runtype !== undefined ? body.runtype : 0, // 0 = 일반 배송 (필수)
+      payType: body.payType || 'contract', // 법인후불 (필수)
+      upWay: body.upWay || 'free_customer', // 고객님이 상차
+      downWay: body.downWay || 'free_customer', // 고객님이 하차
+      deliveryItem: body.deliveryItem || { bgBox: 3 }, // 대박스 3개 (기본값)
       ...body,
     }
 
     console.log('[QuickDelivery API] 주문 데이터:', fullOrderData)
 
     // 3. 주문 API 호출
+    console.log('[QuickDelivery API] 주문 API 호출 URL:', `${HUDADAQ_API_BASE_URL}/order/`)
     const response = await fetch(`${HUDADAQ_API_BASE_URL}/order/`, {
       method: 'POST',
       headers: {
@@ -156,18 +171,35 @@ export async function POST(request: NextRequest) {
       body: JSON.stringify(fullOrderData),
     })
 
+    console.log('[QuickDelivery API] 주문 응답 상태:', response.status)
+    console.log('[QuickDelivery API] 주문 응답 Content-Type:', response.headers.get('content-type'))
+
     if (!response.ok) {
       console.error('[QuickDelivery API] 주문 실패:', response.status, response.statusText)
       const errorText = await response.text()
-      console.error('[QuickDelivery API] 에러 응답:', errorText)
+      console.error('[QuickDelivery API] 에러 응답:', errorText.substring(0, 1000))
       return NextResponse.json(
-        { error: '퀵 배송 주문 실패', details: errorText },
+        { error: '퀵 배송 주문 실패', details: errorText.substring(0, 500) },
         { status: response.status }
       )
     }
 
-    const result: QuickOrderResponse = await response.json()
-    console.log('[QuickDelivery API] 주문 성공:', result)
+    // JSON 파싱 전에 응답 텍스트 확인
+    const responseText = await response.text()
+    console.log('[QuickDelivery API] 주문 응답 본문 (처음 500자):', responseText.substring(0, 500))
+
+    let result: QuickOrderResponse
+    try {
+      result = JSON.parse(responseText)
+      console.log('[QuickDelivery API] 주문 성공:', result)
+    } catch (parseError) {
+      console.error('[QuickDelivery API] JSON 파싱 실패:', parseError)
+      console.error('[QuickDelivery API] 응답 텍스트:', responseText.substring(0, 1000))
+      return NextResponse.json(
+        { error: 'JSON 파싱 실패', details: responseText.substring(0, 500) },
+        { status: 500 }
+      )
+    }
 
     return NextResponse.json(result, { status: 200 })
   } catch (error) {
