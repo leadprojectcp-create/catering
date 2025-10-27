@@ -1411,6 +1411,33 @@
   min-width: 100px;
 }
 
+/* 모바일 반응형 */
+@media (max-width: 768px) {
+  .feeDetailSettings {
+    padding: 12px;
+  }
+
+  .inputRow {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .inputLabel {
+    min-width: auto;
+    width: 100%;
+    flex-basis: 100%;
+  }
+
+  .feeDetailSettings .input {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .inputRow > span {
+    flex-shrink: 0;
+  }
+}
+
 .checkboxRow {
   display: flex;
   align-items: center;
