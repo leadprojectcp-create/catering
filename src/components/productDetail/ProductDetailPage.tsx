@@ -470,10 +470,10 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
                 // 수정 모드일 때 BottomModal 자동으로 열기
                 setIsModalOpen(true)
               }
-
-              // sessionStorage.removeItem('editCartItem') // 디버깅을 위해 임시로 주석 처리
             } catch (error) {
               console.error('장바구니 수정 데이터 로드 실패:', error)
+              // 에러 발생 시 sessionStorage 정리
+              sessionStorage.removeItem('editCartItem')
             }
           } else {
             setQuantity(1)
@@ -826,17 +826,25 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
           ? createAdditionalOptionsWithPrices(product, item.additionalOptions)
           : undefined
 
-        return {
+        const orderItem: Record<string, unknown> = {
           productId: productId,
           productName: product.name,
           price: product.discountedPrice || product.price,
           quantity: item.quantity,
           options: item.options,
-          additionalOptions: item.additionalOptions,
           optionsWithPrices: optionsWithPrices,
-          additionalOptionsWithPrices: additionalOptionsWithPrices,
           itemPrice: calculateItemPrice(product, item.options, item.quantity, item.additionalOptions)
         }
+
+        // undefined가 아닌 경우에만 필드 추가
+        if (item.additionalOptions) {
+          orderItem.additionalOptions = item.additionalOptions
+        }
+        if (additionalOptionsWithPrices) {
+          orderItem.additionalOptionsWithPrices = additionalOptionsWithPrices
+        }
+
+        return orderItem
       })
 
       // shoppingCart 컬렉션에 저장 (orders가 아닌 shoppingCart에 저장)
@@ -865,10 +873,29 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
           }
         : baseOrderData
 
-      const cartDoc = await addDoc(collection(db, 'shoppingCart'), orderData)
+      let cartId: string
+
+      // 수정 모드일 때는 기존 장바구니 아이템 업데이트
+      if (editingCartItemId) {
+        console.log('[ProductDetail] 기존 장바구니 아이템 수정:', editingCartItemId)
+        const cartRef = doc(db, 'shoppingCart', editingCartItemId)
+        await updateDoc(cartRef, {
+          ...orderData,
+          updatedAt: new Date()
+        })
+        cartId = editingCartItemId
+
+        // sessionStorage 정리
+        sessionStorage.removeItem('editCartItem')
+      } else {
+        // 새로운 장바구니 아이템 추가
+        console.log('[ProductDetail] 새로운 장바구니 아이템 추가')
+        const cartDoc = await addDoc(collection(db, 'shoppingCart'), orderData)
+        cartId = cartDoc.id
+      }
 
       // payments 페이지로 이동 (cartId를 전달)
-      router.push(`/payments?cartId=${cartDoc.id}`)
+      router.push(`/payments?cartId=${cartId}`)
     } catch (error) {
       console.error('장바구니 저장 실패:', error)
       alert('장바구니 저장에 실패했습니다.')

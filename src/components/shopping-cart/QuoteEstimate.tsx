@@ -18,15 +18,25 @@ export default function QuoteEstimate({ item, onClose }: QuoteEstimateProps) {
   // 총 수량 계산
   const totalQuantity = item.totalQuantity || item.items.reduce((sum, opt) => sum + opt.quantity, 0)
 
-  // 총 금액 계산
+  // 총 금액 계산 - itemPrice를 사용
   const calculateItemPrice = (cartItem: CartItem): number => {
     return cartItem.items.reduce((total, itemOption) => {
+      // itemPrice가 있으면 그대로 사용
+      if (itemOption.itemPrice) {
+        return total + itemOption.itemPrice
+      }
+      // 없으면 계산
       let itemTotal = 0
-      Object.entries(itemOption.options).forEach(([groupName, value]) => {
-        if (itemOption.optionsWithPrices && itemOption.optionsWithPrices[groupName]) {
-          itemTotal += itemOption.optionsWithPrices[groupName].price
-        }
-      })
+      if (itemOption.optionsWithPrices) {
+        Object.values(itemOption.optionsWithPrices).forEach(opt => {
+          itemTotal += opt.price
+        })
+      }
+      if (itemOption.additionalOptionsWithPrices) {
+        Object.values(itemOption.additionalOptionsWithPrices).forEach(opt => {
+          itemTotal += opt.price
+        })
+      }
       return total + (itemTotal * itemOption.quantity)
     }, 0)
   }
@@ -124,6 +134,7 @@ export default function QuoteEstimate({ item, onClose }: QuoteEstimateProps) {
             <table className={styles.optionsTable}>
               <thead>
                 <tr>
+                  <th>구분</th>
                   <th>옵션</th>
                   <th>가격</th>
                   <th>수량</th>
@@ -131,27 +142,67 @@ export default function QuoteEstimate({ item, onClose }: QuoteEstimateProps) {
                 </tr>
               </thead>
               <tbody>
-                {item.items.map((itemOption, index) => {
-                  const optionEntries = Object.entries(itemOption.options)
-                  const totalPrice = optionEntries.reduce((sum, [groupName]) => {
-                    const optionPrice = itemOption.optionsWithPrices?.[groupName]?.price || 0
-                    return sum + optionPrice
-                  }, 0) * itemOption.quantity
+                {item.items.map((itemOption, itemIndex) => {
+                  // 기본 상품 가격 (price 필드)
+                  const basePrice = itemOption.price || 0
+                  // 상품 옵션 엔트리
+                  const optionEntries = Object.entries(itemOption.options || {})
+                  const hasOptions = optionEntries.length > 0
+
+                  // 옵션이 없을 때는 [기본] 기본으로 표시
+                  const displayOptionEntries = hasOptions
+                    ? optionEntries
+                    : [['기본', '기본'] as [string, string]]
+
+                  // 추가상품 엔트리
+                  const additionalEntries = Object.entries(itemOption.additionalOptions || {})
+                  const hasAdditionalOptions = additionalEntries.length > 0
+
+                  // 전체 행 개수 (기본상품 1 + 상품 옵션 + 추가상품)
+                  const totalRows = 1 + displayOptionEntries.length + additionalEntries.length
+
+                  // 이 아이템의 총 금액 계산
+                  const itemTotalPrice = itemOption.itemPrice || 0
 
                   return (
-                    <React.Fragment key={index}>
-                      {optionEntries.map(([groupName, value], optionIndex) => {
-                        const optionPrice = itemOption.optionsWithPrices?.[groupName]?.price || 0
+                    <React.Fragment key={itemIndex}>
+                      {/* 기본 상품 가격 */}
+                      <tr key={`base-${itemIndex}`}>
+                        <td>기본상품</td>
+                        <td>{item.productName}</td>
+                        <td>{basePrice.toLocaleString()}원</td>
+                        <td rowSpan={totalRows}>{itemOption.quantity}개</td>
+                        <td rowSpan={totalRows}>{itemTotalPrice.toLocaleString()}원</td>
+                      </tr>
+
+                      {/* 상품 옵션들 */}
+                      {displayOptionEntries.map(([groupName, value], optionIndex) => {
+                        const optionPrice = hasOptions && itemOption.optionsWithPrices?.[groupName]
+                          ? itemOption.optionsWithPrices[groupName].price
+                          : 0
                         return (
-                          <tr key={groupName}>
+                          <tr key={`option-${itemIndex}-${groupName}`}>
+                            {optionIndex === 0 && (
+                              <td rowSpan={displayOptionEntries.length}>상품 옵션</td>
+                            )}
                             <td>[{groupName}] {value}</td>
                             <td>+{optionPrice.toLocaleString()}원</td>
-                            {optionIndex === 0 && (
-                              <>
-                                <td rowSpan={optionEntries.length}>{itemOption.quantity}개</td>
-                                <td rowSpan={optionEntries.length}>{totalPrice.toLocaleString()}원</td>
-                              </>
+                          </tr>
+                        )
+                      })}
+
+                      {/* 추가상품들 */}
+                      {hasAdditionalOptions && additionalEntries.map(([groupName, value], addIndex) => {
+                        const additionalPrice = itemOption.additionalOptionsWithPrices?.[groupName]
+                          ? itemOption.additionalOptionsWithPrices[groupName].price
+                          : 0
+                        return (
+                          <tr key={`additional-${itemIndex}-${groupName}`}>
+                            {addIndex === 0 && (
+                              <td rowSpan={additionalEntries.length}>추가상품</td>
                             )}
+                            <td>[{groupName}] {value}</td>
+                            <td>+{additionalPrice.toLocaleString()}원</td>
                           </tr>
                         )
                       })}

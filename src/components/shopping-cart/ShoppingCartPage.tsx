@@ -341,11 +341,11 @@ export default function ShoppingCartPage() {
                     <div key={index} className={styles.itemOptionGroup}>
                       <div className={styles.optionsWrapper}>
                         {/* 상품 옵션 */}
-                        {Object.keys(itemOption.options).length > 0 && (
-                          <div className={styles.optionSection}>
-                            <div className={styles.optionSectionTitle}>상품 옵션</div>
-                            <div className={styles.optionsList}>
-                              {Object.entries(itemOption.options).map(([groupName, value]) => {
+                        <div className={styles.optionSection}>
+                          <div className={styles.optionSectionTitle}>상품 옵션</div>
+                          <div className={styles.optionsList}>
+                            {Object.keys(itemOption.options).length > 0 ? (
+                              Object.entries(itemOption.options).map(([groupName, value]) => {
                                 // 옵션 가격 찾기
                                 let optionPrice = 0
                                 if (itemOption.optionsWithPrices && itemOption.optionsWithPrices[groupName]) {
@@ -356,10 +356,14 @@ export default function ShoppingCartPage() {
                                     <span className={styles.optionGroupName}>[{groupName}]</span> {value} +{optionPrice.toLocaleString()}원
                                   </div>
                                 )
-                              })}
-                            </div>
+                              })
+                            ) : (
+                              <div className={styles.optionText}>
+                                <span className={styles.optionGroupName}>[기본]</span> 기본 +0원
+                              </div>
+                            )}
                           </div>
-                        )}
+                        </div>
 
                         {/* 추가상품 */}
                         {itemOption.additionalOptions && Object.keys(itemOption.additionalOptions).length > 0 && (
