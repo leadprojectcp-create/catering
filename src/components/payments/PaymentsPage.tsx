@@ -1318,6 +1318,8 @@ export default function PaymentsPage() {
                     ? '착불'
                     : deliveryFeeSettings?.type === '무료'
                     ? '무료'
+                    : deliveryFeeSettings?.type === '조건부 무료'
+                    ? (deliveryFee === 0 ? '조건부 무료' : `+${deliveryFee.toLocaleString()}원`)
                     : `+${deliveryFee.toLocaleString()}원`}
                 </span>
               </div>

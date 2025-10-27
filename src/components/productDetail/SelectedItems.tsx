@@ -192,34 +192,45 @@ export default function SelectedItems({
                 </span>
               </div>
             )}
+            {product.deliveryFeeSettings.type === '수량별' && (
+              <div className={styles.feeConditionNotice}>
+                <OptimizedImage src="/icons/delivery.svg" alt="배송" width={16} height={16} />
+                <span>
+                  {product.deliveryFeeSettings.perQuantity}개당 {(product.deliveryFeeSettings.baseFee || 0).toLocaleString()}원
+                </span>
+              </div>
+            )}
           </div>
-          <div className={styles.paymentMethodContainer}>
-            {product.deliveryFeeSettings.paymentMethods.map((method) => {
-              const getPaymentDescription = (paymentMethod: string): string => {
-                switch (paymentMethod) {
-                  case '선결제':
-                    return '카드결제 시 상품금액과 함께 결제됩니다.'
-                  case '착불':
-                    return '상품 수령 후 기사님께 배송비를 결제해주세요.'
-                  default:
-                    return ''
+          {/* 조건부 무료일 때 조건 달성 시 선결제/착불 선택 버튼 숨김 */}
+          {!(product.deliveryFeeSettings.type === '조건부 무료' && calculateTotalPrice() >= (product.deliveryFeeSettings.freeCondition || 0)) && (
+            <div className={styles.paymentMethodContainer}>
+              {product.deliveryFeeSettings.paymentMethods.map((method) => {
+                const getPaymentDescription = (paymentMethod: string): string => {
+                  switch (paymentMethod) {
+                    case '선결제':
+                      return '카드결제 시 상품금액과 함께 결제됩니다.'
+                    case '착불':
+                      return '상품 수령 후 기사님께 배송비를 결제해주세요.'
+                    default:
+                      return ''
+                  }
                 }
-              }
 
-              return (
-                <div
-                  key={method}
-                  className={`${styles.paymentMethodBox} ${parcelPaymentMethod === method ? styles.paymentMethodBoxSelected : ''}`}
-                  onClick={() => onParcelPaymentMethodChange?.(method)}
-                >
-                  <div className={styles.paymentMethodContent}>
-                    <span className={styles.paymentMethodName}>{method}</span>
-                    <div className={styles.paymentMethodDescription}>{getPaymentDescription(method)}</div>
+                return (
+                  <div
+                    key={method}
+                    className={`${styles.paymentMethodBox} ${parcelPaymentMethod === method ? styles.paymentMethodBoxSelected : ''}`}
+                    onClick={() => onParcelPaymentMethodChange?.(method)}
+                  >
+                    <div className={styles.paymentMethodContent}>
+                      <span className={styles.paymentMethodName}>{method}</span>
+                      <div className={styles.paymentMethodDescription}>{getPaymentDescription(method)}</div>
+                    </div>
                   </div>
-                </div>
-              )
-            })}
-          </div>
+                )
+              })}
+            </div>
+          )}
         </div>
       )}
 
