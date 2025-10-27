@@ -3,6 +3,7 @@ import { db } from '@/lib/firebase'
 import { doc, updateDoc, getDoc, setDoc } from 'firebase/firestore'
 import * as PortOne from '@portone/server-sdk'
 import { sendKakaoAlimtalk } from '@/lib/services/smsService'
+import { requestQuickDelivery } from '@/lib/services/quickDeliveryService'
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic'
@@ -229,28 +230,14 @@ export async function POST(request: NextRequest) {
                       }
                     }
 
-                    // 퀵 배송 API 호출 - request의 호스트 정보 사용
-                    const protocol = request.headers.get('x-forwarded-proto') || 'https'
-                    const host = request.headers.get('host') || request.headers.get('x-forwarded-host')
-                    const baseUrl = host ? `${protocol}://${host}` : 'http://localhost:3000'
-
-                    console.log('[Webhook] Quick delivery API URL:', `${baseUrl}/api/quick-delivery`)
-
-                    const quickResponse = await fetch(`${baseUrl}/api/quick-delivery`, {
-                      method: 'POST',
-                      headers: {
-                        'Content-Type': 'application/json',
-                      },
-                      body: JSON.stringify(quickDeliveryData),
-                    })
-
-                    const quickResult = await quickResponse.json()
+                    // 퀵 배송 서비스 직접 호출 (내부 API 대신)
+                    const quickResult = await requestQuickDelivery(quickDeliveryData)
                     console.log('[Webhook] 퀵 배송 API 응답:', quickResult)
 
                     // code가 1 또는 '1'이면 성공
                     const isSuccess = quickResult.code === 1 || quickResult.code === '1'
 
-                    if (quickResponse.ok && isSuccess) {
+                    if (isSuccess) {
                       console.log('[Webhook] 퀵 배송 요청 성공:', quickResult)
 
                       // quickDeliveries 컬렉션에 저장
@@ -281,7 +268,6 @@ export async function POST(request: NextRequest) {
                     } else {
                       const errorMsg = quickResult?.errMsg || quickResult?.message || quickResult?.error || JSON.stringify(quickResult)
                       console.error('[Webhook] 퀵 배송 요청 실패:', {
-                        status: quickResponse.status,
                         code: quickResult?.code,
                         error: errorMsg
                       })
