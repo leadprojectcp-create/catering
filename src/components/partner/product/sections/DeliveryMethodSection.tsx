@@ -118,7 +118,7 @@ export default function DeliveryMethodSection({
       {/* 택배 배송 선택 시 배송비 설정 표시 */}
       {isParcelDeliverySelected && (
         <div className={styles.deliveryFeeSettings}>
-          <h4 className={styles.subSectionTitle}>배송비 설정</h4>
+          <h4 className={styles.subSectionTitle}>상품별 배송비 설정</h4>
 
           {/* 배송비 타입 선택 */}
           <div className={styles.radioGroup}>
@@ -130,9 +130,7 @@ export default function DeliveryMethodSection({
                 onChange={() => handleFeeTypeChange('무료')}
                 className={styles.hiddenRadio}
               />
-              <span className={styles.customRadio}>
-                {deliveryFeeSettings?.type === '무료' ? '●' : '○'}
-              </span>
+              <span className={`${styles.customRadio} ${deliveryFeeSettings?.type === '무료' ? styles.customRadioActive : ''}`}></span>
               무료
             </label>
             <label className={styles.radioLabel}>
@@ -143,9 +141,7 @@ export default function DeliveryMethodSection({
                 onChange={() => handleFeeTypeChange('조건부 무료')}
                 className={styles.hiddenRadio}
               />
-              <span className={styles.customRadio}>
-                {deliveryFeeSettings?.type === '조건부 무료' ? '●' : '○'}
-              </span>
+              <span className={`${styles.customRadio} ${deliveryFeeSettings?.type === '조건부 무료' ? styles.customRadioActive : ''}`}></span>
               조건부 무료
             </label>
             <label className={styles.radioLabel}>
@@ -156,9 +152,7 @@ export default function DeliveryMethodSection({
                 onChange={() => handleFeeTypeChange('유료')}
                 className={styles.hiddenRadio}
               />
-              <span className={styles.customRadio}>
-                {deliveryFeeSettings?.type === '유료' ? '●' : '○'}
-              </span>
+              <span className={`${styles.customRadio} ${deliveryFeeSettings?.type === '유료' ? styles.customRadioActive : ''}`}></span>
               유료
             </label>
             <label className={styles.radioLabel}>
@@ -169,9 +163,7 @@ export default function DeliveryMethodSection({
                 onChange={() => handleFeeTypeChange('수량별')}
                 className={styles.hiddenRadio}
               />
-              <span className={styles.customRadio}>
-                {deliveryFeeSettings?.type === '수량별' ? '●' : '○'}
-              </span>
+              <span className={`${styles.customRadio} ${deliveryFeeSettings?.type === '수량별' ? styles.customRadioActive : ''}`}></span>
               수량별
             </label>
           </div>

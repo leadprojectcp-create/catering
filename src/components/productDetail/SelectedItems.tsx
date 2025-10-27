@@ -123,12 +123,29 @@ export default function SelectedItems({
                 -
               </button>
               <input
-                type="number"
-                value={item.quantity}
-                onChange={(e) => onQuantityInputChange(index, e.target.value)}
+                type="text"
+                inputMode="numeric"
+                value={item.quantity || ''}
+                onChange={(e) => {
+                  const value = e.target.value
+                  // 숫자만 입력 가능하도록
+                  if (value === '' || /^\d+$/.test(value)) {
+                    onQuantityInputChange(index, value)
+                  }
+                }}
+                onBlur={() => {
+                  // 포커스를 잃을 때 최소/최대 값 검증
+                  const minQty = product.minOrderQuantity || 1
+                  const maxQty = product.maxOrderQuantity || 999
+                  if (item.quantity < minQty || item.quantity === 0) {
+                    alert(`최소 주문 수량은 ${minQty}개입니다. 최소 주문 수량과 최대 주문 수량(${maxQty}개) 사이로 입력해주세요.`)
+                    onUpdateQuantity(index, minQty)
+                  } else if (item.quantity > maxQty) {
+                    alert(`최대 주문 수량은 ${maxQty}개입니다. 최소 주문 수량(${minQty}개)과 최대 주문 수량 사이로 입력해주세요.`)
+                    onUpdateQuantity(index, maxQty)
+                  }
+                }}
                 className={styles.quantityValue}
-                min={product.minOrderQuantity || 1}
-                max={product.maxOrderQuantity || 999}
               />
               <button
                 onClick={() => onUpdateQuantity(index, item.quantity + 1)}

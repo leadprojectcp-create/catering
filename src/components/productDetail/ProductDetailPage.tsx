@@ -609,8 +609,21 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
   }
 
   const handleQuantityInputChange = (index: number, value: string) => {
-    const numValue = parseInt(value) || 0
-    updateCartQuantity(index, numValue)
+    // 빈 문자열이면 그냥 빈 값으로 설정 (사용자가 입력 중)
+    if (value === '') {
+      setCartItems(prev => prev.map((item, i) =>
+        i === index ? { ...item, quantity: 0 } : item
+      ))
+      return
+    }
+
+    const numValue = parseInt(value)
+    if (!isNaN(numValue)) {
+      // 제한 없이 바로 설정 (blur 시 검증)
+      setCartItems(prev => prev.map((item, i) =>
+        i === index ? { ...item, quantity: numValue } : item
+      ))
+    }
   }
 
   const saveToShoppingCart = async () => {

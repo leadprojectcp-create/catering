@@ -354,7 +354,7 @@ export default function PartnerHeader({ chatRoomTitle, chatRoomPhone, chatRoomMe
           {/* 사이드 드로어 */}
           <div className={`${styles.drawer} ${isDrawerOpen ? styles.drawerOpen : ''}`}>
             <div className={styles.drawerHeader}>
-              <h2 className={styles.drawerTitle}>파트너 센터</h2>
+              <h2 className={styles.drawerTitle}>단모 파트너 센터</h2>
               <button
                 className={styles.closeButton}
                 onClick={closeDrawer}

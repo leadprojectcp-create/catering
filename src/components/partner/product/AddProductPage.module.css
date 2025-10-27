@@ -1315,9 +1315,10 @@
 }
 
 .subSectionTitle {
+  color: #333;
   font-size: 14px;
   font-weight: 600;
-  color: #374151;
+  line-height: normal;
   margin-bottom: 12px;
 }
 
@@ -1341,8 +1342,30 @@
 }
 
 .customRadio {
-  font-size: 18px;
-  color: #237AF2;
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 2px solid #D9D9D9;
+  border-radius: 50%;
+  position: relative;
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+
+.customRadioActive {
+  border-color: #025BD9;
+}
+
+.customRadioActive::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 10px;
+  height: 10px;
+  background-color: #025BD9;
+  border-radius: 50%;
 }
 
 .feeDetailSettings {
@@ -1353,6 +1376,26 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+.feeDetailSettings .input {
+  border-radius: 5px;
+  border: 1px solid #EBEBEB;
+  height: 35px;
+  flex-shrink: 0;
+  text-align: right;
+  padding: 0 12px;
+}
+
+/* 숫자 입력 필드 화살표 제거 */
+.feeDetailSettings .input[type="number"]::-webkit-outer-spin-button,
+.feeDetailSettings .input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.feeDetailSettings .input[type="number"] {
+  -moz-appearance: textfield;
 }
 
 .inputRow {

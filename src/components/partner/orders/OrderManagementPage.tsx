@@ -223,6 +223,11 @@ export default function OrderManagementPage() {
   }
 
   const filteredOrders = orders.filter(order => {
+    // 결제 완료된 주문만 표시
+    if (order.paymentStatus !== 'paid') {
+      return false
+    }
+
     // 주문 상태 필터
     if (filter !== 'all') {
       if (filter === 'cancelled_rejected') {
