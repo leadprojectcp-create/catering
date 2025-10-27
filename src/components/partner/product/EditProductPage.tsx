@@ -189,7 +189,7 @@ export default function EditProductPage({ productId }: { productId: string }) {
             name: product.name || '',
             images: product.images || [],
             price: product.price || 0,
-            category: product.category || '',
+            category: Array.isArray(product.category) ? product.category : (product.category ? [product.category] : []),
             productTypes: Array.isArray(product.productTypes) ? product.productTypes : [],
             options: product.options || [{ groupName: '', values: [{ name: '', price: 0 }] }],
             additionalOptions: product.additionalOptions || [{ groupName: '', values: [{ name: '', price: 0 }] }],
