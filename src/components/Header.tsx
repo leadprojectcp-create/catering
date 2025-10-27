@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import OptimizedImage from '@/components/common/OptimizedImage'
 import styles from './Header.module.css'
 import { usePathname, useRouter } from 'next/navigation'
@@ -336,10 +337,10 @@ export default function Header({ chatRoomTitle, chatRoomPhone, chatRoomMenu }: H
                   <path d="M9 18l6-6-6-6"/>
                 </svg>
               </div>
-              <div className={styles.userPoints}>
+              <Link href="/points" className={styles.userPoints} onClick={closeDrawer}>
                 <span>내 포인트</span>
                 <span>{(userData.point || 0).toLocaleString()}P</span>
-              </div>
+              </Link>
             </>
           )}
 
@@ -348,6 +349,13 @@ export default function Header({ chatRoomTitle, chatRoomPhone, chatRoomMenu }: H
             className={`${styles.drawerMenuItem} ${pathname === '/wishlist' ? styles.drawerMenuItemActive : ''}`}
             onClick={closeDrawer}
           >
+            <OptimizedImage
+              src={pathname === '/wishlist' ? '/menu-icons/heart_active.png' : '/menu-icons/heart.png'}
+              alt="찜"
+              width={20}
+              height={20}
+              className={styles.menuIcon}
+            />
             찜
           </Link>
           <Link
@@ -355,6 +363,13 @@ export default function Header({ chatRoomTitle, chatRoomPhone, chatRoomMenu }: H
             className={`${styles.drawerMenuItem} ${pathname === '/orders' ? styles.drawerMenuItemActive : ''}`}
             onClick={closeDrawer}
           >
+            <OptimizedImage
+              src={pathname === '/orders' ? '/menu-icons/order_active.png' : '/menu-icons/order.png'}
+              alt="주문내역"
+              width={20}
+              height={20}
+              className={styles.menuIcon}
+            />
             주문내역
           </Link>
           <Link
@@ -362,6 +377,13 @@ export default function Header({ chatRoomTitle, chatRoomPhone, chatRoomMenu }: H
             className={`${styles.drawerMenuItem} ${pathname === '/cart' ? styles.drawerMenuItemActive : ''}`}
             onClick={closeDrawer}
           >
+            <OptimizedImage
+              src={pathname === '/cart' ? '/menu-icons/shopping_active.png' : '/menu-icons/shopping.png'}
+              alt="장바구니"
+              width={20}
+              height={20}
+              className={styles.menuIcon}
+            />
             장바구니
           </Link>
           <Link
@@ -369,6 +391,13 @@ export default function Header({ chatRoomTitle, chatRoomPhone, chatRoomMenu }: H
             className={`${styles.drawerMenuItem} ${pathname === '/chat' || pathname.startsWith('/chat/') ? styles.drawerMenuItemActive : ''}`}
             onClick={closeDrawer}
           >
+            <OptimizedImage
+              src={pathname === '/chat' || pathname.startsWith('/chat/') ? '/menu-icons/chat_active.png' : '/menu-icons/chat.png'}
+              alt="채팅"
+              width={20}
+              height={20}
+              className={styles.menuIcon}
+            />
             채팅
           </Link>
           <Link
@@ -376,6 +405,13 @@ export default function Header({ chatRoomTitle, chatRoomPhone, chatRoomMenu }: H
             className={`${styles.drawerMenuItem} ${pathname === '/reviews' ? styles.drawerMenuItemActive : ''}`}
             onClick={closeDrawer}
           >
+            <OptimizedImage
+              src={pathname === '/reviews' ? '/menu-icons/review_active.png' : '/menu-icons/review.png'}
+              alt="리뷰관리"
+              width={20}
+              height={20}
+              className={styles.menuIcon}
+            />
             리뷰관리
           </Link>
           <Link
@@ -383,6 +419,13 @@ export default function Header({ chatRoomTitle, chatRoomPhone, chatRoomMenu }: H
             className={`${styles.drawerMenuItem} ${pathname === '/faq' ? styles.drawerMenuItemActive : ''}`}
             onClick={closeDrawer}
           >
+            <OptimizedImage
+              src={pathname === '/faq' ? '/menu-icons/service_active.png' : '/menu-icons/service.png'}
+              alt="고객센터"
+              width={20}
+              height={20}
+              className={styles.menuIcon}
+            />
             고객센터
           </Link>
           <Link
@@ -390,6 +433,13 @@ export default function Header({ chatRoomTitle, chatRoomPhone, chatRoomMenu }: H
             className={`${styles.drawerMenuItem} ${pathname === '/notices' || pathname.startsWith('/notices/') ? styles.drawerMenuItemActive : ''}`}
             onClick={closeDrawer}
           >
+            <OptimizedImage
+              src={pathname === '/notices' || pathname.startsWith('/notices/') ? '/menu-icons/notice_active.png' : '/menu-icons/notice.png'}
+              alt="공지사항"
+              width={20}
+              height={20}
+              className={styles.menuIcon}
+            />
             공지사항
           </Link>
           <Link
@@ -397,32 +447,62 @@ export default function Header({ chatRoomTitle, chatRoomPhone, chatRoomMenu }: H
             className={`${styles.drawerMenuItem} ${pathname === '/settings' ? styles.drawerMenuItemActive : ''}`}
             onClick={closeDrawer}
           >
+            <OptimizedImage
+              src={pathname === '/settings' ? '/menu-icons/setting_active.png' : '/menu-icons/setting.png'}
+              alt="설정"
+              width={20}
+              height={20}
+              className={styles.menuIcon}
+            />
             설정
           </Link>
+
+          {/* 로그아웃 / 로그인 */}
+          {userData ? (
+            <button className={styles.drawerMenuItem} onClick={handleLogout}>
+              <OptimizedImage
+                src="/menu-icons/logout.png"
+                alt="로그아웃"
+                width={20}
+                height={20}
+                className={styles.menuIcon}
+              />
+              로그아웃
+            </button>
+          ) : (
+            <Link href="/login" className={styles.drawerMenuItem} onClick={closeDrawer}>
+              로그인
+            </Link>
+          )}
 
           {/* 파트너 페이지 링크 (partner일 경우만 표시) */}
           {userData && userData.type === 'partner' && (
             <Link
               href="/partner/dashboard"
-              className={`${styles.drawerMenuItem} ${pathname.startsWith('/partner') ? styles.drawerMenuItemActive : ''}`}
+              className={styles.partnerLink}
               onClick={closeDrawer}
             >
-              파트너 페이지
+              <div className={styles.partnerLinkContent}>
+                <OptimizedImage
+                  src="/menu-icons/partner_center.png"
+                  alt="파트너 센터"
+                  width={110}
+                  height={0}
+                  className={styles.partnerLogo}
+                  style={{ height: 'auto' }}
+                />
+                <span className={styles.partnerText}>바로가기</span>
+              </div>
+              <Image
+                src="/icons/arrow.svg"
+                alt="화살표"
+                width={24}
+                height={24}
+                className={styles.partnerArrow}
+              />
             </Link>
           )}
         </nav>
-
-        <div className={styles.drawerFooter}>
-          {userData ? (
-            <button className={styles.drawerLogoutButton} onClick={handleLogout}>
-              로그아웃
-            </button>
-          ) : (
-            <Link href="/login" className={styles.drawerLoginButton} onClick={closeDrawer}>
-              로그인
-            </Link>
-          )}
-        </div>
       </div>
     </>
   )

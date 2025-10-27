@@ -268,13 +268,13 @@ export default function CategoryProductList({ categoryName }: CategoryProductLis
         </div>
       </div>
 
-      <div className={styles.productGrid}>
-        {filteredProducts.length === 0 ? (
-          <div className={styles.emptyState}>
-            {searchQuery ? '검색 결과가 없습니다.' : `${categoryName} 카테고리에 등록된 상품이 없습니다.`}
-          </div>
-        ) : (
-          filteredProducts.map((product) => {
+      {filteredProducts.length === 0 ? (
+        <div className={styles.emptyState}>
+          {searchQuery ? '검색 결과가 없습니다.' : `${categoryName} 카테고리에 등록된 상품이 없습니다.`}
+        </div>
+      ) : (
+        <div className={styles.productGrid}>
+          {filteredProducts.map((product) => {
             const imageUrl = product.images && product.images.length > 0 ? product.images[0] : ''
 
             return (
@@ -373,9 +373,9 @@ export default function CategoryProductList({ categoryName }: CategoryProductLis
                 </div>
               </div>
             )
-          })
-        )}
-      </div>
+          })}
+        </div>
+      )}
     </div>
   )
 }

@@ -1,0 +1,116 @@
+.container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 80px 20px 40px;
+}
+
+.loading {
+  text-align: center;
+  padding: 40px 20px;
+  color: #999;
+}
+
+.header {
+  margin-bottom: 24px;
+}
+
+.title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #333;
+  margin: 0;
+}
+
+.balanceCard {
+  background: linear-gradient(135deg, #025BD9 0%, #0147A3 100%);
+  border-radius: 16px;
+  padding: 32px 24px;
+  margin-bottom: 32px;
+}
+
+.balanceLabel {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.balanceAmount {
+  color: #fff;
+  font-size: 32px;
+  font-weight: 700;
+}
+
+.historySection {
+  margin-top: 32px;
+}
+
+.historyTitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: #333;
+  margin: 0 0 16px 0;
+}
+
+.emptyState {
+  text-align: center;
+  padding: 60px 20px;
+  color: #999;
+  font-size: 15px;
+}
+
+.historyList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.historyItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  background: #fff;
+  border: 1px solid #F0F0F0;
+  border-radius: 10px;
+}
+
+.historyLeft {
+  flex: 1;
+}
+
+.historyDescription {
+  font-size: 15px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 6px;
+}
+
+.historyDate {
+  font-size: 13px;
+  color: #999;
+}
+
+.historyRight {
+  text-align: right;
+  margin-left: 16px;
+}
+
+.historyAmount {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.historyAmount.earn {
+  color: #025BD9;
+}
+
+.historyAmount.use {
+  color: #FF4444;
+}
+
+.historyBalance {
+  font-size: 13px;
+  color: #999;
+}

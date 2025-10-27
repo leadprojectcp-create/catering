@@ -82,6 +82,7 @@ interface HistoryResponse {
   code: string
   orderList?: HistoryOrder[]
   errMsg?: string
+  testing?: boolean
 }
 
 /**
