@@ -730,6 +730,8 @@ export default function OrdersPage() {
                             ? styles.deliveryMethodQuick
                             : order.deliveryMethod === '매장 픽업'
                             ? styles.deliveryMethodPickup
+                            : order.deliveryMethod === '택배 배송'
+                            ? styles.deliveryMethodParcel
                             : ''
                         }`}>
                           {order.deliveryMethod}

@@ -101,26 +101,24 @@ export default function CategoryProductList({ categoryName }: CategoryProductLis
             } as Product
           })
         } else {
-          // 일반 카테고리의 경우: products의 category 필드로 직접 조회
+          // 일반 카테고리의 경우: products의 category 배열에서 조회
           const productsQuery = query(
             collection(db, 'products'),
-            where('category', '==', categoryName)
+            where('category', 'array-contains', categoryName),
+            where('status', '==', 'active')
           )
           const productsSnapshot = await getDocs(productsQuery)
           console.log('해당 카테고리 전체 상품 수:', productsSnapshot.docs.length)
 
-          // status가 'active'인 것만 필터링
-          productData = productsSnapshot.docs
-            .map(docSnap => {
-              const data = docSnap.data()
-              console.log('상품 데이터:', data)
-              console.log('minOrderDays 값:', data.minOrderDays)
-              return {
-                id: docSnap.id,
-                ...data
-              } as Product
-            })
-            .filter(product => product.status === 'active')
+          productData = productsSnapshot.docs.map(docSnap => {
+            const data = docSnap.data()
+            console.log('상품 데이터:', data)
+            console.log('minOrderDays 값:', data.minOrderDays)
+            return {
+              id: docSnap.id,
+              ...data
+            } as Product
+          })
 
           console.log('active 상품 수:', productData.length)
         }

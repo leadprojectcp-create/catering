@@ -37,6 +37,16 @@ export default function SelectedItems({
   calculateItemPrice,
   calculateTotalPrice
 }: SelectedItemsProps) {
+  // 전체 수량 계산
+  const totalQuantity = cartItems.reduce((total, item) => total + item.quantity, 0)
+
+  // 최소/최대 주문 수량
+  const minQty = product.minOrderQuantity || 1
+  const maxQty = product.maxOrderQuantity || 999
+
+  // 버튼 활성화 여부 (전체 수량이 최소~최대 범위 내에 있어야 함)
+  const isOrderValid = totalQuantity >= minQty && totalQuantity <= maxQty
+
   return (
     <div className={styles.selectedSection}>
       <h3 className={styles.selectedTitle}>선택된 상품</h3>
@@ -133,18 +143,6 @@ export default function SelectedItems({
                     onQuantityInputChange(index, value)
                   }
                 }}
-                onBlur={() => {
-                  // 포커스를 잃을 때 최소/최대 값 검증
-                  const minQty = product.minOrderQuantity || 1
-                  const maxQty = product.maxOrderQuantity || 999
-                  if (item.quantity < minQty || item.quantity === 0) {
-                    alert(`최소 주문 수량은 ${minQty}개입니다. 최소 주문 수량과 최대 주문 수량(${maxQty}개) 사이로 입력해주세요.`)
-                    onUpdateQuantity(index, minQty)
-                  } else if (item.quantity > maxQty) {
-                    alert(`최대 주문 수량은 ${maxQty}개입니다. 최소 주문 수량(${minQty}개)과 최대 주문 수량 사이로 입력해주세요.`)
-                    onUpdateQuantity(index, maxQty)
-                  }
-                }}
                 className={styles.quantityValue}
               />
               <button
@@ -163,7 +161,7 @@ export default function SelectedItems({
       </div>
 
       {/* 매장 요청사항 */}
-      <div className={styles.requestWrapper}>
+      <div className={styles.requestContainer}>
         <h3 className={styles.requestTitle}>매장 요청사항</h3>
         <div className={styles.requestSection}>
           <textarea
@@ -181,34 +179,46 @@ export default function SelectedItems({
 
       {/* 택배 배송 결제 방식 */}
       {deliveryMethod === '택배 배송' && product.deliveryFeeSettings && product.deliveryFeeSettings.paymentMethods && product.deliveryFeeSettings.paymentMethods.length > 0 && (
-        <div className={styles.parcelPaymentWrapper}>
-          <h3 className={styles.parcelPaymentTitle}>배송비 결제 방식</h3>
-          <div className={styles.parcelPaymentSection}>
-            <div className={styles.paymentMethodGroup}>
-              {product.deliveryFeeSettings.paymentMethods.map((method) => (
-                <label key={method} className={styles.paymentMethodLabel}>
-                  <input
-                    type="radio"
-                    name="parcelPaymentMethod"
-                    value={method}
-                    checked={parcelPaymentMethod === method}
-                    onChange={() => onParcelPaymentMethodChange?.(method)}
-                    className={styles.hiddenRadio}
-                  />
-                  <span className={styles.customRadio}>
-                    {parcelPaymentMethod === method ? '●' : '○'}
-                  </span>
-                  {method}
-                </label>
-              ))}
-            </div>
+        <div className={styles.parcelPaymentContainer}>
+          <div className={styles.parcelPaymentHeader}>
+            <h3 className={styles.parcelPaymentTitle}>배송비 결제 방식</h3>
             {product.deliveryFeeSettings.type === '조건부 무료' && (
               <div className={styles.feeConditionNotice}>
-                {calculateTotalPrice() >= (product.deliveryFeeSettings.freeCondition || 0)
-                  ? `${product.deliveryFeeSettings.freeCondition?.toLocaleString()}원 이상 구매로 배송비 무료!`
-                  : `${product.deliveryFeeSettings.freeCondition?.toLocaleString()}원 이상 구매 시 배송비 무료`}
+                <Image src="/icons/delivery.svg" alt="배송" width={16} height={16} />
+                <span>
+                  {calculateTotalPrice() >= (product.deliveryFeeSettings.freeCondition || 0)
+                    ? `${product.deliveryFeeSettings.freeCondition?.toLocaleString()}원 이상 구매로 배송비 무료!`
+                    : `${product.deliveryFeeSettings.freeCondition?.toLocaleString()}원 이상 구매 시 배송비 무료`}
+                </span>
               </div>
             )}
+          </div>
+          <div className={styles.paymentMethodContainer}>
+            {product.deliveryFeeSettings.paymentMethods.map((method) => {
+              const getPaymentDescription = (paymentMethod: string): string => {
+                switch (paymentMethod) {
+                  case '선결제':
+                    return '카드결제 시 상품금액과 함께 결제됩니다.'
+                  case '착불':
+                    return '상품 수령 후 기사님께 배송비를 결제해주세요.'
+                  default:
+                    return ''
+                }
+              }
+
+              return (
+                <div
+                  key={method}
+                  className={`${styles.paymentMethodBox} ${parcelPaymentMethod === method ? styles.paymentMethodBoxSelected : ''}`}
+                  onClick={() => onParcelPaymentMethodChange?.(method)}
+                >
+                  <div className={styles.paymentMethodContent}>
+                    <span className={styles.paymentMethodName}>{method}</span>
+                    <div className={styles.paymentMethodDescription}>{getPaymentDescription(method)}</div>
+                  </div>
+                </div>
+              )
+            })}
           </div>
         </div>
       )}
@@ -225,10 +235,18 @@ export default function SelectedItems({
           <span className={styles.totalPrice}>{calculateTotalPrice().toLocaleString()}원</span>
         </div>
         <div className={styles.buttonGroup}>
-          <button className={styles.cartButton} onClick={onSaveToCart}>
+          <button
+            className={styles.cartButton}
+            onClick={onSaveToCart}
+            disabled={!isOrderValid}
+          >
             장바구니
           </button>
-          <button className={styles.orderButton} onClick={onOrder}>
+          <button
+            className={styles.orderButton}
+            onClick={onOrder}
+            disabled={!isOrderValid}
+          >
             주문하기
           </button>
         </div>

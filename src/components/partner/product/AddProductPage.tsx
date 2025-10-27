@@ -40,7 +40,7 @@ export default function AddProductPage() {
     name: '',
     images: [],
     price: 0,
-    category: '',
+    category: [],
     productTypes: [],
     options: [{ groupName: '', values: [{ name: '', price: 0 }] }],
     additionalOptions: [{ groupName: '', values: [{ name: '', price: 0 }] }],
@@ -422,7 +422,7 @@ export default function AddProductPage() {
 
         {/* 카테고리 */}
         <CategorySection
-          category={formData.category}
+          categories={formData.category}
           onChange={(category) => setFormData(prev => ({ ...prev, category }))}
         />
 

@@ -18,7 +18,7 @@ export interface ProductFormData {
   name: string
   images: File[]
   price: number
-  category: string
+  category: string[]
   productTypes: string[]
   options: ProductOption[]
   additionalOptions: ProductOption[]

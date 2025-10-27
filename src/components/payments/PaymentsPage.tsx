@@ -465,6 +465,7 @@ export default function PaymentsPage() {
           deliveryTime: orderInfo.deliveryTime,
           address: orderInfo.address,
           detailAddress: orderInfo.detailAddress,
+          zipCode: orderInfo.zipCode || '', // 우편번호
           entrancePassword: entranceCode || '', // 공동현관 비밀번호
           recipient: recipient,
           recipientPhone: orderInfo.phone, // 받는 사람 연락처
@@ -533,6 +534,46 @@ export default function PaymentsPage() {
         paidAt: new Date(),
         verifiedAt: new Date()
       }, { merge: true })
+
+      // 배송지 정보 저장 (퀵업체 배송 또는 택배 배송인 경우)
+      if ((deliveryMethod === '퀵업체 배송' || deliveryMethod === '택배 배송') && orderInfo.address.trim() && addressName.trim()) {
+        try {
+          const userRef = doc(db, 'users', user.uid)
+          const userDoc = await getDoc(userRef)
+
+          if (userDoc.exists()) {
+            const userData = userDoc.data()
+            const existingAddresses = userData.deliveryAddresses || []
+
+            // 동일한 배송지가 이미 있는지 확인 (주소와 상세주소로 비교)
+            const isDuplicate = existingAddresses.some((addr: DeliveryAddress) =>
+              addr.address === orderInfo.address &&
+              addr.detailAddress === orderInfo.detailAddress
+            )
+
+            if (!isDuplicate) {
+              const newAddress = {
+                name: addressName, // 배송지명
+                orderer: recipient, // 수령인
+                phone: orderInfo.phone,
+                email: userEmail,
+                address: orderInfo.address,
+                detailAddress: orderInfo.detailAddress,
+                zipCode: orderInfo.zipCode || ''
+              }
+
+              await updateDoc(userRef, {
+                deliveryAddresses: [...existingAddresses, newAddress]
+              })
+
+              console.log('배송지 저장 완료:', newAddress)
+            }
+          }
+        } catch (addressError) {
+          console.error('배송지 저장 실패:', addressError)
+          // 배송지 저장 실패해도 결제는 완료된 상태이므로 계속 진행
+        }
+      }
 
       // 포인트 사용한 경우 처리
       if (usePoint > 0 && user) {

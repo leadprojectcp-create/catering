@@ -167,6 +167,10 @@
 }
 
 /* 매장 요청사항 */
+.requestContainer {
+  margin-bottom: 16px;
+}
+
 .requestSection {
   border-radius: 20px;
   margin-left: 20px;
@@ -270,6 +274,13 @@
   cursor: pointer;
 }
 
+.cartButton:disabled {
+  background: #F5F5F5;
+  border-color: #E0E0E0;
+  color: #BDBDBD;
+  cursor: not-allowed;
+}
+
 .orderButton {
   width: 100%;
   padding: 12px;
@@ -282,52 +293,88 @@
   cursor: pointer;
 }
 
-.parcelPaymentSection {
-  padding: 20px 20px;
+.orderButton:disabled {
+  background: #E0E0E0;
+  color: #BDBDBD;
+  cursor: not-allowed;
+}
+
+.parcelPaymentContainer {
+  padding: 20px;
   border-radius: 20px;
-  background: #F9F9F9;
+  background: #FFF;
   margin-bottom: 16px;
-  margin-left: 20px;
-  margin-right: 20px;
+}
+
+.parcelPaymentHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
 }
 
 .parcelPaymentTitle {
   font-size: 16px;
   font-weight: 700;
   color: #333;
-  margin: 0 0 12px 0;
-  padding: 0 20px;
-}
-
-.paymentMethodGroup {
-  display: flex;
-  gap: 24px;
-  margin-bottom: 12px;
-}
-
-.paymentMethodLabel {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 14px;
-  color: #333;
-  cursor: pointer;
-}
-
-.hiddenRadio {
-  display: none;
-}
-
-.customRadio {
-  font-size: 18px;
-  color: #237AF2;
+  margin: 0;
 }
 
 .feeConditionNotice {
-  font-size: 13px;
-  color: #237AF2;
-  padding: 8px 12px;
-  background: #F0F6FF;
-  border-radius: 5px;
-  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #707070;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.paymentMethodContainer {
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
+}
+
+.paymentMethodBox {
+  flex: 1;
+  padding: 12px;
+  border-radius: 12px;
+  border: 2px solid #E0E0E0;
+  background: white;
+  cursor: pointer;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.paymentMethodBoxSelected {
+  border: 2px solid #025BD9;
+  background: #F5F9FF;
+}
+
+.paymentMethodContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.paymentMethodName {
+  color: #333;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: normal;
+}
+
+.paymentMethodDescription {
+  color: #707070;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: normal;
+}
+
+@media (max-width: 768px) {
+  .paymentMethodContainer {
+    flex-direction: column;
+  }
 }

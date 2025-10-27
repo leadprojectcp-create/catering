@@ -476,7 +476,7 @@ export default function EditProductPage({ productId }: { productId: string }) {
 
         {/* 카테고리 */}
         <CategorySection
-          category={formData.category}
+          categories={Array.isArray(formData.category) ? formData.category : [formData.category].filter(Boolean)}
           onChange={(category) => setFormData(prev => ({ ...prev, category }))}
         />
 

@@ -238,6 +238,14 @@
   color: #5911FF;
 }
 
+.deliveryMethodParcel {
+  border-radius: 3px;
+  background: #FFF7E9;
+  color: #FF8B00;
+  font-size: 14px;
+  font-weight: 600;
+}
+
 .deliveryDate {
   padding: 4px 8px;
   background-color: #f5f5f5;
