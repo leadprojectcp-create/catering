@@ -708,7 +708,7 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
 
         const totalQuantity = cartItems.reduce((sum, item) => sum + item.quantity, 0)
 
-        await addDoc(collection(db, 'shoppingCart'), {
+        const cartData = {
           uid: user.uid,
           storeId: product.storeId,
           storeName: storeData?.storeName || '',
@@ -720,11 +720,13 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
           totalQuantity: totalQuantity,
           deliveryMethod: deliveryMethod || '',
           request: storeRequest || '',
-          deliveryFeeSettings: product.deliveryFeeSettings,
-          parcelPaymentMethod: parcelPaymentMethod,
           createdAt: new Date(),
-          updatedAt: new Date()
-        })
+          updatedAt: new Date(),
+          ...(deliveryMethod === '택배 배송' && product.deliveryFeeSettings && { deliveryFeeSettings: product.deliveryFeeSettings }),
+          ...(deliveryMethod === '택배 배송' && parcelPaymentMethod && { parcelPaymentMethod: parcelPaymentMethod })
+        }
+
+        await addDoc(collection(db, 'shoppingCart'), cartData)
 
         alert('장바구니에 추가되었습니다.')
       }

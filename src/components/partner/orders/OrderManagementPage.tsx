@@ -358,37 +358,37 @@ export default function OrderManagementPage() {
               className={`${styles.filterBtn} ${filter === 'all' ? styles.active : ''}`}
               onClick={() => handleFilterChange('all')}
             >
-              전체 <span className={styles.filterCount}>{orders.length}건</span>
+              전체 <span className={styles.filterCount}>{orders.filter(o => o.paymentStatus === 'paid').length}건</span>
             </button>
             <button
               className={`${styles.filterBtn} ${filter === 'pending' ? styles.active : ''}`}
               onClick={() => handleFilterChange('pending')}
             >
-              신규 주문 <span className={styles.filterCount}>{orders.filter(o => o.orderStatus === 'pending').length}건</span>
+              신규 주문 <span className={styles.filterCount}>{orders.filter(o => o.paymentStatus === 'paid' && o.orderStatus === 'pending').length}건</span>
             </button>
             <button
               className={`${styles.filterBtn} ${filter === 'cancelled_rejected' ? styles.active : ''}`}
               onClick={() => handleFilterChange('cancelled_rejected')}
             >
-              주문 취소 <span className={styles.filterCount}>{orders.filter(o => o.orderStatus === 'rejected' || o.orderStatus === 'cancelled').length}건</span>
+              주문 취소 <span className={styles.filterCount}>{orders.filter(o => o.paymentStatus === 'paid' && (o.orderStatus === 'rejected' || o.orderStatus === 'cancelled')).length}건</span>
             </button>
             <button
               className={`${styles.filterBtn} ${filter === 'preparing' ? styles.active : ''}`}
               onClick={() => handleFilterChange('preparing')}
             >
-              준비중 <span className={styles.filterCount}>{orders.filter(o => o.orderStatus === 'preparing').length}건</span>
+              준비중 <span className={styles.filterCount}>{orders.filter(o => o.paymentStatus === 'paid' && o.orderStatus === 'preparing').length}건</span>
             </button>
             <button
               className={`${styles.filterBtn} ${filter === 'shipping' ? styles.active : ''}`}
               onClick={() => handleFilterChange('shipping')}
             >
-              배송·픽업중 <span className={styles.filterCount}>{orders.filter(o => o.orderStatus === 'shipping').length}건</span>
+              배송·픽업중 <span className={styles.filterCount}>{orders.filter(o => o.paymentStatus === 'paid' && o.orderStatus === 'shipping').length}건</span>
             </button>
             <button
               className={`${styles.filterBtn} ${filter === 'completed' ? styles.active : ''}`}
               onClick={() => handleFilterChange('completed')}
             >
-              완료 <span className={styles.filterCount}>{orders.filter(o => o.orderStatus === 'completed').length}건</span>
+              완료 <span className={styles.filterCount}>{orders.filter(o => o.paymentStatus === 'paid' && o.orderStatus === 'completed').length}건</span>
             </button>
           </div>
 

@@ -177,7 +177,7 @@
 }
 
 .cardInfo {
-  padding: 12px 0;
+  padding: 0 0 12px 0;
 }
 
 .categoryRow {
@@ -202,6 +202,7 @@
 .titleRow {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 8px;
 }
 
@@ -210,27 +211,6 @@
   font-weight: 700;
   color: #333;
   margin: 0;
-}
-
-.ratingRow {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.star {
-  font-size: 14px;
-}
-
-.ratingNumber {
-  font-size: 14px;
-  font-weight: 700;
-  color: #333;
-}
-
-.reviewCount {
-  font-size: 14px;
-  color: #999;
 }
 
 .emptyState {

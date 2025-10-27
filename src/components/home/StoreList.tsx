@@ -184,30 +184,15 @@ export default function StoreList({ selectedCategory }: StoreListProps) {
                 {/* 카드 정보 */}
                 <div className={styles.cardInfo}>
                   <div className={styles.categoryRow}>
+                    <span className={styles.category}>{store.categories?.[0] || ''}</span>
+                  </div>
+                  <div className={styles.titleRow}>
+                    <h3 className={styles.cardTitle}>{store.storeName}</h3>
                     <span className={styles.district}>
                       {store.address?.city && store.address?.district
                         ? `${store.address.city}/${store.address.district}`
                         : store.address?.city || store.address?.district || ''}
                     </span>
-                    <span className={styles.category}>{store.categories?.[0] || ''}</span>
-                  </div>
-                  <div className={styles.titleRow}>
-                    <h3 className={styles.cardTitle}>{store.storeName}</h3>
-                    <div className={styles.ratingRow}>
-                      <OptimizedImage
-                        src="/icons/star.png"
-                        alt="별점"
-                        width={14}
-                        height={14}
-                        className={styles.star}
-                      />
-                      <span className={styles.ratingNumber}>
-                        {store.rating ? store.rating.toFixed(1) : '0.0'}
-                      </span>
-                      <span className={styles.reviewCount}>
-                        ({store.reviewCount ? store.reviewCount.toLocaleString() : '0'})
-                      </span>
-                    </div>
                   </div>
                 </div>
               </div>
