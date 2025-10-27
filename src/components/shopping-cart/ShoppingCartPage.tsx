@@ -114,25 +114,13 @@ export default function ShoppingCartPage() {
       return
     }
 
-    // 장바구니 아이템 데이터를 세션 스토리지에 저장
-    // items 배열 전체를 전달
     if (!item.items || item.items.length === 0) {
       alert('장바구니 아이템 정보가 없습니다.')
       return
     }
 
-    const editData = {
-      cartItemId: item.id,
-      items: item.items  // 전체 items 배열 전달
-    }
-
-    console.log('[ShoppingCart] 수정 데이터 저장:', editData)
-    console.log('[ShoppingCart] item.items:', item.items)
-
-    sessionStorage.setItem('editCartItem', JSON.stringify(editData))
-
-    // 상품 주문 페이지로 이동
-    router.push(`/productDetail/${item.productId}`)
+    // 장바구니 수정 모드: URL 파라미터로 cartItemId 전달
+    router.push(`/productDetail/${item.productId}?cartItemId=${item.id}`)
   }
 
   const handleDeleteItem = async (itemId: string) => {

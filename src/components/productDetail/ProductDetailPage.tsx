@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { collection, addDoc, updateDoc, doc, getDoc, query, where, getDocs, orderBy } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { useAuth } from '@/contexts/AuthContext'
@@ -380,6 +380,7 @@ const fetchReviews = async (productId: string): Promise<Review[]> => {
 
 export default function ProductDetailPage({ productId }: ProductDetailPageProps) {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { user } = useAuth()
   const [product, setProduct] = useState<Product | null>(null)
   const [store, setStore] = useState<Store | null>(null)
@@ -425,57 +426,76 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
             setLikeCount(data.likeCount || 0)
           }
 
-          // 장바구니에서 수정 중인 아이템 데이터 확인
-          const editCartItemData = sessionStorage.getItem('editCartItem')
-          if (editCartItemData) {
+          // URL 파라미터에서 cartItemId 확인 (장바구니에서 수정 버튼으로 들어온 경우)
+          const cartItemId = searchParams.get('cartItemId')
+
+          if (cartItemId && user) {
             try {
-              const editData = JSON.parse(editCartItemData)
-              if (editData.cartItemId) {
-                setEditingCartItemId(editData.cartItemId)
-              }
+              console.log('[ProductDetail] 장바구니 수정 모드:', cartItemId)
 
-              if (editData.items && Array.isArray(editData.items)) {
-                console.log('[ProductDetail] 장바구니 수정 데이터:', editData.items)
+              // Firestore에서 장바구니 아이템 조회
+              const cartDocRef = doc(db, 'shoppingCart', cartItemId)
+              const cartDocSnap = await getDoc(cartDocRef)
 
-                // 전체 아이템 배열을 그대로 설정 (모든 옵션별 quantity 포함)
-                setCartItems(editData.items)
+              if (cartDocSnap.exists()) {
+                const cartData = cartDocSnap.data()
+                console.log('[ProductDetail] Firestore에서 장바구니 데이터 로드:', cartData)
 
-                // 첫 번째 아이템의 옵션 정보를 UI에 표시하기 위해 변환
-                const firstItem = editData.items[0]
-                if (firstItem) {
-                  console.log('[ProductDetail] 첫 번째 아이템:', firstItem)
-                  console.log('[ProductDetail] quantity:', firstItem.quantity)
-                  // options 객체를 배열 형태로 변환
-                  if (firstItem.options) {
-                    const optionsArray = Object.entries(firstItem.options).map(([groupName, optionName]) => ({
-                      groupName,
-                      optionName: optionName as string
-                    }))
-                    setSelectedOptions(optionsArray)
+                setEditingCartItemId(cartItemId)
+
+                if (cartData.items && Array.isArray(cartData.items)) {
+                  // Firestore 데이터를 ProductDetailPage의 CartItem 구조로 변환
+                  const convertedItems = cartData.items.map((item: any) => ({
+                    options: item.options || {},
+                    additionalOptions: item.additionalOptions,
+                    quantity: item.quantity
+                  }))
+                  setCartItems(convertedItems)
+
+                  // 첫 번째 아이템의 옵션 정보를 UI에 표시
+                  const firstItem = cartData.items[0]
+                  if (firstItem) {
+                    if (firstItem.options) {
+                      const optionsArray = Object.entries(firstItem.options).map(([groupName, optionName]) => ({
+                        groupName,
+                        optionName: optionName as string
+                      }))
+                      setSelectedOptions(optionsArray)
+                    }
+
+                    if (firstItem.additionalOptions) {
+                      const additionalOptionsArray = Object.entries(firstItem.additionalOptions).map(([groupName, optionName]) => ({
+                        groupName,
+                        optionName: optionName as string
+                      }))
+                      setSelectedAdditionalOptions(additionalOptionsArray)
+                    }
+
+                    setQuantity(firstItem.quantity)
                   }
 
-                  // additionalOptions 객체를 배열 형태로 변환
-                  if (firstItem.additionalOptions) {
-                    const additionalOptionsArray = Object.entries(firstItem.additionalOptions).map(([groupName, optionName]) => ({
-                      groupName,
-                      optionName: optionName as string
-                    }))
-                    setSelectedAdditionalOptions(additionalOptionsArray)
+                  // 배송 정보도 복원
+                  if (cartData.deliveryMethod) {
+                    setDeliveryMethod(cartData.deliveryMethod)
+                  }
+                  if (cartData.parcelPaymentMethod) {
+                    setParcelPaymentMethod(cartData.parcelPaymentMethod)
+                  }
+                  if (cartData.request) {
+                    setStoreRequest(cartData.request)
                   }
 
-                  // 첫 번째 아이템의 수량 설정 (UI 표시용)
-                  setQuantity(firstItem.quantity)
+                  // 수정 모드일 때 BottomModal 자동으로 열기
+                  setIsModalOpen(true)
                 }
-
-                // 수정 모드일 때 BottomModal 자동으로 열기
-                setIsModalOpen(true)
+              } else {
+                console.error('[ProductDetail] 장바구니 아이템을 찾을 수 없습니다:', cartItemId)
               }
             } catch (error) {
-              console.error('장바구니 수정 데이터 로드 실패:', error)
-              // 에러 발생 시 sessionStorage 정리
-              sessionStorage.removeItem('editCartItem')
+              console.error('[ProductDetail] 장바구니 데이터 로드 실패:', error)
             }
           } else {
+            // 새로운 주문 시작
             setQuantity(1)
 
             // 옵션이 설정되지 않은 경우 자동으로 기본 상품 추가
@@ -691,19 +711,51 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
     }
 
     try {
-      const items = cartItems.map(item => ({
-        options: item.options,
-        quantity: item.quantity
-      }))
-
       const totalPrice = calculateTotalPrice(product, cartItems)
+
+      // 주문하기와 동일한 구조로 items 생성
+      const orderItems = cartItems.map(item => {
+        const optionsWithPrices = createOptionsWithPrices(product, item.options)
+        const additionalOptionsWithPrices = item.additionalOptions
+          ? createAdditionalOptionsWithPrices(product, item.additionalOptions)
+          : undefined
+
+        const orderItem: Record<string, unknown> = {
+          productId: productId,
+          productName: product.name,
+          price: product.discountedPrice || product.price,
+          quantity: item.quantity,
+          options: item.options,
+          optionsWithPrices: optionsWithPrices,
+          itemPrice: calculateItemPrice(product, item.options, item.quantity, item.additionalOptions)
+        }
+
+        if (item.additionalOptions) {
+          orderItem.additionalOptions = item.additionalOptions
+        }
+        if (additionalOptionsWithPrices) {
+          orderItem.additionalOptionsWithPrices = additionalOptionsWithPrices
+        }
+
+        return orderItem
+      })
 
       if (editingCartItemId) {
         const cartDocRef = doc(db, 'shoppingCart', editingCartItemId)
 
+        // 기존 문서 데이터 가져오기
+        const existingDoc = await getDoc(cartDocRef)
+        const existingData = existingDoc.data()
+
+        const totalQuantity = cartItems.reduce((sum, item) => sum + item.quantity, 0)
+
         await updateDoc(cartDocRef, {
-          items: items,
-          totalPrice: totalPrice
+          items: orderItems,
+          totalProductPrice: totalPrice,
+          totalQuantity: totalQuantity,
+          deliveryMethod: deliveryMethod || existingData?.deliveryMethod || '',
+          request: storeRequest || existingData?.request || '',
+          updatedAt: new Date()
         })
 
         alert('장바구니가 수정되었습니다.')
@@ -712,26 +764,6 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
         // 가게 정보 가져오기
         const storeDoc = await getDoc(doc(db, 'stores', product.storeId))
         const storeData = storeDoc.exists() ? storeDoc.data() : null
-
-        // 주문하기와 동일한 구조로 저장
-        const orderItems = cartItems.map(item => {
-          const optionsWithPrices = createOptionsWithPrices(product, item.options)
-          const additionalOptionsWithPrices = item.additionalOptions
-            ? createAdditionalOptionsWithPrices(product, item.additionalOptions)
-            : undefined
-
-          return {
-            productId: productId,
-            productName: product.name,
-            options: item.options,
-            additionalOptions: item.additionalOptions,
-            optionsWithPrices: optionsWithPrices,
-            additionalOptionsWithPrices: additionalOptionsWithPrices,
-            quantity: item.quantity,
-            price: product.discountedPrice || product.price,
-            itemPrice: calculateItemPrice(product, item.options, item.quantity, item.additionalOptions)
-          }
-        })
 
         const totalQuantity = cartItems.reduce((sum, item) => sum + item.quantity, 0)
 
@@ -879,14 +911,17 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
       if (editingCartItemId) {
         console.log('[ProductDetail] 기존 장바구니 아이템 수정:', editingCartItemId)
         const cartRef = doc(db, 'shoppingCart', editingCartItemId)
+
+        // 기존 문서에서 createdAt 가져오기
+        const existingDoc = await getDoc(cartRef)
+        const existingData = existingDoc.data()
+
         await updateDoc(cartRef, {
           ...orderData,
+          createdAt: existingData?.createdAt || new Date(), // 기존 createdAt 유지
           updatedAt: new Date()
         })
         cartId = editingCartItemId
-
-        // sessionStorage 정리
-        sessionStorage.removeItem('editCartItem')
       } else {
         // 새로운 장바구니 아이템 추가
         console.log('[ProductDetail] 새로운 장바구니 아이템 추가')
