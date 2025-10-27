@@ -1,6 +1,6 @@
 'use client'
 
-import Image from 'next/image'
+import OptimizedImage from '@/components/common/OptimizedImage'
 import { Product, CartItem, getOptionPrice, getAdditionalOptionPrice } from './ProductDetailPage'
 import styles from './SelectedItems.module.css'
 
@@ -60,7 +60,7 @@ export default function SelectedItems({
                 onClick={() => onRemoveItem(index)}
                 className={styles.removeButton}
               >
-                <Image
+                <OptimizedImage
                   src="/icons/trash.svg"
                   alt="삭제"
                   width={16}
@@ -184,7 +184,7 @@ export default function SelectedItems({
             <h3 className={styles.parcelPaymentTitle}>배송비 결제 방식</h3>
             {product.deliveryFeeSettings.type === '조건부 무료' && (
               <div className={styles.feeConditionNotice}>
-                <Image src="/icons/delivery.svg" alt="배송" width={16} height={16} />
+                <OptimizedImage src="/icons/delivery.svg" alt="배송" width={16} height={16} />
                 <span>
                   {calculateTotalPrice() >= (product.deliveryFeeSettings.freeCondition || 0)
                     ? `${product.deliveryFeeSettings.freeCondition?.toLocaleString()}원 이상 구매로 배송비 무료!`

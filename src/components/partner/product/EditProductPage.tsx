@@ -45,7 +45,7 @@ export default function EditProductPage({ productId }: { productId: string }) {
     name: '',
     images: [],
     price: 0,
-    category: '',
+    category: [],
     productTypes: [],
     options: [{ groupName: '', values: [{ name: '', price: 0 }] }],
     additionalOptions: [{ groupName: '', values: [{ name: '', price: 0 }] }],
