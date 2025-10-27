@@ -245,8 +245,12 @@ export async function POST(request: NextRequest) {
                     })
 
                     const quickResult = await quickResponse.json()
+                    console.log('[Webhook] 퀵 배송 API 응답:', quickResult)
 
-                    if (quickResponse.ok && quickResult.code === '1') {
+                    // code가 1 또는 '1'이면 성공
+                    const isSuccess = quickResult.code === 1 || quickResult.code === '1'
+
+                    if (quickResponse.ok && isSuccess) {
                       console.log('[Webhook] 퀵 배송 요청 성공:', quickResult)
 
                       // quickDeliveries 컬렉션에 저장
@@ -275,7 +279,12 @@ export async function POST(request: NextRequest) {
                         }
                       })
                     } else {
-                      console.error('[Webhook] 퀵 배송 요청 실패:', quickResult)
+                      const errorMsg = quickResult?.errMsg || quickResult?.message || quickResult?.error || JSON.stringify(quickResult)
+                      console.error('[Webhook] 퀵 배송 요청 실패:', {
+                        status: quickResponse.status,
+                        code: quickResult?.code,
+                        error: errorMsg
+                      })
 
                       // 실패 정보도 quickDeliveries 컬렉션에 저장
                       const quickDeliveryRef = doc(db, 'quickDeliveries', orderId)
@@ -283,7 +292,7 @@ export async function POST(request: NextRequest) {
                         orderId: orderId,
                         status: 'failed',
                         errorCode: quickResult?.code || 'unknown',
-                        errorMessage: quickResult?.message || quickResult?.error || 'Unknown error',
+                        errorMessage: errorMsg,
                         requestData: quickDeliveryData,
                         responseData: quickResult,
                         createdAt: new Date(),
@@ -292,7 +301,7 @@ export async function POST(request: NextRequest) {
 
                       await updateDoc(orderRef, {
                         quickDeliveryStatus: 'failed',
-                        quickDeliveryError: quickResult?.message || quickResult?.error || 'Unknown error',
+                        quickDeliveryError: errorMsg,
                       })
                     }
                   } catch (error) {

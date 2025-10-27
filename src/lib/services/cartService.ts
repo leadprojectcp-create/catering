@@ -13,11 +13,15 @@ import {
 import { db } from '@/lib/firebase'
 
 export interface CartItemOption {
+  productId?: string
+  productName?: string
+  price?: number
   options: { [key: string]: string }
   additionalOptions?: { [key: string]: string }
   quantity: number
   optionsWithPrices?: { [key: string]: { name: string; price: number } }
   additionalOptionsWithPrices?: { [key: string]: { name: string; price: number } }
+  itemPrice?: number  // 해당 아이템의 총 가격 (기본가격 + 옵션가격) * 수량
 }
 
 export interface CartItem {
