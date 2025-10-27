@@ -54,6 +54,20 @@ export interface Order {
   cancelReason?: string
   carrier?: string
   trackingNumber?: string
+  quickDeliveryOrderNo?: number
+  quickDeliveryStatus?: 'requested' | 'failed' | 'error'
+  quickDeliveryInfo?: {
+    code: number
+    orderNo: number
+    orderInfo?: {
+      feeTotal?: number
+      feeDetail?: string
+    }
+    createdAt?: Date
+  }
+  quickDeliveryError?: string
+  partnerNotified?: boolean
+  partnerNotifiedAt?: Date | Timestamp | FieldValue
   createdAt?: Date | Timestamp | FieldValue
   updatedAt?: Date | Timestamp | FieldValue
 }
