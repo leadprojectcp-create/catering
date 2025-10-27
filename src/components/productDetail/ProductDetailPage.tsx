@@ -708,7 +708,7 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
 
         const totalQuantity = cartItems.reduce((sum, item) => sum + item.quantity, 0)
 
-        const cartData = {
+        const baseCartData = {
           uid: user.uid,
           storeId: product.storeId,
           storeName: storeData?.storeName || '',
@@ -721,10 +721,17 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
           deliveryMethod: deliveryMethod || '',
           request: storeRequest || '',
           createdAt: new Date(),
-          updatedAt: new Date(),
-          ...(deliveryMethod === '택배 배송' && product.deliveryFeeSettings && { deliveryFeeSettings: product.deliveryFeeSettings }),
-          ...(deliveryMethod === '택배 배송' && parcelPaymentMethod && { parcelPaymentMethod: parcelPaymentMethod })
+          updatedAt: new Date()
         }
+
+        // 택배 배송일 때만 추가 필드 포함
+        const cartData = deliveryMethod === '택배 배송'
+          ? {
+              ...baseCartData,
+              ...(product.deliveryFeeSettings ? { deliveryFeeSettings: product.deliveryFeeSettings } : {}),
+              ...(parcelPaymentMethod ? { parcelPaymentMethod: parcelPaymentMethod } : {})
+            }
+          : baseCartData
 
         await addDoc(collection(db, 'shoppingCart'), cartData)
 
@@ -806,7 +813,7 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
       })
 
       // shoppingCart 컬렉션에 저장 (orders가 아닌 shoppingCart에 저장)
-      const cartDoc = await addDoc(collection(db, 'shoppingCart'), {
+      const baseOrderData = {
         uid: user.uid,
         productId: productId,
         productName: product.name,
@@ -818,11 +825,20 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
         totalQuantity: totalQuantity,
         deliveryMethod: deliveryMethod,
         request: storeRequest,
-        deliveryFeeSettings: product.deliveryFeeSettings,
-        parcelPaymentMethod: parcelPaymentMethod,
         createdAt: new Date(),
         updatedAt: new Date()
-      })
+      }
+
+      // 택배 배송일 때만 추가 필드 포함
+      const orderData = deliveryMethod === '택배 배송'
+        ? {
+            ...baseOrderData,
+            ...(product.deliveryFeeSettings ? { deliveryFeeSettings: product.deliveryFeeSettings } : {}),
+            ...(parcelPaymentMethod ? { parcelPaymentMethod: parcelPaymentMethod } : {})
+          }
+        : baseOrderData
+
+      const cartDoc = await addDoc(collection(db, 'shoppingCart'), orderData)
 
       // payments 페이지로 이동 (cartId를 전달)
       router.push(`/payments?cartId=${cartDoc.id}`)
