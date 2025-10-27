@@ -443,7 +443,7 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
                 if (firstItem) {
                   // options 객체를 배열 형태로 변환
                   if (firstItem.options) {
-                    const optionsArray = Object.entries(firstItem.options).map(([groupName, optionName]) => ({
+                    const optionsArray = Object.entries(firstItem.options).map(([groupName, optionName]: [string, string]) => ({
                       groupName,
                       optionName
                     }))
@@ -452,7 +452,7 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
 
                   // additionalOptions 객체를 배열 형태로 변환
                   if (firstItem.additionalOptions) {
-                    const additionalOptionsArray = Object.entries(firstItem.additionalOptions).map(([groupName, optionName]) => ({
+                    const additionalOptionsArray = Object.entries(firstItem.additionalOptions).map(([groupName, optionName]: [string, string]) => ({
                       groupName,
                       optionName
                     }))
