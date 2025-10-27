@@ -582,11 +582,11 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
       }
     })
 
-    // 새로운 cartItem으로 추가 (초기 수량 1개)
+    // 새로운 cartItem으로 추가 (초기 수량은 minOrderQuantity)
     setCartItems(prev => [...prev, {
       options: optionsObj,
       additionalOptions: Object.keys(additionalOptionsObj).length > 0 ? additionalOptionsObj : undefined,
-      quantity: 1
+      quantity: product?.minOrderQuantity || 1
     }])
 
     setSelectedOptions([])
@@ -598,8 +598,10 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
   }
 
   const updateCartQuantity = (index: number, newQuantity: number) => {
-    // 개별 아이템은 1개부터 가능
-    const validQuantity = Math.max(1, newQuantity)
+    // 최소/최대 수량 제한 적용
+    const minQty = product?.minOrderQuantity || 1
+    const maxQty = product?.maxOrderQuantity || 999
+    const validQuantity = Math.min(Math.max(minQty, newQuantity), maxQty)
 
     setCartItems(prev => prev.map((item, i) =>
       i === index ? { ...item, quantity: validQuantity } : item

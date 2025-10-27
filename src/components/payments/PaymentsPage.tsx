@@ -139,10 +139,14 @@ export default function PaymentsPage() {
           // deliveryFeeSettings 가져오기
           if (productData.deliveryFeeSettings) {
             setDeliveryFeeSettings(productData.deliveryFeeSettings)
-            // paymentMethods가 있으면 첫 번째 값을 기본값으로 설정
-            if (productData.deliveryFeeSettings.paymentMethods && productData.deliveryFeeSettings.paymentMethods.length > 0) {
-              setParcelPaymentMethod(productData.deliveryFeeSettings.paymentMethods[0])
-            }
+          }
+
+          // orderDocData에서 저장된 택배 결제방법 확인 (우선순위 1)
+          if (orderDocData.parcelPaymentMethod) {
+            setParcelPaymentMethod(orderDocData.parcelPaymentMethod)
+          } else if (productData.deliveryFeeSettings?.paymentMethods && productData.deliveryFeeSettings.paymentMethods.length > 0) {
+            // 저장된 값이 없으면 첫 번째 값을 기본값으로 설정 (우선순위 2)
+            setParcelPaymentMethod(productData.deliveryFeeSettings.paymentMethods[0])
           }
 
           // orderDocData에서 저장된 배송방법 확인
