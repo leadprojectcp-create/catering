@@ -45,6 +45,7 @@ export default function StoreList({ selectedCategory }: StoreListProps) {
   const router = useRouter()
   const [stores, setStores] = useState<Store[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [displayedStores, setDisplayedStores] = useState<Store[]>([])
 
   useEffect(() => {
     const fetchStores = async () => {
@@ -80,10 +81,10 @@ export default function StoreList({ selectedCategory }: StoreListProps) {
         // 랜덤 셔플
         const shuffledStores = storeData.sort(() => Math.random() - 0.5)
         setStores(shuffledStores)
+        setIsLoading(false)
       } catch (error) {
         console.error('스토어 데이터 가져오기 실패:', error)
         setStores([])
-      } finally {
         setIsLoading(false)
       }
     }
@@ -91,9 +92,31 @@ export default function StoreList({ selectedCategory }: StoreListProps) {
     fetchStores()
   }, [])
 
+  // 순차적으로 스토어 표시 (이미지 로딩 분산)
+  useEffect(() => {
+    if (stores.length === 0) return
+
+    const BATCH_SIZE = 5 // 한 번에 5개씩 표시
+    const DELAY = 100 // 100ms 간격
+
+    let currentIndex = 0
+    const interval = setInterval(() => {
+      if (currentIndex >= stores.length) {
+        clearInterval(interval)
+        return
+      }
+
+      const nextBatch = stores.slice(0, currentIndex + BATCH_SIZE)
+      setDisplayedStores(nextBatch)
+      currentIndex += BATCH_SIZE
+    }, DELAY)
+
+    return () => clearInterval(interval)
+  }, [stores])
+
   const filteredStores = selectedCategory === '전체'
-    ? stores
-    : stores.filter(store => store.businessCategory === selectedCategory)
+    ? displayedStores
+    : displayedStores.filter(store => store.businessCategory === selectedCategory)
 
   if (isLoading) {
     return <Loading />
