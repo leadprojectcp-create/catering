@@ -462,6 +462,9 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
                   // 첫 번째 아이템의 수량 설정 (UI 표시용)
                   setQuantity(firstItem.quantity)
                 }
+
+                // 수정 모드일 때 BottomModal 자동으로 열기
+                setIsModalOpen(true)
               }
 
               sessionStorage.removeItem('editCartItem')

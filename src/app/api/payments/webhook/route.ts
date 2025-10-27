@@ -229,8 +229,14 @@ export async function POST(request: NextRequest) {
                       }
                     }
 
-                    // API 호출
-                    const quickResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/quick-delivery`, {
+                    // 퀵 배송 API 호출 - request의 호스트 정보 사용
+                    const protocol = request.headers.get('x-forwarded-proto') || 'https'
+                    const host = request.headers.get('host') || request.headers.get('x-forwarded-host')
+                    const baseUrl = host ? `${protocol}://${host}` : 'http://localhost:3000'
+
+                    console.log('[Webhook] Quick delivery API URL:', `${baseUrl}/api/quick-delivery`)
+
+                    const quickResponse = await fetch(`${baseUrl}/api/quick-delivery`, {
                       method: 'POST',
                       headers: {
                         'Content-Type': 'application/json',
