@@ -48,7 +48,6 @@ export interface OrderInfo {
   phone: string
   email: string
   orderer: string
-  businessNumber: string
   zipCode: string
   deliveryDate: string
   deliveryTime: string

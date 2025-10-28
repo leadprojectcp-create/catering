@@ -14,28 +14,9 @@ import { OrderData, DeliveryAddress, DaumPostcodeData, OrderInfo } from './types
 import PrivacyPolicy from '@/components/terms/PrivacyPolicy'
 import RefundPolicy from '@/components/terms/RefundPolicy'
 import PaymentTerms from './PaymentTerms'
-import { requestPayment, PayMethod } from '@/lib/services/paymentService'
+import { requestPayment } from '@/lib/services/paymentService'
 import OptimizedImage from '@/components/common/OptimizedImage'
 import styles from './PaymentsPage.module.css'
-
-// 결제 수단 타입 (UI용)
-type PayMethodUI = 'card' | 'corporate' | 'trans' | 'vbank' | 'payco' | 'samsung' | 'kakao' | 'naver' | 'toss' | 'apple'
-
-// UI 결제 수단을 포트원 API 값으로 매핑
-const mapPayMethodToPortOne = (method: PayMethodUI): { payMethod: PayMethod; easyPayProvider?: string } => {
-  if (method === 'card') return { payMethod: 'CARD' }
-  if (method === 'corporate') return { payMethod: 'CARD' } // 법인카드도 CARD로 전송
-  if (method === 'trans') return { payMethod: 'TRANSFER' }
-  if (method === 'vbank') return { payMethod: 'VIRTUAL_ACCOUNT' }
-  if (method === 'payco') return { payMethod: 'EASY_PAY', easyPayProvider: 'PAYCO' }
-  if (method === 'samsung') return { payMethod: 'EASY_PAY', easyPayProvider: 'SAMSUNGPAY' }
-  if (method === 'kakao') return { payMethod: 'EASY_PAY', easyPayProvider: 'KAKAOPAY' }
-  if (method === 'naver') return { payMethod: 'EASY_PAY', easyPayProvider: 'NAVERPAY' }
-  if (method === 'toss') return { payMethod: 'EASY_PAY', easyPayProvider: 'TOSSPAY' }
-  if (method === 'apple') return { payMethod: 'EASY_PAY', easyPayProvider: 'APPLEPAY' }
-
-  return { payMethod: 'CARD' }
-}
 
 export default function PaymentsPage() {
   const router = useRouter()
@@ -45,12 +26,10 @@ export default function PaymentsPage() {
   const [orderId, setOrderId] = useState<string | null>(null)
   const [orderData, setOrderData] = useState<OrderData | null>(null)
   const [deliveryMethod, setDeliveryMethod] = useState('pickup')
-  const [payMethod, setPayMethod] = useState<PayMethodUI>('card')
   const [orderInfo, setOrderInfo] = useState({
     orderer: '',
     phone: '',
     email: '',
-    businessNumber: '',
     detailAddress: '',
     address: '',
     zipCode: '',
@@ -265,14 +244,6 @@ export default function PaymentsPage() {
               setOrderInfo(prev => ({
                 ...prev,
                 phone: userData.phone
-              }))
-            }
-
-            // 사용자 사업자등록번호 설정 (법인카드 결제용)
-            if (userData.businessNumber) {
-              setOrderInfo(prev => ({
-                ...prev,
-                businessNumber: userData.businessNumber
               }))
             }
 
@@ -493,28 +464,7 @@ export default function PaymentsPage() {
 
       console.log('주문 업데이트 완료:', finalOrderId, orderNumber)
 
-      // 법인카드 결제 시 사업자등록번호 필수 확인
-      if (payMethod === 'corporate' && !orderInfo.businessNumber) {
-        alert('법인카드 결제 시 사업자등록번호를 입력해주세요.')
-        return
-      }
-
-      // 법인카드 결제 시 사업자등록번호 유효성 검사 (10자리 숫자)
-      if (payMethod === 'corporate' && orderInfo.businessNumber.length !== 10) {
-        alert('사업자등록번호는 10자리 숫자여야 합니다.')
-        return
-      }
-
-      console.log('=== 결제 요청 전 orderInfo 확인 ===')
-      console.log('orderInfo:', orderInfo)
-      console.log('userEmail:', userEmail)
-      console.log('orderInfo.orderer:', orderInfo.orderer)
-      console.log('orderInfo.phone:', orderInfo.phone)
-      console.log('payMethod:', payMethod)
-      console.log('orderInfo.businessNumber:', orderInfo.businessNumber)
-
-      // 포트원 결제 요청
-      const paymentConfig = mapPayMethodToPortOne(payMethod)
+      // 포트원 결제창 호출
       const paymentResult = await requestPayment({
         orderName: `${orderData.productName} ${orderData.items.length > 1 ? `외 ${orderData.items.length - 1}건` : ''}`,
         amount: totalPrice,
@@ -522,9 +472,6 @@ export default function PaymentsPage() {
         customerName: orderInfo.orderer,
         customerEmail: userEmail,
         customerPhoneNumber: orderInfo.phone,
-        customerBirthday: payMethod === 'corporate' ? orderInfo.businessNumber : undefined, // 법인카드일 때만 사업자등록번호 전달
-        payMethod: paymentConfig.payMethod,
-        easyPayProvider: paymentConfig.easyPayProvider,
       })
 
       if (!paymentResult.success) {
@@ -705,7 +652,6 @@ export default function PaymentsPage() {
       orderer: address.orderer,
       phone: address.phone,
       email: address.email,
-      businessNumber: '',
       detailAddress: address.detailAddress || '',
       address: address.address,
       zipCode: address.zipCode || '',
@@ -1196,134 +1142,6 @@ export default function PaymentsPage() {
             </section>
           </>
         )}
-
-        {/* 결제 수단 선택 */}
-        <section className={styles.section}>
-          <h2 className={styles.sectionTitle}>결제 수단</h2>
-          <div className={styles.paymentMethodContainer}>
-            <div
-              className={`${styles.paymentMethodBox} ${payMethod === 'card' ? styles.paymentMethodBoxSelected : ''}`}
-              onClick={() => setPayMethod('card')}
-            >
-              <span>신용•체크카드</span>
-            </div>
-            <div
-              className={`${styles.paymentMethodBox} ${payMethod === 'corporate' ? styles.paymentMethodBoxSelected : ''}`}
-              onClick={() => setPayMethod('corporate')}
-            >
-              <span>법인카드</span>
-            </div>
-            <div
-              className={`${styles.paymentMethodBox} ${payMethod === 'trans' ? styles.paymentMethodBoxSelected : ''}`}
-              onClick={() => setPayMethod('trans')}
-            >
-              <span>퀵계좌이체</span>
-            </div>
-            <div
-              className={`${styles.paymentMethodBox} ${payMethod === 'vbank' ? styles.paymentMethodBoxSelected : ''}`}
-              onClick={() => setPayMethod('vbank')}
-            >
-              <span>가상계좌</span>
-            </div>
-            <div
-              className={`${styles.paymentMethodBox} ${payMethod === 'payco' ? styles.paymentMethodBoxSelected : ''}`}
-              onClick={() => setPayMethod('payco')}
-            >
-              <OptimizedImage
-                src="/payments-icons/payco.png"
-                alt="PAYCO"
-                width={120}
-                height={45}
-                style={{ objectFit: 'contain' }}
-              />
-            </div>
-            <div
-              className={`${styles.paymentMethodBox} ${payMethod === 'samsung' ? styles.paymentMethodBoxSelected : ''}`}
-              onClick={() => setPayMethod('samsung')}
-            >
-              <OptimizedImage
-                src="/payments-icons/samsungpay.png"
-                alt="SAMSUNG PAY"
-                width={120}
-                height={45}
-                style={{ objectFit: 'contain' }}
-              />
-            </div>
-            <div
-              className={`${styles.paymentMethodBox} ${payMethod === 'kakao' ? styles.paymentMethodBoxSelected : ''}`}
-              onClick={() => setPayMethod('kakao')}
-            >
-              <OptimizedImage
-                src="/payments-icons/kakaopay.png"
-                alt="KAKAO PAY"
-                width={120}
-                height={45}
-                style={{ objectFit: 'contain' }}
-              />
-            </div>
-            <div
-              className={`${styles.paymentMethodBox} ${payMethod === 'naver' ? styles.paymentMethodBoxSelected : ''}`}
-              onClick={() => setPayMethod('naver')}
-            >
-              <OptimizedImage
-                src="/payments-icons/npay.png"
-                alt="NAVER PAY"
-                width={120}
-                height={45}
-                style={{ objectFit: 'contain' }}
-              />
-            </div>
-            <div
-              className={`${styles.paymentMethodBox} ${payMethod === 'toss' ? styles.paymentMethodBoxSelected : ''}`}
-              onClick={() => setPayMethod('toss')}
-            >
-              <OptimizedImage
-                src="/payments-icons/tosspay.png"
-                alt="TOSS PAY"
-                width={120}
-                height={45}
-                style={{ objectFit: 'contain' }}
-              />
-            </div>
-            <div
-              className={`${styles.paymentMethodBox} ${payMethod === 'apple' ? styles.paymentMethodBoxSelected : ''}`}
-              onClick={() => setPayMethod('apple')}
-            >
-              <OptimizedImage
-                src="/payments-icons/applepay.png"
-                alt="APPLE PAY"
-                width={120}
-                height={45}
-                style={{ objectFit: 'contain' }}
-              />
-            </div>
-          </div>
-
-          {/* 법인카드 선택 시 사업자등록번호 입력 */}
-          {payMethod === 'corporate' && (
-            <div className={styles.deliveryContainer} style={{ marginTop: '16px' }}>
-              <div className={styles.formGroup}>
-                <div className={styles.formRow}>
-                  <label className={styles.label}>사업자등록번호</label>
-                  <input
-                    type="text"
-                    className={styles.inputFull}
-                    placeholder="10자리 숫자 (예: 1234567890)"
-                    value={orderInfo.businessNumber}
-                    maxLength={10}
-                    onChange={(e) => {
-                      const value = e.target.value.replace(/[^0-9]/g, '')
-                      setOrderInfo({...orderInfo, businessNumber: value})
-                    }}
-                  />
-                </div>
-                <p style={{ fontSize: '13px', color: '#999', margin: '8px 0 0 0' }}>
-                  법인카드 결제를 위해 사업자등록번호 10자리를 입력해주세요.
-                </p>
-              </div>
-            </div>
-          )}
-        </section>
 
         {/* 총 결제금액 */}
         <section className={styles.section}>
