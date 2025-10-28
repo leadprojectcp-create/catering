@@ -54,6 +54,26 @@ export const createOrGetChatRoom = async (
           room.participants.includes(userId) &&
           room.participants.includes(storeOwnerId)
         ) {
+          // 기존 채팅방이 있어도 양쪽 users에 chatRooms 배열 업데이트 (없으면 추가)
+          const userRef = doc(db, 'users', userId)
+          const storeOwnerRef = doc(db, 'users', storeOwnerId)
+
+          try {
+            await setDoc(userRef, {
+              chatRooms: arrayUnion(roomId)
+            }, { merge: true })
+          } catch (error) {
+            console.error('기존 채팅방 - 사용자 chatRooms 업데이트 실패:', userId, error)
+          }
+
+          try {
+            await setDoc(storeOwnerRef, {
+              chatRooms: arrayUnion(roomId)
+            }, { merge: true })
+          } catch (error) {
+            console.error('기존 채팅방 - 파트너 chatRooms 업데이트 실패:', storeOwnerId, error)
+          }
+
           return roomId
         }
       }
