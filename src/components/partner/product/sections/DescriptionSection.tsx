@@ -1,6 +1,6 @@
 import React from 'react'
 import CustomEditor from '@/components/common/CustomEditor'
-import styles from '../AddProductPage.module.css'
+import styles from './DescriptionSection.module.css'
 
 interface DescriptionSectionProps {
   description: string

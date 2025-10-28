@@ -1,5 +1,5 @@
 import React from 'react'
-import styles from '../AddProductPage.module.css'
+import styles from './AdditionalSettingsSection.module.css'
 
 interface AdditionalSettingsSectionProps {
   additionalSettings: string[]

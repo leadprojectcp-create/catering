@@ -1,5 +1,5 @@
 import React from 'react'
-import styles from '../AddProductPage.module.css'
+import styles from './DeliveryMethodSection.module.css'
 
 export interface DeliveryFeeSettings {
   type: '무료' | '조건부 무료' | '유료' | '수량별'

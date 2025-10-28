@@ -1,0 +1,397 @@
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.titleWithNumber {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  line-height: 1;
+}
+
+.titleWithNumber .sectionTitle {
+  margin-bottom: 0;
+  line-height: 19px;
+}
+
+.numberCircle {
+  width: 19px;
+  height: 19px;
+  flex-shrink: 0;
+  background-color: #025BD9;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFF;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.sectionTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 8px;
+}
+
+.priceInputRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.inputWithUnit {
+  position: relative;
+  min-width: 200px;
+}
+
+.inputWithUnit .textInput {
+  padding-right: 40px;
+  min-width: 200px;
+}
+
+.priceInputWrapper {
+  flex: 1;
+}
+
+.textInput {
+  width: 100%;
+  padding: 16px;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  transition: background-color 0.2s;
+  background: #FAFAFA;
+  color: #333;
+  font-family: inherit;
+}
+
+.textInput:focus {
+  outline: none;
+  background: #f3f4f6;
+}
+
+.textInput::placeholder {
+  color: #999;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.inputUnit {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 14px;
+  font-weight: 500;
+  color: #999;
+  pointer-events: none;
+}
+
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  color: #999;
+}
+
+.checkboxLabel:has(.hiddenCheckbox:checked) {
+  color: #025BD9;
+}
+
+.checkboxNoMargin {
+  margin: 0;
+}
+
+.hiddenCheckbox {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.customCheckbox {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  margin-right: 8px;
+  flex-shrink: 0;
+}
+
+.customCheckbox img {
+  width: 20px;
+  height: 20px;
+}
+
+.discountSection {
+  margin-top: 20px;
+  padding: 20px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
+
+.discountLabel {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #333;
+  font-size: 14px;
+}
+
+.discountTypeButtons {
+  display: flex;
+  gap: 8px;
+}
+
+.discountTypeButton {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #ddd;
+  background-color: white;
+  color: #666;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 400;
+  transition: all 0.2s;
+}
+
+.discountTypeButton:hover {
+  border: 1px solid #237AF2;
+  color: #237AF2;
+}
+
+.discountTypeButtonActive {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #237AF2;
+  background-color: white;
+  color: #237AF2;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 400;
+  transition: all 0.2s;
+}
+
+.discountInputGroup {
+  margin-bottom: 16px;
+}
+
+.dateRangeHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.labelNoMargin {
+  margin-bottom: 0;
+}
+
+.dateRangeWrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  position: relative;
+}
+
+.dateInputContainer {
+  flex: 1;
+  position: relative;
+}
+
+.dateInput {
+  width: 100%;
+  padding: 10px;
+  padding-right: 40px;
+  border: 1px solid #E5E5E5;
+  border-radius: 5px;
+  font-size: 14px;
+  color: #333;
+  cursor: pointer;
+}
+
+.dateInput:focus {
+  outline: none;
+  border-color: #237AF2;
+}
+
+.dateInput:disabled {
+  background-color: #F5F5F5;
+  cursor: not-allowed;
+}
+
+.calendarButton {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.calendarButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.calendarDropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  background: white;
+  border: 1px solid #E5E5E5;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 16px;
+  z-index: 100;
+  min-width: 280px;
+}
+
+.calendarHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.calendarMonth {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+}
+
+.calendarNavButton {
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: #666;
+  cursor: pointer;
+  padding: 4px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.calendarNavButton:hover {
+  color: #237AF2;
+}
+
+.calendarWeekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+.calendarWeekdays > div {
+  font-size: 12px;
+  font-weight: 600;
+  color: #999;
+  padding: 4px;
+}
+
+.calendarGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.calendarDay {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  color: #333;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.calendarDay:hover {
+  background-color: #F0F6FF;
+  color: #237AF2;
+}
+
+.calendarDay:empty {
+  cursor: default;
+}
+
+.calendarDay:empty:hover {
+  background-color: transparent;
+}
+
+.calendarDaySelected {
+  background-color: #237AF2;
+  color: white;
+}
+
+.calendarDaySelected:hover {
+  background-color: #1a5bb8;
+  color: white;
+}
+
+.calendarDayInRange {
+  background-color: #F0F6FF;
+  color: #237AF2;
+}
+
+.discountPreview {
+  padding: 16px;
+  background-color: #F9FAFB;
+  border-radius: 6px;
+}
+
+.discountPreviewRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.discountPreviewRow + .discountPreviewRow {
+  margin-top: 8px;
+}
+
+.discountOriginalPrice {
+  text-decoration: line-through;
+  color: #999;
+}
+
+.discountBadge {
+  display: inline-block;
+  color: #EA4335;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 150%;
+  margin-right: 8px;
+}
+
+.discountFinalPrice {
+  color: #333;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 150%;
+}
+
+.discountPriceLabel {
+  font-weight: 600;
+  color: #EA4335;
+}

@@ -1,7 +1,7 @@
 import React from 'react'
 import Image from 'next/image'
-import { categories } from '../types'
-import styles from '../AddProductPage.module.css'
+import { categories } from '../common/types/types'
+import styles from './CategorySection.module.css'
 
 interface CategorySectionProps {
   categories: string[]

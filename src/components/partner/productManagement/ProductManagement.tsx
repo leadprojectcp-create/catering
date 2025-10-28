@@ -7,7 +7,7 @@ import styles from './ProductManagement.module.css'
 import { db } from '@/lib/firebase'
 import { collection, query, where, getDocs, updateDoc, deleteDoc, doc } from 'firebase/firestore'
 import { useAuth } from '@/contexts/AuthContext'
-import ProductPreviewModal from './ProductPreviewModal'
+import ProductPreviewModal from '../product/common/modals/ProductPreviewModal'
 
 interface MenuItem {
   id: string

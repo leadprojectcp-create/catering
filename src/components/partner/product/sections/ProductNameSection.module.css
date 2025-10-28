@@ -1,0 +1,84 @@
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.titleWithNumber {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  line-height: 1;
+}
+
+.titleWithNumber .sectionTitle {
+  margin-bottom: 0;
+  line-height: 19px;
+}
+
+.numberCircle {
+  width: 19px;
+  height: 19px;
+  flex-shrink: 0;
+  background-color: #025BD9;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFF;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.sectionTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 8px;
+}
+
+.inputWithCounter {
+  position: relative;
+  width: 100%;
+}
+
+.inputWithCounter .textInput {
+  padding-right: 80px;
+}
+
+.input {
+  width: 100%;
+  padding: 16px;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  transition: background-color 0.2s;
+  background: #FAFAFA;
+  color: #333;
+  font-family: inherit;
+}
+
+.input:focus {
+  outline: none;
+  background: #f3f4f6;
+}
+
+.input::placeholder {
+  color: #999;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.inputCounter {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.875rem;
+  color: #9ca3af;
+  pointer-events: none;
+}

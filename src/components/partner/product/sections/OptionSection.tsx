@@ -1,7 +1,7 @@
 import React from 'react'
 import Image from 'next/image'
-import { ProductOption } from '../types'
-import styles from '../AddProductPage.module.css'
+import { ProductOption } from '../common/types/types'
+import styles from './OptionSection.module.css'
 
 interface OptionSectionProps {
   options: ProductOption[]

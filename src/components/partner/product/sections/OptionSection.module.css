@@ -1,0 +1,271 @@
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.titleWithNumber {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  line-height: 1;
+}
+
+.titleWithNumber .sectionTitle {
+  margin-bottom: 0;
+  line-height: 19px;
+}
+
+.numberCircle {
+  width: 19px;
+  height: 19px;
+  flex-shrink: 0;
+  background-color: #025BD9;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFF;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.sectionTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 8px;
+}
+
+.helpButton {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+
+.helpButton:hover {
+  opacity: 1;
+}
+
+.toggleButtonGroup {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.toggleButton {
+  flex: 1;
+  padding: 12px 24px;
+  background-color: white;
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #6B7280;
+  cursor: pointer;
+}
+
+.toggleButtonActive {
+  flex: 1;
+  padding: 12px 24px;
+  background-color: #237AF2;
+  border: 1px solid #237AF2;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: white;
+  cursor: pointer;
+}
+
+.optionCard {
+  border: 1px solid #E0E0E0;
+  padding: 20px;
+  border-radius: 10px;
+  background: white;
+}
+
+.optionGroupHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.optionLabel {
+  font-size: 14px;
+  font-weight: 400;
+  color: #333;
+}
+
+.removeGroupButton {
+  background: none;
+  border: none;
+  color: #999;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.removeGroupButton svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.removeGroupButton:hover {
+  color: #666;
+}
+
+.removeGroupButton:hover svg path {
+  stroke: #666;
+}
+
+.textInput {
+  width: 100%;
+  padding: 16px;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  transition: background-color 0.2s;
+  background: #FAFAFA;
+  color: #333;
+  font-family: inherit;
+}
+
+.textInput:focus {
+  outline: none;
+  background: #f3f4f6;
+}
+
+.textInput::placeholder {
+  color: #999;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.optionValuesContainer {
+  margin-top: 20px;
+}
+
+.optionValuesHeader {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+.optionValueRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #F0F0F0;
+}
+
+.optionValueRow:last-child {
+  border-bottom: none;
+}
+
+.optionInputGroup {
+  display: contents;
+}
+
+.mobileOptionLabel {
+  display: none;
+  font-size: 14px;
+  font-weight: 400;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.priceInputWrapper {
+  position: relative;
+  display: flex;
+  gap: 8px;
+}
+
+.priceInputWrapper .textInput {
+  flex: 1;
+}
+
+.addOptionValueButton,
+.removeOptionValueButton {
+  width: 50px;
+  height: 50px;
+  border: none;
+  border-radius: 10px;
+  background: #E0E0E0;
+  color: #666;
+  font-size: 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.addOptionValueButton:hover,
+.removeOptionValueButton:hover {
+  background: #D0D0D0;
+}
+
+.optionButtonContainer {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.addOptionGroupButton {
+  display: inline-flex;
+  height: 35px;
+  padding: 10px;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  border-radius: 5px;
+  border: 1px solid #237AF2;
+  background: #F0F6FF;
+  color: #237AF2;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.addOptionGroupButton:hover {
+  background: #E0EFFF;
+}
+
+@media (max-width: 640px) {
+  .optionValuesHeader {
+    display: none;
+  }
+
+  .optionInputGroup {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .mobileOptionLabel {
+    display: block;
+  }
+
+  .optionValueRow {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}

@@ -1,8 +1,8 @@
 'use client'
 
 import React, { useState } from 'react'
-import { ProductFormData } from '../types'
-import styles from '../AddProductPage.module.css'
+import { ProductFormData } from '../common/types/types'
+import styles from './PriceSection.module.css'
 
 interface PriceSectionProps {
   price: number

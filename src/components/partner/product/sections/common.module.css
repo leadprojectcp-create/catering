@@ -1,0 +1,142 @@
+/* 공통 섹션 스타일 */
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.sectionTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 8px;
+}
+
+.titleWithNumber {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  line-height: 1;
+}
+
+.titleWithNumber .sectionTitle {
+  margin-bottom: 0;
+  line-height: 19px;
+}
+
+.optionalLabel {
+  font-size: 12px;
+  font-weight: 400;
+  color: #999;
+  margin-left: 4px;
+}
+
+.numberCircle {
+  width: 19px;
+  height: 19px;
+  flex-shrink: 0;
+  background-color: #025BD9;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFF;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* 공통 입력 필드 스타일 */
+.textInput {
+  width: 100%;
+  padding: 16px;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  transition: background-color 0.2s;
+  background: #FAFAFA;
+  color: #333;
+  font-family: inherit;
+}
+
+.textInput:focus {
+  outline: none;
+  background: #f3f4f6;
+}
+
+.textInput::placeholder {
+  color: #999;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.textInput:disabled {
+  color: #ccc;
+  background: #FAFAFA;
+  cursor: not-allowed;
+}
+
+.textarea {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  transition: background-color 0.2s;
+  background: #FAFAFA;
+  color: #333;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 80px;
+}
+
+.textarea:focus {
+  outline: none;
+  background: #f3f4f6;
+}
+
+.textarea::placeholder {
+  color: #999;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* 체크박스 스타일 */
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  color: #999;
+}
+
+.checkboxLabel:has(.hiddenCheckbox:checked) {
+  color: #025BD9;
+}
+
+.hiddenCheckbox {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.customCheckbox {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  margin-right: 8px;
+  flex-shrink: 0;
+}
+
+.customCheckbox img {
+  width: 20px;
+  height: 20px;
+}

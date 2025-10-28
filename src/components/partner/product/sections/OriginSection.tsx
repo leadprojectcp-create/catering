@@ -1,5 +1,5 @@
 import React from 'react'
-import styles from '../AddProductPage.module.css'
+import styles from './OriginSection.module.css'
 
 interface OriginItem {
   ingredient: string

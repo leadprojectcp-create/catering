@@ -1,0 +1,120 @@
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.titleWithNumber {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  line-height: 1;
+}
+
+.titleWithNumber .sectionTitle {
+  margin-bottom: 0;
+  line-height: 19px;
+}
+
+.numberCircle {
+  width: 19px;
+  height: 19px;
+  flex-shrink: 0;
+  background-color: #025BD9;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFF;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.sectionTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 8px;
+}
+
+.quantityGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.quantityGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.quantityGroup .sectionTitle {
+  color: #333;
+  font-size: 14px;
+  font-weight: 400;
+  margin-bottom: 0;
+}
+
+.inputWithUnit {
+  position: relative;
+  min-width: 200px;
+}
+
+.inputWithUnit .textInput {
+  padding-right: 40px;
+  min-width: 200px;
+}
+
+.textInput {
+  width: 100%;
+  padding: 16px;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  transition: background-color 0.2s;
+  background: #FAFAFA;
+  color: #333;
+  font-family: inherit;
+}
+
+.textInput:focus {
+  outline: none;
+  background: #f3f4f6;
+}
+
+.textInput::placeholder {
+  color: #999;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.inputUnit {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 14px;
+  font-weight: 500;
+  color: #999;
+  pointer-events: none;
+}
+
+@media (max-width: 640px) {
+  .quantityGrid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .inputWithUnit {
+    width: 100%;
+  }
+
+  .inputWithUnit .textInput {
+    width: 100%;
+  }
+}
