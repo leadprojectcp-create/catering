@@ -11,6 +11,7 @@ export interface PaymentRequest {
   customerName?: string // 고객 이름
   customerEmail?: string // 고객 이메일
   customerPhoneNumber?: string // 고객 전화번호
+  customerBirthday?: string // 법인카드: 사업자등록번호 10자리 / 개인: 생년월일 YYYYMMDD
   payMethod?: PayMethod // 결제 수단 (기본값: CARD)
   easyPayProvider?: string // 간편결제사 (간편결제 사용 시 필수)
 }
@@ -49,6 +50,11 @@ export const requestPayment = async (
         phoneNumber: request.customerPhoneNumber,
         email: request.customerEmail,
       },
+    }
+
+    // 법인카드 결제 시 사업자등록번호를 customerIdentityNumber로 전달
+    if (request.customerBirthday) {
+      paymentParams.customer.customerIdentityNumber = request.customerBirthday
     }
 
     // 가상계좌 결제 시 필수 파라미터 추가
