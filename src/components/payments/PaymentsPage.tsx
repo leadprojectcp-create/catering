@@ -705,6 +705,7 @@ export default function PaymentsPage() {
       orderer: address.orderer,
       phone: address.phone,
       email: address.email,
+      businessNumber: '',
       detailAddress: address.detailAddress || '',
       address: address.address,
       zipCode: address.zipCode || '',
