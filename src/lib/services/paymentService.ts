@@ -26,24 +26,9 @@ export const requestPayment = async (
     console.log('=== 결제 요청 ===')
     console.log('Order:', request.orderName, request.amount)
 
-    // 서버에서 결제 준비
-    const prepareResponse = await fetch('/api/payments/prepare', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(request),
-    })
-
-    if (!prepareResponse.ok) {
-      const errorData = await prepareResponse.json()
-      throw new Error(errorData.error || '결제 준비에 실패했습니다.')
-    }
-
-    const { paymentId } = await prepareResponse.json()
-
     // 포트원 결제창 호출
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const paymentId = `payment-${request.orderId}-${Date.now()}`
+
     const response = await PortOne.requestPayment({
       storeId: process.env.NEXT_PUBLIC_PORTONE_STORE_ID!,
       channelKey: process.env.NEXT_PUBLIC_PORTONE_CHANNEL_KEY!,
@@ -51,12 +36,14 @@ export const requestPayment = async (
       orderName: request.orderName,
       totalAmount: request.amount,
       currency: 'KRW',
+      payMethod: 'CARD', // 기본 결제 수단 (결제창에서 변경 가능)
       customer: {
         fullName: request.customerName,
         phoneNumber: request.customerPhoneNumber,
         email: request.customerEmail,
       },
       redirectUrl: `${window.location.origin}/payments/complete?orderId=${request.orderId}`,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any)
 
     console.log('=== 결제창 응답 ===')

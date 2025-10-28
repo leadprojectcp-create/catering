@@ -10,12 +10,11 @@ import { useAuth } from '@/contexts/AuthContext'
 import Loading from '@/components/Loading'
 import DeliveryInfo from './DeliveryInfo'
 import DateTimePicker from './DateTimePicker'
-import { OrderData, DeliveryAddress, DaumPostcodeData, OrderInfo } from './types'
+import { OrderData, DeliveryAddress, DaumPostcodeData } from './types'
 import PrivacyPolicy from '@/components/terms/PrivacyPolicy'
 import RefundPolicy from '@/components/terms/RefundPolicy'
 import PaymentTerms from './PaymentTerms'
 import { requestPayment } from '@/lib/services/paymentService'
-import OptimizedImage from '@/components/common/OptimizedImage'
 import styles from './PaymentsPage.module.css'
 
 export default function PaymentsPage() {
@@ -437,7 +436,6 @@ export default function PaymentsPage() {
         totalProductPrice: totalProductPrice,
         deliveryFee: deliveryFee,
         deliveryMethod: deliveryMethod,
-        payMethod: payMethod, // 선택한 결제 수단 저장
         usedPoint: usePoint, // 사용한 포인트 저장
         // 배송 정보를 Map 형태로 저장
         deliveryInfo: {
@@ -502,7 +500,6 @@ export default function PaymentsPage() {
       await setDoc(orderRef, {
         paymentStatus: 'paid',
         paymentId: paymentResult.paymentId,
-        transactionId: paymentResult.transactionId,
         paidAt: new Date(),
         verifiedAt: new Date()
       }, { merge: true })
