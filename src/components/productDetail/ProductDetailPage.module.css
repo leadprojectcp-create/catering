@@ -4,6 +4,13 @@
   margin: 0 auto;
 }
 
+/* 모바일에서 하단 고정 버튼을 위한 여백 */
+@media (max-width: 768px) {
+  .container {
+    padding-bottom: 100px;
+  }
+}
+
 .leftSection {
   width: 100%;
 }

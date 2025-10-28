@@ -17,7 +17,8 @@ export type OrderStatus = 'pending' | 'preparing' | 'shipping' | 'completed' | '
 export interface Order {
   id?: string
   orderNumber?: string
-  userId: string
+  uid: string
+  userId?: string // deprecated, use uid instead
   storeId: string
   storeName: string
   partnerId?: string

@@ -168,14 +168,14 @@ export default function OrderManagementPage() {
       return
     }
 
-    if (!order.userId) {
+    if (!order.uid) {
       alert('고객 정보를 불러올 수 없습니다.')
       return
     }
 
     try {
-      // 고객(userId)의 정보 가져오기
-      const userDoc = await getDoc(doc(db, 'users', order.userId))
+      // 고객(uid)의 정보 가져오기
+      const userDoc = await getDoc(doc(db, 'users', order.uid))
       let userName = '고객'
       if (userDoc.exists()) {
         const userData = userDoc.data()
@@ -186,7 +186,7 @@ export default function OrderManagementPage() {
         user.uid,
         order.storeId,
         userName,
-        order.userId
+        order.uid
       )
       router.push(`/chat?roomId=${roomId}`)
     } catch (error) {
