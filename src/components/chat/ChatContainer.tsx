@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { getUserChatRooms, ChatRoom as ChatRoomType, createOrGetChatRoom } from '@/lib/services/chatService'
 import { ref, onValue } from 'firebase/database'
 import { realtimeDb } from '@/lib/firebase'
-import { doc, getDoc } from 'firebase/firestore'
+import { doc, getDoc, onSnapshot } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { getProduct } from '@/lib/services/productService'
 import ChatRoom, { ChatRoomRef } from './ChatRoom'
@@ -48,7 +48,7 @@ export default function ChatContainer({ isPartner = false }: ChatContainerProps)
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
 
-  // 채팅방 목록 로드 (한 번만)
+  // Firestore users 컬렉션의 chatRooms 배열을 실시간으로 구독하여 채팅방 목록 업데이트
   useEffect(() => {
     // 인증 로딩 중이면 아무것도 하지 않음
     if (authLoading) return
@@ -59,7 +59,28 @@ export default function ChatContainer({ isPartner = false }: ChatContainerProps)
       return
     }
 
-    loadChatRooms()
+    console.log('[ChatContainer] users chatRooms 구독 시작')
+
+    // Firestore users 문서의 chatRooms 배열 실시간 구독
+    const userRef = doc(db, 'users', user.uid)
+    const unsubscribe = onSnapshot(userRef, (docSnapshot) => {
+      if (docSnapshot.exists()) {
+        const userData = docSnapshot.data()
+        const chatRoomIds = userData.chatRooms || []
+
+        console.log('[ChatContainer] chatRooms 배열 변경 감지:', chatRoomIds)
+
+        // chatRoomIds가 변경되면 채팅방 목록 다시 로드
+        loadChatRooms()
+      }
+    }, (error) => {
+      console.error('[ChatContainer] users chatRooms 구독 실패:', error)
+    })
+
+    return () => {
+      console.log('[ChatContainer] users chatRooms 구독 해제')
+      unsubscribe()
+    }
   }, [user, authLoading, router])
 
   // URL의 roomId, productId, message 파라미터 처리
@@ -93,7 +114,7 @@ export default function ChatContainer({ isPartner = false }: ChatContainerProps)
     }
   }, [searchParams, user])
 
-  // 실시간으로 전체 chatRooms의 unreadCount 구독 (한 번만 설정)
+  // 실시간으로 전체 chatRooms의 unreadCount, lastMessage, lastMessageTime 구독
   useEffect(() => {
     if (!user) return
 
@@ -107,7 +128,7 @@ export default function ChatContainer({ isPartner = false }: ChatContainerProps)
 
       // 현재 chatRooms 상태와 비교하여 unreadCount, lastMessage, lastMessageTime 업데이트
       setChatRooms(prevRooms => {
-        return prevRooms.map(room => {
+        const updatedRooms = prevRooms.map(room => {
           const roomSnapshot = snapshot.child(room.id)
           if (roomSnapshot.exists()) {
             const roomData = roomSnapshot.val()
@@ -128,6 +149,11 @@ export default function ChatContainer({ isPartner = false }: ChatContainerProps)
           }
           return room
         })
+
+        // lastMessageTime 기준으로 정렬 (최신순)
+        return updatedRooms.sort((a, b) =>
+          (b.lastMessageTime || b.createdAt) - (a.lastMessageTime || a.createdAt)
+        )
       })
     })
 
