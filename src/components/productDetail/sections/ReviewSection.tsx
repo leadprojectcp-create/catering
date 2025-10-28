@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useRef, useEffect } from 'react'
 import Image from 'next/image'
-import { Review } from './ProductDetailPage'
+import { Review } from '../types'
 import styles from './ReviewSection.module.css'
 
 interface ReviewSectionProps {

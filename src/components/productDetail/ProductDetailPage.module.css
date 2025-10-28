@@ -4,13 +4,6 @@
   margin: 0 auto;
 }
 
-/* 모바일에서 하단 고정 버튼을 위한 여백 */
-@media (max-width: 768px) {
-  .container {
-    padding-bottom: 100px;
-  }
-}
-
 .leftSection {
   width: 100%;
 }
@@ -26,6 +19,7 @@
 /* 모바일 주문하기 버튼 */
 .mobileOrderButton {
   display: block;
+  position: -webkit-sticky; /* Safari 지원 */
   position: sticky;
   bottom: 76px; /* 바텀 네비게이터(60px) + 여백(16px) */
   left: 0;
@@ -43,6 +37,10 @@
   z-index: 100;
   box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
   border-radius: 8px;
+  /* 모바일 브라우저 최적화 */
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  will-change: transform;
 }
 
 .mobileOrderButton:active {

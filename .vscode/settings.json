@@ -18,5 +18,14 @@
         }
       ]
     }
-  ]
+  ],
+  "typescript.tsserver.watchOptions": {
+    "excludeDirectories": ["**/node_modules", "**/.next"]
+  },
+  "files.watcherExclude": {
+    "**/.git/objects/**": true,
+    "**/.git/subtree-cache/**": true,
+    "**/node_modules/**": true,
+    "**/.next/**": true
+  }
 }

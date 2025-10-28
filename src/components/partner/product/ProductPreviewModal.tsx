@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import ProductCard from '@/components/productDetail/ProductCard'
+import ProductInfoSection from '@/components/productDetail/sections/ProductInfoSection'
 import { Product as OrderProduct } from '@/components/productDetail/ProductDetailPage'
 import styles from './ProductPreviewModal.module.css'
 
@@ -75,9 +75,9 @@ export default function ProductPreviewModal({ product, onClose }: ProductPreview
           <button className={styles.closeButton} onClick={onClose}>✕</button>
         </div>
 
-        {/* ProductCard 컴포넌트 사용 */}
+        {/* ProductInfoSection 컴포넌트 사용 */}
         <div className={styles.productCardWrapper}>
-          <ProductCard
+          <ProductInfoSection
             product={orderProduct}
             store={null}
             user={null}

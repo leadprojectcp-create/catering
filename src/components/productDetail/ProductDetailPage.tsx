@@ -7,96 +7,25 @@ import { db } from '@/lib/firebase'
 import { useAuth } from '@/contexts/AuthContext'
 import { useProductLike } from '@/hooks/useProductLike'
 import Loading from '@/components/Loading'
-import ProductCard from './ProductCard'
-import ReviewSection from './ReviewSection'
-import OptionSelector from './OptionSelector'
-import SelectedItems from './SelectedItems'
-import BottomModal from './BottomModal'
-import DeliveryMethodSelector from './DeliveryMethodSelector'
+import ProductInfoSection from './sections/ProductInfoSection'
+import ReviewSection from './sections/ReviewSection'
+import OptionSelectSection from './sections/OptionSelectSection'
+import CartItemsSection from './sections/CartItemsSection'
+import BottomModal from './sections/BottomModal'
+import DeliveryMethodSection from './sections/DeliveryMethodSection'
+import { Product, Store, CartItem, Review } from './types'
 import styles from './ProductDetailPage.module.css'
-import modalStyles from './BottomModal.module.css'
-
-// Types
-export interface Store {
-  id: string
-  storeName: string
-  address?: {
-    city?: string
-    district?: string
-    dong?: string
-    fullAddress?: string
-    detail?: string
-  }
-  phone?: string
-  description?: string
-  storeImages?: string[]
-  primaryCategory?: string
-  categories?: string[]
-}
-
-export interface Product {
-  id: string
-  name: string
-  price: number
-  discountedPrice?: number
-  discount?: {
-    discountAmount: number
-    discountPercent: number
-  }
-  images?: string[]
-  description?: string
-  minOrderQuantity?: number
-  maxOrderQuantity?: number
-  minOrderDays?: number
-  deliveryMethods?: string[]
-  additionalSettings?: string[]
-  origin?: { ingredient: string; origin: string }[]
-  storeId: string
-  productTypes?: string[]
-  averageRating?: number
-  reviewCount?: number
-  optionsEnabled?: boolean
-  options?: {
-    groupName: string
-    values: { name: string; price: number }[]
-    isRequired?: boolean
-  }[]
-  additionalOptionsEnabled?: boolean
-  additionalOptions?: {
-    groupName: string
-    values: { name: string; price: number }[]
-  }[]
-  deliveryFeeSettings?: {
-    type: '무료' | '조건부 무료' | '유료' | '수량별'
-    baseFee?: number
-    freeCondition?: number
-    paymentMethods?: ('선결제' | '착불')[]
-    perQuantity?: number
-  }
-}
-
-export interface CartItem {
-  options: { [key: string]: string }
-  additionalOptions?: { [key: string]: string }
-  quantity: number
-}
-
-export interface Review {
-  id: string
-  userId: string
-  userName?: string
-  rating: number
-  content: string
-  images?: string[]
-  createdAt: Date
-}
+import modalStyles from './sections/BottomModal.module.css'
 
 interface ProductDetailPageProps {
   productId: string
   storeId: string
 }
 
-// Helper Functions
+// Re-export types for backward compatibility
+export type { Product, Store, CartItem, Review }
+
+// Helper Functions kept in ProductDetailPage (UI + logic together)
 const calculateItemPrice = (
   product: Product | null,
   options: { [key: string]: string },
@@ -1026,7 +955,7 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
       ) : (
         <>
           <div className={styles.leftSection}>
-            <ProductCard
+            <ProductInfoSection
               product={product}
               store={store}
               user={user}
@@ -1062,9 +991,9 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
             onClose={() => setIsModalOpen(false)}
             onDragStart={handleDragStart}
           >
-            {/* 옵션이 설정된 경우에만 OptionSelector 표시 */}
+            {/* 옵션이 설정된 경우에만 OptionSelectSection 표시 */}
             {product.optionsEnabled && (
-              <OptionSelector
+              <OptionSelectSection
                 product={product}
                 expandedOptions={expandedOptions}
                 selectedOptions={selectedOptions}
@@ -1078,13 +1007,13 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
               />
             )}
 
-            <DeliveryMethodSelector
+            <DeliveryMethodSection
               deliveryMethods={product.deliveryMethods}
               selectedMethod={deliveryMethod}
               onMethodChange={setDeliveryMethod}
             />
 
-            <SelectedItems
+            <CartItemsSection
               product={product}
               cartItems={cartItems}
               storeRequest={storeRequest}

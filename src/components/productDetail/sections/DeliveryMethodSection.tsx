@@ -1,19 +1,19 @@
 'use client'
 
 import OptimizedImage from '@/components/common/OptimizedImage'
-import styles from './DeliveryMethodSelector.module.css'
+import styles from './DeliveryMethodSection.module.css'
 
-interface DeliveryMethodSelectorProps {
+interface DeliveryMethodSectionProps {
   deliveryMethods?: string[]
   selectedMethod: string
   onMethodChange: (method: string) => void
 }
 
-export default function DeliveryMethodSelector({
+export default function DeliveryMethodSection({
   deliveryMethods,
   selectedMethod,
   onMethodChange
-}: DeliveryMethodSelectorProps) {
+}: DeliveryMethodSectionProps) {
   if (!deliveryMethods || deliveryMethods.length === 0) {
     return null
   }

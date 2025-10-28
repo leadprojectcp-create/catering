@@ -2,10 +2,10 @@
 
 import { useState } from 'react'
 import DeliveryAddressModal from './DeliveryAddressModal'
-import { DeliveryAddress, OrderInfo } from './types'
-import styles from './PaymentsPage.module.css'
+import { DeliveryAddress, OrderInfo } from '../types'
+import styles from '../PaymentsPage.module.css'
 
-interface DeliveryInfoProps {
+interface DeliveryInfoSectionProps {
   orderInfo: OrderInfo
   recipient: string
   addressName: string
@@ -19,7 +19,7 @@ interface DeliveryInfoProps {
   onAddressSearch: () => void
 }
 
-export default function DeliveryInfo({
+export default function DeliveryInfoSection({
   orderInfo,
   recipient,
   addressName,
@@ -31,7 +31,7 @@ export default function DeliveryInfo({
   onAddressLoad,
   onAddressDelete,
   onAddressSearch
-}: DeliveryInfoProps) {
+}: DeliveryInfoSectionProps) {
   const [showAddressList, setShowAddressList] = useState(false)
 
   const handleSaveClick = async () => {

@@ -1,10 +1,10 @@
 'use client'
 
 import OptimizedImage from '@/components/common/OptimizedImage'
-import { Product, CartItem, getOptionPrice, getAdditionalOptionPrice } from './ProductDetailPage'
-import styles from './SelectedItems.module.css'
+import { Product, CartItem, getOptionPrice, getAdditionalOptionPrice } from '../types'
+import styles from './CartItemsSection.module.css'
 
-interface SelectedItemsProps {
+interface CartItemsSectionProps {
   product: Product
   cartItems: CartItem[]
   storeRequest: string
@@ -21,7 +21,7 @@ interface SelectedItemsProps {
   calculateTotalPrice: () => number
 }
 
-export default function SelectedItems({
+export default function CartItemsSection({
   product,
   cartItems,
   storeRequest,
@@ -36,7 +36,7 @@ export default function SelectedItems({
   onParcelPaymentMethodChange,
   calculateItemPrice,
   calculateTotalPrice
-}: SelectedItemsProps) {
+}: CartItemsSectionProps) {
   // 전체 수량 계산
   const totalQuantity = cartItems.reduce((total, item) => total + item.quantity, 0)
 

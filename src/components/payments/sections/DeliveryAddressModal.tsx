@@ -1,6 +1,6 @@
 'use client'
 
-import { DeliveryAddress } from './types'
+import { DeliveryAddress } from '../types'
 import styles from './DeliveryAddressModal.module.css'
 
 interface DeliveryAddressModalProps {

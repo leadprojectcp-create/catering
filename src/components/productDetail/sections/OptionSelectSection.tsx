@@ -1,10 +1,10 @@
 'use client'
 
 import Image from 'next/image'
-import { Product } from './ProductDetailPage'
-import styles from './OptionSelector.module.css'
+import { Product } from '../types'
+import styles from './OptionSelectSection.module.css'
 
-interface OptionSelectorProps {
+interface OptionSelectSectionProps {
   product: Product
   expandedOptions: { [key: string]: boolean }
   selectedOptions: Array<{ groupName: string; optionName: string }>
@@ -17,7 +17,7 @@ interface OptionSelectorProps {
   hasCartItems?: boolean
 }
 
-export default function OptionSelector({
+export default function OptionSelectSection({
   product,
   expandedOptions,
   selectedOptions,
@@ -28,7 +28,7 @@ export default function OptionSelector({
   onReset,
   onAddToCart,
   hasCartItems = false
-}: OptionSelectorProps) {
+}: OptionSelectSectionProps) {
   return (
     <div className={styles.optionSection}>
       {/* 옵션이 설정된 경우에만 표시 */}

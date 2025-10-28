@@ -8,12 +8,12 @@ import { doc, getDoc, setDoc, updateDoc, addDoc, collection, increment, serverTi
 import { db } from '@/lib/firebase'
 import { useAuth } from '@/contexts/AuthContext'
 import Loading from '@/components/Loading'
-import DeliveryInfo from './DeliveryInfo'
-import DateTimePicker from './DateTimePicker'
+import DeliveryInfoSection from './sections/DeliveryInfoSection'
+import DateTimePicker from './sections/DateTimePicker'
 import { OrderData, DeliveryAddress, DaumPostcodeData } from './types'
 import PrivacyPolicy from '@/components/terms/PrivacyPolicy'
 import RefundPolicy from '@/components/terms/RefundPolicy'
-import PaymentTerms from './PaymentTerms'
+import PaymentTerms from './sections/PaymentTerms'
 import { requestPayment } from '@/lib/services/paymentService'
 import styles from './PaymentsPage.module.css'
 
@@ -832,8 +832,6 @@ export default function PaymentsPage() {
         onLoad={handlePostcodeLoad}
       />
       <div className={styles.container}>
-        <h1 className={styles.title}>결제하기</h1>
-
         {/* 주문상품 */}
         <section className={styles.section}>
           <h2 className={styles.sectionTitle}>주문상품</h2>
@@ -1000,7 +998,7 @@ export default function PaymentsPage() {
         {(deliveryMethod === '퀵업체 배송' || deliveryMethod === '택배 배송') && (
           <>
             {/* 배송지 설정 */}
-            <DeliveryInfo
+            <DeliveryInfoSection
               orderInfo={orderInfo}
               recipient={recipient}
               addressName={addressName}

@@ -2,11 +2,11 @@
 
 import { memo } from 'react'
 import { useRouter } from 'next/navigation'
-import { Product, Store } from './ProductDetailPage'
+import { Product, Store } from '../types'
 import OptimizedImage from '@/components/common/OptimizedImage'
-import styles from './ProductCard.module.css'
+import styles from './ProductInfoSection.module.css'
 
-interface ProductCardProps {
+interface ProductInfoSectionProps {
   product: Product
   store: Store | null
   user: { uid: string } | null
@@ -19,7 +19,7 @@ interface ProductCardProps {
   onLikeToggle: () => void
 }
 
-const ProductCard = memo(function ProductCard({
+const ProductInfoSection = memo(function ProductInfoSection({
   product,
   user,
   currentImageIndex,
@@ -29,7 +29,7 @@ const ProductCard = memo(function ProductCard({
   onNextImage,
   onToggleDescription,
   onLikeToggle
-}: ProductCardProps) {
+}: ProductInfoSectionProps) {
   const router = useRouter()
 
   return (
@@ -224,4 +224,4 @@ const ProductCard = memo(function ProductCard({
   )
 })
 
-export default ProductCard
+export default ProductInfoSection
