@@ -1,0 +1,24 @@
+.ordersList {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.emptyState {
+  text-align: center;
+  padding: 80px 20px;
+  color: #868e96;
+  font-size: 16px;
+  border-radius: 12px;
+}
+
+.emptyIcon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.emptyText {
+  color: #868e96;
+  font-size: 16px;
+  font-weight: 500;
+}

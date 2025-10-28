@@ -1,0 +1,418 @@
+.orderCard {
+  border-radius: 10px;
+  border: 1px solid #dfdcdc;
+  background: #FFF;
+  padding: 15px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.orderCardExpanded {
+  border: 2px solid #025BD9;
+}
+
+.cardContentWrapper {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.cardLeft {
+  flex: 1;
+}
+
+.cardRight {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-end;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.actionRow {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.actionBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 5px;
+  border: 1px solid #F0F0F3;
+  background: #FFF;
+  color: #333;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  min-width: 100px;
+}
+
+.orderHeader {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.statusBadge {
+  display: inline-flex;
+  padding: 4px 12px;
+  justify-content: center;
+  align-items: center;
+  border-radius: 5px;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  flex-shrink: 0;
+  width: auto;
+}
+
+.statusPending {
+  background: #025BD9;
+  color: #FFF;
+}
+
+.statusPreparing {
+  background: #FFF8ED;
+  color: #F79B2C;
+}
+
+.statusShipping {
+  background: #F5F7F9;
+  color: #025BD9;
+}
+
+.statusCancelled {
+  background: #FFF6F7;
+  color: #FE4651;
+}
+
+.statusCompleted {
+  background: #F3FFF9;
+  color: #09AB49;
+}
+
+.deliveryBadge {
+  display: inline-flex;
+  padding: 4px 12px;
+  justify-content: center;
+  align-items: center;
+  border-radius: 30px;
+  background: #F0F0F3;
+  color: #4E5968;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  flex-shrink: 0;
+  width: auto;
+}
+
+.dDay {
+  display: inline-flex;
+  padding: 4px 12px;
+  justify-content: center;
+  align-items: center;
+  border-radius: 30px;
+  background: #F0F0F3;
+  color: #4E5968;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  flex-shrink: 0;
+  width: auto;
+}
+
+.orderNumberText {
+  color: #4E5968;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.productName {
+  color: #333;
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  text-align: left;
+}
+
+.orderInfo {
+  color: #999;
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 4px;
+  text-align: left;
+}
+
+.acceptBtn {
+  background: #025BD9 !important;
+  color: white !important;
+  border: none !important;
+}
+
+.cancelBtn {
+  background: transparent !important;
+  color: #333 !important;
+  border: 1px solid #F0F0F3 !important;
+  border-radius: 5px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.orderDetails {
+  display: flex;
+  gap: 15px;
+  width: 100%;
+}
+
+.detailsLeft {
+  flex: 1;
+}
+
+.detailsRight {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.detailCard {
+  border-radius: 10px;
+  border: 1px solid #F4F4F4;
+  background: #FFF;
+  padding: 20px;
+}
+
+.detailTitle {
+  color: #333;
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0 0 12px 0;
+}
+
+.detailSectionDivider {
+  height: 1px;
+  background: #F4F4F4;
+  margin: 20px 0;
+}
+
+.detailRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.detailLabel {
+  color: #999;
+  font-size: 14px;
+  font-weight: 500;
+  min-width: 80px;
+  flex-shrink: 0;
+}
+
+.detailValue {
+  color: #333;
+  font-size: 15px;
+  font-weight: 600;
+  flex: 1;
+  text-align: right;
+}
+
+@media (min-width: 769px) {
+  .detailValue {
+    text-align: left;
+  }
+}
+
+.trackingNumberRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.editTrackingBtn {
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.editTrackingBtn:hover {
+  background: #F5F5F5;
+}
+
+.editTrackingBtn svg {
+  display: block;
+}
+
+.orderItemSection {
+  margin-bottom: 16px;
+}
+
+.orderItemName {
+  color: #333;
+  font-size: 14px;
+  font-weight: 600;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.orderItemContent {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  background: #F5F7F9;
+  padding: 12px;
+  border-radius: 8px;
+  gap: 12px;
+}
+
+.orderItemLeft {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.orderItemRight {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.orderItemQuantity {
+  color: #333;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.orderItemPrice {
+  color: #333;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.optionGroup {
+  display: flex;
+  flex-direction: column;
+}
+
+.optionGroupTitle {
+  color: #333;
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.orderItemOption {
+  color: #4E5968;
+  font-size: 14px;
+  font-weight: 500;
+  margin-top: 4px;
+}
+
+.totalSection {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.totalRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.totalLabel {
+  color: #333;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.totalValue {
+  color: #333;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.requestText {
+  color: #333;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.printOrderButton {
+  display: flex;
+  padding: 10px 15px;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+  border-radius: 5px;
+  border: 1px solid #237AF2;
+  background: transparent;
+  color: #237AF2;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .orderCard {
+    padding: 12px;
+  }
+
+  .cardContentWrapper {
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .cardRight {
+    align-items: stretch;
+    width: 100%;
+  }
+
+  .actionRow {
+    width: 100%;
+  }
+
+  .actionBtn {
+    flex: 1;
+    min-width: unset;
+    justify-content: center;
+  }
+
+  .orderDetails {
+    flex-direction: column;
+  }
+
+  .detailsRight {
+    flex: 1;
+  }
+
+  .detailCard {
+    padding: 15px;
+  }
+}

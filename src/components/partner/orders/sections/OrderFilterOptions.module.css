@@ -1,0 +1,207 @@
+.filterOptions {
+  display: flex;
+  gap: 12px;
+  margin-left: auto;
+}
+
+.dropdownContainer {
+  position: relative;
+}
+
+.dropdown {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px;
+  border-radius: 5px;
+  border: 1px solid #F0F0F3;
+  background: #FFF;
+  cursor: pointer;
+  min-width: 200px;
+}
+
+.dropdownText {
+  color: #333;
+  font-size: 14px;
+  font-weight: 500;
+  flex: 1;
+}
+
+.chevronIcon {
+  flex-shrink: 0;
+  opacity: 0.6;
+}
+
+.dropdownMenu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: #FFF;
+  border: 1px solid #F0F0F3;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  overflow: hidden;
+}
+
+.dropdownItem {
+  padding: 12px;
+  color: #333;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.dropdownItem:hover {
+  background: #F4F4F4;
+}
+
+.calendar {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  background: #FFF;
+  border: 1px solid #F0F0F3;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  min-width: 280px;
+}
+
+.calendarHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.navButton {
+  background: none;
+  border: none;
+  color: #333;
+  font-size: 20px;
+  font-weight: bold;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.navButton:hover {
+  background: #F4F4F4;
+}
+
+.monthYear {
+  color: #333;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.weekday {
+  text-align: center;
+  color: #999;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 8px 0;
+}
+
+.days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0;
+}
+
+.emptyDay {
+  aspect-ratio: 1;
+}
+
+.day {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #333;
+  font-size: 14px;
+  cursor: pointer;
+  position: relative;
+}
+
+.day:hover {
+  background: #F4F4F4;
+  border-radius: 4px;
+}
+
+.selectedDate {
+  color: #FFF;
+  font-weight: 600;
+}
+
+.selectedDate::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 32px;
+  height: 32px;
+  background: #025BD9;
+  border-radius: 50%;
+  z-index: -1;
+}
+
+.inRange {
+  background: rgba(2, 91, 217, 0.1);
+}
+
+.calendarFooter {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #F0F0F3;
+  text-align: center;
+}
+
+.clearButton {
+  background: none;
+  border: 1px solid #F0F0F3;
+  color: #333;
+  cursor: pointer;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.clearButton:hover {
+  background: #F4F4F4;
+}
+
+@media (max-width: 768px) {
+  .filterOptions {
+    margin-left: 0;
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .dropdownContainer {
+    width: 100%;
+  }
+
+  .dropdown {
+    min-width: 100%;
+    width: 100%;
+  }
+
+  .calendar {
+    left: 50%;
+    transform: translateX(-50%);
+  }
+}
