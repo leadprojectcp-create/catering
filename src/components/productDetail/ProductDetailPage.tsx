@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { collection, addDoc, updateDoc, doc, getDoc, query, where, getDocs, orderBy } from 'firebase/firestore'
+import { doc, getDoc, query, where, getDocs, orderBy, collection } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { useAuth } from '@/contexts/AuthContext'
 import { useProductLike } from '@/hooks/useProductLike'
@@ -15,185 +15,15 @@ import BottomModal from './sections/BottomModal'
 import DeliveryMethodSection from './sections/DeliveryMethodSection'
 import { Product, Store, CartItem, Review } from './types'
 import styles from './ProductDetailPage.module.css'
-import modalStyles from './sections/BottomModal.module.css'
 
 interface ProductDetailPageProps {
   productId: string
   storeId: string
 }
 
-// Re-export types for backward compatibility
 export type { Product, Store, CartItem, Review }
 
-// Helper Functions kept in ProductDetailPage (UI + logic together)
-const calculateItemPrice = (
-  product: Product | null,
-  options: { [key: string]: string },
-  qty: number,
-  additionalOptions?: { [key: string]: string }
-): number => {
-  if (!product) return 0
-  const basePrice = product.discountedPrice || product.price
-  let optionPrice = 0
-
-  Object.entries(options).forEach(([groupName, optionValue]) => {
-    // 쉼표로 구분된 여러 옵션이 있을 수 있으므로 split
-    const optionNames = optionValue.split(',').map(name => name.trim())
-
-    optionNames.forEach(optionName => {
-      product.options?.forEach(group => {
-        if (group.groupName === groupName) {
-          const selected = group.values.find(v => v.name === optionName)
-          if (selected) {
-            optionPrice += selected.price
-          }
-        }
-      })
-    })
-  })
-
-  // 추가상품 옵션 가격 계산
-  if (additionalOptions) {
-    Object.entries(additionalOptions).forEach(([groupName, optionValue]) => {
-      const optionNames = optionValue.split(',').map(name => name.trim())
-
-      optionNames.forEach(optionName => {
-        product.additionalOptions?.forEach(group => {
-          if (group.groupName === groupName) {
-            const selected = group.values.find(v => v.name === optionName)
-            if (selected) {
-              optionPrice += selected.price
-            }
-          }
-        })
-      })
-    })
-  }
-
-  return (basePrice + optionPrice) * qty
-}
-
-const calculateTotalPrice = (
-  product: Product | null,
-  cartItems: CartItem[]
-): number => {
-  return cartItems.reduce((total, item) => {
-    return total + calculateItemPrice(product, item.options, item.quantity, item.additionalOptions)
-  }, 0)
-}
-
-const createOptionsWithPrices = (
-  product: Product,
-  options: { [key: string]: string }
-): { [key: string]: { name: string; price: number } } => {
-  const optionsWithPrices: { [key: string]: { name: string; price: number } } = {}
-
-  Object.entries(options).forEach(([groupName, optionValue]) => {
-    // 쉼표로 구분된 여러 옵션이 있을 수 있으므로 split
-    const optionNames = optionValue.split(',').map(name => name.trim())
-    let totalPrice = 0
-
-    optionNames.forEach(optionName => {
-      product.options?.forEach(group => {
-        if (group.groupName === groupName) {
-          const selected = group.values.find(v => v.name === optionName)
-          if (selected) {
-            totalPrice += selected.price
-          }
-        }
-      })
-    })
-
-    // 여러 옵션이면 쉼표로 구분된 이름 그대로 저장, 총 가격 합산
-    optionsWithPrices[groupName] = {
-      name: optionValue, // 쉼표로 구분된 전체 옵션명
-      price: totalPrice
-    }
-  })
-
-  return optionsWithPrices
-}
-
-export const createAdditionalOptionsWithPrices = (
-  product: Product,
-  additionalOptions: { [key: string]: string }
-): { [key: string]: { name: string; price: number } } => {
-  const additionalOptionsWithPrices: { [key: string]: { name: string; price: number } } = {}
-
-  Object.entries(additionalOptions).forEach(([groupName, optionValue]) => {
-    // 쉼표로 구분된 여러 옵션이 있을 수 있으므로 split
-    const optionNames = optionValue.split(',').map(name => name.trim())
-    let totalPrice = 0
-
-    optionNames.forEach(optionName => {
-      product.additionalOptions?.forEach(group => {
-        if (group.groupName === groupName) {
-          const selected = group.values.find(v => v.name === optionName)
-          if (selected) {
-            totalPrice += selected.price
-          }
-        }
-      })
-    })
-
-    // 여러 옵션이면 쉼표로 구분된 이름 그대로 저장, 총 가격 합산
-    additionalOptionsWithPrices[groupName] = {
-      name: optionValue, // 쉼표로 구분된 전체 옵션명
-      price: totalPrice
-    }
-  })
-
-  return additionalOptionsWithPrices
-}
-
-export const getOptionPrice = (
-  product: Product,
-  groupName: string,
-  optionValue: string
-): number => {
-  let optionPrice = 0
-
-  // 쉼표로 구분된 여러 옵션이 있을 수 있으므로 split
-  const optionNames = optionValue.split(',').map(name => name.trim())
-
-  optionNames.forEach(optionName => {
-    product.options?.forEach(group => {
-      if (group.groupName === groupName) {
-        const selected = group.values.find(v => v.name === optionName)
-        if (selected) {
-          optionPrice += selected.price
-        }
-      }
-    })
-  })
-
-  return optionPrice
-}
-
-export const getAdditionalOptionPrice = (
-  product: Product,
-  groupName: string,
-  optionValue: string
-): number => {
-  let optionPrice = 0
-
-  // 쉼표로 구분된 여러 옵션이 있을 수 있으므로 split
-  const optionNames = optionValue.split(',').map(name => name.trim())
-
-  optionNames.forEach(optionName => {
-    product.additionalOptions?.forEach(group => {
-      if (group.groupName === groupName) {
-        const selected = group.values.find(v => v.name === optionName)
-        if (selected) {
-          optionPrice += selected.price
-        }
-      }
-    })
-  })
-
-  return optionPrice
-}
-
+// Data Fetchers
 const maskUserName = (name: string): string => {
   if (name.length > 2) {
     return name[0] + '*'.repeat(name.length - 2) + name[name.length - 1]
@@ -204,7 +34,6 @@ const maskUserName = (name: string): string => {
   }
 }
 
-// Data Fetchers
 const fetchProduct = async (productId: string): Promise<Product | null> => {
   try {
     const productDoc = await getDoc(doc(db, 'products', productId))
@@ -214,7 +43,6 @@ const fetchProduct = async (productId: string): Promise<Product | null> => {
         ...productDoc.data()
       } as Product
 
-      // 리뷰 정보 가져오기
       try {
         const reviewsQuery = query(
           collection(db, 'reviews'),
@@ -311,14 +139,13 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
   const router = useRouter()
   const searchParams = useSearchParams()
   const { user } = useAuth()
+
+  // 상태 관리만
   const [product, setProduct] = useState<Product | null>(null)
   const [store, setStore] = useState<Store | null>(null)
   const [loading, setLoading] = useState(true)
   const [quantity, setQuantity] = useState(1)
-  const [selectedOptions, setSelectedOptions] = useState<Array<{ groupName: string; optionName: string }>>([])
-  const [selectedAdditionalOptions, setSelectedAdditionalOptions] = useState<Array<{ groupName: string; optionName: string }>>([])
   const [cartItems, setCartItems] = useState<CartItem[]>([])
-  const [expandedOptions, setExpandedOptions] = useState<{ [key: string]: boolean }>({})
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false)
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -333,14 +160,14 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
   const [deliveryMethod, setDeliveryMethod] = useState('')
   const [parcelPaymentMethod, setParcelPaymentMethod] = useState<'선결제' | '착불'>('선결제')
 
-  // 제품 좋아요 훅
-  const { isLiked, likeCount, setLikeCount, handleLikeToggle } = useProductLike({
+  const { isLiked, setLikeCount, handleLikeToggle } = useProductLike({
     productId,
     productName: product?.name || '',
     productImage: product?.images?.[0],
     initialLikeCount: 0
   })
 
+  // 데이터 로딩
   useEffect(() => {
     const loadProduct = async () => {
       try {
@@ -348,32 +175,24 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
         if (productData) {
           setProduct(productData)
 
-          // likeCount 설정
           const productDoc = await getDoc(doc(db, 'products', productId))
           if (productDoc.exists()) {
             const data = productDoc.data()
             setLikeCount(data.likeCount || 0)
           }
 
-          // URL 파라미터에서 cartItemId 확인 (장바구니에서 수정 버튼으로 들어온 경우)
           const cartItemId = searchParams.get('cartItemId')
 
           if (cartItemId && user) {
             try {
-              console.log('[ProductDetail] 장바구니 수정 모드:', cartItemId)
-
-              // Firestore에서 장바구니 아이템 조회
               const cartDocRef = doc(db, 'shoppingCart', cartItemId)
               const cartDocSnap = await getDoc(cartDocRef)
 
               if (cartDocSnap.exists()) {
                 const cartData = cartDocSnap.data()
-                console.log('[ProductDetail] Firestore에서 장바구니 데이터 로드:', cartData)
-
                 setEditingCartItemId(cartItemId)
 
                 if (cartData.items && Array.isArray(cartData.items)) {
-                  // Firestore 데이터를 ProductDetailPage의 CartItem 구조로 변환
                   const convertedItems = cartData.items.map((item: { options?: Record<string, string>; additionalOptions?: Record<string, string>; quantity: number }) => ({
                     options: item.options || {},
                     additionalOptions: item.additionalOptions,
@@ -381,29 +200,11 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
                   }))
                   setCartItems(convertedItems)
 
-                  // 첫 번째 아이템의 옵션 정보를 UI에 표시
                   const firstItem = cartData.items[0]
                   if (firstItem) {
-                    if (firstItem.options) {
-                      const optionsArray = Object.entries(firstItem.options).map(([groupName, optionName]) => ({
-                        groupName,
-                        optionName: optionName as string
-                      }))
-                      setSelectedOptions(optionsArray)
-                    }
-
-                    if (firstItem.additionalOptions) {
-                      const additionalOptionsArray = Object.entries(firstItem.additionalOptions).map(([groupName, optionName]) => ({
-                        groupName,
-                        optionName: optionName as string
-                      }))
-                      setSelectedAdditionalOptions(additionalOptionsArray)
-                    }
-
                     setQuantity(firstItem.quantity)
                   }
 
-                  // 배송 정보도 복원
                   if (cartData.deliveryMethod) {
                     setDeliveryMethod(cartData.deliveryMethod)
                   }
@@ -414,20 +215,15 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
                     setStoreRequest(cartData.request)
                   }
 
-                  // 수정 모드일 때 BottomModal 자동으로 열기
                   setIsModalOpen(true)
                 }
-              } else {
-                console.error('[ProductDetail] 장바구니 아이템을 찾을 수 없습니다:', cartItemId)
               }
             } catch (error) {
               console.error('[ProductDetail] 장바구니 데이터 로드 실패:', error)
             }
           } else {
-            // 새로운 주문 시작
             setQuantity(1)
 
-            // 옵션이 설정되지 않은 경우 자동으로 기본 상품 추가
             if (!productData.optionsEnabled) {
               const defaultItem: CartItem = {
                 options: {},
@@ -438,17 +234,14 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
             }
           }
 
-          // 배송방법 초기화 (첫 번째 배송방법 선택)
           if (productData.deliveryMethods && productData.deliveryMethods.length > 0) {
             setDeliveryMethod(productData.deliveryMethods[0])
           }
 
-          // deliveryFeeSettings의 첫 번째 결제 방식을 기본값으로 설정
           if (productData.deliveryFeeSettings?.paymentMethods && productData.deliveryFeeSettings.paymentMethods.length > 0) {
             setParcelPaymentMethod(productData.deliveryFeeSettings.paymentMethods[0])
           }
 
-          // Fetch store data
           if (productData.storeId) {
             const storeData = await fetchStore(productData.storeId)
             if (storeData) {
@@ -464,7 +257,7 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
     }
 
     loadProduct()
-  }, [productId])
+  }, [productId, searchParams, user, setLikeCount])
 
   useEffect(() => {
     const loadReviews = async () => {
@@ -483,110 +276,19 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
     }
   }, [productId])
 
-  const toggleOption = (groupName: string) => {
-    setExpandedOptions(prev => ({
-      ...prev,
-      [groupName]: !prev[groupName]
-    }))
-  }
-
-  const handleOptionSelect = (groupName: string, optionName: string) => {
-    setSelectedOptions(prev => {
-      // 같은 그룹의 기존 옵션을 제거하고 새로운 옵션으로 교체 (라디오 버튼처럼 동작)
-      const filteredOptions = prev.filter(opt => opt.groupName !== groupName)
-
-      // 이미 선택된 옵션인지 확인
-      const existingIndex = prev.findIndex(
-        opt => opt.groupName === groupName && opt.optionName === optionName
-      )
-
-      if (existingIndex !== -1) {
-        // 이미 선택되어 있으면 제거 (체크 해제)
-        return filteredOptions
-      } else {
-        // 선택되어 있지 않으면 추가 (같은 그룹의 다른 옵션은 제거됨)
-        return [...filteredOptions, { groupName, optionName }]
-      }
-    })
-  }
-
-  const handleAdditionalOptionSelect = (groupName: string, optionName: string) => {
-    setSelectedAdditionalOptions(prev => {
-      // 이미 선택된 옵션인지 확인
-      const existingIndex = prev.findIndex(
-        opt => opt.groupName === groupName && opt.optionName === optionName
-      )
-
-      if (existingIndex !== -1) {
-        // 이미 선택되어 있으면 제거 (체크 해제)
-        return prev.filter((_, index) => index !== existingIndex)
-      } else {
-        // 선택되어 있지 않으면 추가 (체크)
-        return [...prev, { groupName, optionName }]
-      }
-    })
-  }
-
-  const resetOptions = () => {
-    setSelectedOptions([])
-    setSelectedAdditionalOptions([])
-    setQuantity(1)
-    setCartItems([])
-  }
-
-  const addToCart = () => {
-    if (selectedOptions.length === 0) {
-      alert('옵션을 선택해주세요.')
-      return
-    }
-
-    // 선택된 모든 옵션을 하나의 객체로 묶기
-    const optionsObj: { [key: string]: string } = {}
-    selectedOptions.forEach(selectedOption => {
-      // 같은 그룹에 여러 옵션이 있으면 쉼표로 구분하여 저장
-      if (optionsObj[selectedOption.groupName]) {
-        optionsObj[selectedOption.groupName] += `, ${selectedOption.optionName}`
-      } else {
-        optionsObj[selectedOption.groupName] = selectedOption.optionName
-      }
-    })
-
-    // 선택된 추가상품 옵션을 객체로 묶기
-    const additionalOptionsObj: { [key: string]: string } = {}
-    selectedAdditionalOptions.forEach(selectedOption => {
-      if (additionalOptionsObj[selectedOption.groupName]) {
-        additionalOptionsObj[selectedOption.groupName] += `, ${selectedOption.optionName}`
-      } else {
-        additionalOptionsObj[selectedOption.groupName] = selectedOption.optionName
-      }
-    })
-
-    // 새로운 cartItem으로 추가 (초기 수량은 1)
-    setCartItems(prev => [...prev, {
-      options: optionsObj,
-      additionalOptions: Object.keys(additionalOptionsObj).length > 0 ? additionalOptionsObj : undefined,
-      quantity: 1
-    }])
-
-    setSelectedOptions([])
-    setSelectedAdditionalOptions([])
-  }
-
+  // 장바구니 아이템 수량 변경 핸들러
   const removeFromCart = (index: number) => {
     setCartItems(prev => prev.filter((_, i) => i !== index))
   }
 
   const updateCartQuantity = (index: number, newQuantity: number) => {
-    // 0 미만으로는 내려가지 않도록만 체크
     const validQuantity = Math.max(0, newQuantity)
-
     setCartItems(prev => prev.map((item, i) =>
       i === index ? { ...item, quantity: validQuantity } : item
     ))
   }
 
   const handleQuantityInputChange = (index: number, value: string) => {
-    // 빈 문자열이면 그냥 빈 값으로 설정 (사용자가 입력 중)
     if (value === '') {
       setCartItems(prev => prev.map((item, i) =>
         i === index ? { ...item, quantity: 0 } : item
@@ -596,276 +298,13 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
 
     const numValue = parseInt(value)
     if (!isNaN(numValue)) {
-      // 제한 없이 바로 설정 (blur 시 검증)
       setCartItems(prev => prev.map((item, i) =>
         i === index ? { ...item, quantity: numValue } : item
       ))
     }
   }
 
-  const saveToShoppingCart = async () => {
-    if (!product || cartItems.length === 0) return
-
-    if (!user) {
-      alert('로그인이 필요합니다.')
-      router.push('/login')
-      return
-    }
-
-    // 옵션 검증 - optionsEnabled가 true일 때만 검증
-    if (product.optionsEnabled) {
-      const hasEmptyOptions = cartItems.some(item => {
-        return !item.options || Object.keys(item.options).length === 0
-      })
-
-      if (hasEmptyOptions) {
-        alert('상품 옵션을 선택해주세요.')
-        return
-      }
-    }
-
-    // 전체 주문 수량 검증
-    const totalQuantity = cartItems.reduce((total, item) => total + item.quantity, 0)
-    const minQty = product.minOrderQuantity || 1
-    const maxQty = product.maxOrderQuantity || 999
-
-    if (totalQuantity < minQty) {
-      alert(`최소 주문 수량은 ${minQty}개입니다. (현재: ${totalQuantity}개)`)
-      return
-    }
-
-    if (totalQuantity > maxQty) {
-      alert(`최대 주문 수량은 ${maxQty}개입니다. (현재: ${totalQuantity}개)`)
-      return
-    }
-
-    try {
-      const totalPrice = calculateTotalPrice(product, cartItems)
-
-      // 주문하기와 동일한 구조로 items 생성
-      const orderItems = cartItems.map(item => {
-        const optionsWithPrices = createOptionsWithPrices(product, item.options)
-        const additionalOptionsWithPrices = item.additionalOptions
-          ? createAdditionalOptionsWithPrices(product, item.additionalOptions)
-          : undefined
-
-        const orderItem: Record<string, unknown> = {
-          productId: productId,
-          productName: product.name,
-          price: product.discountedPrice || product.price,
-          quantity: item.quantity,
-          options: item.options,
-          optionsWithPrices: optionsWithPrices,
-          itemPrice: calculateItemPrice(product, item.options, item.quantity, item.additionalOptions)
-        }
-
-        if (item.additionalOptions) {
-          orderItem.additionalOptions = item.additionalOptions
-        }
-        if (additionalOptionsWithPrices) {
-          orderItem.additionalOptionsWithPrices = additionalOptionsWithPrices
-        }
-
-        return orderItem
-      })
-
-      if (editingCartItemId) {
-        const cartDocRef = doc(db, 'shoppingCart', editingCartItemId)
-
-        // 기존 문서 데이터 가져오기
-        const existingDoc = await getDoc(cartDocRef)
-        const existingData = existingDoc.data()
-
-        const totalQuantity = cartItems.reduce((sum, item) => sum + item.quantity, 0)
-
-        await updateDoc(cartDocRef, {
-          items: orderItems,
-          totalProductPrice: totalPrice,
-          totalQuantity: totalQuantity,
-          deliveryMethod: deliveryMethod || existingData?.deliveryMethod || '',
-          request: storeRequest || existingData?.request || '',
-          updatedAt: new Date()
-        })
-
-        alert('장바구니가 수정되었습니다.')
-        setEditingCartItemId(null)
-      } else {
-        // 가게 정보 가져오기
-        const storeDoc = await getDoc(doc(db, 'stores', product.storeId))
-        const storeData = storeDoc.exists() ? storeDoc.data() : null
-
-        const totalQuantity = cartItems.reduce((sum, item) => sum + item.quantity, 0)
-
-        const baseCartData = {
-          uid: user.uid,
-          storeId: product.storeId,
-          storeName: storeData?.storeName || '',
-          productId: productId,
-          productName: product.name,
-          productImage: product.images?.[0] || '',
-          items: orderItems,
-          totalProductPrice: totalPrice,
-          totalQuantity: totalQuantity,
-          deliveryMethod: deliveryMethod || '',
-          request: storeRequest || '',
-          createdAt: new Date(),
-          updatedAt: new Date()
-        }
-
-        // 택배 배송일 때만 추가 필드 포함
-        const cartData = deliveryMethod === '택배 배송'
-          ? {
-              ...baseCartData,
-              ...(product.deliveryFeeSettings ? { deliveryFeeSettings: product.deliveryFeeSettings } : {}),
-              ...(parcelPaymentMethod ? { parcelPaymentMethod: parcelPaymentMethod } : {})
-            }
-          : baseCartData
-
-        await addDoc(collection(db, 'shoppingCart'), cartData)
-
-        alert('장바구니에 추가되었습니다.')
-      }
-
-      router.push('/cart')
-    } catch (error) {
-      console.error('장바구니 저장 실패:', error)
-      alert('장바구니 저장에 실패했습니다.')
-    }
-  }
-
-  const handleOrder = async () => {
-    if (!product || cartItems.length === 0) {
-      alert('상품을 선택해주세요.')
-      return
-    }
-
-    if (!user) {
-      alert('로그인이 필요합니다.')
-      router.push('/login')
-      return
-    }
-
-    if (!deliveryMethod) {
-      alert('배송방법을 선택해주세요.')
-      return
-    }
-
-    // 옵션 검증 - optionsEnabled가 true일 때만 검증
-    if (product.optionsEnabled) {
-      const hasEmptyOptions = cartItems.some(item => {
-        return !item.options || Object.keys(item.options).length === 0
-      })
-
-      if (hasEmptyOptions) {
-        alert('상품 옵션을 선택해주세요.')
-        return
-      }
-    }
-
-    // 전체 주문 수량 검증
-    const totalQuantity = cartItems.reduce((total, item) => total + item.quantity, 0)
-    const minQty = product.minOrderQuantity || 1
-    const maxQty = product.maxOrderQuantity || 999
-
-    if (totalQuantity < minQty) {
-      alert(`최소 주문 수량은 ${minQty}개입니다. (현재: ${totalQuantity}개)`)
-      return
-    }
-
-    if (totalQuantity > maxQty) {
-      alert(`최대 주문 수량은 ${maxQty}개입니다. (현재: ${totalQuantity}개)`)
-      return
-    }
-
-    try {
-      const totalPrice = calculateTotalPrice(product, cartItems)
-
-      // Firestore에 저장할 주문 항목 데이터
-      const orderItems = cartItems.map(item => {
-        const optionsWithPrices = createOptionsWithPrices(product, item.options)
-        const additionalOptionsWithPrices = item.additionalOptions
-          ? createAdditionalOptionsWithPrices(product, item.additionalOptions)
-          : undefined
-
-        const orderItem: Record<string, unknown> = {
-          productId: productId,
-          productName: product.name,
-          price: product.discountedPrice || product.price,
-          quantity: item.quantity,
-          options: item.options,
-          optionsWithPrices: optionsWithPrices,
-          itemPrice: calculateItemPrice(product, item.options, item.quantity, item.additionalOptions)
-        }
-
-        // undefined가 아닌 경우에만 필드 추가
-        if (item.additionalOptions) {
-          orderItem.additionalOptions = item.additionalOptions
-        }
-        if (additionalOptionsWithPrices) {
-          orderItem.additionalOptionsWithPrices = additionalOptionsWithPrices
-        }
-
-        return orderItem
-      })
-
-      // shoppingCart 컬렉션에 저장 (orders가 아닌 shoppingCart에 저장)
-      const baseOrderData = {
-        uid: user.uid,
-        productId: productId,
-        productName: product.name,
-        productImage: product.images?.[0] || '',
-        storeId: product.storeId,
-        storeName: store?.storeName || '',
-        items: orderItems,
-        totalProductPrice: totalPrice,
-        totalQuantity: totalQuantity,
-        deliveryMethod: deliveryMethod,
-        request: storeRequest,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      }
-
-      // 택배 배송일 때만 추가 필드 포함
-      const orderData = deliveryMethod === '택배 배송'
-        ? {
-            ...baseOrderData,
-            ...(product.deliveryFeeSettings ? { deliveryFeeSettings: product.deliveryFeeSettings } : {}),
-            ...(parcelPaymentMethod ? { parcelPaymentMethod: parcelPaymentMethod } : {})
-          }
-        : baseOrderData
-
-      let cartId: string
-
-      // 수정 모드일 때는 기존 장바구니 아이템 업데이트
-      if (editingCartItemId) {
-        console.log('[ProductDetail] 기존 장바구니 아이템 수정:', editingCartItemId)
-        const cartRef = doc(db, 'shoppingCart', editingCartItemId)
-
-        // 기존 문서에서 createdAt 가져오기
-        const existingDoc = await getDoc(cartRef)
-        const existingData = existingDoc.data()
-
-        await updateDoc(cartRef, {
-          ...orderData,
-          createdAt: existingData?.createdAt || new Date(), // 기존 createdAt 유지
-          updatedAt: new Date()
-        })
-        cartId = editingCartItemId
-      } else {
-        // 새로운 장바구니 아이템 추가
-        console.log('[ProductDetail] 새로운 장바구니 아이템 추가')
-        const cartDoc = await addDoc(collection(db, 'shoppingCart'), orderData)
-        cartId = cartDoc.id
-      }
-
-      // payments 페이지로 이동 (cartId를 전달)
-      router.push(`/payments?cartId=${cartId}`)
-    } catch (error) {
-      console.error('장바구니 저장 실패:', error)
-      alert('장바구니 저장에 실패했습니다.')
-    }
-  }
-
+  // 이미지/설명 핸들러
   const handlePrevImage = useCallback(() => {
     if (!product?.images) return
     setCurrentImageIndex((prev) => (prev === 0 ? product.images!.length - 1 : prev - 1))
@@ -880,6 +319,7 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
     setIsDescriptionExpanded(prev => !prev)
   }, [])
 
+  // 모달 드래그 핸들러
   const handleDragStart = (e: React.TouchEvent | React.MouseEvent) => {
     setIsDragging(true)
     const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY
@@ -928,14 +368,6 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
     }
   }, [isDragging, startY, startHeight, modalHeight])
 
-  const getItemPrice = (options: { [key: string]: string }, qty: number, additionalOptions?: { [key: string]: string }) => {
-    return calculateItemPrice(product, options, qty, additionalOptions)
-  }
-
-  const getTotalPrice = () => {
-    return calculateTotalPrice(product, cartItems)
-  }
-
   if (!product && !loading) {
     return (
       <div className={styles.container}>
@@ -974,7 +406,6 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
             />
           </div>
 
-          {/* 모바일 주문하기 버튼 */}
           {!isModalOpen && (
             <button
               className={styles.mobileOrderButton}
@@ -984,26 +415,19 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
             </button>
           )}
 
-          {/* 오른쪽 영역 - 상품 옵션 */}
           <BottomModal
             isOpen={isModalOpen}
             modalHeight={modalHeight}
             onClose={() => setIsModalOpen(false)}
             onDragStart={handleDragStart}
           >
-            {/* 옵션이 설정된 경우에만 OptionSelectSection 표시 */}
             {product.optionsEnabled && (
               <OptionSelectSection
                 product={product}
-                expandedOptions={expandedOptions}
-                selectedOptions={selectedOptions}
-                selectedAdditionalOptions={selectedAdditionalOptions}
-                onToggleOption={toggleOption}
-                onSelectOption={handleOptionSelect}
-                onSelectAdditionalOption={handleAdditionalOptionSelect}
-                onReset={resetOptions}
-                onAddToCart={addToCart}
-                hasCartItems={cartItems.length > 0}
+                quantity={quantity}
+                cartItems={cartItems}
+                onQuantityChange={setQuantity}
+                onCartItemsChange={setCartItems}
               />
             )}
 
@@ -1014,20 +438,21 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
             />
 
             <CartItemsSection
+              user={user}
+              productId={productId}
               product={product}
+              storeName={store?.storeName || ''}
               cartItems={cartItems}
               storeRequest={storeRequest}
               deliveryMethod={deliveryMethod}
               parcelPaymentMethod={parcelPaymentMethod}
+              editingCartItemId={editingCartItemId}
               onRemoveItem={removeFromCart}
               onUpdateQuantity={updateCartQuantity}
               onQuantityInputChange={handleQuantityInputChange}
               onStoreRequestChange={setStoreRequest}
-              onSaveToCart={saveToShoppingCart}
-              onOrder={handleOrder}
               onParcelPaymentMethodChange={setParcelPaymentMethod}
-              calculateItemPrice={getItemPrice}
-              calculateTotalPrice={getTotalPrice}
+              onEditingCartItemIdChange={setEditingCartItemId}
             />
           </BottomModal>
         </>
