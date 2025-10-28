@@ -1,0 +1,47 @@
+.section {
+  margin-bottom: 32px;
+}
+
+.sectionTitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.deliveryContainer {
+  border-radius: 20px;
+  border: 1px solid #F4F4F4;
+  padding: 16px;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.infoButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  margin-left: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.2s;
+}
+
+.infoButton:hover {
+  opacity: 0.7;
+}
+
+@media (max-width: 768px) {
+  .sectionTitle {
+    font-size: 16px;
+  }
+}

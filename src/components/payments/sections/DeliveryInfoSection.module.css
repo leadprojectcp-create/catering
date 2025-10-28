@@ -1,0 +1,100 @@
+.section {
+  margin-bottom: 32px;
+}
+
+.sectionTitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.addressButton {
+  padding: 8px 16px;
+  border-radius: 30px;
+  border: 1px solid #D9D9D9;
+  background: white;
+  color: #333;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.deliveryContainer {
+  border-radius: 20px;
+  border: 1px solid #F4F4F4;
+  padding: 16px;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.formRow {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 16px;
+}
+
+.label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  min-width: 60px;
+  flex-shrink: 0;
+}
+
+.input {
+  flex: 1;
+  padding: 12px;
+  border: 1px solid #E5E5E5;
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+}
+
+.input::placeholder {
+  color: #999;
+}
+
+.addressInputWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  flex: 1;
+}
+
+.addressInput {
+  width: 100%;
+  padding: 12px;
+  padding-right: 40px;
+  border: 1px solid #E5E5E5;
+  border-radius: 5px;
+  background: #FAFAFA;
+  font-size: 14px;
+  outline: none;
+  cursor: pointer;
+}
+
+.addressInput::placeholder {
+  color: #999;
+}
+
+.addressInputWrapper svg {
+  position: absolute;
+  right: 12px;
+  pointer-events: none;
+}
+
+@media (max-width: 768px) {
+  .sectionTitle {
+    font-size: 16px;
+  }
+}

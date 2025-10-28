@@ -1,0 +1,207 @@
+.section {
+  margin-bottom: 32px;
+}
+
+.sectionTitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.paymentContainer {
+  border-radius: 20px;
+  border: 1px solid #F4F4F4;
+  padding: 16px;
+  background: white;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.paymentRow {
+  display: flex;
+  justify-content: space-between;
+}
+
+.deliveryFeeInquiryButton {
+  display: inline-flex;
+  padding: 5px 10px;
+  justify-content: center;
+  align-items: center;
+  border-radius: 5px;
+  background: #F5F7F9;
+  border: none;
+  color: #025BD9;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.deliveryFeeInquiryButton:hover:not(:disabled) {
+  background: #E8ECF0;
+}
+
+.deliveryFeeInquiryButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.deliveryFeeNotice {
+  color: #EA4335;
+  font-size: 14px;
+  font-weight: 500;
+  margin-top: -4px;
+  padding-left: 0;
+}
+
+.paymentLabel {
+  min-width: 80px;
+  color: #707070;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.paymentValue {
+  color: #333;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.promotionValue {
+  color: #FF070B;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.paymentTotal {
+  display: flex;
+  justify-content: space-between;
+  font-size: 16px;
+  font-weight: 700;
+  color: #333;
+  margin-top: 16px;
+  padding-top: 16px;
+}
+
+.finalPrice {
+  color: #025BD9;
+  font-size: 20px;
+}
+
+.paymentRowPoint {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  align-items: flex-start;
+}
+
+.pointInputContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  margin-left: 8px;
+  align-items: flex-end;
+}
+
+.pointInputWithPrefix {
+  position: relative;
+  width: 100%;
+  max-width: 200px;
+}
+
+.pointPrefix {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #333;
+  font-size: 16px;
+  font-weight: 600;
+  pointer-events: none;
+}
+
+.pointInput {
+  width: 100%;
+  padding: 4px 16px 8px 35px;
+  border: 1px solid #E5E5E5;
+  border-radius: 8px;
+  color: #333;
+  font-size: 16px;
+  font-weight: 600;
+  text-align: right;
+}
+
+/* 숫자 입력 필드 화살표 제거 */
+.pointInput::-webkit-outer-spin-button,
+.pointInput::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.pointInput[type=number] {
+  -moz-appearance: textfield;
+}
+
+.pointBottomRow {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+}
+
+.pointInput:focus {
+  outline: none;
+  border-color: #025BD9;
+}
+
+.useAllButton {
+  padding: 4px 10px;
+  border-radius: 50px;
+  border: 1px solid #D9D9D9;
+  background: white;
+  color: #333;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.useAllButton:hover {
+  background: #F9F9F9;
+}
+
+.availablePoint {
+  font-size: 14px;
+  color: #333;
+  font-weight: 600;
+  text-align: right;
+}
+
+.paymentButton {
+  width: 100%;
+  padding: 16px;
+  border: none;
+  border-radius: 8px;
+  background: #025BD9;
+  font-size: 16px;
+  font-weight: 600;
+  color: white;
+  cursor: pointer;
+  margin-top: 16px;
+}
+
+.paymentButton:hover {
+  background: #0147a3;
+}
+
+@media (max-width: 768px) {
+  .sectionTitle {
+    font-size: 16px;
+  }
+}
