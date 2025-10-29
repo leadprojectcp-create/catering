@@ -6,6 +6,7 @@ import { getProduct, updateProduct } from '@/lib/services/productService'
 import { useAuth } from '@/contexts/AuthContext'
 import StoreInfoRequiredModal from './common/modals/StoreInfoRequiredModal'
 import OptionHelpModal from './common/modals/OptionHelpModal'
+import AdditionalProductHelpModal from './common/modals/AdditionalProductHelpModal'
 import EditImageUploadSection from './sections/EditImageUploadSection'
 import ProductNameSection from './sections/ProductNameSection'
 import ProductTypeSection from './sections/ProductTypeSection'
@@ -38,6 +39,7 @@ export default function EditProductPage({ productId }: { productId: string }) {
   const [showStoreInfoModal, setShowStoreInfoModal] = useState(false)
   const [missingInfo, setMissingInfo] = useState<string>('')
   const [showOptionHelpModal, setShowOptionHelpModal] = useState(false)
+  const [showAdditionalProductHelpModal, setShowAdditionalProductHelpModal] = useState(false)
   const [optionsEnabled, setOptionsEnabled] = useState(false)
   const [additionalOptionsEnabled, setAdditionalOptionsEnabled] = useState(false)
   const [deliveryFeeSettings, setDeliveryFeeSettings] = useState<DeliveryFeeSettings>({ type: '무료' })
@@ -518,7 +520,7 @@ export default function EditProductPage({ productId }: { productId: string }) {
         <AdditionalOptionSection
           options={formData.additionalOptions}
           onChange={(additionalOptions) => setFormData(prev => ({ ...prev, additionalOptions }))}
-          onShowHelpModal={() => setShowOptionHelpModal(true)}
+          onShowHelpModal={() => setShowAdditionalProductHelpModal(true)}
           enabled={additionalOptionsEnabled}
           onToggle={(enabled) => {
             setAdditionalOptionsEnabled(enabled)
@@ -598,6 +600,13 @@ export default function EditProductPage({ productId }: { productId: string }) {
       {showOptionHelpModal && (
         <OptionHelpModal
           onClose={() => setShowOptionHelpModal(false)}
+        />
+      )}
+
+      {/* 추가상품 설정 도움말 모달 */}
+      {showAdditionalProductHelpModal && (
+        <AdditionalProductHelpModal
+          onClose={() => setShowAdditionalProductHelpModal(false)}
         />
       )}
     </div>
