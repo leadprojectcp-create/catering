@@ -85,13 +85,34 @@ export default function OptionSelectSection({
       }
     })
 
-    const newItem: CartItem = {
-      options: optionsObj,
-      additionalOptions: Object.keys(additionalOptionsObj).length > 0 ? additionalOptionsObj : undefined,
-      quantity: quantity
+    // 필수 옵션이 없고 추가 옵션만 있는 경우
+    if (!product.optionsEnabled && product.additionalOptionsEnabled) {
+      // 첫 번째 담기: 기본 상품(첫 번째 항목)에 추가 옵션을 추가
+      if (cartItems.length === 1 && Object.keys(cartItems[0].options).length === 0 && !cartItems[0].additionalOptions) {
+        const updatedItem: CartItem = {
+          options: {},
+          additionalOptions: Object.keys(additionalOptionsObj).length > 0 ? additionalOptionsObj : undefined,
+          quantity: cartItems[0].quantity
+        }
+        onCartItemsChange([updatedItem])
+      } else {
+        // 두 번째부터: 새로운 상품 추가 (추가 담기)
+        const newItem: CartItem = {
+          options: {},
+          additionalOptions: Object.keys(additionalOptionsObj).length > 0 ? additionalOptionsObj : undefined,
+          quantity: quantity
+        }
+        onCartItemsChange([...cartItems, newItem])
+      }
+    } else {
+      // 필수 옵션이 있는 경우: 기존 로직
+      const newItem: CartItem = {
+        options: optionsObj,
+        additionalOptions: Object.keys(additionalOptionsObj).length > 0 ? additionalOptionsObj : undefined,
+        quantity: quantity
+      }
+      onCartItemsChange([...cartItems, newItem])
     }
-
-    onCartItemsChange([...cartItems, newItem])
 
     // 초기화
     setSelectedOptions([])
@@ -239,7 +260,14 @@ export default function OptionSelectSection({
           초기화
         </button>
         <button className={styles.addToCartButton} onClick={addToCart}>
-          {cartItems.length > 0 ? '추가 담기' : '담기'}
+          {/* 필수 옵션이 없고 추가 옵션만 있는 경우 */}
+          {!product.optionsEnabled && product.additionalOptionsEnabled ? (
+            // 첫 번째 기본 상품에 추가 옵션이 없으면 "담기", 있으면 "추가 담기"
+            (cartItems.length === 1 && !cartItems[0].additionalOptions) ? '담기' : '추가 담기'
+          ) : (
+            // 필수 옵션이 있는 경우: 기존 로직
+            cartItems.length > 0 ? '추가 담기' : '담기'
+          )}
         </button>
       </div>
     </div>

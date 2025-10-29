@@ -224,10 +224,20 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
           } else {
             setQuantity(1)
 
-            if (!productData.optionsEnabled) {
+            // 필수 옵션이 없고 추가 옵션만 있는 경우 기본 상품 1개를 담은 상태로 시작
+            if (!productData.optionsEnabled && productData.additionalOptionsEnabled) {
               const defaultItem: CartItem = {
                 options: {},
-                additionalOptions: {},
+                additionalOptions: undefined,
+                quantity: 1
+              }
+              setCartItems([defaultItem])
+            }
+            // 필수 옵션도 없고 추가 옵션도 없는 경우 (옵션이 아예 없는 상품)
+            else if (!productData.optionsEnabled && !productData.additionalOptionsEnabled) {
+              const defaultItem: CartItem = {
+                options: {},
+                additionalOptions: undefined,
                 quantity: 1
               }
               setCartItems([defaultItem])
@@ -421,7 +431,7 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
             onClose={() => setIsModalOpen(false)}
             onDragStart={handleDragStart}
           >
-            {product.optionsEnabled && (
+            {(product.optionsEnabled || product.additionalOptionsEnabled) && (
               <OptionSelectSection
                 product={product}
                 quantity={quantity}
