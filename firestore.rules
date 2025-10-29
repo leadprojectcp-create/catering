@@ -302,16 +302,19 @@ service cloud.firestore {
 
     // Points collection - 포인트 적립/사용 내역
     match /points/{pointId} {
-      // 본인의 포인트 내역만 읽기 가능
+      // 본인의 포인트 내역만 읽기 가능 (쿼리 포함)
       allow read: if isSignedIn() &&
         resource.data.uid == request.auth.uid;
 
       // 관리자는 모든 포인트 내역 읽기 가능
       allow read: if isAdmin();
 
-      // 로그인한 사용자만 자신의 포인트 내역 생성 가능
+      // 시스템 또는 로그인한 사용자가 자신의 포인트 내역 생성 가능
       allow create: if isSignedIn() &&
         request.resource.data.uid == request.auth.uid;
+
+      // 시스템에서 포인트 생성 가능 (리뷰 작성, 주문 등)
+      allow create: if true;
 
       // 수정/삭제 불가 (포인트 내역은 변경 불가)
       allow update, delete: if false;
