@@ -18,7 +18,7 @@ import PrintOrderSheet from './components/PrintOrderSheet'
 import styles from './OrderManagementPage.module.css'
 
 type FilterStatus = 'all' | 'pending' | 'cancelled_rejected' | 'preparing' | 'shipping' | 'completed'
-type DeliveryMethodFilter = 'all' | '퀵업체 배송' | '매장 픽업'
+type DeliveryMethodFilter = 'all' | '퀵업체 배송' | '택배 배송' | '매장 픽업'
 
 export default function OrderManagementPage() {
   const searchParams = useSearchParams()
@@ -37,10 +37,37 @@ export default function OrderManagementPage() {
   const [driverInfo, setDriverInfo] = useState<{ [orderId: string]: { rName: string; rMobile: string } }>({})
 
   useEffect(() => {
+    console.log('=== URL 파라미터 읽기 ===')
+    console.log('searchParams:', searchParams.toString())
+
     // URL 파라미터에서 filter 값 읽기
     const filterParam = searchParams.get('filter')
+    console.log('filterParam:', filterParam)
     if (filterParam && ['all', 'pending', 'cancelled_rejected', 'preparing', 'shipping', 'completed'].includes(filterParam)) {
       setFilter(filterParam as FilterStatus)
+    }
+
+    // URL 파라미터에서 배송 방법 필터 읽기
+    const deliveryParam = searchParams.get('delivery')
+    console.log('deliveryParam:', deliveryParam)
+    if (deliveryParam && ['all', '퀵업체 배송', '택배 배송', '매장 픽업'].includes(deliveryParam)) {
+      setDeliveryMethodFilter(deliveryParam as DeliveryMethodFilter)
+    }
+
+    // URL 파라미터에서 날짜 범위 읽기
+    const startDateParam = searchParams.get('startDate')
+    const endDateParam = searchParams.get('endDate')
+    console.log('날짜 파라미터:', { startDateParam, endDateParam })
+
+    if (startDateParam && endDateParam) {
+      const startDate = new Date(startDateParam)
+      const endDate = new Date(endDateParam)
+      console.log('날짜 파싱 결과:', { startDate, endDate })
+
+      setDateRange({
+        start: startDate,
+        end: endDate
+      })
     }
   }, [searchParams])
 
@@ -78,10 +105,50 @@ export default function OrderManagementPage() {
     return () => unsubscribe()
   }, [])
 
+  const updateURL = (updates: {
+    filter?: FilterStatus
+    delivery?: DeliveryMethodFilter
+    startDate?: Date | null
+    endDate?: Date | null
+  }) => {
+    const params = new URLSearchParams(searchParams.toString())
+
+    if (updates.filter !== undefined) {
+      params.set('filter', updates.filter)
+    }
+    if (updates.delivery !== undefined) {
+      params.set('delivery', updates.delivery)
+    }
+    if (updates.startDate !== undefined && updates.endDate !== undefined) {
+      if (updates.startDate && updates.endDate) {
+        params.set('startDate', updates.startDate.toISOString().split('T')[0])
+        params.set('endDate', updates.endDate.toISOString().split('T')[0])
+      } else {
+        params.delete('startDate')
+        params.delete('endDate')
+      }
+    }
+
+    router.push(`/partner/order/history?${params.toString()}`)
+  }
+
   const handleFilterChange = (newFilter: FilterStatus) => {
     setFilter(newFilter)
-    // URL 업데이트하여 새로고침 시에도 탭 유지
-    router.push(`/partner/order/history?filter=${newFilter}`)
+    updateURL({ filter: newFilter })
+  }
+
+  const handleDeliveryFilterChange = (newDelivery: DeliveryMethodFilter) => {
+    setDeliveryMethodFilter(newDelivery)
+    updateURL({ delivery: newDelivery })
+  }
+
+  const handleDateRangeChange = (range: { start: Date | null; end: Date | null }) => {
+    console.log('날짜 범위 변경:', {
+      start: range.start?.toLocaleDateString('ko-KR'),
+      end: range.end?.toLocaleDateString('ko-KR')
+    })
+    setDateRange(range)
+    updateURL({ startDate: range.start, endDate: range.end })
   }
 
   const getStatusLabel = (status: OrderStatus) => {
@@ -256,6 +323,10 @@ export default function OrderManagementPage() {
   }
 
   // Calculate filtered orders count for display
+  console.log('=== 필터링 시작 ===')
+  console.log('전체 주문 수:', orders.length)
+  console.log('날짜 범위:', dateRange)
+
   const filteredOrders = orders.filter(order => {
     // 결제 완료된 주문만 표시
     if (order.paymentStatus !== 'paid') {
@@ -276,10 +347,35 @@ export default function OrderManagementPage() {
       return false
     }
 
-    // 날짜 필터
+    // 날짜 필터 (주문 생성일 기준)
     if (dateRange.start && dateRange.end) {
-      const orderDate = new Date(order.deliveryDate)
-      if (orderDate < dateRange.start || orderDate > dateRange.end) {
+      if (!order.createdAt) {
+        console.log('주문에 createdAt이 없음:', order.orderNumber)
+        return true // createdAt이 없으면 필터링하지 않음
+      }
+
+      // createdAt이 Firestore Timestamp인 경우와 Date인 경우 모두 처리
+      let orderDate: Date
+      if (typeof order.createdAt === 'object' && 'toDate' in order.createdAt) {
+        orderDate = (order.createdAt as any).toDate()
+      } else {
+        orderDate = new Date(order.createdAt as any)
+      }
+
+      // 날짜만 비교 (시간 제외)
+      const orderDateOnly = new Date(orderDate.getFullYear(), orderDate.getMonth(), orderDate.getDate())
+      const startDateOnly = new Date(dateRange.start.getFullYear(), dateRange.start.getMonth(), dateRange.start.getDate())
+      const endDateOnly = new Date(dateRange.end.getFullYear(), dateRange.end.getMonth(), dateRange.end.getDate())
+
+      console.log('날짜 필터 비교:', {
+        orderNumber: order.orderNumber,
+        orderDateOnly: orderDateOnly.toLocaleDateString('ko-KR'),
+        startDateOnly: startDateOnly.toLocaleDateString('ko-KR'),
+        endDateOnly: endDateOnly.toLocaleDateString('ko-KR'),
+        isInRange: orderDateOnly >= startDateOnly && orderDateOnly <= endDateOnly
+      })
+
+      if (orderDateOnly < startDateOnly || orderDateOnly > endDateOnly) {
         return false
       }
     }
@@ -303,8 +399,8 @@ export default function OrderManagementPage() {
           <OrderFilterOptions
             deliveryMethodFilter={deliveryMethodFilter}
             dateRange={dateRange}
-            onDeliveryFilterChange={setDeliveryMethodFilter}
-            onDateRangeChange={setDateRange}
+            onDeliveryFilterChange={handleDeliveryFilterChange}
+            onDateRangeChange={handleDateRangeChange}
           />
         </div>
       </div>

@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { ChevronDown, Calendar } from 'lucide-react'
 import styles from './OrderFilterOptions.module.css'
 
-type DeliveryMethodFilter = 'all' | '퀵업체 배송' | '매장 픽업'
+type DeliveryMethodFilter = 'all' | '퀵업체 배송' | '택배 배송' | '매장 픽업'
 
 interface OrderFilterOptionsProps {
   deliveryMethodFilter: DeliveryMethodFilter
@@ -38,14 +38,18 @@ export default function OrderFilterOptions({
 
   const handleDateClick = (date: Date) => {
     if (selectingStart) {
+      console.log('시작일 선택:', date.toLocaleDateString('ko-KR'))
       onDateRangeChange({ start: date, end: null })
       setSelectingStart(false)
     } else {
       if (dateRange.start && date >= dateRange.start) {
+        console.log('종료일 선택:', date.toLocaleDateString('ko-KR'))
+        console.log('날짜 범위:', dateRange.start.toLocaleDateString('ko-KR'), '~', date.toLocaleDateString('ko-KR'))
         onDateRangeChange({ ...dateRange, end: date })
         setShowDatePicker(false)
         setSelectingStart(true)
       } else {
+        console.log('종료일이 시작일보다 이전입니다. 시작일 재설정:', date.toLocaleDateString('ko-KR'))
         onDateRangeChange({ start: date, end: null })
       }
     }
@@ -147,6 +151,15 @@ export default function OrderFilterOptions({
               }}
             >
               퀵업체 배송
+            </div>
+            <div
+              className={styles.dropdownItem}
+              onClick={() => {
+                onDeliveryFilterChange('택배 배송')
+                setShowDeliveryDropdown(false)
+              }}
+            >
+              택배 배송
             </div>
             <div
               className={styles.dropdownItem}

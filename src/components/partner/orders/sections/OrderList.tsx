@@ -5,7 +5,7 @@ import OrderCard from './OrderCard'
 import styles from './OrderList.module.css'
 
 type FilterStatus = 'all' | 'pending' | 'cancelled_rejected' | 'preparing' | 'shipping' | 'completed'
-type DeliveryMethodFilter = 'all' | '퀵업체 배송' | '매장 픽업'
+type DeliveryMethodFilter = 'all' | '퀵업체 배송' | '택배 배송' | '매장 픽업'
 
 interface OrderListProps {
   orders: Order[]
