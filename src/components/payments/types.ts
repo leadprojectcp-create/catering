@@ -8,6 +8,14 @@ export interface OrderItem {
   itemPrice?: number
 }
 
+export interface DeliveryFeeSettings {
+  type: '무료' | '유료' | '조건부 무료' | '수량별'
+  baseFee?: number
+  freeCondition?: number
+  perQuantity?: number
+  paymentMethods?: ('선결제' | '착불')[]
+}
+
 export interface OrderData {
   storeId: string
   storeName: string
@@ -26,6 +34,7 @@ export interface OrderData {
   totalPrice?: number
   storeRequest?: string
   minOrderDays?: number
+  deliveryFeeSettings?: DeliveryFeeSettings
 }
 
 export interface DeliveryAddress {

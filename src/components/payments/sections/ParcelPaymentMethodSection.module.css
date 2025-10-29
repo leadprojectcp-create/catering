@@ -1,0 +1,82 @@
+.parcelPaymentContainer {
+  margin-bottom: 32px;
+}
+
+.titleRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.parcelPaymentTitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 0;
+}
+
+.feeConditionNotice {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #707070;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.paymentMethodContainer {
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
+}
+
+.paymentMethodBox {
+  flex: 1;
+  padding: 16px;
+  border-radius: 12px;
+  border: 2px solid #E0E0E0;
+  background: white;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.paymentMethodBoxSelected {
+  border: 2px solid #025BD9;
+  background: #F5F9FF;
+}
+
+.paymentMethodContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.paymentMethodName {
+  color: #333;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: normal;
+}
+
+.paymentMethodDescription {
+  color: #666;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: normal;
+}
+
+@media (max-width: 768px) {
+  .parcelPaymentHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .paymentMethodContainer {
+    flex-direction: column;
+  }
+}

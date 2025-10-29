@@ -8,12 +8,14 @@ import { db } from '@/lib/firebase'
 import { useAuth } from '@/contexts/AuthContext'
 import Loading from '@/components/Loading'
 import DeliveryInfoSection from './sections/DeliveryInfoSection'
+import DeliveryMethodSection from './sections/DeliveryMethodSection'
+import ParcelPaymentMethodSection from './sections/ParcelPaymentMethodSection'
 import OrderProductSection from './sections/OrderProductSection'
 import PickupRecipientSection from './sections/PickupRecipientSection'
 import PickupDateTimeSection from './sections/PickupDateTimeSection'
 import DeliveryDateTimeSection from './sections/DeliveryDateTimeSection'
 import DeliveryRequestSection from './sections/DeliveryRequestSection'
-import PaymentSummarySection from './sections/PaymentSummarySection'
+import PaymentSummarySection, { usePaymentSummary } from './sections/PaymentSummarySection'
 import AgreementsSection from './sections/AgreementsSection'
 import { OrderData, DeliveryAddress } from './types'
 import PrivacyPolicy from '@/components/terms/PrivacyPolicy'
@@ -152,7 +154,8 @@ export default function PaymentsPage() {
           totalPrice: orderDocData.totalProductPrice,
           storeRequest: orderDocData.request || '',
           deliveryMethods: deliveryMethods,
-          minOrderDays: minOrderDays
+          minOrderDays: minOrderDays,
+          deliveryFeeSettings: deliveryFeeSettings || undefined
         }
 
         setOrderData(data)
@@ -265,6 +268,30 @@ export default function PaymentsPage() {
     loadData()
   }, [user, searchParams, router])
 
+  // usePaymentSummary hook 사용
+  const { handlePayment, totalPrice: calculatedTotalPrice } = usePaymentSummary({
+    user,
+    deliveryMethod,
+    deliveryFeeFromAPI,
+    usePoint,
+    availablePoint,
+    parcelPaymentMethod,
+    deliveryFeeSettings,
+    orderData,
+    orderInfo,
+    recipient,
+    addressName,
+    deliveryRequest,
+    detailedRequest,
+    entranceCode,
+    agreements,
+    orderId,
+    searchParams,
+    onUsePointChange: setUsePoint,
+    onDeliveryFeeFromAPIChange: setDeliveryFeeFromAPI,
+    onProcessingChange: setIsProcessing
+  })
+
   // 주소 검색 핸들러
   // 다음 Postcode API 로드 핸들러
   const handlePostcodeLoad = () => {
@@ -283,7 +310,28 @@ export default function PaymentsPage() {
       />
       <div className={styles.container}>
         {/* 주문상품 */}
-        <OrderProductSection orderData={orderData} />
+        <OrderProductSection
+          orderData={orderData}
+          orderId={orderId}
+          isCartMode={!!searchParams.get('cartId')}
+        />
+
+        {/* 배송방법 선택 */}
+        <DeliveryMethodSection
+          deliveryMethods={orderData?.deliveryMethods}
+          selectedMethod={deliveryMethod}
+          onMethodChange={setDeliveryMethod}
+        />
+
+        {/* 택배 배송 - 배송비 결제 방식 */}
+        {deliveryMethod === '택배 배송' && deliveryFeeSettings && (
+          <ParcelPaymentMethodSection
+            deliveryFeeSettings={deliveryFeeSettings}
+            parcelPaymentMethod={parcelPaymentMethod}
+            totalPrice={orderData?.items.reduce((sum, item) => sum + ((item.price || 0) * item.quantity), 0) || 0}
+            onMethodChange={setParcelPaymentMethod}
+          />
+        )}
 
         {/* 매장 픽업 - 수령인 정보 */}
         {deliveryMethod === '매장 픽업' && (
@@ -385,7 +433,14 @@ export default function PaymentsPage() {
           onShowTermsModal={setShowTermsModal}
         />
 
-        {/* 약관 동의만 표시 (결제 버튼은 PaymentSummarySection에 있음) */}
+        {/* 결제하기 버튼 */}
+        <button
+          type="button"
+          onClick={handlePayment}
+          className={styles.paymentButton}
+        >
+          {calculatedTotalPrice.toLocaleString()}원 결제하기
+        </button>
       </div>
 
       {/* 배송 날짜 정보 모달 */}

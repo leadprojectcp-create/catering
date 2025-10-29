@@ -41,6 +41,7 @@ interface PaymentSummarySectionProps {
   onUsePointChange: (point: number) => void
   onDeliveryFeeFromAPIChange: (fee: number | null) => void
   onProcessingChange: (isProcessing: boolean) => void
+  onPayment?: () => Promise<void>
 }
 
 export default function PaymentSummarySection({
@@ -63,7 +64,8 @@ export default function PaymentSummarySection({
   searchParams,
   onUsePointChange,
   onDeliveryFeeFromAPIChange,
-  onProcessingChange
+  onProcessingChange,
+  onPayment
 }: PaymentSummarySectionProps) {
   const router = useRouter()
   const [isLoadingDeliveryFee, setIsLoadingDeliveryFee] = useState(false)
@@ -629,13 +631,330 @@ export default function PaymentSummarySection({
           <span className={styles.finalPrice}>{totalPrice.toLocaleString()}원</span>
         </div>
       </div>
-      <button
-        type="button"
-        onClick={handlePayment}
-        className={styles.paymentButton}
-      >
-        {totalPrice.toLocaleString()}원 결제하기
-      </button>
     </section>
   )
+}
+
+// PaymentSummarySection의 return에서 제외하고 handlePayment와 totalPrice를 노출
+export type { PaymentSummarySectionProps }
+export const usePaymentSummary = (props: Omit<PaymentSummarySectionProps, 'onPayment'>) => {
+  const router = useRouter()
+  const {
+    user, deliveryMethod, deliveryFeeFromAPI, usePoint, parcelPaymentMethod,
+    deliveryFeeSettings, orderData, orderInfo, recipient, addressName,
+    deliveryRequest, detailedRequest, entranceCode, agreements, orderId,
+    searchParams, onProcessingChange
+  } = props
+
+  const totalProductPrice = orderData
+    ? orderData.items.reduce((sum, item) => {
+        return sum + (item.itemPrice || (orderData.productPrice * item.quantity))
+      }, 0)
+    : 0
+
+  const totalQuantity = orderData
+    ? orderData.items.reduce((sum, item) => sum + item.quantity, 0)
+    : 0
+
+  const deliveryFee = deliveryMethod === '퀵업체 배송'
+    ? (deliveryFeeFromAPI || 0)
+    : deliveryMethod === '택배 배송' && deliveryFeeSettings
+    ? (() => {
+        if (deliveryFeeSettings.type === '무료') return 0
+        if (deliveryFeeSettings.type === '조건부 무료') {
+          return totalProductPrice >= (deliveryFeeSettings.freeCondition || 0) ? 0 : (deliveryFeeSettings.baseFee || 0)
+        }
+        if (deliveryFeeSettings.type === '수량별') {
+          return (deliveryFeeSettings.baseFee || 0) * totalQuantity
+        }
+        return deliveryFeeSettings.baseFee || 0
+      })()
+    : 0
+
+  const totalPrice = totalProductPrice + deliveryFee - usePoint
+
+  const handlePayment = async () => {
+    // [handlePayment 함수 내용 유지 - 너무 길어서 생략]
+    if (!user) {
+      alert('로그인이 필요합니다.')
+      router.push('/auth/login')
+      return
+    }
+
+    if (!orderData) {
+      alert('주문 정보가 없습니다.')
+      return
+    }
+
+    if (!orderInfo.orderer.trim()) {
+      alert('주문자 이름을 입력해주세요.')
+      return
+    }
+
+    if (!orderInfo.phone.trim()) {
+      alert('연락처를 입력해주세요.')
+      return
+    }
+
+    let userEmail = orderInfo.email
+    if (!userEmail || !userEmail.trim()) {
+      if (user) {
+        const userDocRef = doc(db, 'users', user.uid)
+        const userDoc = await getDoc(userDocRef)
+        if (userDoc.exists()) {
+          userEmail = userDoc.data().email || ''
+        }
+      }
+    }
+
+    if (!userEmail || !userEmail.trim()) {
+      alert('이메일 정보를 찾을 수 없습니다. 프로필에서 이메일을 등록해주세요.')
+      return
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(userEmail)) {
+      alert(`등록된 이메일 형식이 올바르지 않습니다: ${userEmail}\n프로필에서 올바른 이메일로 변경해주세요.`)
+      return
+    }
+
+    console.log('=== 이메일 검증 완료 ===')
+    console.log('사용할 이메일:', userEmail)
+
+    if (deliveryMethod === '퀵업체 배송') {
+      if (!orderInfo.address.trim()) {
+        alert('주소를 입력해주세요.')
+        return
+      }
+    }
+
+    if (!recipient.trim()) {
+      alert('수령인 이름을 입력해주세요.')
+      return
+    }
+
+    if (!orderInfo.deliveryDate) {
+      alert('배송 날짜를 선택해주세요.')
+      return
+    }
+
+    if (deliveryMethod !== '택배 배송' && !orderInfo.deliveryTime) {
+      alert('배송 시간을 선택해주세요.')
+      return
+    }
+
+    if (!agreements.privacy || !agreements.terms || !agreements.refund || !agreements.marketing) {
+      alert('필수 약관에 모두 동의해주세요.')
+      return
+    }
+
+    try {
+      onProcessingChange(true)
+
+      if (!orderId) {
+        alert('주문 정보가 없습니다.')
+        return
+      }
+
+      const cartIdParam = searchParams.get('cartId')
+      let finalOrderId = orderId
+
+      if (cartIdParam) {
+        const cartDocRef = doc(db, 'shoppingCart', cartIdParam)
+        const cartDocSnap = await getDoc(cartDocRef)
+
+        if (!cartDocSnap.exists()) {
+          alert('장바구니 정보를 찾을 수 없습니다.')
+          return
+        }
+
+        const cartData = cartDocSnap.data()
+
+        const newOrderData = {
+          uid: cartData.uid,
+          productId: cartData.productId,
+          storeId: cartData.storeId,
+          storeName: cartData.storeName,
+          items: cartData.items,
+          totalProductPrice: cartData.totalProductPrice,
+          totalQuantity: cartData.totalQuantity,
+          deliveryMethod: cartData.deliveryMethod,
+          request: cartData.request,
+          createdAt: cartData.createdAt || new Date(),
+          updatedAt: new Date()
+        }
+
+        const newOrderRef = await addDoc(collection(db, 'orders'), newOrderData)
+        finalOrderId = newOrderRef.id
+        console.log('shoppingCart에서 orders로 이동 완료:', finalOrderId)
+      }
+
+      const storeDoc = await getDoc(doc(db, 'stores', orderData.storeId))
+      const storeData = storeDoc.exists() ? storeDoc.data() : null
+
+      const orderDocRef = doc(db, 'orders', finalOrderId)
+      const orderDocSnap = await getDoc(orderDocRef)
+
+      if (!orderDocSnap.exists()) {
+        alert('주문 정보를 찾을 수 없습니다.')
+        return
+      }
+
+      const orderNumber = `ORD${Date.now()}`
+
+      await updateDoc(orderDocRef, {
+        partnerId: storeData?.partnerId,
+        partnerPhone: storeData?.phone,
+        storeName: storeData?.storeName,
+        totalPrice: totalPrice,
+        totalProductPrice: totalProductPrice,
+        deliveryFee: deliveryFee,
+        deliveryMethod: deliveryMethod,
+        usedPoint: usePoint,
+        deliveryInfo: {
+          addressName: addressName,
+          deliveryDate: orderInfo.deliveryDate,
+          deliveryTime: orderInfo.deliveryTime,
+          address: orderInfo.address,
+          detailAddress: orderInfo.detailAddress,
+          zipCode: orderInfo.zipCode || '',
+          entrancePassword: entranceCode || '',
+          recipient: recipient,
+          recipientPhone: orderInfo.phone,
+          deliveryRequest: deliveryRequest,
+          detailedRequest: detailedRequest,
+        },
+        orderer: orderInfo.orderer,
+        phone: orderInfo.phone,
+        orderNumber: orderNumber,
+        orderStatus: 'pending',
+        paymentStatus: 'unpaid',
+        updatedAt: new Date()
+      })
+
+      console.log('주문 업데이트 완료:', finalOrderId, orderNumber)
+
+      const paymentResult = await requestPayment({
+        orderName: `${orderData.productName} ${orderData.items.length > 1 ? `외 ${orderData.items.length - 1}건` : ''}`,
+        amount: totalPrice,
+        orderId: finalOrderId,
+        customerName: orderInfo.orderer,
+        customerEmail: userEmail,
+        customerPhoneNumber: orderInfo.phone,
+      })
+
+      if (!paymentResult.success) {
+        alert(`결제에 실패했습니다.\n${paymentResult.errorMessage || '알 수 없는 오류'}`)
+        return
+      }
+
+      console.log('결제 검증 시작:', paymentResult.paymentId)
+      const verifyResponse = await fetch('/api/payments/verify', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ paymentId: paymentResult.paymentId }),
+      })
+
+      const verifyData = await verifyResponse.json()
+      console.log('결제 검증 결과:', verifyData)
+
+      if (!verifyData.verified) {
+        alert('결제 검증에 실패했습니다. 고객센터에 문의해주세요.')
+        return
+      }
+
+      const orderRef = doc(db, 'orders', finalOrderId)
+      await setDoc(orderRef, {
+        paymentStatus: 'paid',
+        paymentId: paymentResult.paymentId,
+        paidAt: new Date(),
+        verifiedAt: new Date()
+      }, { merge: true })
+
+      if ((deliveryMethod === '퀵업체 배송' || deliveryMethod === '택배 배송') && orderInfo.address.trim() && addressName.trim()) {
+        try {
+          const userRef = doc(db, 'users', user.uid)
+          const userDoc = await getDoc(userRef)
+
+          if (userDoc.exists()) {
+            const userData = userDoc.data()
+            const existingAddresses = userData.deliveryAddresses || []
+
+            const isDuplicate = existingAddresses.some((addr: DeliveryAddress) =>
+              addr.address === orderInfo.address &&
+              addr.detailAddress === orderInfo.detailAddress
+            )
+
+            if (!isDuplicate) {
+              const newAddress = {
+                name: addressName,
+                orderer: recipient,
+                phone: orderInfo.phone,
+                email: userEmail,
+                address: orderInfo.address,
+                detailAddress: orderInfo.detailAddress,
+                zipCode: orderInfo.zipCode || ''
+              }
+
+              await updateDoc(userRef, {
+                deliveryAddresses: [...existingAddresses, newAddress]
+              })
+
+              console.log('배송지 저장 완료:', newAddress)
+            }
+          }
+        } catch (addressError) {
+          console.error('배송지 저장 실패:', addressError)
+        }
+      }
+
+      if (usePoint > 0 && user) {
+        try {
+          const userRef = doc(db, 'users', user.uid)
+          await updateDoc(userRef, {
+            point: increment(-usePoint)
+          })
+
+          await addDoc(collection(db, 'points'), {
+            uid: user.uid,
+            amount: -usePoint,
+            type: 'used',
+            reason: '주문 결제 시 포인트 사용',
+            orderId: finalOrderId,
+            productId: orderData?.productId || '',
+            productName: orderData?.productName || '',
+            createdAt: serverTimestamp()
+          })
+
+          console.log('포인트 사용 처리 완료:', usePoint)
+        } catch (pointError) {
+          console.error('포인트 사용 처리 실패:', pointError)
+        }
+      }
+
+      if (cartIdParam) {
+        try {
+          const cartDocRef = doc(db, 'shoppingCart', cartIdParam)
+          await deleteDoc(cartDocRef)
+          console.log('장바구니 삭제 완료:', cartIdParam)
+        } catch (cartDeleteError) {
+          console.error('장바구니 삭제 실패:', cartDeleteError)
+        }
+      }
+
+      sessionStorage.removeItem('orderData')
+
+      alert(`결제가 완료되었습니다!\n주문번호: ${orderNumber}`)
+      router.push('/orders')
+    } catch (error) {
+      console.error('주문 생성 실패:', error)
+      alert('주문 생성에 실패했습니다. 다시 시도해주세요.')
+    } finally {
+      onProcessingChange(false)
+    }
+  }
+
+  return { handlePayment, totalPrice }
 }

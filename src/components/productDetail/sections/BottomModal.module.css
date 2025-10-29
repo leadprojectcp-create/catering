@@ -14,6 +14,14 @@
   z-index: 1001;
   transition: transform 0.3s ease;
   max-height: 95vh;
+  /* 스크롤바 숨기기 */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+/* 스크롤바 숨기기 - Webkit 브라우저 (Chrome, Safari) */
+.bottomModal::-webkit-scrollbar {
+  display: none;
 }
 
 .bottomModal.open {

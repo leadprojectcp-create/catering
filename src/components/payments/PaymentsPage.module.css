@@ -1,6 +1,23 @@
 .container {
-  max-width: 600px;
+  max-width: 800px;
   margin: 0 auto;
+}
+
+.paymentButton {
+  width: 100%;
+  padding: 16px;
+  border: none;
+  border-radius: 8px;
+  background: #025BD9;
+  font-size: 16px;
+  font-weight: 600;
+  color: white;
+  cursor: pointer;
+  margin-top: 16px;
+}
+
+.paymentButton:hover {
+  background: #0147a3;
 }
 
 /* 정보 모달 */

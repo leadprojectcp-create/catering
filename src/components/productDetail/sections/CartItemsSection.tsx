@@ -18,6 +18,7 @@ interface CartItemsSectionProps {
   deliveryMethod: string
   parcelPaymentMethod?: '선결제' | '착불'
   editingCartItemId: string | null
+  isEditingOrder?: boolean
   onRemoveItem: (index: number) => void
   onUpdateQuantity: (index: number, newQuantity: number) => void
   onQuantityInputChange: (index: number, value: string) => void
@@ -139,6 +140,7 @@ export default function CartItemsSection({
   deliveryMethod,
   parcelPaymentMethod,
   editingCartItemId,
+  isEditingOrder = false,
   onRemoveItem,
   onUpdateQuantity,
   onQuantityInputChange,
@@ -222,22 +224,37 @@ export default function CartItemsSection({
       })
 
       if (editingCartItemId) {
-        const cartDocRef = doc(db, 'shoppingCart', editingCartItemId)
-        const existingDoc = await getDoc(cartDocRef)
+        const collectionName = isEditingOrder ? 'orders' : 'shoppingCart'
+        const docRef = doc(db, collectionName, editingCartItemId)
+        const existingDoc = await getDoc(docRef)
         const existingData = existingDoc.data()
 
         const totalQuantity = cartItems.reduce((sum, item) => sum + item.quantity, 0)
 
-        await updateDoc(cartDocRef, {
+        const updateData: any = {
           items: orderItems,
           totalProductPrice: totalPrice,
           totalQuantity: totalQuantity,
           deliveryMethod: deliveryMethod || existingData?.deliveryMethod || '',
           request: storeRequest || existingData?.request || '',
           updatedAt: new Date()
-        })
+        }
 
-        alert('장바구니가 수정되었습니다.')
+        // 택배 배송인 경우 parcelPaymentMethod 추가
+        if (deliveryMethod === '택배 배송' && parcelPaymentMethod) {
+          updateData.parcelPaymentMethod = parcelPaymentMethod
+        }
+
+        await updateDoc(docRef, updateData)
+
+        if (isEditingOrder) {
+          alert('주문이 수정되었습니다.')
+          // orders인 경우 payments 페이지로 돌아가기 (새로고침하여 데이터 다시 로드)
+          window.location.href = `/payments?orderId=${editingCartItemId}`
+        } else {
+          alert('장바구니가 수정되었습니다.')
+          router.push('/cart')
+        }
         onEditingCartItemIdChange(null)
       } else {
         const storeDoc = await getDoc(doc(db, 'stores', product.storeId))
@@ -272,9 +289,8 @@ export default function CartItemsSection({
         await addDoc(collection(db, 'shoppingCart'), cartData)
 
         alert('장바구니에 추가되었습니다.')
+        router.push('/cart')
       }
-
-      router.push('/cart')
     } catch (error) {
       console.error('장바구니 저장 실패:', error)
       alert('장바구니 저장에 실패했습니다.')
@@ -539,62 +555,6 @@ export default function CartItemsSection({
           </div>
         </div>
       </div>
-
-      {/* 택배 배송 결제 방식 */}
-      {deliveryMethod === '택배 배송' && product.deliveryFeeSettings && product.deliveryFeeSettings.paymentMethods && product.deliveryFeeSettings.paymentMethods.length > 0 && (
-        <div className={styles.parcelPaymentContainer}>
-          <div className={styles.parcelPaymentHeader}>
-            <h3 className={styles.parcelPaymentTitle}>배송비 결제 방식</h3>
-            {product.deliveryFeeSettings.type === '조건부 무료' && (
-              <div className={styles.feeConditionNotice}>
-                <OptimizedImage src="/icons/delivery.svg" alt="배송" width={16} height={16} />
-                <span>
-                  {calculateTotalPrice() >= (product.deliveryFeeSettings.freeCondition || 0)
-                    ? `${product.deliveryFeeSettings.freeCondition?.toLocaleString()}원 이상 구매로 배송비 무료!`
-                    : `${product.deliveryFeeSettings.freeCondition?.toLocaleString()}원 이상 구매 시 배송비 무료`}
-                </span>
-              </div>
-            )}
-            {product.deliveryFeeSettings.type === '수량별' && (
-              <div className={styles.feeConditionNotice}>
-                <OptimizedImage src="/icons/delivery.svg" alt="배송" width={16} height={16} />
-                <span>
-                  상품 {product.deliveryFeeSettings.perQuantity}개당, 배송비 {(product.deliveryFeeSettings.baseFee || 0).toLocaleString()}원
-                </span>
-              </div>
-            )}
-          </div>
-          {!(product.deliveryFeeSettings.type === '조건부 무료' && calculateTotalPrice() >= (product.deliveryFeeSettings.freeCondition || 0)) && (
-            <div className={styles.paymentMethodContainer}>
-              {product.deliveryFeeSettings.paymentMethods.map((method) => {
-                const getPaymentDescription = (paymentMethod: string): string => {
-                  switch (paymentMethod) {
-                    case '선결제':
-                      return '카드결제 시 상품금액과 함께 결제됩니다.'
-                    case '착불':
-                      return '상품 수령 후 기사님께 배송비를 결제해주세요.'
-                    default:
-                      return ''
-                  }
-                }
-
-                return (
-                  <div
-                    key={method}
-                    className={`${styles.paymentMethodBox} ${parcelPaymentMethod === method ? styles.paymentMethodBoxSelected : ''}`}
-                    onClick={() => onParcelPaymentMethodChange?.(method)}
-                  >
-                    <div className={styles.paymentMethodContent}>
-                      <span className={styles.paymentMethodName}>{method}</span>
-                      <div className={styles.paymentMethodDescription}>{getPaymentDescription(method)}</div>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          )}
-        </div>
-      )}
 
       {/* 결제 정보 */}
       <div className={styles.paymentSection}>

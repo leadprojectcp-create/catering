@@ -24,7 +24,16 @@ export default function DateTimePicker({
 }: DateTimePickerProps) {
   const [showDatePicker, setShowDatePicker] = useState(false)
   const [showTimePicker, setShowTimePicker] = useState(false)
-  const [currentMonth, setCurrentMonth] = useState(new Date())
+
+  // 선택 가능한 최소 날짜를 계산하여 초기 달력 표시
+  const getInitialMonth = () => {
+    const today = new Date()
+    const minDate = new Date(today)
+    minDate.setDate(minDate.getDate() + minOrderDays)
+    return minDate
+  }
+
+  const [currentMonth, setCurrentMonth] = useState(getInitialMonth())
   const [pickerValue, setPickerValue] = useState({
     hour: '00',
     minute: '00'
