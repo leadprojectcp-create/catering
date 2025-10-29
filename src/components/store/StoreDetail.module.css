@@ -105,6 +105,9 @@
 .infoSection {
   flex: 1;
   padding: 0;
+  min-width: 0;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .header {
@@ -247,6 +250,9 @@
   font-weight: 600;
   color: #333;
   text-decoration: none;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  flex: 1;
 }
 
 .detailValueColumn {

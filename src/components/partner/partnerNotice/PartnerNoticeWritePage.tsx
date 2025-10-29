@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createNotice } from '@/lib/services/partnerNoticeService'
 import { useAuth } from '@/contexts/AuthContext'
-import CustomEditor from '@/components/common/CustomEditor'
 import Loading from '@/components/Loading'
 import styles from './PartnerNoticeWritePage.module.css'
 
@@ -18,6 +17,19 @@ export default function NoticeWritePage() {
     status: 'draft' as 'draft' | 'published',
     isVisible: true
   })
+
+  // HTML 태그 제거 함수
+  const removeHtmlTags = (text: string) => {
+    return text.replace(/<[^>]*>/g, '')
+  }
+
+  // 내용 변경 핸들러
+  const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newValue = e.target.value
+    // HTML 태그가 포함되어 있으면 제거
+    const cleanValue = removeHtmlTags(newValue)
+    setFormData(prev => ({ ...prev, content: cleanValue }))
+  }
 
   const handleSubmit = async (status: 'draft' | 'published') => {
     if (!formData.title || !formData.content) {
@@ -75,14 +87,13 @@ export default function NoticeWritePage() {
 
         <div className={styles.formGroup}>
           <label className={styles.label}>내용</label>
-          <div className={styles.editorWrapper}>
-            <CustomEditor
-              value={formData.content}
-              onChange={(value) => setFormData(prev => ({ ...prev, content: value }))}
-              placeholder="공지사항 내용을 입력하세요"
-              uploadType="partnernotice"
-            />
-          </div>
+          <textarea
+            className={styles.textarea}
+            value={formData.content}
+            onChange={handleContentChange}
+            placeholder="공지사항 내용을 입력하세요 (HTML 코드는 자동으로 제거됩니다)"
+            rows={15}
+          />
         </div>
 
         <div className={styles.formGroup}>

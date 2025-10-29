@@ -10,7 +10,7 @@ import styles from './PointsPage.module.css'
 
 interface PointHistory {
   id: string
-  type: 'earned' | 'used'
+  type: 'earned' | 'used' | 'expired'
   amount: number
   reason: string
   createdAt: Timestamp
