@@ -400,6 +400,8 @@ export default function EditProductPage({ productId }: { productId: string }) {
         const discountPercent = formData.price > 0 ? Math.round((discountAmount / formData.price) * 100) : 0
 
         submitData.discount = {
+          type: formData.discount.type,
+          value: formData.discount.value,
           discountAmount: discountAmount,
           discountPercent: discountPercent,
           startDate: formData.discount.startDate,

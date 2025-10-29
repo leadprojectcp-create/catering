@@ -22,6 +22,16 @@ export default function DeliveryMethodSection({
   onChange,
   onDeliveryFeeChange
 }: DeliveryMethodSectionProps) {
+  // 숫자 포맷팅 함수
+  const formatNumber = (num: number | string): string => {
+    if (!num) return ''
+    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+  }
+
+  const parseNumber = (str: string): number => {
+    return Number(str.replace(/,/g, ''))
+  }
+
   const handleCheckboxChange = (method: string, checked: boolean) => {
     if (checked) {
       onChange([...deliveryMethods, method])
@@ -43,6 +53,11 @@ export default function DeliveryMethodSection({
         [field]: value
       })
     }
+  }
+
+  const handleNumberInput = (field: keyof DeliveryFeeSettings, value: string) => {
+    const numValue = parseNumber(value)
+    handleFeeSettingChange(field, numValue)
   }
 
   const handlePaymentMethodToggle = (method: '선결제' | '착불') => {
@@ -174,10 +189,10 @@ export default function DeliveryMethodSection({
               <div className={styles.inputRow}>
                 <label className={styles.inputLabel}>기본 배송비</label>
                 <input
-                  type="number"
+                  type="text"
                   placeholder="배송비 입력"
-                  value={deliveryFeeSettings.baseFee || ''}
-                  onChange={(e) => handleFeeSettingChange('baseFee', Number(e.target.value))}
+                  value={formatNumber(deliveryFeeSettings.baseFee || '')}
+                  onChange={(e) => handleNumberInput('baseFee', e.target.value)}
                   className={styles.input}
                 />
                 <span>원</span>
@@ -185,10 +200,10 @@ export default function DeliveryMethodSection({
               <div className={styles.inputRow}>
                 <label className={styles.inputLabel}>배송비 조건</label>
                 <input
-                  type="number"
+                  type="text"
                   placeholder="최소 금액 입력"
-                  value={deliveryFeeSettings.freeCondition || ''}
-                  onChange={(e) => handleFeeSettingChange('freeCondition', Number(e.target.value))}
+                  value={formatNumber(deliveryFeeSettings.freeCondition || '')}
+                  onChange={(e) => handleNumberInput('freeCondition', e.target.value)}
                   className={styles.input}
                 />
                 <span>원 이상 무료</span>
@@ -237,10 +252,10 @@ export default function DeliveryMethodSection({
               <div className={styles.inputRow}>
                 <label className={styles.inputLabel}>기본 배송비</label>
                 <input
-                  type="number"
+                  type="text"
                   placeholder="배송비 입력"
-                  value={deliveryFeeSettings.baseFee || ''}
-                  onChange={(e) => handleFeeSettingChange('baseFee', Number(e.target.value))}
+                  value={formatNumber(deliveryFeeSettings.baseFee || '')}
+                  onChange={(e) => handleNumberInput('baseFee', e.target.value)}
                   className={styles.input}
                 />
                 <span>원</span>
@@ -289,10 +304,10 @@ export default function DeliveryMethodSection({
               <div className={styles.inputRow}>
                 <label className={styles.inputLabel}>기본 배송비</label>
                 <input
-                  type="number"
+                  type="text"
                   placeholder="배송비 입력"
-                  value={deliveryFeeSettings.baseFee || ''}
-                  onChange={(e) => handleFeeSettingChange('baseFee', Number(e.target.value))}
+                  value={formatNumber(deliveryFeeSettings.baseFee || '')}
+                  onChange={(e) => handleNumberInput('baseFee', e.target.value)}
                   className={styles.input}
                 />
                 <span>원</span>
@@ -300,10 +315,10 @@ export default function DeliveryMethodSection({
               <div className={styles.inputRow}>
                 <label className={styles.inputLabel}>반복 부과 수량</label>
                 <input
-                  type="number"
+                  type="text"
                   placeholder="예: 5"
-                  value={deliveryFeeSettings.perQuantity || ''}
-                  onChange={(e) => handleFeeSettingChange('perQuantity', Number(e.target.value))}
+                  value={formatNumber(deliveryFeeSettings.perQuantity || '')}
+                  onChange={(e) => handleNumberInput('perQuantity', e.target.value)}
                   className={styles.input}
                 />
                 <span>개마다</span>

@@ -14,6 +14,7 @@ export default function PriceSection({ price, discount, onChange }: PriceSection
   const [showCalendar, setShowCalendar] = useState(false)
   const [currentMonth, setCurrentMonth] = useState(new Date())
   const [selectingDate, setSelectingDate] = useState<'start' | 'end'>('start')
+  const [hoverDate, setHoverDate] = useState<string | null>(null)
 
   // Helper functions
   const formatNumberWithCommas = (num: number): string => {
@@ -57,7 +58,8 @@ export default function PriceSection({ price, discount, onChange }: PriceSection
     const year = date.getFullYear()
     const month = String(date.getMonth() + 1).padStart(2, '0')
     const day = String(date.getDate()).padStart(2, '0')
-    return `${year}-${month}-${day}`
+    // 시간을 00:00:00으로 설정하여 ISO 형식으로 저장
+    return `${year}-${month}-${day}T00:00:00`
   }
 
   const handleDateSelect = (day: number) => {
@@ -66,14 +68,20 @@ export default function PriceSection({ price, discount, onChange }: PriceSection
 
     if (selectingDate === 'start') {
       onChange({
-        discount: { ...discount!, startDate: formattedDate }
+        discount: { ...discount!, startDate: formattedDate, endDate: null }
       })
       setSelectingDate('end')
     } else {
+      // 종료일은 시작일 이후만 선택 가능
+      if (discount?.startDate && formattedDate <= discount.startDate) {
+        alert('종료일은 시작일 이후여야 합니다.')
+        return
+      }
       onChange({
         discount: { ...discount!, endDate: formattedDate }
       })
       setShowCalendar(false)
+      setSelectingDate('start') // 다음 선택을 위해 초기화
     }
   }
 
@@ -87,6 +95,10 @@ export default function PriceSection({ price, discount, onChange }: PriceSection
     const monthData = getDaysInMonth(currentMonth)
     const days = []
 
+    // 현재 날짜 (시간 제외)
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+
     // Empty cells for days before month starts
     for (let i = 0; i < monthData.firstDay; i++) {
       days.push(<div key={`empty-${i}`} className={styles.calendarDay}></div>)
@@ -95,15 +107,41 @@ export default function PriceSection({ price, discount, onChange }: PriceSection
     // Days of the month
     for (let day = 1; day <= monthData.daysInMonth; day++) {
       const currentDate = formatDateToYYYYMMDD(new Date(monthData.year, monthData.month, day))
-      const isSelected = currentDate === discount?.startDate || currentDate === discount?.endDate
-      const isInRange = discount?.startDate && discount?.endDate &&
-                        currentDate > discount.startDate && currentDate < discount.endDate
+      const currentDateObj = new Date(monthData.year, monthData.month, day)
+      currentDateObj.setHours(0, 0, 0, 0)
+
+      // 날짜 비교를 위해 날짜 부분만 추출 (YYYY-MM-DD 형식)
+      const currentDateOnly = currentDate.split('T')[0]
+      const startDateOnly = discount?.startDate?.split('T')[0]
+      const endDateOnly = discount?.endDate?.split('T')[0]
+      const hoverDateOnly = hoverDate?.split('T')[0]
+
+      const isStartDate = currentDateOnly === startDateOnly
+      const isEndDate = currentDateOnly === endDateOnly
+
+      // 실제 선택된 범위
+      const isInRange = startDateOnly && endDateOnly &&
+                        currentDateOnly > startDateOnly && currentDateOnly < endDateOnly
+
+      // 호버 시 미리보기 범위 (종료일 선택 중일 때)
+      const isHoverRange = selectingDate === 'end' && startDateOnly && hoverDateOnly &&
+                          currentDateOnly > startDateOnly && currentDateOnly < hoverDateOnly
+
+      const isHoverEnd = selectingDate === 'end' && currentDateOnly === hoverDateOnly
+
+      // 과거 날짜는 비활성화
+      const isPastDate = currentDateObj < today
+
+      // 종료일 선택 중일 때 시작일 이전은 비활성화
+      const isDisabled = isPastDate || (selectingDate === 'end' && startDateOnly && currentDateOnly <= startDateOnly)
 
       days.push(
         <div
           key={day}
-          className={`${styles.calendarDay} ${isSelected ? styles.calendarDaySelected : ''} ${isInRange ? styles.calendarDayInRange : ''}`}
-          onClick={() => handleDateSelect(day)}
+          className={`${styles.calendarDay} ${isStartDate ? styles.calendarDayStart : ''} ${isEndDate ? styles.calendarDayEnd : ''} ${isInRange ? styles.calendarDayInRange : ''} ${isHoverRange ? styles.calendarDayHoverRange : ''} ${isHoverEnd ? styles.calendarDayHoverEnd : ''} ${isDisabled ? styles.calendarDayDisabled : ''}`}
+          onClick={() => !isDisabled && handleDateSelect(day)}
+          onMouseEnter={() => !isDisabled && setHoverDate(currentDate)}
+          onMouseLeave={() => setHoverDate(null)}
         >
           {day}
         </div>
@@ -263,9 +301,9 @@ export default function PriceSection({ price, discount, onChange }: PriceSection
                   type="text"
                   value={
                     discount.startDate && discount.endDate
-                      ? `${discount.startDate.replace(/-/g, '.')} ~ ${discount.endDate.replace(/-/g, '.')}`
+                      ? `${(discount.startDate.split('T')[0] || discount.startDate).replace(/-/g, '.')} ~ ${(discount.endDate.split('T')[0] || discount.endDate).replace(/-/g, '.')}`
                       : discount.startDate
-                      ? `${discount.startDate.replace(/-/g, '.')} ~ 종료일 선택`
+                      ? `${(discount.startDate.split('T')[0] || discount.startDate).replace(/-/g, '.')} ~ 종료일 선택`
                       : '기간 선택'
                   }
                   placeholder="기간 선택"

@@ -32,6 +32,25 @@ const ProductInfoSection = memo(function ProductInfoSection({
 }: ProductInfoSectionProps) {
   const router = useRouter()
 
+  // 할인 기간이 유효한지 체크하는 함수
+  const isDiscountValid = () => {
+    if (!product.discount || !product.discount.discountPercent || product.discount.discountPercent <= 0) {
+      return false
+    }
+
+    // 상시 적용이거나 기간이 설정되지 않은 경우
+    if (!product.discount.startDate || !product.discount.endDate) {
+      return true
+    }
+
+    const now = new Date()
+    const startDate = new Date(product.discount.startDate)
+    const endDate = new Date(product.discount.endDate)
+
+    // 현재 시간이 시작일과 종료일 사이에 있는지 체크
+    return now >= startDate && now <= endDate
+  }
+
   return (
     <>
       <div className={styles.productCard}>
@@ -122,11 +141,11 @@ const ProductInfoSection = memo(function ProductInfoSection({
           )}
 
           {/* 가격 정보 */}
-          {product.discount && product.discountedPrice && product.discount.discountPercent > 0 ? (
+          {isDiscountValid() && product.discountedPrice ? (
             <div className={styles.priceSection}>
               <span className={styles.originalPrice}>{product.price.toLocaleString()}원</span>
               <span className={styles.discountedPrice}>{product.discountedPrice?.toLocaleString()}원</span>
-              <span className={styles.discountPercent}>{product.discount.discountPercent}%</span>
+              <span className={styles.discountPercent}>{product.discount!.discountPercent}%</span>
             </div>
           ) : (
             <span className={styles.regularPrice}>{product.price.toLocaleString()}원</span>

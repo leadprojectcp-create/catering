@@ -151,8 +151,9 @@
 .editorContent img {
   max-width: 100%;
   height: auto;
-  margin: 10px 0;
+  margin: 10px auto;
   border-radius: 4px;
+  display: block;
 }
 
 .editorContent:focus {

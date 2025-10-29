@@ -46,6 +46,25 @@ export default function ProductManagement() {
   const [searchQuery, setSearchQuery] = useState('')
   const [previewProduct, setPreviewProduct] = useState<MenuItem | null>(null)
 
+  // 할인 기간이 유효한지 체크하는 함수
+  const isDiscountValid = (item: MenuItem) => {
+    if (!item.discount || !item.discount.discountPercent || item.discount.discountPercent <= 0) {
+      return false
+    }
+
+    // 상시 적용이거나 기간이 설정되지 않은 경우
+    if (!item.discount.startDate || !item.discount.endDate) {
+      return true
+    }
+
+    const now = new Date()
+    const startDate = new Date(item.discount.startDate)
+    const endDate = new Date(item.discount.endDate)
+
+    // 현재 시간이 시작일과 종료일 사이에 있는지 체크
+    return now >= startDate && now <= endDate
+  }
+
   const fetchMenuItems = useCallback(async () => {
     if (!user?.uid) return
 
@@ -231,12 +250,12 @@ export default function ProductManagement() {
                     </h3>
                   </div>
 
-                  {item.discountedPrice ? (
+                  {isDiscountValid(item) && item.discountedPrice ? (
                     <div className={styles.priceRow}>
                       <span className={styles.originalPrice}>{item.price.toLocaleString()}원</span>
                       <div className={styles.discountRow}>
                         <span className={styles.discountedPrice}>{item.discountedPrice.toLocaleString()}원</span>
-                        <span className={styles.discountPercent}>{item.discount?.discountPercent}%</span>
+                        <span className={styles.discountPercent}>{item.discount!.discountPercent}%</span>
                       </div>
                     </div>
                   ) : (

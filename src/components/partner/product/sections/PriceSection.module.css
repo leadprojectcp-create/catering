@@ -318,7 +318,7 @@
 .calendarGrid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 4px;
+  gap: 0;
 }
 
 .calendarDay {
@@ -328,9 +328,9 @@
   justify-content: center;
   font-size: 14px;
   color: #333;
-  border-radius: 4px;
   cursor: pointer;
   transition: all 0.2s ease;
+  position: relative;
 }
 
 .calendarDay:hover {
@@ -346,19 +346,66 @@
   background-color: transparent;
 }
 
-.calendarDaySelected {
+/* 시작 날짜 */
+.calendarDayStart {
   background-color: #237AF2;
   color: white;
+  border-radius: 4px 0 0 4px;
 }
 
-.calendarDaySelected:hover {
+.calendarDayStart:hover {
   background-color: #1a5bb8;
   color: white;
 }
 
+/* 종료 날짜 */
+.calendarDayEnd {
+  background-color: #237AF2;
+  color: white;
+  border-radius: 0 4px 4px 0;
+}
+
+.calendarDayEnd:hover {
+  background-color: #1a5bb8;
+  color: white;
+}
+
+/* 시작과 종료가 같은 날인 경우 */
+.calendarDayStart.calendarDayEnd {
+  border-radius: 4px;
+}
+
+/* 범위 내 날짜 */
 .calendarDayInRange {
   background-color: #F0F6FF;
   color: #237AF2;
+  border-radius: 0;
+}
+
+/* 호버 시 미리보기 범위 */
+.calendarDayHoverRange {
+  background-color: #E8F2FF;
+  color: #237AF2;
+  border-radius: 0;
+}
+
+/* 호버 시 미리보기 종료일 */
+.calendarDayHoverEnd {
+  background-color: #237AF2;
+  color: white;
+  border-radius: 0 4px 4px 0;
+}
+
+/* 비활성화된 날짜 */
+.calendarDayDisabled {
+  color: #ccc;
+  cursor: not-allowed;
+  background-color: transparent;
+}
+
+.calendarDayDisabled:hover {
+  background-color: transparent;
+  color: #ccc;
 }
 
 .discountPreview {

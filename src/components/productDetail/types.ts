@@ -23,8 +23,13 @@ export interface Product {
   price: number
   discountedPrice?: number
   discount?: {
+    type?: 'amount' | 'percent'
+    value?: number
     discountAmount: number
     discountPercent: number
+    startDate?: string | null
+    endDate?: string | null
+    isAlwaysActive?: boolean
   }
   images?: string[]
   description?: string
