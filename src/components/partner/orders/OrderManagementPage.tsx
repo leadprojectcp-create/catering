@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { updateOrderStatus } from '@/lib/services/orderService'
 import type { Order, OrderStatus } from '@/lib/services/orderService'
-import type { Timestamp, FieldValue } from 'firebase/firestore'
+import type { Timestamp } from 'firebase/firestore'
 import { auth, db } from '@/lib/firebase'
 import { doc, getDoc, collection, query, where, orderBy as firestoreOrderBy, onSnapshot } from 'firebase/firestore'
 import { createOrGetChatRoom } from '@/lib/services/chatService'
@@ -26,7 +26,6 @@ export default function OrderManagementPage() {
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<FilterStatus>('all')
-  const [storeId, setStoreId] = useState<string>('')
   const [deliveryMethodFilter, setDeliveryMethodFilter] = useState<DeliveryMethodFilter>('all')
   const [dateRange, setDateRange] = useState<{ start: Date | null; end: Date | null }>({ start: null, end: null })
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null)
@@ -75,8 +74,6 @@ export default function OrderManagementPage() {
     // 현재 사용자의 storeId 가져오기 및 실시간 리스너 설정
     const user = auth.currentUser
     if (!user) return
-
-    setStoreId(user.uid)
 
     // Firestore 실시간 리스너 설정
     const ordersQuery = query(
@@ -356,10 +353,10 @@ export default function OrderManagementPage() {
 
       // createdAt이 Firestore Timestamp인 경우와 Date인 경우 모두 처리
       let orderDate: Date
-      if (typeof order.createdAt === 'object' && 'toDate' in order.createdAt) {
-        orderDate = (order.createdAt as any).toDate()
+      if (typeof order.createdAt === 'object' && order.createdAt && 'toDate' in order.createdAt) {
+        orderDate = (order.createdAt as Timestamp).toDate()
       } else {
-        orderDate = new Date(order.createdAt as any)
+        orderDate = new Date(order.createdAt as string | number | Date)
       }
 
       // 날짜만 비교 (시간 제외)
