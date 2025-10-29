@@ -132,11 +132,14 @@ export default function CustomEditor({ value, onChange, placeholder, storeId, pr
 
   // Only set initial value on mount
   useEffect(() => {
-    if (isInitialMount.current && editorRef.current && value) {
-      editorRef.current.innerHTML = value
+    if (isInitialMount.current && editorRef.current) {
+      if (value) {
+        editorRef.current.innerHTML = value
+      }
       isInitialMount.current = false
     }
-  }, [value])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   return (
     <div className={styles.editorContainer}>

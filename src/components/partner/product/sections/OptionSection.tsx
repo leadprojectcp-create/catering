@@ -123,7 +123,7 @@ export default function OptionSection({ options, onChange, onShowHelpModal, enab
           </div>
           <input
             type="text"
-            placeholder="ex) 참치샌드위치"
+            placeholder="ex) 샌드위치"
             value={option.groupName}
             onChange={(e) => updateOptionGroup(groupIndex, e.target.value)}
             className={styles.textInput}
@@ -140,7 +140,7 @@ export default function OptionSection({ options, onChange, onShowHelpModal, enab
                   <label className={styles.mobileOptionLabel}>옵션명</label>
                   <input
                     type="text"
-                    placeholder="ex) 기본"
+                    placeholder="ex) 참치샌드위치"
                     value={value.name}
                     onChange={(e) => updateOptionValue(groupIndex, valueIndex, 'name', e.target.value)}
                     className={styles.textInput}

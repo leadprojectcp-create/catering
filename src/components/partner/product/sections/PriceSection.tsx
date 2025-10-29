@@ -144,6 +144,7 @@ export default function PriceSection({ price, discount, onChange }: PriceSection
       <div className={styles.titleWithNumber}>
         <span className={styles.numberCircle}>5</span>
         <span className={styles.sectionTitle}>상품 판매가</span>
+        <span className={styles.optionalLabel}>(단일상품가격을 적어주세요)</span>
       </div>
       <div className={styles.priceInputRow}>
         <div className={`${styles.inputWithUnit} ${styles.priceInputWrapper}`}>
