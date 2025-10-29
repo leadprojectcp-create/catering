@@ -416,7 +416,7 @@ export default function OrderManagementPage() {
       </div>
 
       <OrderList
-        orders={orders}
+        orders={filteredOrders}
         filter={filter}
         deliveryMethodFilter={deliveryMethodFilter}
         dateRange={dateRange}

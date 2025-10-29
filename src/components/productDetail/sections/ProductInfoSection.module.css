@@ -338,6 +338,40 @@
   overflow: visible;
 }
 
+/* 상품 설명 내 이미지 스타일 */
+.descriptionText img {
+  max-width: 100%;
+  height: auto;
+  margin: 10px auto;
+  border-radius: 4px;
+  display: block;
+}
+
+/* 이미지 정렬을 위한 래퍼 스타일 */
+.descriptionText div[style*="text-align"] img,
+.descriptionText p[style*="text-align"] img {
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.descriptionText div[style*="text-align: left"] img,
+.descriptionText p[style*="text-align: left"] img {
+  margin-left: 0;
+  margin-right: auto;
+}
+
+.descriptionText div[style*="text-align: center"] img,
+.descriptionText p[style*="text-align: center"] img {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.descriptionText div[style*="text-align: right"] img,
+.descriptionText p[style*="text-align: right"] img {
+  margin-left: auto;
+  margin-right: 0;
+}
+
 .expandButton {
   width: 100%;
   padding: 12px;

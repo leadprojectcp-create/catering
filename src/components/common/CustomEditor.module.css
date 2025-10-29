@@ -156,6 +156,31 @@
   display: block;
 }
 
+/* 이미지 정렬을 위한 래퍼 스타일 */
+.editorContent div[style*="text-align"] img,
+.editorContent p[style*="text-align"] img {
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.editorContent div[style*="text-align: left"] img,
+.editorContent p[style*="text-align: left"] img {
+  margin-left: 0;
+  margin-right: auto;
+}
+
+.editorContent div[style*="text-align: center"] img,
+.editorContent p[style*="text-align: center"] img {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.editorContent div[style*="text-align: right"] img,
+.editorContent p[style*="text-align: right"] img {
+  margin-left: auto;
+  margin-right: 0;
+}
+
 .editorContent:focus {
   outline: none;
 }

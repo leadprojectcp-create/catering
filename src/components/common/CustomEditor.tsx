@@ -70,7 +70,7 @@ export default function CustomEditor({ value, onChange, placeholder, storeId, pr
 
       // Insert image directly into editor content
       if (editorRef.current) {
-        const img = `<img src="${result.url}" alt="상품 이미지" style="max-width: 100%; height: auto;" />`
+        const img = `<img src="${result.url}" alt="상품 이미지" style="max-width: 100%; height: auto; display: block; margin: 10px auto;" />`
 
         // Focus the editor first
         editorRef.current.focus()
