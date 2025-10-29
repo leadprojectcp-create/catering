@@ -70,7 +70,8 @@ export default function CustomEditor({ value, onChange, placeholder, storeId, pr
 
       // Insert image directly into editor content
       if (editorRef.current) {
-        const img = `<img src="${result.url}" alt="상품 이미지" style="max-width: 100%; height: auto; display: block; margin: 10px auto;" />`
+        // Wrap image in a div for better alignment control
+        const imgWrapper = `<div style="text-align: center;"><img src="${result.url}" alt="상품 이미지" style="max-width: 100%; height: auto; display: inline-block;" /></div>`
 
         // Focus the editor first
         editorRef.current.focus()
@@ -79,14 +80,14 @@ export default function CustomEditor({ value, onChange, placeholder, storeId, pr
         const selection = window.getSelection()
         if (selection && selection.rangeCount > 0) {
           try {
-            document.execCommand('insertHTML', false, img)
+            document.execCommand('insertHTML', false, imgWrapper)
           } catch (error) {
             // Fallback: append to the end of content
-            editorRef.current.innerHTML += img
+            editorRef.current.innerHTML += imgWrapper
           }
         } else {
           // No selection, append to end
-          editorRef.current.innerHTML += img
+          editorRef.current.innerHTML += imgWrapper
         }
 
         handleInput()

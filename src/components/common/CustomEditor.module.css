@@ -151,34 +151,27 @@
 .editorContent img {
   max-width: 100%;
   height: auto;
-  margin: 10px auto;
   border-radius: 4px;
-  display: block;
+  display: inline-block;
+  vertical-align: middle;
 }
 
-/* 이미지 정렬을 위한 래퍼 스타일 */
-.editorContent div[style*="text-align"] img,
-.editorContent p[style*="text-align"] img {
-  margin-left: 0;
-  margin-right: 0;
+/* 이미지를 포함한 div의 정렬 스타일 */
+.editorContent div:has(img) {
+  margin: 10px 0;
 }
 
-.editorContent div[style*="text-align: left"] img,
-.editorContent p[style*="text-align: left"] img {
-  margin-left: 0;
-  margin-right: auto;
+/* 정렬 버튼으로 설정된 text-align이 이미지에 적용되도록 */
+.editorContent [style*="text-align: left"] img {
+  display: inline-block;
 }
 
-.editorContent div[style*="text-align: center"] img,
-.editorContent p[style*="text-align: center"] img {
-  margin-left: auto;
-  margin-right: auto;
+.editorContent [style*="text-align: center"] img {
+  display: inline-block;
 }
 
-.editorContent div[style*="text-align: right"] img,
-.editorContent p[style*="text-align: right"] img {
-  margin-left: auto;
-  margin-right: 0;
+.editorContent [style*="text-align: right"] img {
+  display: inline-block;
 }
 
 .editorContent:focus {
