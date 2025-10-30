@@ -268,6 +268,13 @@ export default function PaymentsPage() {
     loadData()
   }, [user, searchParams, router])
 
+  // 배송 정보가 변경되면 배송비 조회를 다시 해야 하므로 deliveryFeeFromAPI 초기화
+  useEffect(() => {
+    if (deliveryMethod === '퀵업체 배송' && deliveryFeeFromAPI !== null) {
+      setDeliveryFeeFromAPI(null)
+    }
+  }, [orderInfo.deliveryDate, orderInfo.deliveryTime, orderInfo.address])
+
   // usePaymentSummary hook 사용
   const { handlePayment, totalPrice: calculatedTotalPrice } = usePaymentSummary({
     user,
