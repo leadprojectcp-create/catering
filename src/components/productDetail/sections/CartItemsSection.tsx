@@ -231,7 +231,7 @@ export default function CartItemsSection({
 
         const totalQuantity = cartItems.reduce((sum, item) => sum + item.quantity, 0)
 
-        const updateData: any = {
+        const updateData: Record<string, unknown> = {
           items: orderItems,
           totalProductPrice: totalPrice,
           totalQuantity: totalQuantity,
