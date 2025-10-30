@@ -11,7 +11,7 @@
 
 .deliveryMethodContainer {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   gap: 12px;
 }
 
@@ -59,10 +59,4 @@
   color: #666;
   font-size: 12px;
   font-weight: 400;
-}
-
-@media (max-width: 768px) {
-  .deliveryMethodContainer {
-    flex-direction: column;
-  }
 }
