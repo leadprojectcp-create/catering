@@ -19,6 +19,7 @@ interface CartItemsSectionProps {
   parcelPaymentMethod?: '선결제' | '착불'
   editingCartItemId: string | null
   isEditingOrder?: boolean
+  additionalOrderId?: string | null
   onRemoveItem: (index: number) => void
   onUpdateQuantity: (index: number, newQuantity: number) => void
   onQuantityInputChange: (index: number, value: string) => void
@@ -141,6 +142,7 @@ export default function CartItemsSection({
   parcelPaymentMethod,
   editingCartItemId,
   isEditingOrder = false,
+  additionalOrderId,
   onRemoveItem,
   onUpdateQuantity,
   onQuantityInputChange,
@@ -414,7 +416,12 @@ export default function CartItemsSection({
         cartId = docRef.id
       }
 
-      router.push(`/payments?cartId=${cartId}`)
+      // additionalOrderId가 있으면 함께 전달
+      if (additionalOrderId) {
+        router.push(`/payments?cartId=${cartId}&additionalOrderId=${additionalOrderId}`)
+      } else {
+        router.push(`/payments?cartId=${cartId}`)
+      }
     } catch (error) {
       console.error('주문 생성 실패:', error)
       alert('주문 생성에 실패했습니다.')

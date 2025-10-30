@@ -4,6 +4,8 @@ import { useState } from 'react'
 import type { Order, OrderStatus } from '@/lib/services/orderService'
 import type { Timestamp, FieldValue } from 'firebase/firestore'
 import Image from 'next/image'
+import { doc, updateDoc } from 'firebase/firestore'
+import { db } from '@/lib/firebase'
 import styles from './OrderCard.module.css'
 
 interface OrderCardProps {
@@ -29,6 +31,24 @@ export default function OrderCard({
   onOpenChat,
   onPrint,
 }: OrderCardProps) {
+  const [allowAdditionalOrder, setAllowAdditionalOrder] = useState(order.allowAdditionalOrder ?? false)
+
+  const handleToggleAdditionalOrder = async () => {
+    if (!order.id) return
+
+    try {
+      const newValue = !allowAdditionalOrder
+      const orderRef = doc(db, 'orders', order.id)
+      await updateDoc(orderRef, {
+        allowAdditionalOrder: newValue
+      })
+      setAllowAdditionalOrder(newValue)
+    } catch (error) {
+      console.error('추가주문허용 업데이트 실패:', error)
+      alert('업데이트에 실패했습니다.')
+    }
+  }
+
   const formatDate = (date: Date | Timestamp | FieldValue | undefined) => {
     if (!date) return '-'
     const d = typeof date === 'object' && 'toDate' in date ? (date as Timestamp).toDate() : new Date(date as string | number | Date)
@@ -259,7 +279,32 @@ export default function OrderCard({
 
               <div className={styles.detailSectionDivider}></div>
 
-              <h3 className={styles.detailTitle}>주문상품상세</h3>
+              <div className={styles.detailTitleRow}>
+                <h3 className={styles.detailTitle}>주문상품상세</h3>
+                {order.orderStatus === 'preparing' && (
+                  <div className={styles.additionalOrderToggle}>
+                    <Image
+                      src="/icons/info-circle.svg"
+                      alt="정보"
+                      width={16}
+                      height={16}
+                    />
+                    <span className={styles.additionalOrderLabel}>추가주문허용</span>
+                    <button
+                      className={styles.toggleButton}
+                      onClick={handleToggleAdditionalOrder}
+                      type="button"
+                    >
+                      <Image
+                        src={allowAdditionalOrder ? "/icons/toggle-on.svg" : "/icons/toggle-off.svg"}
+                        alt="토글"
+                        width={41}
+                        height={25}
+                      />
+                    </button>
+                  </div>
+                )}
+              </div>
               {order.items.map((item, index) => {
                 const showProductName = index === 0 || order.items[index - 1].productName !== item.productName
                 return (

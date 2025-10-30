@@ -139,6 +139,9 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
   const searchParams = useSearchParams()
   const { user } = useAuth()
 
+  // additionalOrderId 파라미터 가져오기
+  const additionalOrderId = searchParams.get('additionalOrderId')
+
   // 상태 관리만
   const [product, setProduct] = useState<Product | null>(null)
   const [store, setStore] = useState<Store | null>(null)
@@ -503,6 +506,7 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
               parcelPaymentMethod={parcelPaymentMethod}
               editingCartItemId={editingCartItemId}
               isEditingOrder={isEditingOrder}
+              additionalOrderId={additionalOrderId}
               onRemoveItem={removeFromCart}
               onUpdateQuantity={updateCartQuantity}
               onQuantityInputChange={handleQuantityInputChange}

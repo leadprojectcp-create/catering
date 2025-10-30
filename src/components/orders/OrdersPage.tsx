@@ -51,6 +51,7 @@ interface Order {
   createdAt: Date
   paidAt?: Date
   hasReview?: boolean
+  allowAdditionalOrder?: boolean
   deliveryInfo?: {
     addressName?: string
     deliveryDate?: string
@@ -834,6 +835,23 @@ export default function OrdersPage() {
                       >
                         주문상세
                       </button>
+                      {order.orderStatus === 'preparing' && order.allowAdditionalOrder && (
+                        <button
+                          className={styles.additionalOrderButton}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            // 첫 번째 상품의 productId로 이동
+                            const productId = order.items[0]?.productId
+                            if (productId) {
+                              router.push(`/productDetail/${productId}?additionalOrderId=${order.id}`)
+                            } else {
+                              alert('상품 정보를 찾을 수 없습니다.')
+                            }
+                          }}
+                        >
+                          추가 주문
+                        </button>
+                      )}
                     </>
                   )}
                 </div>

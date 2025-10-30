@@ -69,6 +69,7 @@ export interface Order {
   quickDeliveryError?: string
   partnerNotified?: boolean
   partnerNotifiedAt?: Date | Timestamp | FieldValue
+  allowAdditionalOrder?: boolean
   createdAt?: Date | Timestamp | FieldValue
   updatedAt?: Date | Timestamp | FieldValue
 }

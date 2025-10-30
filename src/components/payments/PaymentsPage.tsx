@@ -74,9 +74,10 @@ export default function PaymentsPage() {
 
   useEffect(() => {
     const loadData = async () => {
-      // URL에서 cartId 또는 orderId 가져오기
+      // URL에서 cartId, orderId, additionalOrderId 가져오기
       const cartIdParam = searchParams.get('cartId')
       const orderIdParam = searchParams.get('orderId')
+      const additionalOrderIdParam = searchParams.get('additionalOrderId')
 
       const id = cartIdParam || orderIdParam
       const collection = cartIdParam ? 'shoppingCart' : 'orders'
@@ -88,6 +89,47 @@ export default function PaymentsPage() {
       }
 
       setOrderId(id)
+
+      // 추가 주문인 경우 기존 주문 정보 로드
+      if (additionalOrderIdParam) {
+        try {
+          const originalOrderDoc = await getDoc(doc(db, 'orders', additionalOrderIdParam))
+          if (originalOrderDoc.exists()) {
+            const originalOrderData = originalOrderDoc.data()
+
+            // 기존 주문의 배송 정보를 복원
+            if (originalOrderData.deliveryInfo) {
+              const deliveryInfo = originalOrderData.deliveryInfo
+              setAddressName(deliveryInfo.addressName || '')
+              setOrderInfo(prev => ({
+                ...prev,
+                deliveryDate: deliveryInfo.deliveryDate || '',
+                deliveryTime: deliveryInfo.deliveryTime || '',
+                address: deliveryInfo.address || '',
+                detailAddress: deliveryInfo.detailAddress || ''
+              }))
+              setEntranceCode(deliveryInfo.entrancePassword || '')
+              setRecipient(deliveryInfo.recipient || '')
+              setDeliveryRequest(deliveryInfo.deliveryRequest || '')
+              setDetailedRequest(deliveryInfo.detailedRequest || '')
+            }
+
+            // 배송 방법 복원
+            if (originalOrderData.deliveryMethod) {
+              setDeliveryMethod(originalOrderData.deliveryMethod)
+            }
+
+            // 주문자 정보 복원
+            setOrderInfo(prev => ({
+              ...prev,
+              orderer: originalOrderData.orderer || prev.orderer,
+              phone: originalOrderData.phone || prev.phone
+            }))
+          }
+        } catch (error) {
+          console.error('기존 주문 정보 로드 실패:', error)
+        }
+      }
 
       try {
         // Firestore에서 주문 정보 가져오기 (shoppingCart 또는 orders)
@@ -309,6 +351,9 @@ export default function PaymentsPage() {
     return <Loading />
   }
 
+  // additionalOrderId가 있는지 확인
+  const isAdditionalOrder = !!searchParams.get('additionalOrderId')
+
   return (
     <>
       <Script
@@ -323,56 +368,59 @@ export default function PaymentsPage() {
           isCartMode={!!searchParams.get('cartId')}
         />
 
-        {/* 배송방법 선택 */}
-        <DeliveryMethodSection
-          deliveryMethods={orderData?.deliveryMethods}
-          selectedMethod={deliveryMethod}
-          onMethodChange={setDeliveryMethod}
-        />
-
-        {/* 택배 배송 - 배송비 결제 방식 */}
-        {deliveryMethod === '택배 배송' && deliveryFeeSettings && (
-          <ParcelPaymentMethodSection
-            deliveryFeeSettings={deliveryFeeSettings}
-            parcelPaymentMethod={parcelPaymentMethod}
-            totalPrice={orderData?.items.reduce((sum, item) => sum + ((item.price || 0) * item.quantity), 0) || 0}
-            onMethodChange={setParcelPaymentMethod}
-          />
-        )}
-
-        {/* 매장 픽업 - 수령인 정보 */}
-        {deliveryMethod === '매장 픽업' && (
+        {/* 추가 주문이 아닐 때만 배송방법, 수령인 정보 등 표시 */}
+        {!isAdditionalOrder && (
           <>
-            <PickupRecipientSection
-              recipient={recipient}
-              phone={orderInfo.phone}
-              onRecipientChange={setRecipient}
-              onPhoneChange={(phone) => setOrderInfo({...orderInfo, phone})}
+            {/* 배송방법 선택 */}
+            <DeliveryMethodSection
+              deliveryMethods={orderData?.deliveryMethods}
+              selectedMethod={deliveryMethod}
+              onMethodChange={setDeliveryMethod}
             />
-            <PickupDateTimeSection
-              deliveryDate={orderInfo.deliveryDate}
-              deliveryTime={orderInfo.deliveryTime}
-              minOrderDays={minOrderDays}
-              onDateChange={(date) => setOrderInfo({...orderInfo, deliveryDate: date})}
-              onTimeChange={(time) => setOrderInfo({...orderInfo, deliveryTime: time})}
-              onShowDateInfoModal={() => setShowDateInfoModal(true)}
-            />
-          </>
-        )}
 
-        {/* 퀵업체 배송 또는 택배 배송 선택시 배송지 설정 표시 */}
-        {(deliveryMethod === '퀵업체 배송' || deliveryMethod === '택배 배송') && (
-          <>
-            {/* 배송지 설정 */}
-            <DeliveryInfoSection
-              userId={user?.uid || null}
-              orderInfo={orderInfo}
-              recipient={recipient}
-              addressName={addressName}
-              savedAddresses={savedAddresses}
-              onOrderInfoChange={setOrderInfo}
-              onRecipientChange={setRecipient}
-              onAddressNameChange={setAddressName}
+            {/* 택배 배송 - 배송비 결제 방식 */}
+            {deliveryMethod === '택배 배송' && deliveryFeeSettings && (
+              <ParcelPaymentMethodSection
+                deliveryFeeSettings={deliveryFeeSettings}
+                parcelPaymentMethod={parcelPaymentMethod}
+                totalPrice={orderData?.items.reduce((sum, item) => sum + ((item.price || 0) * item.quantity), 0) || 0}
+                onMethodChange={setParcelPaymentMethod}
+              />
+            )}
+
+            {/* 매장 픽업 - 수령인 정보 */}
+            {deliveryMethod === '매장 픽업' && (
+              <>
+                <PickupRecipientSection
+                  recipient={recipient}
+                  phone={orderInfo.phone}
+                  onRecipientChange={setRecipient}
+                  onPhoneChange={(phone) => setOrderInfo({...orderInfo, phone})}
+                />
+                <PickupDateTimeSection
+                  deliveryDate={orderInfo.deliveryDate}
+                  deliveryTime={orderInfo.deliveryTime}
+                  minOrderDays={minOrderDays}
+                  onDateChange={(date) => setOrderInfo({...orderInfo, deliveryDate: date})}
+                  onTimeChange={(time) => setOrderInfo({...orderInfo, deliveryTime: time})}
+                  onShowDateInfoModal={() => setShowDateInfoModal(true)}
+                />
+              </>
+            )}
+
+            {/* 퀵업체 배송 또는 택배 배송 선택시 배송지 설정 표시 */}
+            {(deliveryMethod === '퀵업체 배송' || deliveryMethod === '택배 배송') && (
+              <>
+                {/* 배송지 설정 */}
+                <DeliveryInfoSection
+                  userId={user?.uid || null}
+                  orderInfo={orderInfo}
+                  recipient={recipient}
+                  addressName={addressName}
+                  savedAddresses={savedAddresses}
+                  onOrderInfoChange={setOrderInfo}
+                  onRecipientChange={setRecipient}
+                  onAddressNameChange={setAddressName}
               onSavedAddressesChange={setSavedAddresses}
             />
 
@@ -385,14 +433,16 @@ export default function PaymentsPage() {
               onTimeChange={(time) => setOrderInfo({...orderInfo, deliveryTime: time})}
               onShowDateInfoModal={() => setShowDateInfoModal(true)}
             />
-            <DeliveryRequestSection
-              deliveryRequest={deliveryRequest}
-              entranceCode={entranceCode}
-              detailedRequest={detailedRequest}
-              onDeliveryRequestChange={setDeliveryRequest}
-              onEntranceCodeChange={setEntranceCode}
-              onDetailedRequestChange={setDetailedRequest}
-            />
+                <DeliveryRequestSection
+                  deliveryRequest={deliveryRequest}
+                  entranceCode={entranceCode}
+                  detailedRequest={detailedRequest}
+                  onDeliveryRequestChange={setDeliveryRequest}
+                  onEntranceCodeChange={setEntranceCode}
+                  onDetailedRequestChange={setDetailedRequest}
+                />
+              </>
+            )}
           </>
         )}
 
