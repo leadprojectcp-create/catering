@@ -803,7 +803,7 @@ export const usePaymentSummary = (props: Omit<PaymentSummarySectionProps, 'onPay
             items: cartData.items,
             totalProductPrice: cartData.totalProductPrice,
             totalQuantity: cartData.totalQuantity,
-            deliveryMethod: cartData.deliveryMethod,
+            deliveryMethod: deliveryMethod, // props에서 가져온 deliveryMethod 사용
             request: cartData.request,
             createdAt: cartData.createdAt || new Date(),
             updatedAt: new Date()
