@@ -186,7 +186,7 @@ export default function CartItemsSection({
     const minQty = product.minOrderQuantity || 1
     const maxQty = product.maxOrderQuantity || 999
 
-    if (totalQuantity < minQty) {
+    if (!additionalOrderId && totalQuantity < minQty) {
       alert(`최소 주문 수량은 ${minQty}개입니다. (현재: ${totalQuantity}개)`)
       return
     }
@@ -334,7 +334,7 @@ export default function CartItemsSection({
     const minQty = product.minOrderQuantity || 1
     const maxQty = product.maxOrderQuantity || 999
 
-    if (totalQuantity < minQty) {
+    if (!additionalOrderId && totalQuantity < minQty) {
       alert(`최소 주문 수량은 ${minQty}개입니다. (현재: ${totalQuantity}개)`)
       return
     }
