@@ -76,7 +76,10 @@ export default function PaymentSummarySection({
   // 총 상품금액과 수량 계산 - 추가 결제 모드일 때는 pendingItems 사용
   const totalProductPrice = useMemo(() => {
     if (!orderData) return 0
-    const itemsToCalculate = (isAdditionalOrder && orderData.pendingItems) ? orderData.pendingItems : orderData.items
+    const orderDataWithPending = orderData as OrderData & { pendingItems?: typeof orderData.items }
+    const itemsToCalculate = (isAdditionalOrder && orderDataWithPending.pendingItems)
+      ? orderDataWithPending.pendingItems
+      : orderData.items
     return itemsToCalculate.reduce((sum, item) => {
       return sum + (item.itemPrice || (orderData.productPrice * item.quantity))
     }, 0)
@@ -84,7 +87,10 @@ export default function PaymentSummarySection({
 
   const totalQuantity = useMemo(() => {
     if (!orderData) return 0
-    const itemsToCalculate = (isAdditionalOrder && orderData.pendingItems) ? orderData.pendingItems : orderData.items
+    const orderDataWithPending = orderData as OrderData & { pendingItems?: typeof orderData.items }
+    const itemsToCalculate = (isAdditionalOrder && orderDataWithPending.pendingItems)
+      ? orderDataWithPending.pendingItems
+      : orderData.items
     return itemsToCalculate.reduce((sum, item) => sum + item.quantity, 0)
   }, [orderData, isAdditionalOrder])
 
@@ -341,13 +347,10 @@ export default function PaymentSummarySection({
         return
       }
 
-      // 결제 검증 완료 - paymentInfo를 빈 배열로 초기화 (웹훅에서 실제 데이터 추가)
+      // 결제 검증 완료 - paymentInfo는 웹훅에서 처리하므로 여기서는 paymentStatus만 업데이트
       const orderRef = doc(db, 'orders', finalOrderId)
       await updateDoc(orderRef, {
         paymentStatus: 'paid',
-        paymentInfo: [], // 빈 배열로 초기화 - 웹훅에서 실제 결제 정보 추가
-        paymentId: [], // 빈 배열로 초기화 - 웹훅에서 실제 ID 추가
-        paidAt: [], // 빈 배열로 초기화 - 웹훅에서 실제 날짜 추가
         verifiedAt: new Date()
       })
 
