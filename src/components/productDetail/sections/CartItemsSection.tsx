@@ -15,8 +15,6 @@ interface CartItemsSectionProps {
   storeName: string
   cartItems: CartItem[]
   storeRequest: string
-  deliveryMethod: string
-  parcelPaymentMethod?: '선결제' | '착불'
   editingCartItemId: string | null
   isEditingOrder?: boolean
   additionalOrderId?: string | null
@@ -24,7 +22,6 @@ interface CartItemsSectionProps {
   onUpdateQuantity: (index: number, newQuantity: number) => void
   onQuantityInputChange: (index: number, value: string) => void
   onStoreRequestChange: (value: string) => void
-  onParcelPaymentMethodChange?: (method: '선결제' | '착불') => void
   onEditingCartItemIdChange: (id: string | null) => void
 }
 
@@ -138,8 +135,6 @@ export default function CartItemsSection({
   storeName,
   cartItems,
   storeRequest,
-  deliveryMethod,
-  parcelPaymentMethod,
   editingCartItemId,
   isEditingOrder = false,
   additionalOrderId,
@@ -147,7 +142,6 @@ export default function CartItemsSection({
   onUpdateQuantity,
   onQuantityInputChange,
   onStoreRequestChange,
-  onParcelPaymentMethodChange,
   onEditingCartItemIdChange
 }: CartItemsSectionProps) {
   const router = useRouter()
@@ -237,14 +231,8 @@ export default function CartItemsSection({
           items: orderItems,
           totalProductPrice: totalPrice,
           totalQuantity: totalQuantity,
-          deliveryMethod: deliveryMethod || existingData?.deliveryMethod || '',
           request: storeRequest || existingData?.request || '',
           updatedAt: new Date()
-        }
-
-        // 택배 배송인 경우 parcelPaymentMethod 추가
-        if (deliveryMethod === '택배 배송' && parcelPaymentMethod) {
-          updateData.parcelPaymentMethod = parcelPaymentMethod
         }
 
         await updateDoc(docRef, updateData)
@@ -264,7 +252,7 @@ export default function CartItemsSection({
 
         const totalQuantity = cartItems.reduce((sum, item) => sum + item.quantity, 0)
 
-        const baseCartData = {
+        const cartData = {
           uid: user.uid,
           storeId: product.storeId,
           storeName: storeData?.storeName || '',
@@ -274,19 +262,10 @@ export default function CartItemsSection({
           items: orderItems,
           totalProductPrice: totalPrice,
           totalQuantity: totalQuantity,
-          deliveryMethod: deliveryMethod || '',
           request: storeRequest || '',
           createdAt: new Date(),
           updatedAt: new Date()
         }
-
-        const cartData = deliveryMethod === '택배 배송'
-          ? {
-              ...baseCartData,
-              ...(product.deliveryFeeSettings ? { deliveryFeeSettings: product.deliveryFeeSettings } : {}),
-              ...(parcelPaymentMethod ? { parcelPaymentMethod: parcelPaymentMethod } : {})
-            }
-          : baseCartData
 
         await addDoc(collection(db, 'shoppingCart'), cartData)
 
@@ -309,11 +288,6 @@ export default function CartItemsSection({
     if (!user) {
       alert('로그인이 필요합니다.')
       router.push('/login')
-      return
-    }
-
-    if (!deliveryMethod) {
-      alert('배송방법을 선택해주세요.')
       return
     }
 
@@ -373,7 +347,7 @@ export default function CartItemsSection({
         return orderItem
       })
 
-      const baseOrderData = {
+      const orderData = {
         uid: user.uid,
         productId: productId,
         productName: product.name,
@@ -383,19 +357,10 @@ export default function CartItemsSection({
         items: orderItems,
         totalProductPrice: totalPrice,
         totalQuantity: totalQuantity,
-        deliveryMethod: deliveryMethod,
         request: storeRequest,
         createdAt: new Date(),
         updatedAt: new Date()
       }
-
-      const orderData = deliveryMethod === '택배 배송'
-        ? {
-            ...baseOrderData,
-            ...(product.deliveryFeeSettings ? { deliveryFeeSettings: product.deliveryFeeSettings } : {}),
-            ...(parcelPaymentMethod ? { parcelPaymentMethod: parcelPaymentMethod } : {})
-          }
-        : baseOrderData
 
       let cartId: string
 
@@ -435,8 +400,10 @@ export default function CartItemsSection({
   const minQty = product.minOrderQuantity || 1
   const maxQty = product.maxOrderQuantity || 999
 
-  // 버튼 활성화 여부
-  const isOrderValid = totalQuantity >= minQty && totalQuantity <= maxQty
+  // 버튼 활성화 여부 - 추가 주문인 경우 최소 수량 체크 안 함
+  const isOrderValid = additionalOrderId
+    ? totalQuantity <= maxQty
+    : totalQuantity >= minQty && totalQuantity <= maxQty
 
   return (
     <div className={styles.selectedSection}>
