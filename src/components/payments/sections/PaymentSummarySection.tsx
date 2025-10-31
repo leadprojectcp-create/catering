@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import { doc, getDoc, updateDoc, setDoc, addDoc, collection, increment, serverTimestamp, deleteDoc } from 'firebase/firestore'
+import { doc, getDoc, updateDoc, addDoc, collection, increment, serverTimestamp, deleteDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { requestPayment } from '@/lib/services/paymentService'
 import { OrderData, OrderInfo, DeliveryAddress } from '../types'
@@ -70,20 +70,23 @@ export default function PaymentSummarySection({
   const router = useRouter()
   const [isLoadingDeliveryFee, setIsLoadingDeliveryFee] = useState(false)
 
-  // 총 상품금액과 수량 계산
+  // 추가 결제 모드 확인
+  const isAdditionalOrder = searchParams.get('additionalOrderId')
+
+  // 총 상품금액과 수량 계산 - 추가 결제 모드일 때는 pendingItems 사용
   const totalProductPrice = useMemo(() => {
-    return orderData
-      ? orderData.items.reduce((sum, item) => {
-          return sum + (item.itemPrice || (orderData.productPrice * item.quantity))
-        }, 0)
-      : 0
-  }, [orderData])
+    if (!orderData) return 0
+    const itemsToCalculate = (isAdditionalOrder && orderData.pendingItems) ? orderData.pendingItems : orderData.items
+    return itemsToCalculate.reduce((sum, item) => {
+      return sum + (item.itemPrice || (orderData.productPrice * item.quantity))
+    }, 0)
+  }, [orderData, isAdditionalOrder])
 
   const totalQuantity = useMemo(() => {
-    return orderData
-      ? orderData.items.reduce((sum, item) => sum + item.quantity, 0)
-      : 0
-  }, [orderData])
+    if (!orderData) return 0
+    const itemsToCalculate = (isAdditionalOrder && orderData.pendingItems) ? orderData.pendingItems : orderData.items
+    return itemsToCalculate.reduce((sum, item) => sum + item.quantity, 0)
+  }, [orderData, isAdditionalOrder])
 
   // 택배 배송비 계산
   const calculateParcelDeliveryFee = useMemo(() => {
@@ -338,14 +341,15 @@ export default function PaymentSummarySection({
         return
       }
 
-      // 결제 검증 성공 - 주문 상태 업데이트
+      // 결제 검증 완료 - paymentInfo를 빈 배열로 초기화 (웹훅에서 실제 데이터 추가)
       const orderRef = doc(db, 'orders', finalOrderId)
-      await setDoc(orderRef, {
+      await updateDoc(orderRef, {
         paymentStatus: 'paid',
-        paymentId: paymentResult.paymentId,
-        paidAt: new Date(),
+        paymentInfo: [], // 빈 배열로 초기화 - 웹훅에서 실제 결제 정보 추가
+        paymentId: [], // 빈 배열로 초기화 - 웹훅에서 실제 ID 추가
+        paidAt: [], // 빈 배열로 초기화 - 웹훅에서 실제 날짜 추가
         verifiedAt: new Date()
-      }, { merge: true })
+      })
 
       // 배송지 정보 저장 (퀵업체 배송 또는 택배 배송인 경우)
       if ((deliveryMethod === '퀵업체 배송' || deliveryMethod === '택배 배송') && orderInfo.address.trim() && addressName.trim()) {
@@ -537,8 +541,6 @@ export default function PaymentSummarySection({
       setIsLoadingDeliveryFee(false)
     }
   }
-
-  const isAdditionalOrder = searchParams.get('additionalOrderId')
 
   return (
     <section className={styles.section}>
@@ -809,51 +811,12 @@ export const usePaymentSummary = (props: Omit<PaymentSummarySectionProps, 'onPay
       const currentOrderData = orderDocSnap.data()
 
       if (additionalOrderIdParam) {
-        // 추가 주문인 경우 paymentInfo 배열에 추가
-        // 기존 paymentInfo가 배열이 아니면 기존 결제 정보를 배열의 첫 항목으로 변환
-        let existingPaymentInfo = []
-        if (Array.isArray(currentOrderData.paymentInfo)) {
-          existingPaymentInfo = currentOrderData.paymentInfo
-        } else if (currentOrderData.paymentId) {
-          // 기존 형식(단일 paymentId)인 경우 배열로 변환
-          existingPaymentInfo = [{
-            paymentId: currentOrderData.paymentId,
-            amount: currentOrderData.totalPrice || 0,
-            productPrice: currentOrderData.totalProductPrice || 0,
-            deliveryFee: currentOrderData.deliveryFee || 0,
-            usedPoint: currentOrderData.usedPoint || 0,
-            paidAt: currentOrderData.paidAt || null,
-            createdAt: currentOrderData.createdAt || new Date()
-          }]
-        }
-
-        const newPaymentInfo = {
-          paymentId: null, // 결제 후 업데이트됨
-          amount: totalPrice,
-          productPrice: totalProductPrice,
-          deliveryFee: deliveryFee,
-          usedPoint: usePoint,
-          paidAt: null, // 결제 후 업데이트됨
-          createdAt: new Date()
-        }
-
+        // 추가 주문 - 기본 정보만 업데이트 (paymentInfo는 웹훅에서 처리)
         await updateDoc(orderDocRef, {
-          paymentInfo: [...existingPaymentInfo, newPaymentInfo],
-          // totalPrice와 totalProductPrice는 누적하지 않음 (각 paymentInfo에 저장됨)
           updatedAt: new Date()
         })
       } else {
-        // 새로운 주문인 경우 paymentInfo 배열 형태로 저장
-        const newPaymentInfo = {
-          paymentId: null, // 결제 후 업데이트됨
-          amount: totalPrice,
-          productPrice: totalProductPrice,
-          deliveryFee: deliveryFee,
-          usedPoint: usePoint,
-          paidAt: null, // 결제 후 업데이트됨
-          createdAt: new Date()
-        }
-
+        // 새로운 주문 - 기본 주문 정보 저장 (paymentInfo는 웹훅에서 처리)
         await updateDoc(orderDocRef, {
           partnerId: storeData?.partnerId,
           partnerPhone: storeData?.phone,
@@ -863,7 +826,6 @@ export const usePaymentSummary = (props: Omit<PaymentSummarySectionProps, 'onPay
           deliveryFee: deliveryFee,
           deliveryMethod: deliveryMethod,
           usedPoint: usePoint,
-          paymentInfo: [newPaymentInfo], // 배열로 저장
           deliveryInfo: {
             addressName: addressName,
             deliveryDate: orderInfo.deliveryDate,
@@ -919,49 +881,8 @@ export const usePaymentSummary = (props: Omit<PaymentSummarySectionProps, 'onPay
         return
       }
 
-      const orderRef = doc(db, 'orders', finalOrderId)
-
-      // paymentInfo 배열의 마지막 항목 업데이트 (추가 주문이든 신규 주문이든 동일)
-      const updatedOrderSnap = await getDoc(orderRef)
-      const updatedOrderData = updatedOrderSnap.data()
-
-      if (!updatedOrderData) {
-        alert('주문 정보를 찾을 수 없습니다.')
-        return
-      }
-
-      const paymentInfoArray = updatedOrderData.paymentInfo || []
-
-      if (paymentInfoArray.length > 0) {
-        // 마지막 paymentInfo 항목 업데이트
-        paymentInfoArray[paymentInfoArray.length - 1] = {
-          ...paymentInfoArray[paymentInfoArray.length - 1],
-          paymentId: paymentResult.paymentId,
-          paidAt: new Date()
-        }
-
-        // 기존 paymentId 배열 가져오기 (하위 호환성)
-        const existingPaymentIds = Array.isArray(updatedOrderData.paymentId)
-          ? updatedOrderData.paymentId
-          : updatedOrderData.paymentId
-          ? [updatedOrderData.paymentId]
-          : []
-
-        const existingPaidAts = Array.isArray(updatedOrderData.paidAt)
-          ? updatedOrderData.paidAt
-          : updatedOrderData.paidAt
-          ? [updatedOrderData.paidAt]
-          : []
-
-        await updateDoc(orderRef, {
-          paymentInfo: paymentInfoArray,
-          paymentStatus: 'paid',
-          paymentId: [...existingPaymentIds, paymentResult.paymentId], // 배열로 누적 저장
-          paidAt: [...existingPaidAts, new Date()], // 배열로 누적 저장
-          verifiedAt: new Date(),
-          updatedAt: new Date()
-        })
-      }
+      // 결제 검증 완료 - 웹훅에서 paymentInfo를 업데이트하므로 여기서는 하지 않음
+      console.log('[PaymentSummary] 결제 검증 완료. 웹훅에서 paymentInfo 업데이트됩니다.')
 
       if ((deliveryMethod === '퀵업체 배송' || deliveryMethod === '택배 배송') && orderInfo.address.trim() && addressName.trim()) {
         try {

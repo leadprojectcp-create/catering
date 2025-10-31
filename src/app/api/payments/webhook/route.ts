@@ -96,27 +96,157 @@ export async function POST(request: NextRequest) {
       if (orderId) {
         const orderRef = doc(db, 'orders', orderId)
 
-        // paymentData에서 필요한 필드만 저장 (민감한 정보 제외, undefined 제외)
-        const paymentInfo: Record<string, string | number | object> = {}
+        // 기존 주문 데이터 조회 (paymentInfo 배열 확인)
+        const orderSnapshot = await getDoc(orderRef)
+        const existingOrderData = orderSnapshot.data()
 
-        if (paymentData.method) paymentInfo.method = paymentData.method
-        if (paymentData.amount) paymentInfo.amount = paymentData.amount
-        if (paymentData.currency) paymentInfo.currency = paymentData.currency
-        if (paymentData.paidAt) paymentInfo.paidAt = paymentData.paidAt
-        if (paymentData.pgProvider) paymentInfo.pgProvider = paymentData.pgProvider
-        if (paymentData.pgTxId) paymentInfo.pgTxId = paymentData.pgTxId
-        if (paymentData.receiptUrl) paymentInfo.receiptUrl = paymentData.receiptUrl
-        if (paymentData.status) paymentInfo.status = paymentData.status
-
-        await updateDoc(orderRef, {
-          paymentStatus: 'paid',
-          paymentId: paymentId,
-          transactionId: transactionId,
-          paidAt: new Date(),
-          paymentInfo: paymentInfo,
+        console.log('[Webhook] 기존 주문 데이터 조회:', {
+          orderId,
+          orderExists: orderSnapshot.exists(),
+          hasPaymentInfo: !!existingOrderData?.paymentInfo,
+          paymentInfoType: existingOrderData?.paymentInfo ?
+            (Array.isArray(existingOrderData.paymentInfo) ? 'array' : 'object') :
+            'none'
         })
 
-        console.log(`[Webhook] Order ${orderId} updated with payment info`)
+        // paymentData에서 PortOne 전체 응답을 저장
+        const newPaymentInfo = {
+          ...paymentData, // PortOne API 전체 응답
+          paidAt: new Date()
+        }
+
+        console.log('[Webhook] PortOne 전체 응답 구조:', {
+          id: paymentData.id,
+          status: paymentData.status,
+          hasAmount: !!paymentData.amount,
+          hasMethod: !!paymentData.method,
+          keys: Object.keys(paymentData)
+        })
+
+        // 기존 paymentInfo 배열 가져오기
+        let paymentInfoArray = []
+        if (existingOrderData?.paymentInfo) {
+          if (Array.isArray(existingOrderData.paymentInfo)) {
+            // 이미 배열인 경우
+            paymentInfoArray = existingOrderData.paymentInfo
+          } else {
+            // 단일 객체인 경우 배열로 변환
+            paymentInfoArray = [existingOrderData.paymentInfo]
+          }
+        }
+
+        // paymentId로 이미 존재하는 항목 찾기 (중복 방지)
+        const existingIndex = paymentInfoArray.findIndex(
+          (info: { id?: string }) => info.id === paymentData.id
+        )
+
+        if (existingIndex >= 0) {
+          // 이미 존재하면 업데이트
+          paymentInfoArray[existingIndex] = newPaymentInfo
+          console.log(`[Webhook] paymentInfo 배열 항목 업데이트 (index: ${existingIndex})`)
+        } else {
+          // 없으면 추가
+          paymentInfoArray.push(newPaymentInfo)
+          console.log(`[Webhook] paymentInfo 배열에 새 항목 추가 (total: ${paymentInfoArray.length})`)
+        }
+
+        // 기존 paymentId 배열 처리 (하위 호환성)
+        let paymentIdArray = []
+        if (existingOrderData?.paymentId) {
+          paymentIdArray = Array.isArray(existingOrderData.paymentId)
+            ? existingOrderData.paymentId
+            : [existingOrderData.paymentId]
+        }
+        if (!paymentIdArray.includes(paymentId)) {
+          paymentIdArray.push(paymentId)
+        }
+
+        // 기존 paidAt 배열 처리
+        let paidAtArray = []
+        if (existingOrderData?.paidAt) {
+          paidAtArray = Array.isArray(existingOrderData.paidAt)
+            ? existingOrderData.paidAt
+            : [existingOrderData.paidAt]
+        }
+        paidAtArray.push(new Date())
+
+        // pendingItems가 있으면 items에 추가 (추가 결제 완료 시)
+        let finalItems = existingOrderData?.items || []
+        const hasPendingItems = existingOrderData?.pendingItems && existingOrderData.pendingItems.length > 0
+
+        if (hasPendingItems) {
+          console.log('[Webhook] pendingItems 감지 - items에 추가:', existingOrderData.pendingItems)
+          finalItems = [...finalItems, ...existingOrderData.pendingItems]
+
+          // totalProductPrice와 totalQuantity도 업데이트
+          const newTotalProductPrice = (existingOrderData?.totalProductPrice || 0) + (existingOrderData?.pendingTotalProductPrice || 0)
+          const newTotalQuantity = (existingOrderData?.totalQuantity || 0) + (existingOrderData?.pendingTotalQuantity || 0)
+
+          console.log('[Webhook] 총 금액/수량 업데이트:', {
+            기존금액: existingOrderData?.totalProductPrice,
+            추가금액: existingOrderData?.pendingTotalProductPrice,
+            최종금액: newTotalProductPrice,
+            기존수량: existingOrderData?.totalQuantity,
+            추가수량: existingOrderData?.pendingTotalQuantity,
+            최종수량: newTotalQuantity
+          })
+        }
+
+        console.log('[Webhook] Firestore 업데이트 준비:', {
+          orderId,
+          paymentStatus: 'paid',
+          paymentIdArrayLength: paymentIdArray.length,
+          paidAtArrayLength: paidAtArray.length,
+          paymentInfoArrayLength: paymentInfoArray.length,
+          hasPendingItems,
+          finalItemsLength: finalItems.length,
+          paymentInfoFirstItem: paymentInfoArray[0] ? {
+            id: paymentInfoArray[0].id,
+            status: paymentInfoArray[0].status,
+            hasAmount: !!paymentInfoArray[0].amount
+          } : null
+        })
+
+        const updateData: Record<string, unknown> = {
+          paymentStatus: 'paid',
+          paymentId: paymentIdArray,
+          transactionId: transactionId,
+          paidAt: paidAtArray,
+          paymentInfo: paymentInfoArray,
+        }
+
+        // paymentInfo가 배열인지 명시적으로 확인
+        console.log('[Webhook] paymentInfo 타입 확인:', {
+          isArray: Array.isArray(paymentInfoArray),
+          length: paymentInfoArray.length,
+          type: typeof paymentInfoArray,
+          firstElement: paymentInfoArray[0] ? typeof paymentInfoArray[0] : 'empty'
+        })
+
+        // pendingItems가 있었다면 items 업데이트 및 pending 필드 삭제
+        if (hasPendingItems) {
+          updateData.items = finalItems
+          updateData.totalProductPrice = (existingOrderData?.totalProductPrice || 0) + (existingOrderData?.pendingTotalProductPrice || 0)
+          updateData.totalQuantity = (existingOrderData?.totalQuantity || 0) + (existingOrderData?.pendingTotalQuantity || 0)
+          updateData.pendingItems = null
+          updateData.pendingTotalProductPrice = null
+          updateData.pendingTotalQuantity = null
+        }
+
+        await updateDoc(orderRef, updateData)
+
+        console.log(`[Webhook] ✅ Order ${orderId} updated with payment info (배열 길이: ${paymentInfoArray.length})`)
+
+        // 업데이트 후 확인
+        const updatedOrderSnapshot = await getDoc(orderRef)
+        const updatedOrderData = updatedOrderSnapshot.data()
+        console.log('[Webhook] 업데이트 후 확인:', {
+          orderId,
+          hasPaymentInfo: !!updatedOrderData?.paymentInfo,
+          paymentInfoLength: Array.isArray(updatedOrderData?.paymentInfo) ?
+            updatedOrderData.paymentInfo.length : 'not array',
+          paymentStatus: updatedOrderData?.paymentStatus
+        })
 
         // 주문 정보 조회
         const orderDoc = await getDoc(orderRef)
