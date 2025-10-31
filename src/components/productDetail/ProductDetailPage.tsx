@@ -391,7 +391,20 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
 
   // 장바구니 아이템 수량 변경 핸들러
   const removeFromCart = (index: number) => {
-    setCartItems(prev => prev.filter((_, i) => i !== index))
+    setCartItems(prev => {
+      const newItems = prev.filter((_, i) => i !== index)
+
+      // 모든 아이템이 삭제되고, 필수 옵션이 없는 경우 기본 상품 1개 추가
+      if (newItems.length === 0 && product && !product.optionsEnabled) {
+        return [{
+          options: {},
+          additionalOptions: undefined,
+          quantity: 1
+        }]
+      }
+
+      return newItems
+    })
   }
 
   const updateCartQuantity = (index: number, newQuantity: number) => {
