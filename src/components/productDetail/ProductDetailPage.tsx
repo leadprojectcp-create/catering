@@ -502,8 +502,6 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
               storeName={store?.storeName || ''}
               cartItems={cartItems}
               storeRequest={storeRequest}
-              deliveryMethod={deliveryMethod}
-              parcelPaymentMethod={parcelPaymentMethod}
               editingCartItemId={editingCartItemId}
               isEditingOrder={isEditingOrder}
               additionalOrderId={additionalOrderId}
@@ -511,7 +509,6 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
               onUpdateQuantity={updateCartQuantity}
               onQuantityInputChange={handleQuantityInputChange}
               onStoreRequestChange={setStoreRequest}
-              onParcelPaymentMethodChange={setParcelPaymentMethod}
               onEditingCartItemIdChange={setEditingCartItemId}
             />
           </BottomModal>
