@@ -189,7 +189,56 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
 
           console.log('[ProductDetail] URL 파라미터:', { cartItemId, orderId, hasUser: !!user })
 
-          if (cartItemId && user) {
+          // 추가 주문 모드에서 주문 수정인 경우
+          if (additionalOrderId && user) {
+            try {
+              console.log('[ProductDetail] additionalOrderId로 주문 데이터 로드 시작:', additionalOrderId)
+              const orderDocRef = doc(db, 'orders', additionalOrderId)
+              const orderDocSnap = await getDoc(orderDocRef)
+
+              if (orderDocSnap.exists()) {
+                const orderData = orderDocSnap.data()
+                console.log('[ProductDetail] 추가 주문 데이터:', orderData)
+                setEditingCartItemId(additionalOrderId)
+                setIsEditingOrder(true)
+
+                if (orderData.items && Array.isArray(orderData.items)) {
+                  console.log('[ProductDetail] items 배열:', orderData.items)
+                  const convertedItems = orderData.items.map((item: { options?: Record<string, string>; additionalOptions?: Record<string, string>; quantity: number }) => ({
+                    options: item.options || {},
+                    additionalOptions: item.additionalOptions,
+                    quantity: item.quantity
+                  }))
+                  console.log('[ProductDetail] 변환된 items:', convertedItems)
+                  setCartItems(convertedItems)
+
+                  const firstItem = orderData.items[0]
+                  if (firstItem) {
+                    setQuantity(firstItem.quantity)
+                  }
+
+                  if (orderData.deliveryMethod) {
+                    setDeliveryMethod(orderData.deliveryMethod)
+                  }
+                  if (orderData.parcelPaymentMethod) {
+                    setParcelPaymentMethod(orderData.parcelPaymentMethod)
+                  }
+                  if (orderData.request) {
+                    setStoreRequest(orderData.request)
+                  }
+
+                  console.log('[ProductDetail] 추가 주문 모달 열기')
+                  setIsModalOpen(true)
+                } else {
+                  console.error('[ProductDetail] items 배열이 없거나 배열이 아님')
+                }
+              } else {
+                console.error('[ProductDetail] 추가 주문 문서가 존재하지 않음')
+              }
+            } catch (error) {
+              console.error('[ProductDetail] 추가 주문 데이터 로드 실패:', error)
+            }
+          } else if (cartItemId && user) {
             try {
               const cartDocRef = doc(db, 'shoppingCart', cartItemId)
               const cartDocSnap = await getDoc(cartDocRef)

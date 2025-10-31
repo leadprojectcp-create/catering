@@ -347,6 +347,32 @@ export default function CartItemsSection({
         return orderItem
       })
 
+      // 추가 주문인 경우 바로 orders에 items 추가하고 결제 페이지로 이동
+      if (additionalOrderId) {
+        const existingOrderRef = doc(db, 'orders', additionalOrderId)
+        const existingOrderSnap = await getDoc(existingOrderRef)
+
+        if (!existingOrderSnap.exists()) {
+          alert('기존 주문 정보를 찾을 수 없습니다.')
+          return
+        }
+
+        const existingOrderData = existingOrderSnap.data()
+
+        // 수정 모드인 경우 기존 items를 교체, 새로 추가하는 경우 items를 추가
+        const updatedItems = isEditingOrder
+          ? orderItems  // 수정 모드: 기존 items를 새로운 items로 교체
+          : [...(existingOrderData.items || []), ...orderItems]  // 추가 모드: 기존 items에 새 items 추가
+
+        await updateDoc(existingOrderRef, {
+          items: updatedItems,
+          updatedAt: new Date()
+        })
+
+        router.push(`/payments?orderId=${additionalOrderId}&additionalOrderId=${additionalOrderId}`)
+        return
+      }
+
       const orderData = {
         uid: user.uid,
         productId: productId,
@@ -381,12 +407,7 @@ export default function CartItemsSection({
         cartId = docRef.id
       }
 
-      // additionalOrderId가 있으면 함께 전달
-      if (additionalOrderId) {
-        router.push(`/payments?cartId=${cartId}&additionalOrderId=${additionalOrderId}`)
-      } else {
-        router.push(`/payments?cartId=${cartId}`)
-      }
+      router.push(`/payments?cartId=${cartId}`)
     } catch (error) {
       console.error('주문 생성 실패:', error)
       alert('주문 생성에 실패했습니다.')
@@ -410,21 +431,27 @@ export default function CartItemsSection({
       <h3 className={styles.selectedTitle}>선택된 상품</h3>
       <div className={styles.selectedItem}>
         {cartItems.map((item, index) => {
+          // 옵션이 없고 항목이 1개만 있으면 삭제 불가
+          const hasOptions = Object.keys(item.options).length > 0 || (item.additionalOptions && Object.keys(item.additionalOptions).length > 0)
+          const canRemove = cartItems.length > 1 || hasOptions
+
           return (
           <div key={index} className={styles.cartItemWrapper}>
             <div className={styles.selectedHeader}>
               <div className={styles.selectedName}>{product.name}</div>
-              <button
-                onClick={() => onRemoveItem(index)}
-                className={styles.removeButton}
-              >
-                <OptimizedImage
-                  src="/icons/trash.svg"
-                  alt="삭제"
-                  width={16}
-                  height={16}
-                />
-              </button>
+              {canRemove && (
+                <button
+                  onClick={() => onRemoveItem(index)}
+                  className={styles.removeButton}
+                >
+                  <OptimizedImage
+                    src="/icons/trash.svg"
+                    alt="삭제"
+                    width={16}
+                    height={16}
+                  />
+                </button>
+              )}
             </div>
             {/* 옵션이 있을 때만 표시 */}
             {Object.keys(item.options).length > 0 && (
@@ -542,19 +569,21 @@ export default function CartItemsSection({
           <span className={styles.totalPrice}>{calculateTotalPrice().toLocaleString()}원</span>
         </div>
         <div className={styles.buttonGroup}>
+          {!additionalOrderId && (
+            <button
+              className={styles.cartButton}
+              onClick={handleSaveToCart}
+              disabled={!isOrderValid}
+            >
+              장바구니
+            </button>
+          )}
           <button
-            className={styles.cartButton}
-            onClick={handleSaveToCart}
-            disabled={!isOrderValid}
-          >
-            장바구니
-          </button>
-          <button
-            className={styles.orderButton}
+            className={additionalOrderId ? styles.orderButtonFull : styles.orderButton}
             onClick={handleOrder}
             disabled={!isOrderValid}
           >
-            주문하기
+            {additionalOrderId ? '추가 주문하기' : '주문하기'}
           </button>
         </div>
       </div>

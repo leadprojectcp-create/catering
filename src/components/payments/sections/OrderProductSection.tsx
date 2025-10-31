@@ -9,13 +9,21 @@ interface OrderProductSectionProps {
   orderData: OrderData | null
   orderId: string | null
   isCartMode: boolean
+  additionalOrderId: string | null
 }
 
-export default function OrderProductSection({ orderData, orderId, isCartMode }: OrderProductSectionProps) {
+export default function OrderProductSection({ orderData, orderId, isCartMode, additionalOrderId }: OrderProductSectionProps) {
   const router = useRouter()
 
   const handleEditProduct = () => {
     if (!orderData || !orderId) return
+
+    // 추가 주문 모드인 경우
+    if (additionalOrderId) {
+      router.push(`/productDetail/${orderData.productId}?additionalOrderId=${additionalOrderId}`)
+      return
+    }
+
     // cartMode면 cartItemId로, 아니면 orderId로 전달
     const paramName = isCartMode ? 'cartItemId' : 'orderId'
     router.push(`/productDetail/${orderData.productId}?${paramName}=${orderId}`)

@@ -366,6 +366,7 @@ export default function PaymentsPage() {
           orderData={orderData}
           orderId={orderId}
           isCartMode={!!searchParams.get('cartId')}
+          additionalOrderId={searchParams.get('additionalOrderId')}
         />
 
         {/* 추가 주문이 아닐 때만 배송방법, 수령인 정보 등 표시 */}

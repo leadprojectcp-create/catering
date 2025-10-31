@@ -538,6 +538,8 @@ export default function PaymentSummarySection({
     }
   }
 
+  const isAdditionalOrder = searchParams.get('additionalOrderId')
+
   return (
     <section className={styles.section}>
       <h2 className={styles.sectionTitle}>총 결제금액</h2>
@@ -550,7 +552,7 @@ export default function PaymentSummarySection({
           <span className={styles.paymentLabel}>총 상품금액</span>
           <span className={styles.paymentValue}>{totalProductPrice.toLocaleString()}원</span>
         </div>
-        {deliveryMethod === '퀵업체 배송' && !deliveryFeeFromAPI && (
+        {!isAdditionalOrder && deliveryMethod === '퀵업체 배송' && !deliveryFeeFromAPI && (
           <div className={styles.paymentRow}>
             <div>
               <div className={styles.paymentLabel}>배송비</div>
@@ -568,7 +570,7 @@ export default function PaymentSummarySection({
             </button>
           </div>
         )}
-        {deliveryMethod === '퀵업체 배송' && deliveryFeeFromAPI && (
+        {!isAdditionalOrder && deliveryMethod === '퀵업체 배송' && deliveryFeeFromAPI && (
           <>
             <div className={styles.paymentRow}>
               <span className={styles.paymentLabel}>배송비</span>
@@ -580,7 +582,7 @@ export default function PaymentSummarySection({
             </div>
           </>
         )}
-        {deliveryMethod === '택배 배송' && (
+        {!isAdditionalOrder && deliveryMethod === '택배 배송' && (
           <div className={styles.paymentRow}>
             <span className={styles.paymentLabel}>배송비</span>
             <span className={styles.paymentValue}>
@@ -760,7 +762,8 @@ export const usePaymentSummary = (props: Omit<PaymentSummarySectionProps, 'onPay
       let finalOrderId = orderId
       const additionalOrderIdParam = searchParams.get('additionalOrderId')
 
-      if (cartIdParam) {
+      // 추가 주문이 아닌 경우에만 cartId 처리
+      if (cartIdParam && !additionalOrderIdParam) {
         const cartDocRef = doc(db, 'shoppingCart', cartIdParam)
         const cartDocSnap = await getDoc(cartDocRef)
 
@@ -771,48 +774,24 @@ export const usePaymentSummary = (props: Omit<PaymentSummarySectionProps, 'onPay
 
         const cartData = cartDocSnap.data()
 
-        // 추가 주문인 경우 기존 주문에 items 추가
-        if (additionalOrderIdParam) {
-          finalOrderId = additionalOrderIdParam
-          const existingOrderRef = doc(db, 'orders', additionalOrderIdParam)
-          const existingOrderSnap = await getDoc(existingOrderRef)
-
-          if (!existingOrderSnap.exists()) {
-            alert('기존 주문 정보를 찾을 수 없습니다.')
-            return
-          }
-
-          const existingOrderData = existingOrderSnap.data()
-
-          // 기존 items에 새로운 items 추가
-          const updatedItems = [...(existingOrderData.items || []), ...cartData.items]
-
-          await updateDoc(existingOrderRef, {
-            items: updatedItems,
-            updatedAt: new Date()
-          })
-
-          console.log('기존 주문에 상품 추가 완료:', finalOrderId)
-        } else {
-          // 새로운 주문 생성
-          const newOrderData = {
-            uid: cartData.uid,
-            productId: cartData.productId,
-            storeId: cartData.storeId,
-            storeName: cartData.storeName,
-            items: cartData.items,
-            totalProductPrice: cartData.totalProductPrice,
-            totalQuantity: cartData.totalQuantity,
-            deliveryMethod: deliveryMethod, // props에서 가져온 deliveryMethod 사용
-            request: cartData.request,
-            createdAt: cartData.createdAt || new Date(),
-            updatedAt: new Date()
-          }
-
-          const newOrderRef = await addDoc(collection(db, 'orders'), newOrderData)
-          finalOrderId = newOrderRef.id
-          console.log('shoppingCart에서 orders로 이동 완료:', finalOrderId)
+        // 새로운 주문 생성
+        const newOrderData = {
+          uid: cartData.uid,
+          productId: cartData.productId,
+          storeId: cartData.storeId,
+          storeName: cartData.storeName,
+          items: cartData.items,
+          totalProductPrice: cartData.totalProductPrice,
+          totalQuantity: cartData.totalQuantity,
+          deliveryMethod: deliveryMethod, // props에서 가져온 deliveryMethod 사용
+          request: cartData.request,
+          createdAt: cartData.createdAt || new Date(),
+          updatedAt: new Date()
         }
+
+        const newOrderRef = await addDoc(collection(db, 'orders'), newOrderData)
+        finalOrderId = newOrderRef.id
+        console.log('shoppingCart에서 orders로 이동 완료:', finalOrderId)
       }
 
       const storeDoc = await getDoc(doc(db, 'stores', orderData.storeId))

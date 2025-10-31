@@ -299,6 +299,24 @@
   cursor: not-allowed;
 }
 
+.orderButtonFull {
+  width: 100%;
+  padding: 12px;
+  background: #025BD9;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+  cursor: pointer;
+}
+
+.orderButtonFull:disabled {
+  background: #E0E0E0;
+  color: #BDBDBD;
+  cursor: not-allowed;
+}
+
 .parcelPaymentContainer {
   padding: 20px;
   border-radius: 20px;
