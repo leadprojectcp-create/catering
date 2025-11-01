@@ -127,43 +127,116 @@ export async function POST(request: NextRequest) {
               })
 
               if (partnerPhone) {
+                // 추가 주문 여부 확인 (paymentInfo 배열 길이로 판단)
+                const isAdditionalOrder = orderData.paymentInfo && Array.isArray(orderData.paymentInfo) && orderData.paymentInfo.length > 1
+
                 // 이미 알림톡을 발송했는지 확인
                 const alreadyNotified = orderData.partnerNotified === true
 
-                if (!alreadyNotified) {
-                  // 총 수량 계산
+                // 최초 주문이거나 추가 주문인 경우 알림톡 발송
+                if (!alreadyNotified || isAdditionalOrder) {
+                  // 총 수량 계산 (DB의 totalQuantity 우선 사용)
                   console.log(`[Webhook] Order items:`, orderData.items)
-                  const totalQuantity = orderData.items?.reduce(
+                  const totalQuantity = orderData.totalQuantity || orderData.items?.reduce(
                     (sum: number, item: { quantity: number }) => sum + item.quantity,
                     0
                   ) || 0
+                  const totalProductPrice = orderData.totalProductPrice || orderData.totalPrice || 0
 
                   console.log(`[Webhook] Calculated totalQuantity:`, totalQuantity)
+                  console.log(`[Webhook] Is additional order:`, isAdditionalOrder)
+
+                  // 추가 주문인 경우 isAddItem이 true인 모든 아이템들의 수량과 금액 계산
+                  let additionalQuantity = 0
+                  let additionalProductPrice = 0
+
+                  if (isAdditionalOrder && orderData.items) {
+                    const additionalItems = orderData.items.filter(
+                      (item: { isAddItem?: boolean }) => item.isAddItem === true
+                    )
+
+                    additionalQuantity = additionalItems.reduce(
+                      (sum: number, item: { quantity: number }) => sum + item.quantity,
+                      0
+                    )
+
+                    additionalProductPrice = additionalItems.reduce(
+                      (sum: number, item: { itemPrice?: number }) => sum + (item.itemPrice || 0),
+                      0
+                    )
+
+                    console.log(`[Webhook] Additional order details:`, {
+                      additionalQuantity,
+                      additionalProductPrice,
+                      additionalItems: additionalItems.length
+                    })
+                  }
 
                   const alimtalkParams = {
                     storeName: orderData.storeName || '',
                     orderNumber: orderData.orderNumber || orderId,
                     totalQuantity: String(totalQuantity),
-                    totalProductPrice: String(orderData.totalProductPrice || orderData.totalPrice || 0),
+                    totalProductPrice: String(totalProductPrice),
+                    additionalQuantity: String(additionalQuantity),
+                    additionalProductPrice: String(additionalProductPrice),
                   }
 
                   console.log(`[Webhook] Alimtalk params:`, alimtalkParams)
-                  console.log(`[Webhook] Sending Kakao Alimtalk to ${partnerPhone}`)
+
+                  // 템플릿 코드 선택
+                  // 파트너용: 신규 UD_0958, 추가 UD_3133
+                  // 고객용: 신규 UD_3134, 추가 UD_3135
+                  const partnerTemplateCode = isAdditionalOrder ? 'UD_3133' : 'UD_0958'
+                  const customerTemplateCode = isAdditionalOrder ? 'UD_3135' : 'UD_3134'
+                  console.log(`[Webhook] Partner template: ${partnerTemplateCode}, Customer template: ${customerTemplateCode}`)
 
                   try {
-                    // 카카오톡 알림톡 발송 (템플릿 코드: UD_0958)
-                    // Aligo에서 알림톡 실패 시 자동으로 SMS 대체 발송
-                    const kakaoSuccess = await sendKakaoAlimtalk(partnerPhone, 'UD_0958', alimtalkParams)
+                    // 1. 파트너에게 알림톡 발송
+                    console.log(`[Webhook] Sending Kakao Alimtalk to partner: ${partnerPhone}`)
+                    const partnerKakaoSuccess = await sendKakaoAlimtalk(partnerPhone, partnerTemplateCode, alimtalkParams)
 
-                    if (kakaoSuccess) {
-                      console.log(`[Webhook] 알림톡/SMS 발송 요청 성공: ${partnerPhone}`)
-                      // 알림톡 발송 완료 표시
-                      await updateDoc(orderRef, {
-                        partnerNotified: true,
-                        partnerNotifiedAt: new Date(),
-                      })
+                    if (partnerKakaoSuccess) {
+                      console.log(`[Webhook] 파트너 알림톡/SMS 발송 요청 성공: ${partnerPhone}`)
+                      // 최초 주문인 경우에만 partnerNotified 업데이트
+                      if (!alreadyNotified) {
+                        await updateDoc(orderRef, {
+                          partnerNotified: true,
+                          partnerNotifiedAt: new Date(),
+                        })
+                      }
                     } else {
-                      console.error('[Webhook] 알림톡/SMS 발송 요청 실패:', partnerPhone)
+                      console.error('[Webhook] 파트너 알림톡/SMS 발송 요청 실패:', partnerPhone)
+                    }
+
+                    // 2. 주문자에게 알림톡 발송
+                    const userId = orderData?.uid
+                    if (userId) {
+                      console.log(`[Webhook] Looking up user: ${userId}`)
+                      const userRef = doc(db, 'users', userId)
+                      const userDoc = await getDoc(userRef)
+
+                      if (userDoc.exists()) {
+                        const userData = userDoc.data()
+                        const customerPhone = userData?.phone
+
+                        if (customerPhone) {
+                          console.log(`[Webhook] Sending Kakao Alimtalk to customer: ${customerPhone}`)
+                          // 고객용 템플릿 사용
+                          const customerKakaoSuccess = await sendKakaoAlimtalk(customerPhone, customerTemplateCode, alimtalkParams)
+
+                          if (customerKakaoSuccess) {
+                            console.log(`[Webhook] 고객 알림톡/SMS 발송 요청 성공: ${customerPhone}`)
+                          } else {
+                            console.error('[Webhook] 고객 알림톡/SMS 발송 요청 실패:', customerPhone)
+                          }
+                        } else {
+                          console.warn(`[Webhook] User ${userId} has no phone number`)
+                        }
+                      } else {
+                        console.warn(`[Webhook] User ${userId} not found`)
+                      }
+                    } else {
+                      console.warn(`[Webhook] Order has no uid field`)
                     }
                   } catch (alimtalkError) {
                     console.error('[Webhook] 알림톡 발송 중 에러:', alimtalkError)
