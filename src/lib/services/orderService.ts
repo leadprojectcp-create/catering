@@ -10,6 +10,9 @@ export interface OrderItem {
   additionalOptionsWithPrices?: { [key: string]: { name: string; price: number } }
   quantity: number
   price: number
+  itemPrice?: number
+  paymentId?: string
+  isAddItem?: boolean
 }
 
 export type OrderStatus = 'pending' | 'preparing' | 'shipping' | 'completed' | 'rejected' | 'cancelled'
@@ -26,6 +29,7 @@ export interface Order {
   items: OrderItem[]
   totalPrice: number
   totalProductPrice: number
+  totalQuantity?: number
   deliveryFee: number
   orderStatus: OrderStatus
   paymentStatus: 'paid' | 'unpaid'

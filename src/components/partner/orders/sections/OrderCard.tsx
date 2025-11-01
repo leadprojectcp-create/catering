@@ -307,18 +307,20 @@ export default function OrderCard({
               </div>
               {order.items.map((item, index) => {
                 const showProductName = index === 0 || order.items[index - 1].productName !== item.productName
+                const hasOptions = Object.keys(item.options || {}).length > 0
+                const hasAdditionalOptions = item.additionalOptions && Object.keys(item.additionalOptions).length > 0
+
                 return (
                   <div key={index} className={styles.orderItemSection}>
                     {showProductName && (
                       <span className={styles.orderItemName}>{item.productName}</span>
                     )}
 
-                    {/* 옵션이나 추가상품이 있을 때만 orderItemContent 표시 */}
-                    {(Object.keys(item.options).length > 0 || (item.additionalOptions && Object.keys(item.additionalOptions).length > 0)) && (
-                      <div className={styles.orderItemContent}>
+                    {/* 모든 상품에 대해 orderItemContent 표시 */}
+                    <div className={styles.orderItemContent}>
                         <div className={styles.orderItemLeft}>
                           {/* 상품 옵션 */}
-                          {Object.keys(item.options).length > 0 && (
+                          {hasOptions ? (
                             <div className={styles.optionGroup}>
                               <div className={styles.optionGroupTitle}>상품 옵션</div>
                               {Object.entries(item.options).map(([key, value], optIdx) => {
@@ -332,6 +334,13 @@ export default function OrderCard({
                                   </div>
                                 )
                               })}
+                            </div>
+                          ) : (
+                            <div className={styles.optionGroup}>
+                              <div className={styles.optionGroupTitle}>상품 옵션</div>
+                              <div className={styles.orderItemOption}>
+                                [기본] 기본 +0원
+                              </div>
                             </div>
                           )}
 
@@ -356,11 +365,9 @@ export default function OrderCard({
 
                         <div className={styles.orderItemRight}>
                           <span className={styles.orderItemQuantity}>{item.quantity}개</span>
-                          <span className={styles.orderItemPrice}>{formatCurrency(item.price * item.quantity)}</span>
+                          <span className={styles.orderItemPrice}>{formatCurrency(item.itemPrice || item.price * item.quantity)}</span>
                         </div>
                       </div>
-                    )}
-
                   </div>
                 )
               })}
@@ -371,7 +378,7 @@ export default function OrderCard({
               <div className={styles.totalSection}>
                 <div className={styles.totalRow}>
                   <span className={styles.totalLabel}>총 상품갯수</span>
-                  <span className={styles.totalValue}>{order.items.reduce((sum, item) => sum + item.quantity, 0)}개</span>
+                  <span className={styles.totalValue}>{order.totalQuantity || order.items.reduce((sum, item) => sum + item.quantity, 0)}개</span>
                 </div>
                 <div className={styles.totalRow}>
                   <span className={styles.totalLabel}>총 상품금액</span>
