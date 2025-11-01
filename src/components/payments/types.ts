@@ -6,6 +6,8 @@ export interface OrderItem {
   quantity: number
   price?: number
   itemPrice?: number
+  paymentId?: string  // 어느 결제에 포함된 상품인지
+  isAddItem?: boolean // 추가 주문 상품인지 (true: 추가 주문, false/undefined: 최초 주문)
 }
 
 export interface DeliveryFeeSettings {
@@ -28,7 +30,7 @@ export interface OrderData {
     discountPercent: number
   }
   productImage: string
-  items: OrderItem[]
+  items: OrderItem[] // 모든 주문 상품 (최초 + 추가 주문 모두 포함, isAddItem과 paymentId로 구분)
   deliveryMethods?: string[]
   deliveryMethod?: string
   totalPrice?: number

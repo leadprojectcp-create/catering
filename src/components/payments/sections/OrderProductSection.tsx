@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { OrderData } from '../types'
+import { OrderData, OrderItem } from '../types'
 import styles from './OrderProductSection.module.css'
 
 interface OrderProductSectionProps {
@@ -20,7 +20,7 @@ export default function OrderProductSection({ orderData, orderId, isCartMode, ad
 
     // 추가 주문 모드인 경우
     if (additionalOrderId) {
-      router.push(`/productDetail/${orderData.productId}?additionalOrderId=${additionalOrderId}`)
+      router.push(`/productDetail/${orderData.productId}?additionalOrderId=${additionalOrderId}&mode=edit`)
       return
     }
 
@@ -64,17 +64,24 @@ export default function OrderProductSection({ orderData, orderId, isCartMode, ad
                 </div>
 
                 {/* 각 아이템의 옵션들만 반복 */}
-                {orderData.items.map((item, index) => (
-                  <div key={index}>
-                    {/* 옵션이 없을 때는 수량만 표시 */}
-                    {Object.keys(item.options).length === 0 && (!item.additionalOptions || Object.keys(item.additionalOptions).length === 0) ? (
-                      <div className={styles.productQuantity}>{item.quantity}개</div>
-                    ) : (
-                      /* 옵션이나 추가상품이 있을 때만 productDetailsBox 표시 */
+                {/* additionalOrderId가 있으면 paymentId 없는 항목 표시, 없으면 isAddItem=false인 항목 표시 */}
+                {(() => {
+                  let itemsToDisplay: OrderItem[] = []
+
+                  if (additionalOrderId) {
+                    // 추가 주문 결제 모드 (결제 전): paymentId가 없는 항목들 (방금 추가된 것들)
+                    itemsToDisplay = orderData.items.filter(item => !item.paymentId)
+                  } else {
+                    // 일반 모드: 최초 주문 상품만 표시 (isAddItem이 false이거나 없는 것들)
+                    itemsToDisplay = orderData.items.filter(item => !item.isAddItem)
+                  }
+
+                  return itemsToDisplay.map((item, index) => (
+                    <div key={index}>
                       <div className={styles.productDetailsBox}>
                         <div className={styles.productDetailsLeft}>
                           {/* 상품 옵션 */}
-                          {Object.keys(item.options).length > 0 && (
+                          {Object.keys(item.options).length > 0 ? (
                             <div className={styles.optionSection}>
                               <div className={styles.optionSectionTitle}>상품 옵션</div>
                               <div className={styles.productOptions}>
@@ -90,6 +97,17 @@ export default function OrderProductSection({ orderData, orderId, isCartMode, ad
                                     </div>
                                   )
                                 })}
+                              </div>
+                            </div>
+                          ) : (
+                            /* 필수 옵션이 없을 때 기본 옵션 표시 */
+                            <div className={styles.optionSection}>
+                              <div className={styles.optionSectionTitle}>상품 옵션</div>
+                              <div className={styles.productOptions}>
+                                <div className={styles.optionItem}>
+                                  <span className={styles.optionGroup}>[기본]</span>
+                                  <span>[기본] +0원</span>
+                                </div>
                               </div>
                             </div>
                           )}
@@ -120,9 +138,101 @@ export default function OrderProductSection({ orderData, orderId, isCartMode, ad
                           <div className={styles.productQuantity}>{item.quantity}개</div>
                         </div>
                       </div>
-                    )}
-                  </div>
-                ))}
+                    </div>
+                  ))
+                })()}
+
+                {/* 추가 주문 내역 표시 (paymentId로 그룹핑) - 결제 완료 후에만 표시 */}
+                {!additionalOrderId && (() => {
+                  // isAddItem=true인 항목들만 필터링
+                  const addItems = orderData.items.filter(item => item.isAddItem)
+
+                  if (addItems.length === 0) return null
+
+                  // paymentId로 그룹핑
+                  const groupedByPaymentId: { [key: string]: OrderItem[] } = {}
+                  addItems.forEach(item => {
+                    const paymentId = item.paymentId || 'unknown'
+                    if (!groupedByPaymentId[paymentId]) {
+                      groupedByPaymentId[paymentId] = []
+                    }
+                    groupedByPaymentId[paymentId].push(item)
+                  })
+
+                  return (
+                    <div className={styles.additionalOrdersSection}>
+                      <div className={styles.additionalOrdersTitle}>추가 주문 내역</div>
+                      {Object.entries(groupedByPaymentId).map(([paymentId, items], groupIndex) => (
+                        <div key={paymentId} className={styles.additionalOrderGroup}>
+                          <div className={styles.additionalOrderHeader}>추가 주문 {groupIndex + 1}</div>
+                          {items.map((item, itemIndex) => (
+                            <div key={`${paymentId}-${itemIndex}`}>
+                              <div className={styles.productDetailsBox}>
+                                <div className={styles.productDetailsLeft}>
+                                  {/* 상품 옵션 */}
+                                  {Object.keys(item.options).length > 0 ? (
+                                    <div className={styles.optionSection}>
+                                      <div className={styles.optionSectionTitle}>상품 옵션</div>
+                                      <div className={styles.productOptions}>
+                                        {Object.entries(item.options).map(([key, value]) => {
+                                          let optionPrice = 0
+                                          if (item.optionsWithPrices && item.optionsWithPrices[key]) {
+                                            optionPrice = item.optionsWithPrices[key].price
+                                          }
+                                          return (
+                                            <div key={key} className={styles.optionItem}>
+                                              <span className={styles.optionGroup}>[{key}]</span>
+                                              <span>{value} +{optionPrice.toLocaleString()}원</span>
+                                            </div>
+                                          )
+                                        })}
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <div className={styles.optionSection}>
+                                      <div className={styles.optionSectionTitle}>상품 옵션</div>
+                                      <div className={styles.productOptions}>
+                                        <div className={styles.optionItem}>
+                                          <span className={styles.optionGroup}>[기본]</span>
+                                          <span>[기본] +0원</span>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {/* 추가상품 */}
+                                  {item.additionalOptions && Object.keys(item.additionalOptions).length > 0 && (
+                                    <div className={styles.optionSection}>
+                                      <div className={styles.optionSectionTitle}>추가상품</div>
+                                      <div className={styles.productOptions}>
+                                        {Object.entries(item.additionalOptions).map(([key, value]) => {
+                                          let optionPrice = 0
+                                          if (item.additionalOptionsWithPrices && item.additionalOptionsWithPrices[key]) {
+                                            optionPrice = item.additionalOptionsWithPrices[key].price
+                                          }
+                                          return (
+                                            <div key={key} className={styles.optionItem}>
+                                              <span className={styles.optionGroup}>[{key}]</span>
+                                              <span>{value} +{optionPrice.toLocaleString()}원</span>
+                                            </div>
+                                          )
+                                        })}
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+
+                                <div className={styles.productDetailsRight}>
+                                  <div className={styles.productQuantity}>{item.quantity}개</div>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ))}
+                    </div>
+                  )
+                })()}
               </div>
             </div>
           </div>

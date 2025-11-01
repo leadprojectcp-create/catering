@@ -206,7 +206,8 @@ export default function CartItemsSection({
           quantity: item.quantity,
           options: item.options,
           optionsWithPrices: optionsWithPrices,
-          itemPrice: calculateItemPrice(product, item.options, item.quantity, item.additionalOptions)
+          itemPrice: calculateItemPrice(product, item.options, item.quantity, item.additionalOptions),
+          isAddItem: false  // 최초 주문 (추가 주문이 아님)
         }
 
         if (item.additionalOptions) {
@@ -334,7 +335,8 @@ export default function CartItemsSection({
           quantity: item.quantity,
           options: item.options,
           optionsWithPrices: optionsWithPrices,
-          itemPrice: calculateItemPrice(product, item.options, item.quantity, item.additionalOptions)
+          itemPrice: calculateItemPrice(product, item.options, item.quantity, item.additionalOptions),
+          isAddItem: false  // 최초 주문 (추가 주문이 아님)
         }
 
         if (item.additionalOptions) {
@@ -347,28 +349,29 @@ export default function CartItemsSection({
         return orderItem
       })
 
-      // 추가 주문인 경우 바로 orders에 items 추가하고 결제 페이지로 이동
+      // 추가 주문인 경우 sessionStorage에 임시 저장하고 결제 페이지로 이동
+      // 실제 items 추가는 결제 완료 후에만 처리
       if (additionalOrderId) {
-        const existingOrderRef = doc(db, 'orders', additionalOrderId)
-        const existingOrderSnap = await getDoc(existingOrderRef)
+        console.log('[CartItemsSection] 추가 결제 처리 시작:', additionalOrderId)
+        console.log('[CartItemsSection] isEditingOrder:', isEditingOrder)
 
-        if (!existingOrderSnap.exists()) {
-          alert('기존 주문 정보를 찾을 수 없습니다.')
-          return
+        // 새로운 추가 주문 아이템들 (결제 전이라 paymentId는 없음)
+        const newItemsForAdditionalOrder = orderItems.map((item: Record<string, unknown>) => ({
+          ...item,
+          isAddItem: true  // 추가 주문 표시
+        }))
+
+        // sessionStorage에 추가 주문 정보 저장 (임시)
+        const additionalOrderData = {
+          orderId: additionalOrderId,
+          items: newItemsForAdditionalOrder,
+          totalProductPrice: totalPrice,
+          totalQuantity: totalQuantity
         }
 
-        const existingOrderData = existingOrderSnap.data()
+        sessionStorage.setItem('additionalOrderData', JSON.stringify(additionalOrderData))
 
-        // 수정 모드인 경우 기존 items를 교체, 새로 추가하는 경우 items를 추가
-        const updatedItems = isEditingOrder
-          ? orderItems  // 수정 모드: 기존 items를 새로운 items로 교체
-          : [...(existingOrderData.items || []), ...orderItems]  // 추가 모드: 기존 items에 새 items 추가
-
-        await updateDoc(existingOrderRef, {
-          items: updatedItems,
-          updatedAt: new Date()
-        })
-
+        console.log('[CartItemsSection] 추가 주문 데이터 sessionStorage 저장 완료, 결제 페이지로 이동')
         router.push(`/payments?orderId=${additionalOrderId}&additionalOrderId=${additionalOrderId}`)
         return
       }
@@ -583,7 +586,7 @@ export default function CartItemsSection({
             onClick={handleOrder}
             disabled={!isOrderValid}
           >
-            {additionalOrderId ? '추가 주문하기' : '주문하기'}
+            {additionalOrderId ? '추가 결제하기' : '주문하기'}
           </button>
         </div>
       </div>

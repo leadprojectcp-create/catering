@@ -31,6 +31,12 @@ export async function POST(request: NextRequest) {
 
     const paymentData = await response.json()
 
+    console.log('[Verify API] PortOne 결제 검증:', {
+      paymentId: paymentData.id,
+      status: paymentData.status,
+      amount: paymentData.amount?.total
+    })
+
     // 결제 상태 확인
     const isVerified = paymentData.status === 'PAID'
 

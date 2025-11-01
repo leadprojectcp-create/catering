@@ -184,6 +184,26 @@ export default function PaymentsPage() {
           }
         }
 
+        // 추가 주문인 경우 sessionStorage에서 데이터 가져오기
+        let items = orderDocData.items
+        let totalPrice = orderDocData.totalProductPrice
+
+        if (additionalOrderIdParam) {
+          const additionalDataStr = sessionStorage.getItem('additionalOrderData')
+          if (additionalDataStr) {
+            try {
+              const additionalData = JSON.parse(additionalDataStr)
+              console.log('[PaymentsPage] sessionStorage에서 추가 주문 데이터 로드:', additionalData)
+
+              // sessionStorage의 추가 주문 items만 사용 (기존 items에 추가하지 않음)
+              items = additionalData.items
+              totalPrice = additionalData.totalProductPrice
+            } catch (error) {
+              console.error('[PaymentsPage] sessionStorage 파싱 실패:', error)
+            }
+          }
+        }
+
         // OrderData 형식으로 변환
         const data: OrderData = {
           storeId: orderDocData.storeId,
@@ -192,13 +212,19 @@ export default function PaymentsPage() {
           productName: firstItem.productName,
           productPrice: firstItem.price,
           productImage: productImage,
-          items: orderDocData.items,
-          totalPrice: orderDocData.totalProductPrice,
+          items: items,
+          totalPrice: totalPrice,
           storeRequest: orderDocData.request || '',
           deliveryMethods: deliveryMethods,
           minOrderDays: minOrderDays,
           deliveryFeeSettings: deliveryFeeSettings || undefined
         }
+
+        console.log('[PaymentsPage] OrderData 생성:', {
+          hasItems: !!items,
+          itemsLength: items?.length,
+          isAdditionalOrder: !!additionalOrderIdParam
+        })
 
         setOrderData(data)
 

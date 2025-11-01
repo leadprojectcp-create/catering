@@ -157,6 +157,33 @@
   font-weight: 500;
 }
 
+.additionalOrdersSection {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #ddd;
+}
+
+.additionalOrdersTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 12px;
+}
+
+.additionalOrderGroup {
+  margin-bottom: 16px;
+  padding: 12px;
+  background: #fafafa;
+  border-radius: 8px;
+}
+
+.additionalOrderHeader {
+  font-size: 14px;
+  font-weight: 600;
+  color: #666;
+  margin-bottom: 8px;
+}
+
 @media (max-width: 768px) {
   .sectionTitle {
     font-size: 16px;

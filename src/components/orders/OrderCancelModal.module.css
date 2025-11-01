@@ -78,6 +78,56 @@
   font-weight: 500;
 }
 
+.refundInfo {
+  border-radius: 10px;
+  background: #FFF9F0;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border: 1px solid #FFE4B3;
+}
+
+.refundRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+  color: #333;
+}
+
+.refundLabel {
+  font-weight: 700;
+  color: #025BD9;
+}
+
+.refundAmount {
+  font-weight: 700;
+  font-size: 16px;
+  color: #025BD9;
+}
+
+.refundRate {
+  color: #025BD9;
+  font-weight: 600;
+}
+
+.noRefund {
+  color: #FF4C4C;
+  font-weight: 600;
+}
+
+.warning {
+  padding: 12px;
+  background: #FFF3F3;
+  border: 1px solid #FFD4D4;
+  border-radius: 8px;
+  color: #FF4C4C;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
+}
+
 .description {
   color: #333;
   font-size: 14px;

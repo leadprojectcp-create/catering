@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { collection, query, where, orderBy, getDocs, doc, getDoc, limit } from 'firebase/firestore'
+import { collection, query, where, orderBy, getDocs, doc, getDoc, limit, onSnapshot } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { useAuth } from '@/contexts/AuthContext'
 import { createOrGetChatRoom } from '@/lib/services/chatService'
@@ -71,6 +71,7 @@ export default function OrdersPage() {
   const [loading, setLoading] = useState(true)
   const [orders, setOrders] = useState<Order[]>([])
   const [cancelOrderId, setCancelOrderId] = useState<string | null>(null)
+  const [cancelOrderData, setCancelOrderData] = useState<{ deliveryDate: string; totalAmount: number; paymentId: string | string[] | null } | null>(null)
   const [filterStatus, setFilterStatus] = useState<'all' | 'unpaid' | 'pending' | 'preparing' | 'shipping' | 'completed' | 'cancelled'>('all')
   const [deliveryMethodFilter, setDeliveryMethodFilter] = useState<'all' | '퀵업체 배송' | '매장 픽업'>('all')
   const [dateRange, setDateRange] = useState<{ start: Date | null; end: Date | null }>({ start: null, end: null })
@@ -83,108 +84,121 @@ export default function OrdersPage() {
   const [selectingStart, setSelectingStart] = useState(true)
 
   useEffect(() => {
-    const loadOrders = async () => {
-      // 인증 로딩 중이면 대기
-      if (authLoading) return
+    // 인증 로딩 중이면 대기
+    if (authLoading) return
 
-      // 인증 완료 후 유저가 없으면 로그인 페이지로
-      if (!user) {
-        router.push('/login')
-        return
-      }
-
-      try {
-        const ordersRef = collection(db, 'orders')
-        const q = query(
-          ordersRef,
-          where('uid', '==', user.uid),
-          orderBy('createdAt', 'desc')
-        )
-        const querySnapshot = await getDocs(q)
-
-        const ordersData: Order[] = []
-
-        // 각 주문에 대해 가게 정보를 가져와서 전화번호와 partnerId 추가
-        for (const docSnapshot of querySnapshot.docs) {
-          const data = docSnapshot.data()
-
-          // storeId로 가게 정보 가져오기
-          let storePhone = data.partnerPhone
-          let partnerId = data.partnerId
-          if (data.storeId && (!storePhone || !partnerId)) {
-            try {
-              const storeDoc = await getDoc(doc(db, 'stores', data.storeId))
-              if (storeDoc.exists()) {
-                const storeData = storeDoc.data()
-                if (!storePhone) storePhone = storeData.phone
-                if (!partnerId) partnerId = storeData.partnerId
-              }
-            } catch (error) {
-              console.error('가게 정보 로드 실패:', error)
-            }
-          }
-
-          // 각 상품의 이미지 가져오기
-          const itemsWithImages = await Promise.all(
-            (data.items || []).map(async (item: OrderItem) => {
-              if (item.productId && !item.productImage) {
-                try {
-                  const productDoc = await getDoc(doc(db, 'products', item.productId))
-                  if (productDoc.exists()) {
-                    const productData = productDoc.data()
-                    return {
-                      ...item,
-                      productImage: productData.images?.[0] || null
-                    }
-                  }
-                } catch (error) {
-                  console.error('상품 이미지 로드 실패:', error)
-                }
-              }
-              return item
-            })
-          )
-
-          // 리뷰 존재 여부 확인
-          let hasReview = false
-          if (data.orderStatus === 'completed') {
-            try {
-              const reviewsRef = collection(db, 'reviews')
-              const reviewQuery = query(
-                reviewsRef,
-                where('uid', '==', user.uid),
-                where('orderId', '==', docSnapshot.id),
-                limit(1)
-              )
-              const reviewSnapshot = await getDocs(reviewQuery)
-              hasReview = !reviewSnapshot.empty
-            } catch (error) {
-              console.error('리뷰 확인 실패:', error)
-            }
-          }
-
-          ordersData.push({
-            id: docSnapshot.id,
-            ...data,
-            partnerId: partnerId,
-            partnerPhone: storePhone,
-            items: itemsWithImages,
-            createdAt: data.createdAt?.toDate() || new Date(),
-            paidAt: data.paidAt?.toDate(),
-            hasReview: hasReview,
-          } as Order)
-        }
-
-        setOrders(ordersData)
-      } catch (error) {
-        console.error('주문 목록 로딩 실패:', error)
-        alert('주문 목록을 불러오는데 실패했습니다.')
-      } finally {
-        setLoading(false)
-      }
+    // 인증 완료 후 유저가 없으면 로그인 페이지로
+    if (!user) {
+      router.push('/login')
+      return
     }
 
-    loadOrders()
+    // Firestore 실시간 구독
+    const ordersRef = collection(db, 'orders')
+    const q = query(
+      ordersRef,
+      where('uid', '==', user.uid),
+      orderBy('createdAt', 'desc')
+    )
+
+    console.log('[OrdersPage] 실시간 구독 시작')
+
+    const unsubscribe = onSnapshot(q, async (querySnapshot) => {
+      console.log('[OrdersPage] 주문 데이터 업데이트 감지:', querySnapshot.docs.length, '개')
+
+      const ordersData: Order[] = []
+
+      // 각 주문에 대해 가게 정보를 가져와서 전화번호와 partnerId 추가
+      for (const docSnapshot of querySnapshot.docs) {
+        const data = docSnapshot.data()
+
+        // storeId로 가게 정보 가져오기
+        let storePhone = data.partnerPhone
+        let partnerId = data.partnerId
+        if (data.storeId && (!storePhone || !partnerId)) {
+          try {
+            const storeDoc = await getDoc(doc(db, 'stores', data.storeId))
+            if (storeDoc.exists()) {
+              const storeData = storeDoc.data()
+              if (!storePhone) storePhone = storeData.phone
+              if (!partnerId) partnerId = storeData.partnerId
+            }
+          } catch (error) {
+            console.error('가게 정보 로드 실패:', error)
+          }
+        }
+
+        // 각 상품의 이미지 가져오기
+        const itemsWithImages = await Promise.all(
+          (data.items || []).map(async (item: OrderItem) => {
+            if (item.productId && !item.productImage) {
+              try {
+                const productDoc = await getDoc(doc(db, 'products', item.productId))
+                if (productDoc.exists()) {
+                  const productData = productDoc.data()
+                  return {
+                    ...item,
+                    productImage: productData.images?.[0] || null
+                  }
+                }
+              } catch (error) {
+                console.error('상품 이미지 로드 실패:', error)
+              }
+            }
+            return item
+          })
+        )
+
+        // 리뷰 존재 여부 확인
+        let hasReview = false
+        if (data.orderStatus === 'completed') {
+          try {
+            const reviewsRef = collection(db, 'reviews')
+            const reviewQuery = query(
+              reviewsRef,
+              where('uid', '==', user.uid),
+              where('orderId', '==', docSnapshot.id),
+              limit(1)
+            )
+            const reviewSnapshot = await getDocs(reviewQuery)
+            hasReview = !reviewSnapshot.empty
+          } catch (error) {
+            console.error('리뷰 확인 실패:', error)
+          }
+        }
+
+        // paidAt은 paymentInfo 배열의 마지막 결제 정보에서 가져옴
+        let paidAtValue
+        if (data.paymentInfo && Array.isArray(data.paymentInfo) && data.paymentInfo.length > 0) {
+          const lastPayment = data.paymentInfo[data.paymentInfo.length - 1]
+          paidAtValue = lastPayment?.paidAt ? new Date(lastPayment.paidAt) : undefined
+        }
+
+        ordersData.push({
+          id: docSnapshot.id,
+          ...data,
+          partnerId: partnerId,
+          partnerPhone: storePhone,
+          items: itemsWithImages,
+          createdAt: data.createdAt?.toDate() || new Date(),
+          paidAt: paidAtValue,
+          hasReview: hasReview,
+        } as Order)
+      }
+
+      setOrders(ordersData)
+      setLoading(false)
+    }, (error) => {
+      console.error('주문 목록 실시간 구독 에러:', error)
+      alert('주문 목록을 불러오는데 실패했습니다.')
+      setLoading(false)
+    })
+
+    // cleanup: 구독 해제
+    return () => {
+      console.log('[OrdersPage] 실시간 구독 해제')
+      unsubscribe()
+    }
   }, [user, authLoading, router])
 
   // 외부 클릭 감지
@@ -790,6 +804,11 @@ export default function OrdersPage() {
                         onClick={(e) => {
                           e.stopPropagation()
                           setCancelOrderId(order.id)
+                          setCancelOrderData({
+                            deliveryDate: order.deliveryInfo?.deliveryDate || '',
+                            totalAmount: order.totalPrice || 0,
+                            paymentId: order.paymentId || null
+                          })
                         }}
                       >
                         주문취소
@@ -821,6 +840,11 @@ export default function OrdersPage() {
                           onClick={(e) => {
                             e.stopPropagation()
                             setCancelOrderId(order.id)
+                            setCancelOrderData({
+                              deliveryDate: order.deliveryInfo?.deliveryDate || '',
+                              totalAmount: order.totalPrice || 0,
+                              paymentId: order.paymentId || null
+                            })
                           }}
                         >
                           주문취소
@@ -843,7 +867,7 @@ export default function OrdersPage() {
                             // 첫 번째 상품의 productId로 이동
                             const productId = order.items[0]?.productId
                             if (productId) {
-                              router.push(`/productDetail/${productId}?additionalOrderId=${order.id}`)
+                              router.push(`/productDetail/${productId}?additionalOrderId=${order.id}&mode=add`)
                             } else {
                               alert('상품 정보를 찾을 수 없습니다.')
                             }
@@ -862,10 +886,16 @@ export default function OrdersPage() {
       </div>
 
       {/* 주문 취소 모달 */}
-      {cancelOrderId && (
+      {cancelOrderId && cancelOrderData && (
         <OrderCancelModal
           orderId={cancelOrderId}
-          onClose={() => setCancelOrderId(null)}
+          deliveryDate={cancelOrderData.deliveryDate}
+          totalAmount={cancelOrderData.totalAmount}
+          paymentId={cancelOrderData.paymentId}
+          onClose={() => {
+            setCancelOrderId(null)
+            setCancelOrderData(null)
+          }}
           onCancel={() => {
             // 주문 목록 새로고침
             window.location.reload()

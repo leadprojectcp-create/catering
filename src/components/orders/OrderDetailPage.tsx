@@ -212,12 +212,19 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
           })
         )
 
+        // paidAt은 paymentInfo 배열의 마지막 결제 정보에서 가져옴
+        let paidAtValue
+        if (orderData.paymentInfo && Array.isArray(orderData.paymentInfo) && orderData.paymentInfo.length > 0) {
+          const lastPayment = orderData.paymentInfo[orderData.paymentInfo.length - 1]
+          paidAtValue = lastPayment?.paidAt ? new Date(lastPayment.paidAt) : undefined
+        }
+
         setOrder({
           id: orderDoc.id,
           ...orderData,
           items: itemsWithImages,
           createdAt: orderData.createdAt?.toDate(),
-          paidAt: orderData.paidAt?.toDate(),
+          paidAt: paidAtValue,
         } as Order)
       } catch (error) {
         console.error('주문 조회 실패:', error)
@@ -750,9 +757,12 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
       </div>
 
       {/* 주문 취소 모달 */}
-      {cancelOrderId && (
+      {cancelOrderId && order && (
         <OrderCancelModal
           orderId={cancelOrderId}
+          deliveryDate={order.deliveryInfo?.deliveryDate || order.deliveryDate || ''}
+          totalAmount={order.totalPrice || 0}
+          paymentId={order.paymentId || null}
           onClose={() => setCancelOrderId(null)}
           onCancel={() => {
             router.push('/orders')
