@@ -57,6 +57,7 @@ interface OrderItem {
   additionalOptionsWithPrices?: { [key: string]: { name: string; price: number } }
   quantity: number
   price: number
+  itemPrice?: number
   productImage?: string
 }
 
@@ -438,7 +439,7 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
                     <div className={styles.productName}>{productName}</div>
 
                     {items.map((item, itemIndex) => {
-                      const itemTotalPrice = item.price * item.quantity
+                      const itemTotalPrice = item.itemPrice || (item.price * item.quantity)
                       return (
                         <div key={itemIndex} className={styles.productDetailsBox}>
                           <div className={styles.productDetailsLeft}>
