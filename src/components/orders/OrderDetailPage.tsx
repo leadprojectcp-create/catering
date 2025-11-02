@@ -6,6 +6,7 @@ import Image from 'next/image'
 import { doc, getDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { useAuth } from '@/contexts/AuthContext'
+import { createOrGetChatRoom } from '@/lib/services/chatService'
 import { addCartItem } from '@/lib/services/cartService'
 import Loading from '@/components/Loading'
 import OrderCancelModal from './OrderCancelModal'
@@ -78,6 +79,8 @@ interface Order {
   uid: string
   storeId: string
   storeName: string
+  partnerId?: string
+  partnerPhone?: string
   items: OrderItem[]
   totalPrice: number
   totalProductPrice: number
@@ -171,6 +174,22 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
           return
         }
 
+        // storeId로 가게 정보 가져오기
+        let storePhone = orderData.partnerPhone
+        let partnerId = orderData.partnerId
+        if (orderData.storeId && (!storePhone || !partnerId)) {
+          try {
+            const storeDoc = await getDoc(doc(db, 'stores', orderData.storeId))
+            if (storeDoc.exists()) {
+              const storeData = storeDoc.data()
+              if (!storePhone) storePhone = storeData.phone
+              if (!partnerId) partnerId = storeData.partnerId
+            }
+          } catch (error) {
+            console.error('가게 정보 로드 실패:', error)
+          }
+        }
+
         // 각 상품의 이미지 가져오기
         const itemsWithImages = await Promise.all(
           (orderData.items || []).map(async (item: OrderItem) => {
@@ -195,6 +214,8 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
         setOrder({
           id: orderDoc.id,
           ...orderData,
+          partnerId: partnerId,
+          partnerPhone: storePhone,
           items: itemsWithImages,
           createdAt: orderData.createdAt?.toDate(),
         } as Order)
@@ -305,6 +326,38 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
     return '#999'
   }
 
+  const handleChatClick = async () => {
+    if (!user) {
+      alert('로그인이 필요합니다.')
+      router.push('/login')
+      return
+    }
+
+    if (!order?.partnerId) {
+      alert('가게 정보를 불러오는 중입니다.')
+      return
+    }
+
+    // 자기 자신과 채팅하는 것 방지
+    if (user.uid === order.partnerId) {
+      alert('자기 자신과는 채팅할 수 없습니다.')
+      return
+    }
+
+    try {
+      const roomId = await createOrGetChatRoom(
+        user.uid,
+        order.storeId,
+        order.storeName,
+        order.partnerId
+      )
+      router.push(`/chat?roomId=${roomId}`)
+    } catch (error) {
+      console.error('채팅방 생성 실패:', error)
+      alert('채팅방 생성에 실패했습니다.')
+    }
+  }
+
   const handleAddToCart = async () => {
     if (!user || !order) return
 
@@ -358,14 +411,19 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
             <div className={styles.storeHeader}>
             <div className={styles.storeName}>{order.storeName}</div>
             <div className={styles.storeActions}>
-              <button className={styles.actionButton}>
+              <button className={styles.actionButton} onClick={handleChatClick}>
                 <Image src="/icons/chat.png" alt="채팅" width={20} height={20} />
                 <span>채팅</span>
               </button>
-              <button className={styles.actionButton}>
-                <Image src="/icons/phone.png" alt="전화" width={20} height={20} />
-                <span>전화</span>
-              </button>
+              {order.partnerPhone && (
+                <a
+                  href={`tel:${order.partnerPhone}`}
+                  className={styles.actionButton}
+                >
+                  <Image src="/icons/phone.png" alt="전화" width={20} height={20} />
+                  <span>전화</span>
+                </a>
+              )}
             </div>
           </div>
 
