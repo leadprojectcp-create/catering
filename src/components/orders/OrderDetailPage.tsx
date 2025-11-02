@@ -100,8 +100,6 @@ interface Order {
   transactionId?: string
   orderNumber?: string
   createdAt: Date
-  paidAt?: Date
-  payMethod?: string
   usedPoint?: number
   // 퀵 배송 관련 필드
   quickDeliveryOrderNo?: number
@@ -130,25 +128,6 @@ interface QuickDeliveryDriver {
 
 interface OrderDetailPageProps {
   params: Promise<{ id: string }>
-}
-
-// 결제수단 표시 변환 함수
-const getPayMethodName = (payMethod?: string): string => {
-  if (!payMethod) return '알 수 없음'
-
-  const payMethodMap: { [key: string]: string } = {
-    'card': '신용카드',
-    'trans': '퀵계좌이체',
-    'vbank': '가상계좌',
-    'payco': 'PAYCO',
-    'samsung': 'SAMSUNG PAY',
-    'kakao': '카카오페이',
-    'naver': '네이버페이',
-    'toss': '토스페이',
-    'apple': 'APPLE PAY'
-  }
-
-  return payMethodMap[payMethod] || payMethod
 }
 
 export default function OrderDetailPage({ params }: OrderDetailPageProps) {
@@ -212,19 +191,11 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
           })
         )
 
-        // paidAt은 paymentInfo 배열의 마지막 결제 정보에서 가져옴
-        let paidAtValue
-        if (orderData.paymentInfo && Array.isArray(orderData.paymentInfo) && orderData.paymentInfo.length > 0) {
-          const lastPayment = orderData.paymentInfo[orderData.paymentInfo.length - 1]
-          paidAtValue = lastPayment?.paidAt ? new Date(lastPayment.paidAt) : undefined
-        }
-
         setOrder({
           id: orderDoc.id,
           ...orderData,
           items: itemsWithImages,
           createdAt: orderData.createdAt?.toDate(),
-          paidAt: paidAtValue,
         } as Order)
       } catch (error) {
         console.error('주문 조회 실패:', error)
@@ -690,21 +661,6 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
               <span className={styles.infoValue}>-{(order.usedPoint ?? 0).toLocaleString()}원</span>
             </div>
             <div className={styles.divider}></div>
-            {order.paidAt && (
-              <div className={styles.paymentDateInfo}>
-                {new Date(order.paidAt).toLocaleDateString('ko-KR', {
-                  year: 'numeric',
-                  month: '2-digit',
-                  day: '2-digit',
-                  weekday: 'short'
-                }).replace(/\. /g, '.').replace(/\.$/, '')} {new Date(order.paidAt).toLocaleTimeString('ko-KR', {
-                  hour: '2-digit',
-                  minute: '2-digit',
-                  second: '2-digit',
-                  hour12: false
-                })} {getPayMethodName(order.payMethod)} 결제
-              </div>
-            )}
             <div className={styles.infoRow}>
               <span className={styles.totalLabel}>총 결제금액</span>
               <span className={styles.totalValue}>{order.totalPrice.toLocaleString()}원</span>
