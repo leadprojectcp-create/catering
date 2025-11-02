@@ -14,6 +14,12 @@ export interface CategoryOption {
   icon: string
 }
 
+export interface QuantityRange {
+  minQuantity: number
+  maxQuantity: number
+  daysBeforeOrder: number
+}
+
 export interface ProductFormData {
   name: string
   images: File[]
@@ -25,9 +31,9 @@ export interface ProductFormData {
   description: string
   minOrderQuantity: number
   maxOrderQuantity: number
+  quantityRanges?: QuantityRange[]
   deliveryMethods: string[]
   additionalSettings: string[]
-  minOrderDays: number
   origin: { ingredient: string, origin: string }[]
   discount?: {
     enabled: boolean

@@ -41,6 +41,11 @@ interface Product {
   minOrderQuantity?: number
   maxOrderQuantity?: number
   minOrderDays?: number
+  quantityRanges?: {
+    minQuantity: number
+    maxQuantity: number
+    daysBeforeOrder: number
+  }[]
   additionalSettings?: string[]
   averageRating?: number
   reviewCount?: number
@@ -347,16 +352,18 @@ export default function CategoryProductList({ categoryName }: CategoryProductLis
                   )}
 
                   {/* 주문 가능 수량 */}
-                  {product.minOrderQuantity && product.maxOrderQuantity && (
+                  {product.quantityRanges && product.quantityRanges.length > 0 && (
                     <div className={styles.orderQuantity}>
-                      최소 {product.minOrderQuantity}개 ~ 최대 {product.maxOrderQuantity}개 주문가능
+                      최소 {product.quantityRanges[0].minQuantity}개 ~ 최대 {product.quantityRanges[product.quantityRanges.length - 1].maxQuantity}개 주문가능
                     </div>
                   )}
 
-                  {/* 최소 주문일 정보 */}
-                  {product.minOrderDays && product.minOrderDays > 0 && (
+                  {/* 주문일 정보 */}
+                  {product.quantityRanges && product.quantityRanges.length > 0 && !(product.quantityRanges[0].daysBeforeOrder === 0 && product.quantityRanges[product.quantityRanges.length - 1].daysBeforeOrder === 0) && (
                     <div className={styles.minOrderDays}>
-                      최소 {product.minOrderDays}일 전 주문 가능
+                      {product.quantityRanges[0].daysBeforeOrder === product.quantityRanges[product.quantityRanges.length - 1].daysBeforeOrder
+                        ? `${product.quantityRanges[0].daysBeforeOrder}일 전 주문 가능`
+                        : `${product.quantityRanges[0].daysBeforeOrder}일 ~ ${product.quantityRanges[product.quantityRanges.length - 1].daysBeforeOrder}일 전 주문 가능`}
                     </div>
                   )}
 

@@ -160,8 +160,6 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
   const [loadingReviews, setLoadingReviews] = useState(true)
   const [editingCartItemId, setEditingCartItemId] = useState<string | null>(null)
   const [storeRequest, setStoreRequest] = useState('')
-  const [deliveryMethod, setDeliveryMethod] = useState('')
-  const [parcelPaymentMethod, setParcelPaymentMethod] = useState<'선결제' | '착불'>('선결제')
 
   const { isLiked, setLikeCount, handleLikeToggle } = useProductLike({
     productId,
@@ -231,12 +229,6 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
                         setQuantity(firstItem.quantity)
                       }
 
-                      if (orderData.deliveryMethod) {
-                        setDeliveryMethod(orderData.deliveryMethod)
-                      }
-                      if (orderData.parcelPaymentMethod) {
-                        setParcelPaymentMethod(orderData.parcelPaymentMethod)
-                      }
                       if (orderData.request) {
                         setStoreRequest(orderData.request)
                       }
@@ -298,12 +290,6 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
                     setQuantity(firstItem.quantity)
                   }
 
-                  if (cartData.deliveryMethod) {
-                    setDeliveryMethod(cartData.deliveryMethod)
-                  }
-                  if (cartData.parcelPaymentMethod) {
-                    setParcelPaymentMethod(cartData.parcelPaymentMethod)
-                  }
                   if (cartData.request) {
                     setStoreRequest(cartData.request)
                   }
@@ -341,12 +327,6 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
                     setQuantity(firstItem.quantity)
                   }
 
-                  if (orderData.deliveryMethod) {
-                    setDeliveryMethod(orderData.deliveryMethod)
-                  }
-                  if (orderData.parcelPaymentMethod) {
-                    setParcelPaymentMethod(orderData.parcelPaymentMethod)
-                  }
                   if (orderData.request) {
                     setStoreRequest(orderData.request)
                   }
@@ -385,13 +365,6 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
             }
           }
 
-          if (productData.deliveryMethods && productData.deliveryMethods.length > 0) {
-            setDeliveryMethod(productData.deliveryMethods[0])
-          }
-
-          if (productData.deliveryFeeSettings?.paymentMethods && productData.deliveryFeeSettings.paymentMethods.length > 0) {
-            setParcelPaymentMethod(productData.deliveryFeeSettings.paymentMethods[0])
-          }
 
           if (productData.storeId) {
             const storeData = await fetchStore(productData.storeId)

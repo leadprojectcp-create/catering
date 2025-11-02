@@ -8,6 +8,12 @@ interface PickupDateTimeSectionProps {
   deliveryDate: string
   deliveryTime: string
   minOrderDays: number
+  quantityRanges?: {
+    minQuantity: number
+    maxQuantity: number
+    daysBeforeOrder: number
+  }[]
+  totalQuantity?: number
   onDateChange: (date: string) => void
   onTimeChange: (time: string) => void
   onShowDateInfoModal: () => void
@@ -17,6 +23,8 @@ export default function PickupDateTimeSection({
   deliveryDate,
   deliveryTime,
   minOrderDays,
+  quantityRanges,
+  totalQuantity,
   onDateChange,
   onTimeChange,
   onShowDateInfoModal
@@ -45,6 +53,8 @@ export default function PickupDateTimeSection({
             deliveryTime={deliveryTime}
             minOrderDays={minOrderDays}
             deliveryMethod="매장 픽업"
+            quantityRanges={quantityRanges}
+            totalQuantity={totalQuantity}
             onDateChange={onDateChange}
             onTimeChange={onTimeChange}
           />

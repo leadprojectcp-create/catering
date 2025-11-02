@@ -25,6 +25,25 @@ interface CartItemsSectionProps {
   onEditingCartItemIdChange: (id: string | null) => void
 }
 
+// Helper functions - 할인 유효성 검사
+const isDiscountValid = (product: Product): boolean => {
+  if (!product.discount) return false
+
+  const now = new Date()
+
+  // 항상 활성화된 할인
+  if (product.discount.isAlwaysActive) return true
+
+  // 기간 제한 할인
+  if (product.discount.startDate && product.discount.endDate) {
+    const startDate = new Date(product.discount.startDate)
+    const endDate = new Date(product.discount.endDate)
+    return now >= startDate && now <= endDate
+  }
+
+  return false
+}
+
 // Helper functions - 가격 계산
 const calculateItemPrice = (
   product: Product,
@@ -32,7 +51,10 @@ const calculateItemPrice = (
   qty: number,
   additionalOptions?: { [key: string]: string }
 ): number => {
-  const basePrice = product.discountedPrice || product.price
+  // 할인이 유효한 경우에만 discountedPrice 사용
+  const basePrice = (isDiscountValid(product) && product.discountedPrice)
+    ? product.discountedPrice
+    : product.price
   let optionPrice = 0
 
   Object.entries(options).forEach(([groupName, optionValue]) => {
@@ -177,8 +199,15 @@ export default function CartItemsSection({
 
     // 전체 주문 수량 검증
     const totalQuantity = cartItems.reduce((total, item) => total + item.quantity, 0)
-    const minQty = product.minOrderQuantity || 1
-    const maxQty = product.maxOrderQuantity || 999
+
+    // quantityRanges가 있으면 그것을 사용, 없으면 기존 방식
+    const minQty = product.quantityRanges && product.quantityRanges.length > 0
+      ? 10  // 하드코딩: 최소 10개
+      : (product.minOrderQuantity || 1)
+
+    const maxQty = product.quantityRanges && product.quantityRanges.length > 0
+      ? product.quantityRanges[product.quantityRanges.length - 1].maxQuantity
+      : (product.maxOrderQuantity || 999)
 
     if (!additionalOrderId && totalQuantity < minQty) {
       alert(`최소 주문 수량은 ${minQty}개입니다. (현재: ${totalQuantity}개)`)
@@ -202,7 +231,7 @@ export default function CartItemsSection({
         const orderItem: Record<string, unknown> = {
           productId: productId,
           productName: product.name,
-          price: product.discountedPrice || product.price,
+          price: (isDiscountValid(product) && product.discountedPrice) ? product.discountedPrice : product.price,
           quantity: item.quantity,
           options: item.options,
           optionsWithPrices: optionsWithPrices,
@@ -306,8 +335,15 @@ export default function CartItemsSection({
 
     // 전체 주문 수량 검증
     const totalQuantity = cartItems.reduce((total, item) => total + item.quantity, 0)
-    const minQty = product.minOrderQuantity || 1
-    const maxQty = product.maxOrderQuantity || 999
+
+    // quantityRanges가 있으면 그것을 사용, 없으면 기존 방식
+    const minQty = product.quantityRanges && product.quantityRanges.length > 0
+      ? 10  // 하드코딩: 최소 10개
+      : (product.minOrderQuantity || 1)
+
+    const maxQty = product.quantityRanges && product.quantityRanges.length > 0
+      ? product.quantityRanges[product.quantityRanges.length - 1].maxQuantity
+      : (product.maxOrderQuantity || 999)
 
     if (!additionalOrderId && totalQuantity < minQty) {
       alert(`최소 주문 수량은 ${minQty}개입니다. (현재: ${totalQuantity}개)`)
@@ -331,7 +367,7 @@ export default function CartItemsSection({
         const orderItem: Record<string, unknown> = {
           productId: productId,
           productName: product.name,
-          price: product.discountedPrice || product.price,
+          price: (isDiscountValid(product) && product.discountedPrice) ? product.discountedPrice : product.price,
           quantity: item.quantity,
           options: item.options,
           optionsWithPrices: optionsWithPrices,
@@ -420,9 +456,14 @@ export default function CartItemsSection({
   // 전체 수량 계산
   const totalQuantity = cartItems.reduce((total, item) => total + item.quantity, 0)
 
-  // 최소/최대 주문 수량
-  const minQty = product.minOrderQuantity || 1
-  const maxQty = product.maxOrderQuantity || 999
+  // 최소/최대 주문 수량 - quantityRanges가 있으면 그것을 사용
+  const minQty = product.quantityRanges && product.quantityRanges.length > 0
+    ? 10  // 하드코딩: 최소 10개
+    : (product.minOrderQuantity || 1)
+
+  const maxQty = product.quantityRanges && product.quantityRanges.length > 0
+    ? product.quantityRanges[product.quantityRanges.length - 1].maxQuantity
+    : (product.maxOrderQuantity || 999)
 
   // 버튼 활성화 여부 - 추가 주문인 경우 최소 수량 체크 안 함
   const isOrderValid = additionalOrderId

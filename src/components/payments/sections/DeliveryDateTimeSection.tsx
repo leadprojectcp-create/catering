@@ -9,6 +9,12 @@ interface DeliveryDateTimeSectionProps {
   deliveryTime: string
   minOrderDays: number
   deliveryMethod: string
+  quantityRanges?: {
+    minQuantity: number
+    maxQuantity: number
+    daysBeforeOrder: number
+  }[]
+  totalQuantity?: number
   onDateChange: (date: string) => void
   onTimeChange: (time: string) => void
   onShowDateInfoModal: () => void
@@ -19,6 +25,8 @@ export default function DeliveryDateTimeSection({
   deliveryTime,
   minOrderDays,
   deliveryMethod,
+  quantityRanges,
+  totalQuantity,
   onDateChange,
   onTimeChange,
   onShowDateInfoModal
@@ -47,6 +55,8 @@ export default function DeliveryDateTimeSection({
             deliveryTime={deliveryTime}
             minOrderDays={minOrderDays}
             deliveryMethod={deliveryMethod}
+            quantityRanges={quantityRanges}
+            totalQuantity={totalQuantity}
             onDateChange={onDateChange}
             onTimeChange={onTimeChange}
           />

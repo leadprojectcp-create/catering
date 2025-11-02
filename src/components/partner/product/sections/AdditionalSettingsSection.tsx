@@ -53,6 +53,21 @@ export default function AdditionalSettingsSection({ additionalSettings, onChange
           </span>
           스티커 제작
         </label>
+        <label className={styles.checkboxLabel}>
+          <input
+            type="checkbox"
+            checked={additionalSettings.includes('당일배송 가능')}
+            onChange={(e) => handleCheckboxChange('당일배송 가능', e.target.checked)}
+            className={styles.hiddenCheckbox}
+          />
+          <span className={styles.customCheckbox}>
+            <img
+              src={additionalSettings.includes('당일배송 가능') ? "/icons/check_active.png" : "/icons/check.png"}
+              alt="체크박스"
+            />
+          </span>
+          당일배송 가능
+        </label>
       </div>
     </div>
   )

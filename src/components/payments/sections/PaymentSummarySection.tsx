@@ -81,7 +81,9 @@ export default function PaymentSummarySection({
       ? orderData.items.filter(item => !item.paymentId)  // 추가 주문: paymentId 없는 것만
       : orderData.items  // 최초 주문: 전체
     return itemsToCalculate.reduce((sum, item) => {
-      return sum + (item.itemPrice || (orderData.productPrice * item.quantity))
+      // itemPrice는 CartItemsSection에서 이미 추가상품 가격을 포함하여 계산됨
+      const itemTotal = item.itemPrice || (orderData.productPrice * item.quantity)
+      return sum + itemTotal
     }, 0)
   }, [orderData, isAdditionalOrder])
 
@@ -93,10 +95,9 @@ export default function PaymentSummarySection({
     return itemsToCalculate.reduce((sum, item) => sum + item.quantity, 0)
   }, [orderData, isAdditionalOrder])
 
-  // 택배 배송비 계산
+  // 택배 배송비 계산 (착불일 경우에도 금액 계산)
   const calculateParcelDeliveryFee = useMemo(() => {
     if (!deliveryFeeSettings) return 0
-    if (parcelPaymentMethod === '착불') return 0
 
     const { type, baseFee = 0, freeCondition = 0, perQuantity = 0 } = deliveryFeeSettings
 
@@ -113,23 +114,35 @@ export default function PaymentSummarySection({
       return baseFee
     }
     return 0
-  }, [deliveryFeeSettings, parcelPaymentMethod, totalProductPrice, totalQuantity])
+  }, [deliveryFeeSettings, totalProductPrice, totalQuantity])
 
-  // 배송비 계산
+  // 배송비 계산 (추가 주문일 때는 배송비 0, 착불일 때는 0)
   const deliveryFee = useMemo(() => {
+    // 추가 주문일 때는 배송비 없음
+    if (isAdditionalOrder) {
+      return 0
+    }
+
     if (deliveryMethod === '퀵업체 배송') {
       return deliveryFeeFromAPI || 0
     }
     if (deliveryMethod === '택배 배송') {
+      // 착불일 경우 결제 금액에 포함하지 않음
+      if (parcelPaymentMethod === '착불') {
+        return 0
+      }
       return calculateParcelDeliveryFee
     }
     return 0
-  }, [deliveryMethod, deliveryFeeFromAPI, calculateParcelDeliveryFee])
+  }, [isAdditionalOrder, deliveryMethod, deliveryFeeFromAPI, calculateParcelDeliveryFee, parcelPaymentMethod])
 
-  // 배송비 프로모션 (퀵업체 배송이고 배송비가 조회되었을 때만 적용)
+  // 배송비 프로모션 (퀵업체 배송이고 배송비가 조회되었을 때만 적용, 추가 주문은 제외)
   const deliveryPromotion = useMemo(() => {
+    if (isAdditionalOrder) {
+      return 0
+    }
     return deliveryMethod === '퀵업체 배송' && deliveryFeeFromAPI ? 10000 : 0
-  }, [deliveryMethod, deliveryFeeFromAPI])
+  }, [isAdditionalOrder, deliveryMethod, deliveryFeeFromAPI])
 
   // 총 결제금액
   const totalPrice = useMemo(() => {
@@ -502,12 +515,12 @@ export default function PaymentSummarySection({
             <span className={styles.paymentLabel}>배송비</span>
             <span className={styles.paymentValue}>
               {parcelPaymentMethod === '착불'
-                ? '착불'
+                ? `착불(${calculateParcelDeliveryFee.toLocaleString()}원)`
                 : deliveryFeeSettings?.type === '무료'
                 ? '무료'
                 : deliveryFeeSettings?.type === '조건부 무료'
-                ? (deliveryFee === 0 ? '조건부 무료' : `+${deliveryFee.toLocaleString()}원`)
-                : `+${deliveryFee.toLocaleString()}원`}
+                ? (calculateParcelDeliveryFee === 0 ? '조건부 무료' : `+${calculateParcelDeliveryFee.toLocaleString()}원`)
+                : `+${calculateParcelDeliveryFee.toLocaleString()}원`}
             </span>
           </div>
         )}
@@ -565,7 +578,9 @@ export const usePaymentSummary = (props: Omit<PaymentSummarySectionProps, 'onPay
 
   const totalProductPrice = orderData
     ? orderData.items.reduce((sum, item) => {
-        return sum + (item.itemPrice || (orderData.productPrice * item.quantity))
+        // itemPrice는 CartItemsSection에서 이미 추가상품 가격을 포함하여 계산됨
+        const itemTotal = item.itemPrice || (orderData.productPrice * item.quantity)
+        return sum + itemTotal
       }, 0)
     : 0
 
@@ -577,12 +592,16 @@ export const usePaymentSummary = (props: Omit<PaymentSummarySectionProps, 'onPay
     ? (deliveryFeeFromAPI || 0)
     : deliveryMethod === '택배 배송' && deliveryFeeSettings
     ? (() => {
+        // 착불일 경우 배송비 0
+        if (parcelPaymentMethod === '착불') return 0
+
         if (deliveryFeeSettings.type === '무료') return 0
         if (deliveryFeeSettings.type === '조건부 무료') {
           return totalProductPrice >= (deliveryFeeSettings.freeCondition || 0) ? 0 : (deliveryFeeSettings.baseFee || 0)
         }
         if (deliveryFeeSettings.type === '수량별') {
-          return (deliveryFeeSettings.baseFee || 0) * totalQuantity
+          const times = Math.ceil(totalQuantity / (deliveryFeeSettings.perQuantity || 1))
+          return (deliveryFeeSettings.baseFee || 0) * times
         }
         return deliveryFeeSettings.baseFee || 0
       })()
@@ -724,8 +743,10 @@ export const usePaymentSummary = (props: Omit<PaymentSummarySectionProps, 'onPay
       const currentOrderData = orderDocSnap.data()
 
       if (additionalOrderIdParam) {
-        // 추가 주문 - 기본 정보만 업데이트 (paymentInfo는 웹훅에서 처리)
+        // 추가 주문 - totalPrice도 누적 (paymentInfo는 웹훅에서 처리)
+        const currentTotalPrice = currentOrderData?.totalPrice || 0
         await updateDoc(orderDocRef, {
+          totalPrice: currentTotalPrice + totalPrice,
           updatedAt: new Date()
         })
       } else {

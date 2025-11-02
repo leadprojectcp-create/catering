@@ -10,6 +10,12 @@ interface DateTimePickerProps {
   deliveryTime: string
   minOrderDays?: number
   deliveryMethod?: string
+  quantityRanges?: {
+    minQuantity: number
+    maxQuantity: number
+    daysBeforeOrder: number
+  }[]
+  totalQuantity?: number
   onDateChange: (date: string) => void
   onTimeChange: (time: string) => void
 }
@@ -19,17 +25,37 @@ export default function DateTimePicker({
   deliveryTime,
   minOrderDays = 0,
   deliveryMethod,
+  quantityRanges,
+  totalQuantity = 0,
   onDateChange,
   onTimeChange
 }: DateTimePickerProps) {
   const [showDatePicker, setShowDatePicker] = useState(false)
   const [showTimePicker, setShowTimePicker] = useState(false)
 
+  // quantityRanges를 기반으로 현재 수량에 맞는 daysBeforeOrder 계산
+  const getMinDaysForQuantity = () => {
+    if (!quantityRanges || quantityRanges.length === 0) {
+      return minOrderDays
+    }
+
+    // 현재 수량에 맞는 범위 찾기
+    for (const range of quantityRanges) {
+      if (totalQuantity >= range.minQuantity && totalQuantity <= range.maxQuantity) {
+        return range.daysBeforeOrder
+      }
+    }
+
+    // 해당하는 범위가 없으면 마지막 범위의 daysBeforeOrder 사용
+    return quantityRanges[quantityRanges.length - 1].daysBeforeOrder
+  }
+
   // 선택 가능한 최소 날짜를 계산하여 초기 달력 표시
   const getInitialMonth = () => {
     const today = new Date()
     const minDate = new Date(today)
-    minDate.setDate(minDate.getDate() + minOrderDays)
+    const calculatedMinDays = getMinDaysForQuantity()
+    minDate.setDate(minDate.getDate() + calculatedMinDays)
     return minDate
   }
 
@@ -60,9 +86,10 @@ export default function DateTimePicker({
     const today = new Date()
     today.setHours(0, 0, 0, 0)
 
-    // 최소 선택 가능 날짜 (오늘부터 minOrderDays 이후)
+    // 최소 선택 가능 날짜 (오늘부터 계산된 일수 이후)
+    const calculatedMinDays = getMinDaysForQuantity()
     const minDate = new Date(today)
-    minDate.setDate(minDate.getDate() + minOrderDays)
+    minDate.setDate(minDate.getDate() + calculatedMinDays)
     minDate.setHours(0, 0, 0, 0)
 
     // 최대 선택 가능 날짜 (오늘부터 30일 후)
@@ -83,7 +110,7 @@ export default function DateTimePicker({
         date: date,
         day: date.getDate(),
         isCurrentMonth,
-        isPast: isBeforeMinDate || isBeyondMaxDate, // minOrderDays 이전 날짜 또는 30일 이후 날짜 모두 비활성화
+        isPast: isBeforeMinDate || isBeyondMaxDate, // 계산된 일수 이전 날짜 또는 30일 이후 날짜 모두 비활성화
         isToday,
         value: `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
       })

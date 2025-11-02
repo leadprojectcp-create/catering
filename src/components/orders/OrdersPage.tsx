@@ -426,6 +426,12 @@ export default function OrdersPage() {
       return
     }
 
+    // 자기 자신과 채팅하는 것 방지
+    if (user.uid === order.partnerId) {
+      alert('자기 자신과는 채팅할 수 없습니다.')
+      return
+    }
+
     try {
       const roomId = await createOrGetChatRoom(
         user.uid,
@@ -542,7 +548,7 @@ export default function OrdersPage() {
             className={filterStatus === 'pending' ? styles.filterActive : styles.filterButton}
             onClick={() => setFilterStatus('pending')}
           >
-            주문확인대기 <span className={styles.filterCount}>{orders.filter(o => o.paymentStatus === 'paid' && o.orderStatus === 'pending').length}건</span>
+            신규주문 <span className={styles.filterCount}>{orders.filter(o => o.paymentStatus === 'paid' && o.orderStatus === 'pending').length}건</span>
           </button>
           <button
             className={filterStatus === 'preparing' ? styles.filterActive : styles.filterButton}
@@ -834,7 +840,7 @@ export default function OrdersPage() {
                     </>
                   ) : (
                     <>
-                      {(order.orderStatus === 'pending' || order.orderStatus === 'preparing') && (
+                      {order.orderStatus === 'pending' && (
                         <button
                           className={styles.cancelButton}
                           onClick={(e) => {
@@ -873,7 +879,7 @@ export default function OrdersPage() {
                             }
                           }}
                         >
-                          추가 주문
+                          추가주문하기
                         </button>
                       )}
                     </>

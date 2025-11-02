@@ -19,7 +19,6 @@ import DescriptionSection from './sections/DescriptionSection'
 import OriginSection from './sections/OriginSection'
 import DeliveryMethodSection, { DeliveryFeeSettings } from './sections/DeliveryMethodSection'
 import AdditionalSettingsSection from './sections/AdditionalSettingsSection'
-import MinOrderDaysSection from './sections/MinOrderDaysSection'
 import { ProductFormData } from './common/types/types'
 import styles from './AddProductPage.module.css'
 
@@ -54,9 +53,9 @@ export default function EditProductPage({ productId }: { productId: string }) {
     description: '',
     minOrderQuantity: 10,
     maxOrderQuantity: 11,
+    quantityRanges: [{ minQuantity: 10, maxQuantity: 20, daysBeforeOrder: 1 }],
     deliveryMethods: [],
     additionalSettings: [],
-    minOrderDays: 3,
     origin: [],
     status: 'pending',
     discount: {
@@ -198,9 +197,13 @@ export default function EditProductPage({ productId }: { productId: string }) {
             description: product.description || '',
             minOrderQuantity: product.minOrderQuantity || 10,
             maxOrderQuantity: product.maxOrderQuantity || 11,
+            quantityRanges: product.quantityRanges?.map((range, index) => ({
+              minQuantity: range.minQuantity ?? (index === 0 ? (product.minOrderQuantity || 10) : product.quantityRanges![index - 1].maxQuantity),
+              maxQuantity: range.maxQuantity,
+              daysBeforeOrder: range.daysBeforeOrder
+            })) || [{ minQuantity: 10, maxQuantity: 20, daysBeforeOrder: 1 }],
             deliveryMethods: deliveryMethodsArray,
             additionalSettings: additionalSettingsArray,
-            minOrderDays: product.minOrderDays || 3,
             origin: Array.isArray(product.origin) ? product.origin : [],
             status: product.status as 'active' | 'inactive' | 'pending',
             discount: product.discount ? {
@@ -328,11 +331,6 @@ export default function EditProductPage({ productId }: { productId: string }) {
     }
 
     // 추가설정은 선택사항이므로 검사하지 않음
-
-    if (formData.minOrderDays < 0) {
-      alert('최소 주문 날짜를 선택해주세요.')
-      return
-    }
 
     setIsSubmitting(true)
 
@@ -491,10 +489,11 @@ export default function EditProductPage({ productId }: { productId: string }) {
           onChange={(data) => setFormData(prev => ({ ...prev, ...data }))}
         />
 
-        {/* 상품 수량 설정 */}
+        {/* 상품 수량별 주문 조건 설정 */}
         <QuantitySection
           minOrderQuantity={formData.minOrderQuantity}
           maxOrderQuantity={formData.maxOrderQuantity}
+          quantityRanges={formData.quantityRanges}
           onChange={(data) => setFormData(prev => ({ ...prev, ...data }))}
         />
 
@@ -560,12 +559,6 @@ export default function EditProductPage({ productId }: { productId: string }) {
         <AdditionalSettingsSection
           additionalSettings={formData.additionalSettings}
           onChange={(additionalSettings) => setFormData(prev => ({ ...prev, additionalSettings }))}
-        />
-
-        {/* 최소 주문 날짜 */}
-        <MinOrderDaysSection
-          minOrderDays={formData.minOrderDays}
-          onChange={(minOrderDays) => setFormData(prev => ({ ...prev, minOrderDays }))}
         />
 
         {/* 버튼 영역 */}

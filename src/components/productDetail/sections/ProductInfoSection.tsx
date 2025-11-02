@@ -165,23 +165,18 @@ const ProductInfoSection = memo(function ProductInfoSection({
             ))}
           </div>
 
-          {/* 주문 가능 수량 */}
-          {product.minOrderQuantity && product.maxOrderQuantity && (
-            <div className={styles.orderQuantityRow}>
-              <span className={styles.orderLabel}>주문가능수량</span>
-              <span className={styles.orderValue}>
-                최소 {product.minOrderQuantity}개 ~ 최대 {product.maxOrderQuantity}개
-              </span>
-            </div>
-          )}
-
-          {/* 최소 주문일 정보 */}
-          {product.minOrderDays !== undefined && (
-            <div className={styles.orderQuantityRow}>
-              <span className={styles.orderLabel}>최소주문날짜</span>
-              <span className={styles.orderValue}>
-                {product.minOrderDays === 0 ? '당일 배송 가능' : `최소 ${product.minOrderDays}일 전 주문`}
-              </span>
+          {/* 상품 수량별 예약주문 안내 */}
+          {product.quantityRanges && product.quantityRanges.length > 0 && (
+            <div className={styles.quantityRangesBox}>
+              <div className={styles.quantityRangesTitle}>상품 수량별 예약주문 안내</div>
+              <div className={styles.quantityRangesDivider}></div>
+              <div className={styles.quantityRangesList}>
+                {product.quantityRanges.map((range, index) => (
+                  <div key={index} className={styles.quantityRangeItem}>
+                    - {range.minQuantity}개 ~ {range.maxQuantity}개 주문 시 {range.daysBeforeOrder === 0 ? '당일배송 가능' : `${range.daysBeforeOrder}일전 주문`}
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 
@@ -190,6 +185,11 @@ const ProductInfoSection = memo(function ProductInfoSection({
             <button className={styles.actionButton} onClick={() => {
               if (!user) {
                 alert('로그인이 필요합니다.')
+                return
+              }
+              // 본인 상품인지 확인
+              if (user.uid === product.storeId) {
+                alert('자기 자신과의 채팅방 생성 되지 않습니다.')
                 return
               }
               router.push(`/chat?productId=${product.id}&message=${encodeURIComponent('이 상품에 대해서 궁금합니다.')}`)
@@ -206,20 +206,6 @@ const ProductInfoSection = memo(function ProductInfoSection({
               가게
             </button>
           </div>
-
-          {/* 원산지 표기 */}
-          {product.origin && product.origin.length > 0 && (
-            <div className={styles.originSection}>
-              <h3 className={styles.originTitle}>원산지 표기</h3>
-              <p className={styles.originText}>
-                {product.origin.map((item, index) => (
-                  <span key={index}>
-                    {item.ingredient}({item.origin}){index < product.origin!.length - 1 ? ', ' : ''}
-                  </span>
-                ))}
-              </p>
-            </div>
-          )}
         </div>
       </div>
 
@@ -231,6 +217,21 @@ const ProductInfoSection = memo(function ProductInfoSection({
             className={`${styles.descriptionText} ${isDescriptionExpanded ? styles.expanded : ''}`}
             dangerouslySetInnerHTML={{ __html: product.description }}
           />
+
+          {/* 원산지 표기 - 펼쳤을 때만 표시 */}
+          {isDescriptionExpanded && product.origin && product.origin.length > 0 && (
+            <div className={styles.originSection}>
+              <h3 className={styles.originTitle}>원산지 표기</h3>
+              <p className={styles.originText}>
+                {product.origin.map((item, index) => (
+                  <span key={index}>
+                    {item.ingredient}({item.origin}){index < product.origin!.length - 1 ? ', ' : ''}
+                  </span>
+                ))}
+              </p>
+            </div>
+          )}
+
           <button
             className={styles.expandButton}
             onClick={onToggleDescription}

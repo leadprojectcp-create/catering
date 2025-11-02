@@ -71,6 +71,12 @@ export default function PaymentsPage() {
   } | null>(null)
   const [parcelPaymentMethod, setParcelPaymentMethod] = useState<'선결제' | '착불'>('선결제')
   const [isProcessing, setIsProcessing] = useState(false)
+  const [quantityRanges, setQuantityRanges] = useState<{
+    minQuantity: number
+    maxQuantity: number
+    daysBeforeOrder: number
+  }[]>([])
+  const [totalQuantity, setTotalQuantity] = useState(0)
 
   useEffect(() => {
     const loadData = async () => {
@@ -163,6 +169,11 @@ export default function PaymentsPage() {
             setMinOrderDays(productData.minOrderDays)
           }
 
+          // quantityRanges 가져오기
+          if (productData.quantityRanges && productData.quantityRanges.length > 0) {
+            setQuantityRanges(productData.quantityRanges)
+          }
+
           // deliveryFeeSettings 가져오기
           if (productData.deliveryFeeSettings) {
             setDeliveryFeeSettings(productData.deliveryFeeSettings)
@@ -225,6 +236,10 @@ export default function PaymentsPage() {
           itemsLength: items?.length,
           isAdditionalOrder: !!additionalOrderIdParam
         })
+
+        // 총 수량 계산
+        const calculatedTotalQuantity = items.reduce((sum: number, item: any) => sum + item.quantity, 0)
+        setTotalQuantity(calculatedTotalQuantity)
 
         setOrderData(data)
 
@@ -428,6 +443,8 @@ export default function PaymentsPage() {
                   deliveryDate={orderInfo.deliveryDate}
                   deliveryTime={orderInfo.deliveryTime}
                   minOrderDays={minOrderDays}
+                  quantityRanges={quantityRanges}
+                  totalQuantity={totalQuantity}
                   onDateChange={(date) => setOrderInfo({...orderInfo, deliveryDate: date})}
                   onTimeChange={(time) => setOrderInfo({...orderInfo, deliveryTime: time})}
                   onShowDateInfoModal={() => setShowDateInfoModal(true)}
@@ -456,6 +473,8 @@ export default function PaymentsPage() {
               deliveryTime={orderInfo.deliveryTime}
               minOrderDays={minOrderDays}
               deliveryMethod={deliveryMethod}
+              quantityRanges={quantityRanges}
+              totalQuantity={totalQuantity}
               onDateChange={(date) => setOrderInfo({...orderInfo, deliveryDate: date})}
               onTimeChange={(time) => setOrderInfo({...orderInfo, deliveryTime: time})}
               onShowDateInfoModal={() => setShowDateInfoModal(true)}

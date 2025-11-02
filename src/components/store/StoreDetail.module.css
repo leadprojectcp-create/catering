@@ -270,6 +270,10 @@
 
 .noticeSection {
   padding: 24px 0 0 0;
+  border-radius: 20px;
+  border: 1px solid #FC6536;
+  padding: 20px;
+  margin-top: 20px;
 }
 
 .noticeList {
@@ -282,10 +286,15 @@
   padding: 0;
   background: transparent;
   border: none;
+  cursor: pointer;
 }
 
 .noticeTitle {
-  display: none;
+  color: #333;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 150%;
+  margin: 0 0 4px 0;
 }
 
 .noticeContent {
@@ -295,10 +304,97 @@
   line-height: 150%;
   margin: 0;
   white-space: pre-wrap;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .noticeDate {
   display: none;
+}
+
+/* 공지사항 모달 */
+.noticeModal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.noticeModalContent {
+  background: white;
+  border-radius: 20px;
+  max-width: 500px;
+  width: 100%;
+  max-height: 80vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.noticeModalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px;
+  border-bottom: 1px solid #F0F0F3;
+}
+
+.noticeModalTitle {
+  color: #333;
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.noticeModalClose {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #999;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s;
+}
+
+.noticeModalClose:hover {
+  color: #333;
+}
+
+.noticeModalBody {
+  padding: 24px;
+  overflow-y: auto;
+}
+
+.noticeModalTitleText {
+  color: #333;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 150%;
+  margin: 0 0 12px 0;
+}
+
+.noticeModalText {
+  color: #333;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 150%;
+  margin: 0;
+  white-space: pre-wrap;
 }
 
 @media (max-width: 768px) {

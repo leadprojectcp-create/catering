@@ -171,8 +171,8 @@
   object-fit: contain;
 }
 
-/* 월간 주문현황 */
-.monthlyOrderSection {
+/* 실시간 주문현황 */
+.realtimeOrderSection {
   background: white;
   border-radius: 12px;
   padding: 24px;
@@ -183,7 +183,7 @@
   margin-bottom: 40px;
 }
 
-.monthlyOrderTitle {
+.realtimeOrderTitle {
   color: #4E5968;
   font-size: 16px;
   font-weight: 700;
@@ -193,39 +193,39 @@
   gap: 6px;
 }
 
-.monthlyOrderGrid {
+.realtimeOrderGrid {
   display: flex;
   justify-content: space-around;
   align-items: center;
   width: 100%;
 }
 
-.monthlyOrderItem {
+.realtimeOrderItem {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 12px;
 }
 
-.monthlyOrderDivider {
+.realtimeOrderDivider {
   color: #E5E5E5;
   font-size: 20px;
   font-weight: 300;
 }
 
-.monthlyOrderLabel {
+.realtimeOrderLabel {
   color: #999;
   font-size: 16px;
   font-weight: 600;
 }
 
-.monthlyOrderValue {
+.realtimeOrderValue {
   color: #4E5968;
   font-size: 18px;
   font-weight: 700;
 }
 
-.monthlyOrderValueZero {
+.realtimeOrderValueZero {
   color: #C3C3C3;
   font-size: 18px;
   font-weight: 700;
@@ -646,45 +646,45 @@
     height: 20px;
   }
 
-  .monthlyOrderSection {
+  .realtimeOrderSection {
     padding: 20px 16px;
   }
 
-  .monthlyOrderTitle {
+  .realtimeOrderTitle {
     font-size: 15px;
   }
 
-  .monthlyOrderGrid {
+  .realtimeOrderGrid {
     flex-direction: column;
     gap: 8px;
   }
 
-  .monthlyOrderDivider {
+  .realtimeOrderDivider {
     display: none;
   }
 
-  .monthlyOrderItem {
+  .realtimeOrderItem {
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
     width: 100%;
   }
 
-  .monthlyOrderLabel {
+  .realtimeOrderLabel {
     color: #999;
     font-size: 16px;
     font-weight: 600;
     text-align: left;
   }
 
-  .monthlyOrderValue {
+  .realtimeOrderValue {
     color: #4E5968;
     font-size: 18px;
     font-weight: 700;
     text-align: right;
   }
 
-  .monthlyOrderValueZero {
+  .realtimeOrderValueZero {
     color: #C3C3C3;
     font-size: 18px;
     font-weight: 700;

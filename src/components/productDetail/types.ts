@@ -36,6 +36,11 @@ export interface Product {
   minOrderQuantity?: number
   maxOrderQuantity?: number
   minOrderDays?: number
+  quantityRanges?: {
+    minQuantity: number
+    maxQuantity: number
+    daysBeforeOrder: number
+  }[]
   deliveryMethods?: string[]
   additionalSettings?: string[]
   origin?: { ingredient: string; origin: string }[]

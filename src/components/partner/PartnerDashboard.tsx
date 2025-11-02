@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
-import { collection, query, where, orderBy, limit, getDocs, Timestamp } from 'firebase/firestore'
+import { collection, query, where, orderBy, limit, getDocs, Timestamp, onSnapshot } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { getPublishedNotices, Notice } from '@/lib/services/noticeService'
 import Loading from '@/components/Loading'
@@ -158,12 +158,12 @@ interface DashboardStats {
   activeProducts: number
   recentOrders: Order[]
   recentReviews: Review[]
-  // 월간 주문현황
-  monthOrderStats: {
+  // 실시간 주문현황
+  realtimeOrderStats: {
     newOrders: number // 신규주문
     cancelledOrders: number // 주문취소
     preparingOrders: number // 준비중
-    shippingOrders: number // 배송(점)픽업 중
+    shippingOrders: number // 배송•픽업 중
     completedOrders: number // 완료
   }
   // 주간 차트 데이터
@@ -193,7 +193,7 @@ export default function PartnerDashboard() {
     activeProducts: 0,
     recentOrders: [],
     recentReviews: [],
-    monthOrderStats: {
+    realtimeOrderStats: {
       newOrders: 0,
       cancelledOrders: 0,
       preparingOrders: 0,
@@ -217,6 +217,61 @@ export default function PartnerDashboard() {
     if (user) {
       fetchDashboardData()
       fetchNotices()
+
+      // 실시간 주문현황 구독
+      const storeId = user.uid
+      const ordersQuery = query(
+        collection(db, 'orders'),
+        where('storeId', '==', storeId),
+        where('paymentStatus', '==', 'paid')
+      )
+
+      const unsubscribe = onSnapshot(ordersQuery, (snapshot) => {
+        console.log('=== 실시간 주문 구독 트리거 ===')
+        console.log('전체 주문 수:', snapshot.docs.length)
+
+        let newOrders = 0
+        let cancelledOrders = 0
+        let preparingOrders = 0
+        let shippingOrders = 0
+        let completedOrders = 0
+
+        snapshot.docs.forEach(doc => {
+          const order = doc.data()
+          console.log('주문 데이터:', {
+            orderId: doc.id,
+            orderStatus: order.orderStatus,
+            paymentStatus: order.paymentStatus
+          })
+
+          if (order.orderStatus === 'pending') newOrders++
+          else if (order.orderStatus === 'cancelled') cancelledOrders++
+          else if (order.orderStatus === 'preparing') preparingOrders++
+          else if (order.orderStatus === 'shipping') shippingOrders++
+          else if (order.orderStatus === 'completed') completedOrders++
+        })
+
+        console.log('실시간 주문현황 업데이트:', {
+          newOrders,
+          cancelledOrders,
+          preparingOrders,
+          shippingOrders,
+          completedOrders
+        })
+
+        setStats(prev => ({
+          ...prev,
+          realtimeOrderStats: {
+            newOrders,
+            cancelledOrders,
+            preparingOrders,
+            shippingOrders,
+            completedOrders
+          }
+        }))
+      })
+
+      return () => unsubscribe()
     } else {
       setLoading(false)
     }
@@ -443,23 +498,7 @@ export default function PartnerDashboard() {
         if (product.status === 'active') activeProducts++
       })
 
-      // 월간 주문현황 계산
-      let monthNewOrders = 0
-      let monthCancelledOrders = 0
-      let monthPreparingOrders = 0
-      let monthShippingOrders = 0
-      let monthCompletedOrders = 0
-
-      monthOrdersSnapshot.docs.forEach(doc => {
-        const order = doc.data()
-        if (order.paymentStatus === 'paid') {
-          if (order.orderStatus === 'pending') monthNewOrders++
-          else if (order.orderStatus === 'cancelled') monthCancelledOrders++
-          else if (order.orderStatus === 'preparing') monthPreparingOrders++
-          else if (order.orderStatus === 'shipping') monthShippingOrders++
-          else if (order.orderStatus === 'completed') monthCompletedOrders++
-        }
-      })
+      // 실시간 주문현황은 onSnapshot에서 처리하므로 여기서는 제거
 
       // 주간 차트 데이터 계산 (일~토)
       const weeklySalesLastWeek = [0, 0, 0, 0, 0, 0, 0]
@@ -607,7 +646,7 @@ export default function PartnerDashboard() {
         monthSettlement = 0
       }
 
-      setStats({
+      setStats(prev => ({
         todayOrders: todayOrdersSnapshot?.size || 0,
         pendingOrders: pendingOrdersSnapshot?.size || 0,
         newOrders: newOrdersSnapshot?.size || 0,
@@ -627,13 +666,7 @@ export default function PartnerDashboard() {
           id: doc.id,
           ...doc.data()
         })) || [],
-        monthOrderStats: {
-          newOrders: monthNewOrders,
-          cancelledOrders: monthCancelledOrders,
-          preparingOrders: monthPreparingOrders,
-          shippingOrders: monthShippingOrders,
-          completedOrders: monthCompletedOrders
-        },
+        realtimeOrderStats: prev.realtimeOrderStats, // 실시간 구독 데이터 유지 (이전 상태 사용)
         weeklySales: {
           lastWeek: weeklySalesLastWeek,
           thisWeek: weeklySalesThisWeek
@@ -642,7 +675,7 @@ export default function PartnerDashboard() {
           lastWeek: weeklyOrdersLastWeek,
           thisWeek: weeklyOrdersThisWeek
         }
-      })
+      }))
     } catch (error) {
       console.error('대시보드 데이터 로드 실패:', error)
     } finally {
@@ -784,47 +817,47 @@ export default function PartnerDashboard() {
               </div>
             </div>
 
-            {/* 월간 주문현황 */}
-            <div className={styles.monthlyOrderSection}>
-              <h2 className={styles.monthlyOrderTitle}>
-                월간 주문현황
+            {/* 실시간 주문현황 */}
+            <div className={styles.realtimeOrderSection}>
+              <h2 className={styles.realtimeOrderTitle}>
+                실시간 주문현황
                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
                   <path d="M7.5 5L12.5 10L7.5 15" stroke="#4E5968" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               </h2>
-              <div className={styles.monthlyOrderGrid}>
-                <div className={styles.monthlyOrderItem}>
-                  <span className={styles.monthlyOrderLabel}>신규주문</span>
-                  <span className={stats.monthOrderStats.newOrders === 0 ? styles.monthlyOrderValueZero : styles.monthlyOrderValue}>
-                    {stats.monthOrderStats.newOrders}건
+              <div className={styles.realtimeOrderGrid}>
+                <div className={styles.realtimeOrderItem}>
+                  <span className={styles.realtimeOrderLabel}>신규주문</span>
+                  <span className={stats.realtimeOrderStats.newOrders === 0 ? styles.realtimeOrderValueZero : styles.realtimeOrderValue}>
+                    {stats.realtimeOrderStats.newOrders}건
                   </span>
                 </div>
-                <div className={styles.monthlyOrderDivider}>|</div>
-                <div className={styles.monthlyOrderItem}>
-                  <span className={styles.monthlyOrderLabel}>주문취소</span>
-                  <span className={stats.monthOrderStats.cancelledOrders === 0 ? styles.monthlyOrderValueZero : styles.monthlyOrderValue}>
-                    {stats.monthOrderStats.cancelledOrders}건
+                <div className={styles.realtimeOrderDivider}>|</div>
+                <div className={styles.realtimeOrderItem}>
+                  <span className={styles.realtimeOrderLabel}>주문취소</span>
+                  <span className={stats.realtimeOrderStats.cancelledOrders === 0 ? styles.realtimeOrderValueZero : styles.realtimeOrderValue}>
+                    {stats.realtimeOrderStats.cancelledOrders}건
                   </span>
                 </div>
-                <div className={styles.monthlyOrderDivider}>|</div>
-                <div className={styles.monthlyOrderItem}>
-                  <span className={styles.monthlyOrderLabel}>준비중</span>
-                  <span className={stats.monthOrderStats.preparingOrders === 0 ? styles.monthlyOrderValueZero : styles.monthlyOrderValue}>
-                    {stats.monthOrderStats.preparingOrders}건
+                <div className={styles.realtimeOrderDivider}>|</div>
+                <div className={styles.realtimeOrderItem}>
+                  <span className={styles.realtimeOrderLabel}>준비중</span>
+                  <span className={stats.realtimeOrderStats.preparingOrders === 0 ? styles.realtimeOrderValueZero : styles.realtimeOrderValue}>
+                    {stats.realtimeOrderStats.preparingOrders}건
                   </span>
                 </div>
-                <div className={styles.monthlyOrderDivider}>|</div>
-                <div className={styles.monthlyOrderItem}>
-                  <span className={styles.monthlyOrderLabel}>배송•픽업 중</span>
-                  <span className={stats.monthOrderStats.shippingOrders === 0 ? styles.monthlyOrderValueZero : styles.monthlyOrderValue}>
-                    {stats.monthOrderStats.shippingOrders}건
+                <div className={styles.realtimeOrderDivider}>|</div>
+                <div className={styles.realtimeOrderItem}>
+                  <span className={styles.realtimeOrderLabel}>배송•픽업 중</span>
+                  <span className={stats.realtimeOrderStats.shippingOrders === 0 ? styles.realtimeOrderValueZero : styles.realtimeOrderValue}>
+                    {stats.realtimeOrderStats.shippingOrders}건
                   </span>
                 </div>
-                <div className={styles.monthlyOrderDivider}>|</div>
-                <div className={styles.monthlyOrderItem}>
-                  <span className={styles.monthlyOrderLabel}>완료</span>
-                  <span className={stats.monthOrderStats.completedOrders === 0 ? styles.monthlyOrderValueZero : styles.monthlyOrderValue}>
-                    {stats.monthOrderStats.completedOrders}건
+                <div className={styles.realtimeOrderDivider}>|</div>
+                <div className={styles.realtimeOrderItem}>
+                  <span className={styles.realtimeOrderLabel}>완료</span>
+                  <span className={stats.realtimeOrderStats.completedOrders === 0 ? styles.realtimeOrderValueZero : styles.realtimeOrderValue}>
+                    {stats.realtimeOrderStats.completedOrders}건
                   </span>
                 </div>
               </div>

@@ -21,7 +21,6 @@ import DescriptionSection from './sections/DescriptionSection'
 import OriginSection from './sections/OriginSection'
 import DeliveryMethodSection, { DeliveryFeeSettings } from './sections/DeliveryMethodSection'
 import AdditionalSettingsSection from './sections/AdditionalSettingsSection'
-import MinOrderDaysSection from './sections/MinOrderDaysSection'
 import { ProductFormData, ProductOption, categories } from './common/types/types'
 import styles from './AddProductPage.module.css'
 
@@ -49,9 +48,9 @@ export default function AddProductPage() {
     description: '',
     minOrderQuantity: 10,
     maxOrderQuantity: 11,
+    quantityRanges: [{ minQuantity: 10, maxQuantity: 20, daysBeforeOrder: 1 }],
     deliveryMethods: [],
     additionalSettings: [],
-    minOrderDays: 3,
     origin: [],
     discount: {
       enabled: false,
@@ -284,11 +283,6 @@ export default function AddProductPage() {
 
     // 추가설정은 선택사항이므로 검사하지 않음
 
-    if (formData.minOrderDays < 0) {
-      alert('최소 주문 날짜를 선택해주세요.')
-      return
-    }
-
     setIsSubmitting(true)
 
     try {
@@ -437,10 +431,11 @@ export default function AddProductPage() {
           onChange={(data) => setFormData(prev => ({ ...prev, ...data }))}
         />
 
-        {/* 상품 수량 설정 */}
+        {/* 상품 수량별 주문 조건 설정 */}
         <QuantitySection
           minOrderQuantity={formData.minOrderQuantity}
           maxOrderQuantity={formData.maxOrderQuantity}
+          quantityRanges={formData.quantityRanges}
           onChange={(data) => setFormData(prev => ({ ...prev, ...data }))}
         />
 
@@ -488,12 +483,6 @@ export default function AddProductPage() {
         <AdditionalSettingsSection
           additionalSettings={formData.additionalSettings}
           onChange={(additionalSettings) => setFormData(prev => ({ ...prev, additionalSettings }))}
-        />
-
-        {/* 최소 주문 날짜 */}
-        <MinOrderDaysSection
-          minOrderDays={formData.minOrderDays}
-          onChange={(minOrderDays) => setFormData(prev => ({ ...prev, minOrderDays }))}
         />
 
         {/* 버튼 영역 */}

@@ -106,7 +106,7 @@ export default function OrderProductSection({ orderData, orderId, isCartMode, ad
                               <div className={styles.productOptions}>
                                 <div className={styles.optionItem}>
                                   <span className={styles.optionGroup}>[기본]</span>
-                                  <span>[기본] +0원</span>
+                                  <span> +0원</span>
                                 </div>
                               </div>
                             </div>

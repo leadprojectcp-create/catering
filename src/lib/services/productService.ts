@@ -27,6 +27,11 @@ export interface ProductData {
   description: string
   minOrderQuantity: number
   maxOrderQuantity: number
+  quantityRanges?: {
+    minQuantity: number
+    maxQuantity: number
+    daysBeforeOrder: number
+  }[]
   deliveryMethods: {
     quick: boolean
     parcel: boolean
@@ -38,7 +43,6 @@ export interface ProductData {
     stickerCustom: boolean
     giftItem: boolean
   }
-  minOrderDays: number
   origin: { ingredient: string, origin: string }[]
   orderType: string
   partnerId?: string

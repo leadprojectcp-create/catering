@@ -47,6 +47,7 @@ export default function StoreDetail({ storeId }: StoreDetailProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [notices, setNotices] = useState<Notice[]>([])
   const [noticesLoading, setNoticesLoading] = useState(true)
+  const [selectedNotice, setSelectedNotice] = useState<Notice | null>(null)
 
   // 좋아요 훅 사용
   const { isLiked, likeCount, setLikeCount, handleLikeToggle } = useStoreLike({
@@ -263,13 +264,35 @@ export default function StoreDetail({ storeId }: StoreDetailProps) {
         {/* 공지사항 섹션 */}
         {!noticesLoading && notices.length > 0 && (
           <div className={styles.noticeSection}>
-            <div className={styles.sectionTitle}>사장님 공지사항</div>
+            <div className={styles.sectionTitle}>가게공지사항</div>
             <div className={styles.noticeList}>
               {notices.map((notice) => (
-                <div key={notice.id} className={styles.noticeItem}>
+                <div key={notice.id} className={styles.noticeItem} onClick={() => setSelectedNotice(notice)}>
+                  <p className={styles.noticeTitle}>[{notice.title}]</p>
                   <p className={styles.noticeContent}>{notice.content}</p>
                 </div>
               ))}
+            </div>
+          </div>
+        )}
+
+        {/* 공지사항 팝업 */}
+        {selectedNotice && (
+          <div className={styles.noticeModal} onClick={() => setSelectedNotice(null)}>
+            <div className={styles.noticeModalContent} onClick={(e) => e.stopPropagation()}>
+              <div className={styles.noticeModalHeader}>
+                <h3 className={styles.noticeModalTitle}>가게공지사항</h3>
+                <button
+                  className={styles.noticeModalClose}
+                  onClick={() => setSelectedNotice(null)}
+                >
+                  ✕
+                </button>
+              </div>
+              <div className={styles.noticeModalBody}>
+                <p className={styles.noticeModalTitleText}>[{selectedNotice.title}]</p>
+                <p className={styles.noticeModalText}>{selectedNotice.content}</p>
+              </div>
             </div>
           </div>
         )}
