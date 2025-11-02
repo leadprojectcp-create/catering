@@ -238,7 +238,7 @@ export default function PaymentsPage() {
         })
 
         // 총 수량 계산
-        const calculatedTotalQuantity = items.reduce((sum: number, item: any) => sum + item.quantity, 0)
+        const calculatedTotalQuantity = items.reduce((sum: number, item: { quantity: number }) => sum + item.quantity, 0)
         setTotalQuantity(calculatedTotalQuantity)
 
         setOrderData(data)
