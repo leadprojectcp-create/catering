@@ -1,8 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import Image from 'next/image'
-import Picker from 'react-mobile-picker'
 import styles from './DateTimePicker.module.css'
 
 interface DateTimePickerProps {
@@ -32,6 +31,41 @@ export default function DateTimePicker({
 }: DateTimePickerProps) {
   const [showDatePicker, setShowDatePicker] = useState(false)
   const [showTimePicker, setShowTimePicker] = useState(false)
+  const [selectedPeriod, setSelectedPeriod] = useState<'오전' | '오후'>('오후')
+  const [selectedHour, setSelectedHour] = useState('07')
+  const [selectedMinute, setSelectedMinute] = useState('10')
+
+  const periodRef = useRef<HTMLDivElement>(null)
+  const hourRef = useRef<HTMLDivElement>(null)
+  const minuteRef = useRef<HTMLDivElement>(null)
+
+  // 시간 선택기가 열릴 때 선택된 항목으로 스크롤
+  useEffect(() => {
+    if (showTimePicker) {
+      setTimeout(() => {
+        const isMobile = window.innerWidth <= 768
+        const itemHeight = isMobile ? 36 : 40
+
+        // 오전/오후 스크롤
+        if (periodRef.current) {
+          const periodIndex = selectedPeriod === '오전' ? 0 : 1
+          periodRef.current.scrollTop = periodIndex * itemHeight
+        }
+
+        // 시간 스크롤
+        if (hourRef.current) {
+          const hourIndex = parseInt(selectedHour) - 1
+          hourRef.current.scrollTop = hourIndex * itemHeight
+        }
+
+        // 분 스크롤
+        if (minuteRef.current) {
+          const minuteIndex = parseInt(selectedMinute)
+          minuteRef.current.scrollTop = minuteIndex * itemHeight
+        }
+      }, 0)
+    }
+  }, [showTimePicker, selectedPeriod, selectedHour, selectedMinute])
 
   // quantityRanges를 기반으로 현재 수량에 맞는 daysBeforeOrder 계산
   const getMinDaysForQuantity = () => {
@@ -60,16 +94,40 @@ export default function DateTimePicker({
   }
 
   const [currentMonth, setCurrentMonth] = useState(getInitialMonth())
-  const [pickerValue, setPickerValue] = useState({
-    hour: '00',
-    minute: '00'
-  })
 
-  // react-mobile-picker용 데이터 생성
-  const pickerSelections = {
-    hour: Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0')),
-    minute: Array.from({ length: 60 }, (_, i) => String(i).padStart(2, '0'))
+  // 스크롤 이벤트 핸들러 (디바운스 없이 즉시 반응)
+  const handleScroll = (ref: React.RefObject<HTMLDivElement | null>, type: 'period' | 'hour' | 'minute') => {
+    if (!ref.current) return
+
+    // 모바일과 데스크톱의 item 높이 차이 고려
+    const isMobile = window.innerWidth <= 768
+    const itemHeight = isMobile ? 36 : 40
+    const scrollTop = ref.current.scrollTop
+
+    // 더 정확한 인덱스 계산 (반올림 대신 가장 가까운 아이템 찾기)
+    const index = Math.round(scrollTop / itemHeight)
+
+    if (type === 'period') {
+      const newPeriod = index === 0 ? '오전' : '오후'
+      if (newPeriod !== selectedPeriod) {
+        setSelectedPeriod(newPeriod)
+      }
+    } else if (type === 'hour') {
+      const newHour = String(index + 1).padStart(2, '0')
+      if (newHour !== selectedHour && index >= 0 && index < 12) {
+        setSelectedHour(newHour)
+      }
+    } else if (type === 'minute') {
+      const newMinute = String(index).padStart(2, '0')
+      if (newMinute !== selectedMinute && index >= 0 && index < 60) {
+        setSelectedMinute(newMinute)
+      }
+    }
   }
+
+  // 시간/분 옵션 생성 (1-12시)
+  const hours = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0'))
+  const minutes = Array.from({ length: 60 }, (_, i) => String(i).padStart(2, '0'))
 
   // 달력 날짜 생성
   const generateCalendar = () => {
@@ -218,7 +276,15 @@ export default function DateTimePicker({
               onClick={() => {
                 if (deliveryTime) {
                   const [h, m] = deliveryTime.split(':')
-                  setPickerValue({ hour: h, minute: m })
+                  const hour24 = parseInt(h)
+                  if (hour24 >= 12) {
+                    setSelectedPeriod('오후')
+                    setSelectedHour(hour24 === 12 ? '12' : String(hour24 - 12).padStart(2, '0'))
+                  } else {
+                    setSelectedPeriod('오전')
+                    setSelectedHour(hour24 === 0 ? '12' : String(hour24).padStart(2, '0'))
+                  }
+                  setSelectedMinute(m)
                 }
                 setShowTimePicker(!showTimePicker)
               }}
@@ -230,38 +296,93 @@ export default function DateTimePicker({
                   <span>시간 선택</span>
                   <button onClick={() => setShowTimePicker(false)}>✕</button>
                 </div>
-                <div className={styles.pickerContainer}>
-                  <Picker
-                    value={pickerValue}
-                    onChange={setPickerValue}
-                    wheelMode="natural"
-                    height={200}
-                    itemHeight={40}
-                  >
-                    {Object.keys(pickerSelections).map((name) => (
-                      <Picker.Column key={name} name={name}>
-                        {pickerSelections[name as keyof typeof pickerSelections].map((option) => (
-                          <Picker.Item
-                            key={option}
-                            value={option}
-                            style={{
-                              color: pickerValue[name as keyof typeof pickerValue] === option ? '#025BD9' : '#ccc',
-                              fontSize: pickerValue[name as keyof typeof pickerValue] === option ? '20px' : '14px',
-                              fontWeight: pickerValue[name as keyof typeof pickerValue] === option ? 600 : 400,
-                              transition: 'all 0.2s ease'
-                            }}
-                          >
-                            {option}
-                          </Picker.Item>
-                        ))}
-                      </Picker.Column>
-                    ))}
-                  </Picker>
-                  <div className={styles.timeSeparator}>:</div>
+                <div className={styles.timePickerContainer}>
+                  <div className={styles.timeColumn}>
+                    <div
+                      ref={periodRef}
+                      className={styles.scrollContainer}
+                      onScroll={() => handleScroll(periodRef, 'period')}
+                    >
+                      {['오전', '오후'].map((period) => (
+                        <div
+                          key={period}
+                          className={`${styles.scrollItem} ${selectedPeriod === period ? styles.scrollItemActive : ''}`}
+                          onClick={() => {
+                            setSelectedPeriod(period as '오전' | '오후')
+                            if (periodRef.current) {
+                              const isMobile = window.innerWidth <= 768
+                              const itemHeight = isMobile ? 36 : 40
+                              const index = period === '오전' ? 0 : 1
+                              periodRef.current.scrollTo({ top: index * itemHeight, behavior: 'auto' })
+                            }
+                          }}
+                        >
+                          {period}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className={styles.timeColumn}>
+                    <div
+                      ref={hourRef}
+                      className={styles.scrollContainer}
+                      onScroll={() => handleScroll(hourRef, 'hour')}
+                    >
+                      {hours.map((hour) => (
+                        <div
+                          key={hour}
+                          className={`${styles.scrollItem} ${selectedHour === hour ? styles.scrollItemActive : ''}`}
+                          onClick={() => {
+                            setSelectedHour(hour)
+                            if (hourRef.current) {
+                              const isMobile = window.innerWidth <= 768
+                              const itemHeight = isMobile ? 36 : 40
+                              const index = parseInt(hour) - 1
+                              hourRef.current.scrollTo({ top: index * itemHeight, behavior: 'auto' })
+                            }
+                          }}
+                        >
+                          {hour}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className={styles.timeColumn}>
+                    <div
+                      ref={minuteRef}
+                      className={styles.scrollContainer}
+                      onScroll={() => handleScroll(minuteRef, 'minute')}
+                    >
+                      {minutes.map((minute) => (
+                        <div
+                          key={minute}
+                          className={`${styles.scrollItem} ${selectedMinute === minute ? styles.scrollItemActive : ''}`}
+                          onClick={() => {
+                            setSelectedMinute(minute)
+                            if (minuteRef.current) {
+                              const isMobile = window.innerWidth <= 768
+                              const itemHeight = isMobile ? 36 : 40
+                              const index = parseInt(minute)
+                              minuteRef.current.scrollTo({ top: index * itemHeight, behavior: 'auto' })
+                            }
+                          }}
+                        >
+                          {minute}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className={styles.selectionHighlight}></div>
                 </div>
                 <div className={styles.timeFooter}>
                   <button onClick={() => {
-                    const time = `${pickerValue.hour}:${pickerValue.minute}`
+                    let hour24 = parseInt(selectedHour)
+                    if (selectedPeriod === '오후' && hour24 !== 12) {
+                      hour24 += 12
+                    } else if (selectedPeriod === '오전' && hour24 === 12) {
+                      hour24 = 0
+                    }
+                    const time = `${String(hour24).padStart(2, '0')}:${selectedMinute}`
                     onTimeChange(time)
                     setShowTimePicker(false)
                   }}>확인</button>

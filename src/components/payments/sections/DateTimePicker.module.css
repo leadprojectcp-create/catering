@@ -153,70 +153,86 @@
   padding: 0;
 }
 
-.pickerContainer {
-  padding: 20px;
+.timePickerContainer {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  gap: 0;
+  padding: 24px 16px;
+  height: 225px;
+  overflow: hidden;
+}
+
+.timeColumn {
+  flex: 1;
+  display: flex;
+  justify-content: center;
   position: relative;
 }
 
-.timeSeparator {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 20px;
-  font-weight: 600;
-  color: #025BD9;
-  z-index: 3;
-  pointer-events: none;
+.scrollContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  overflow-y: scroll;
+  height: 177px;
+  padding: 68.5px 0;
+  scroll-snap-type: y proximity;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  scroll-behavior: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  scroll-padding: 68.5px 0;
 }
 
-/* 가운데 선택 영역 하이라이트 */
-.pickerContainer::before {
-  content: '';
+.scrollContainer::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollItem {
+  height: 40px;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 500;
+  color: #ccc;
+  cursor: pointer;
+  transition: all 0.15s ease-out;
+  scroll-snap-align: center;
+  scroll-snap-stop: normal;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.scrollItemActive {
+  font-size: 24px;
+  font-weight: 700;
+  color: #333;
+}
+
+.selectionHighlight {
   position: absolute;
   top: 50%;
-  left: 20px;
-  right: 20px;
+  left: 16px;
+  right: 16px;
   height: 40px;
-  margin-top: -20px;
-  border-top: 1px solid #025BD9;
-  border-bottom: 1px solid #025BD9;
+  transform: translateY(-50%);
   background-color: rgba(2, 91, 217, 0.05);
+  border-top: 2px solid #e0e0e0;
+  border-bottom: 2px solid #e0e0e0;
   pointer-events: none;
   z-index: 1;
 }
 
-/* react-mobile-picker 스타일 커스터마이징 */
-.pickerContainer :global(.picker-column) {
-  position: relative;
-  z-index: 2;
-}
-
-/* 모든 picker 아이템 */
-.pickerContainer :global(.picker-column) > div,
-.pickerContainer :global(.picker-item),
-.pickerContainer div[class*="picker"] > div {
-  color: #ccc !important;
-  font-size: 14px !important;
-  transition: all 0.2s ease !important;
-  font-weight: 400 !important;
-}
-
-/* 선택된 아이템 - 더 강력한 선택자들 */
-.pickerContainer :global(.picker-item-selected),
-.pickerContainer :global(.picker-column) > div:nth-child(3),
-.pickerContainer div[class*="picker"] > div:nth-child(3) {
-  color: #025BD9 !important;
-  font-size: 20px !important;
-  font-weight: 600 !important;
-}
-
-/* 추가 선택자 - transform이 0인 중앙 요소 */
-.pickerContainer div[style*="translateY(0px)"],
-.pickerContainer div[style="transform: translateY(0px);"] {
-  color: #025BD9 !important;
-  font-size: 20px !important;
-  font-weight: 600 !important;
+.timeDivider {
+  font-size: 20px;
+  font-weight: 600;
+  color: #333;
+  margin-top: 14px;
 }
 
 .timeFooter {
@@ -259,7 +275,33 @@
     padding: 6px 10px;
   }
 
-  .pickerContainer {
-    padding: 15px;
+  .timePickerContainer {
+    padding: 20px 12px;
+    height: 200px;
+  }
+
+  .scrollContainer {
+    height: 160px;
+    padding: 62px 0;
+    scroll-padding: 62px 0;
+  }
+
+  .scrollItem {
+    height: 36px;
+    min-height: 36px;
+    font-size: 16px;
+  }
+
+  .scrollItemActive {
+    font-size: 22px;
+  }
+
+  .selectionHighlight {
+    height: 36px;
+  }
+
+  .timeDivider {
+    font-size: 18px;
+    margin-top: 12px;
   }
 }
