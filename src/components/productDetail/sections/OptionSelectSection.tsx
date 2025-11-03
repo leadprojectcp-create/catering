@@ -67,6 +67,19 @@ export default function OptionSelectSection({
 
   // 장바구니에 담기
   const addToCart = () => {
+    // 필수 옵션(상품옵션)이 활성화되어 있는 경우, 선택 여부 확인
+    if (product.optionsEnabled && product.options && product.options.length > 0) {
+      // 모든 필수 옵션 그룹에서 최소 하나씩 선택되었는지 확인
+      const allRequiredOptionsSelected = product.options.every(optionGroup => {
+        return selectedOptions.some(selected => selected.groupName === optionGroup.groupName)
+      })
+
+      if (!allRequiredOptionsSelected) {
+        alert('필수 옵션(상품 옵션)을 모두 선택해주세요.')
+        return
+      }
+    }
+
     const optionsObj: { [key: string]: string } = {}
     selectedOptions.forEach(opt => {
       if (optionsObj[opt.groupName]) {

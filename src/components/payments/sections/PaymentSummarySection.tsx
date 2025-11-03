@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { doc, getDoc, updateDoc, addDoc, collection, increment, serverTimestamp, deleteDoc, deleteField } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
@@ -69,9 +69,28 @@ export default function PaymentSummarySection({
 }: PaymentSummarySectionProps) {
   const router = useRouter()
   const [isLoadingDeliveryFee, setIsLoadingDeliveryFee] = useState(false)
+  const [existingOrder, setExistingOrder] = useState<any>(null)
 
   // 추가 결제 모드 확인
   const isAdditionalOrder = searchParams.get('additionalOrderId')
+
+  // 추가 주문일 때 기존 주문 정보 가져오기
+  useEffect(() => {
+    const fetchExistingOrder = async () => {
+      if (isAdditionalOrder && orderId) {
+        try {
+          const orderRef = doc(db, 'orders', orderId)
+          const orderDoc = await getDoc(orderRef)
+          if (orderDoc.exists()) {
+            setExistingOrder(orderDoc.data())
+          }
+        } catch (error) {
+          console.error('Error fetching existing order:', error)
+        }
+      }
+    }
+    fetchExistingOrder()
+  }, [isAdditionalOrder, orderId])
 
   // 총 상품금액과 수량 계산
   // 추가 주문 모드일 때는 paymentId가 없는 항목들(새로 추가된 것들)만 계산
@@ -102,39 +121,85 @@ export default function PaymentSummarySection({
     const { type, baseFee = 0, freeCondition = 0, perQuantity = 0 } = deliveryFeeSettings
 
     if (type === '무료') return 0
+
+    // 조건부 무료: 추가 주문일 때는 기존 주문 금액과 합산
     if (type === '조건부 무료') {
+      if (isAdditionalOrder && existingOrder) {
+        const existingTotalPrice = existingOrder.totalProductPrice || 0
+        const combinedPrice = existingTotalPrice + totalProductPrice
+
+        // 기존에 이미 무료 조건을 충족했는지 확인
+        const wasAlreadyFree = existingTotalPrice >= freeCondition
+        // 추가 후 무료 조건을 충족하는지 확인
+        const isNowFree = combinedPrice >= freeCondition
+
+        // 기존에 무료가 아니었는데 추가 후 무료가 되면 배송비 0원
+        // 기존에도 무료였으면 배송비 0원
+        // 추가 후에도 무료 조건 미달이면 배송비 0원 (추가 주문에는 배송비 부과 안 함)
+        return 0
+      }
+      // 최초 주문일 때
       return totalProductPrice >= freeCondition ? 0 : baseFee
     }
+
     if (type === '유료') return baseFee
+
+    // 수량별: 추가 주문일 때는 기존 주문 수량과 합산
     if (type === '수량별') {
       if (perQuantity > 0) {
+        if (isAdditionalOrder && existingOrder) {
+          // 기존 주문의 총 수량 계산
+          const existingTotalQuantity = existingOrder.items?.reduce((sum: number, item: any) => sum + item.quantity, 0) || 0
+          const combinedQuantity = existingTotalQuantity + totalQuantity
+
+          // 기존 배송비 구간
+          const existingTimes = Math.ceil(existingTotalQuantity / perQuantity)
+          // 추가 후 배송비 구간
+          const combinedTimes = Math.ceil(combinedQuantity / perQuantity)
+
+          // 새로운 구간에 진입했으면 그 차이만큼 배송비 부과
+          const additionalTimes = combinedTimes - existingTimes
+          return baseFee * additionalTimes
+        }
+        // 최초 주문일 때
         const times = Math.ceil(totalQuantity / perQuantity)
         return baseFee * times
       }
       return baseFee
     }
     return 0
-  }, [deliveryFeeSettings, totalProductPrice, totalQuantity])
+  }, [deliveryFeeSettings, totalProductPrice, totalQuantity, isAdditionalOrder, existingOrder])
 
-  // 배송비 계산 (추가 주문일 때는 배송비 0, 착불일 때는 0)
+  // 배송비 계산
   const deliveryFee = useMemo(() => {
-    // 추가 주문일 때는 배송비 없음
-    if (isAdditionalOrder) {
-      return 0
-    }
-
     if (deliveryMethod === '퀵업체 배송') {
+      // 추가 주문일 때는 배송비 없음
+      if (isAdditionalOrder) {
+        return 0
+      }
       return deliveryFeeFromAPI || 0
     }
+
     if (deliveryMethod === '택배 배송') {
       // 착불일 경우 결제 금액에 포함하지 않음
       if (parcelPaymentMethod === '착불') {
         return 0
       }
+
+      // 추가 주문일 때: 조건부 무료와 수량별은 계산된 배송비 적용, 나머지는 0원
+      if (isAdditionalOrder) {
+        if (deliveryFeeSettings?.type === '조건부 무료' || deliveryFeeSettings?.type === '수량별') {
+          return calculateParcelDeliveryFee
+        }
+        return 0
+      }
+
+      // 최초 주문일 때
       return calculateParcelDeliveryFee
     }
+
     return 0
-  }, [isAdditionalOrder, deliveryMethod, deliveryFeeFromAPI, calculateParcelDeliveryFee, parcelPaymentMethod])
+  }, [isAdditionalOrder, deliveryMethod, deliveryFeeFromAPI, calculateParcelDeliveryFee, parcelPaymentMethod, deliveryFeeSettings])
 
   // 배송비 프로모션 (퀵업체 배송이고 배송비가 조회되었을 때만 적용, 추가 주문은 제외)
   const deliveryPromotion = useMemo(() => {

@@ -36,7 +36,6 @@ export default function AddProductPage() {
   const [showAdditionalProductHelpModal, setShowAdditionalProductHelpModal] = useState(false)
   const [optionsEnabled, setOptionsEnabled] = useState(false)
   const [additionalOptionsEnabled, setAdditionalOptionsEnabled] = useState(false)
-  const [deliveryFeeSettings, setDeliveryFeeSettings] = useState<DeliveryFeeSettings>({ type: '무료' })
   const [formData, setFormData] = useState<ProductFormData>({
     name: '',
     images: [],
@@ -50,6 +49,7 @@ export default function AddProductPage() {
     maxOrderQuantity: 11,
     quantityRanges: [{ minQuantity: 10, maxQuantity: 20, daysBeforeOrder: 1 }],
     deliveryMethods: [],
+    deliveryFeeSettings: { type: '무료' },
     additionalSettings: [],
     origin: [],
     discount: {
@@ -281,6 +281,58 @@ export default function AddProductPage() {
       return
     }
 
+    // 택배 배송 선택 시 배송비 설정 필수 검사
+    if (formData.deliveryMethods.includes('택배 배송')) {
+      if (!formData.deliveryFeeSettings?.type) {
+        alert('택배 배송 시 배송비 타입(무료/조건부 무료/유료/수량별)을 선택해주세요.')
+        return
+      }
+
+      // 조건부 무료인 경우
+      if (formData.deliveryFeeSettings.type === '조건부 무료') {
+        if (!formData.deliveryFeeSettings.baseFee || formData.deliveryFeeSettings.baseFee <= 0) {
+          alert('조건부 무료 배송 시 기본 배송비를 입력해주세요.')
+          return
+        }
+        if (!formData.deliveryFeeSettings.freeCondition || formData.deliveryFeeSettings.freeCondition <= 0) {
+          alert('조건부 무료 배송 시 무료 배송 조건 금액을 입력해주세요.')
+          return
+        }
+        if (!formData.deliveryFeeSettings.paymentMethods || formData.deliveryFeeSettings.paymentMethods.length === 0) {
+          alert('조건부 무료 배송 시 결제 방식(선결제/착불)을 최소 1개 이상 선택해주세요.')
+          return
+        }
+      }
+
+      // 유료인 경우
+      if (formData.deliveryFeeSettings.type === '유료') {
+        if (!formData.deliveryFeeSettings.baseFee || formData.deliveryFeeSettings.baseFee <= 0) {
+          alert('유료 배송 시 기본 배송비를 입력해주세요.')
+          return
+        }
+        if (!formData.deliveryFeeSettings.paymentMethods || formData.deliveryFeeSettings.paymentMethods.length === 0) {
+          alert('유료 배송 시 결제 방식(선결제/착불)을 최소 1개 이상 선택해주세요.')
+          return
+        }
+      }
+
+      // 수량별인 경우
+      if (formData.deliveryFeeSettings.type === '수량별') {
+        if (!formData.deliveryFeeSettings.baseFee || formData.deliveryFeeSettings.baseFee <= 0) {
+          alert('수량별 배송 시 기본 배송비를 입력해주세요.')
+          return
+        }
+        if (!formData.deliveryFeeSettings.perQuantity || formData.deliveryFeeSettings.perQuantity <= 0) {
+          alert('수량별 배송 시 반복 부과 수량을 입력해주세요.')
+          return
+        }
+        if (!formData.deliveryFeeSettings.paymentMethods || formData.deliveryFeeSettings.paymentMethods.length === 0) {
+          alert('수량별 배송 시 결제 방식(선결제/착불)을 최소 1개 이상 선택해주세요.')
+          return
+        }
+      }
+    }
+
     // 추가설정은 선택사항이므로 검사하지 않음
 
     setIsSubmitting(true)
@@ -343,7 +395,7 @@ export default function AddProductPage() {
         additionalOptionsEnabled, // 추가상품 설정 여부 저장
         additionalOptions: filteredAdditionalOptions.length > 0 ? filteredAdditionalOptions : undefined, // 비어있으면 undefined
         orderType: 'single', // 항상 단건주문으로 설정
-        deliveryFeeSettings: formData.deliveryMethods.includes('택배 배송') ? deliveryFeeSettings : undefined, // 택배 배송일 때만 배송비 설정 저장
+        deliveryFeeSettings: formData.deliveryMethods.includes('택배 배송') ? formData.deliveryFeeSettings : undefined, // 택배 배송일 때만 배송비 설정 저장
         createdAt: new Date().toISOString()
       }
 
@@ -474,9 +526,9 @@ export default function AddProductPage() {
         {/* 상품 배송 설정 */}
         <DeliveryMethodSection
           deliveryMethods={formData.deliveryMethods}
-          deliveryFeeSettings={deliveryFeeSettings}
+          deliveryFeeSettings={formData.deliveryFeeSettings}
           onChange={(deliveryMethods) => setFormData(prev => ({ ...prev, deliveryMethods }))}
-          onDeliveryFeeChange={setDeliveryFeeSettings}
+          onDeliveryFeeChange={(settings) => setFormData(prev => ({ ...prev, deliveryFeeSettings: settings }))}
         />
 
         {/* 상품주문 추가설정 */}

@@ -41,7 +41,6 @@ export default function EditProductPage({ productId }: { productId: string }) {
   const [showAdditionalProductHelpModal, setShowAdditionalProductHelpModal] = useState(false)
   const [optionsEnabled, setOptionsEnabled] = useState(false)
   const [additionalOptionsEnabled, setAdditionalOptionsEnabled] = useState(false)
-  const [deliveryFeeSettings, setDeliveryFeeSettings] = useState<DeliveryFeeSettings>({ type: '무료' })
   const [formData, setFormData] = useState<EditProductFormData>({
     name: '',
     images: [],
@@ -55,6 +54,7 @@ export default function EditProductPage({ productId }: { productId: string }) {
     maxOrderQuantity: 11,
     quantityRanges: [{ minQuantity: 10, maxQuantity: 20, daysBeforeOrder: 1 }],
     deliveryMethods: [],
+    deliveryFeeSettings: { type: '무료' },
     additionalSettings: [],
     origin: [],
     status: 'pending',
@@ -181,11 +181,6 @@ export default function EditProductPage({ productId }: { productId: string }) {
             setStoreId(product.storeId)
           }
 
-          // deliveryFeeSettings 불러오기
-          if (product.deliveryFeeSettings) {
-            setDeliveryFeeSettings(product.deliveryFeeSettings as DeliveryFeeSettings)
-          }
-
           setFormData({
             name: product.name || '',
             images: product.images || [],
@@ -203,6 +198,7 @@ export default function EditProductPage({ productId }: { productId: string }) {
               daysBeforeOrder: range.daysBeforeOrder
             })) || [{ minQuantity: 10, maxQuantity: 20, daysBeforeOrder: 1 }],
             deliveryMethods: deliveryMethodsArray,
+            deliveryFeeSettings: product.deliveryFeeSettings as DeliveryFeeSettings || { type: '무료' },
             additionalSettings: additionalSettingsArray,
             origin: Array.isArray(product.origin) ? product.origin : [],
             status: product.status as 'active' | 'inactive' | 'pending',
@@ -330,6 +326,58 @@ export default function EditProductPage({ productId }: { productId: string }) {
       return
     }
 
+    // 택배 배송 선택 시 배송비 설정 필수 검사
+    if (formData.deliveryMethods.includes('택배 배송')) {
+      if (!formData.deliveryFeeSettings?.type) {
+        alert('택배 배송 시 배송비 타입(무료/조건부 무료/유료/수량별)을 선택해주세요.')
+        return
+      }
+
+      // 조건부 무료인 경우
+      if (formData.deliveryFeeSettings.type === '조건부 무료') {
+        if (!formData.deliveryFeeSettings.baseFee || formData.deliveryFeeSettings.baseFee <= 0) {
+          alert('조건부 무료 배송 시 기본 배송비를 입력해주세요.')
+          return
+        }
+        if (!formData.deliveryFeeSettings.freeCondition || formData.deliveryFeeSettings.freeCondition <= 0) {
+          alert('조건부 무료 배송 시 무료 배송 조건 금액을 입력해주세요.')
+          return
+        }
+        if (!formData.deliveryFeeSettings.paymentMethods || formData.deliveryFeeSettings.paymentMethods.length === 0) {
+          alert('조건부 무료 배송 시 결제 방식(선결제/착불)을 최소 1개 이상 선택해주세요.')
+          return
+        }
+      }
+
+      // 유료인 경우
+      if (formData.deliveryFeeSettings.type === '유료') {
+        if (!formData.deliveryFeeSettings.baseFee || formData.deliveryFeeSettings.baseFee <= 0) {
+          alert('유료 배송 시 기본 배송비를 입력해주세요.')
+          return
+        }
+        if (!formData.deliveryFeeSettings.paymentMethods || formData.deliveryFeeSettings.paymentMethods.length === 0) {
+          alert('유료 배송 시 결제 방식(선결제/착불)을 최소 1개 이상 선택해주세요.')
+          return
+        }
+      }
+
+      // 수량별인 경우
+      if (formData.deliveryFeeSettings.type === '수량별') {
+        if (!formData.deliveryFeeSettings.baseFee || formData.deliveryFeeSettings.baseFee <= 0) {
+          alert('수량별 배송 시 기본 배송비를 입력해주세요.')
+          return
+        }
+        if (!formData.deliveryFeeSettings.perQuantity || formData.deliveryFeeSettings.perQuantity <= 0) {
+          alert('수량별 배송 시 반복 부과 수량을 입력해주세요.')
+          return
+        }
+        if (!formData.deliveryFeeSettings.paymentMethods || formData.deliveryFeeSettings.paymentMethods.length === 0) {
+          alert('수량별 배송 시 결제 방식(선결제/착불)을 최소 1개 이상 선택해주세요.')
+          return
+        }
+      }
+    }
+
     // 추가설정은 선택사항이므로 검사하지 않음
 
     setIsSubmitting(true)
@@ -389,7 +437,7 @@ export default function EditProductPage({ productId }: { productId: string }) {
         options: filteredOptions, // 유효성 검사 통과한 옵션들
         additionalOptionsEnabled, // 추가상품 설정 여부 저장
         additionalOptions: filteredAdditionalOptions.length > 0 ? filteredAdditionalOptions : [], // 비어있으면 빈 배열로 덮어쓰기
-        deliveryFeeSettings: formData.deliveryMethods.includes('택배 배송') ? deliveryFeeSettings : null, // 택배 배송일 때만 배송비 설정 저장, 아니면 제거
+        deliveryFeeSettings: formData.deliveryMethods.includes('택배 배송') ? formData.deliveryFeeSettings : null, // 택배 배송일 때만 배송비 설정 저장, 아니면 제거
         updatedAt: new Date().toISOString()
       }
 
@@ -550,9 +598,9 @@ export default function EditProductPage({ productId }: { productId: string }) {
         {/* 상품 배송 설정 */}
         <DeliveryMethodSection
           deliveryMethods={formData.deliveryMethods}
-          deliveryFeeSettings={deliveryFeeSettings}
+          deliveryFeeSettings={formData.deliveryFeeSettings}
           onChange={(deliveryMethods) => setFormData(prev => ({ ...prev, deliveryMethods }))}
-          onDeliveryFeeChange={setDeliveryFeeSettings}
+          onDeliveryFeeChange={(settings) => setFormData(prev => ({ ...prev, deliveryFeeSettings: settings }))}
         />
 
         {/* 상품주문 추가설정 */}

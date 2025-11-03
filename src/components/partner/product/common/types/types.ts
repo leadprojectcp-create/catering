@@ -20,6 +20,14 @@ export interface QuantityRange {
   daysBeforeOrder: number
 }
 
+export interface DeliveryFeeSettings {
+  type: '무료' | '조건부 무료' | '유료' | '수량별'
+  baseFee?: number
+  freeCondition?: number
+  paymentMethods?: ('선결제' | '착불')[]
+  perQuantity?: number
+}
+
 export interface ProductFormData {
   name: string
   images: File[]
@@ -33,6 +41,7 @@ export interface ProductFormData {
   maxOrderQuantity: number
   quantityRanges?: QuantityRange[]
   deliveryMethods: string[]
+  deliveryFeeSettings?: DeliveryFeeSettings
   additionalSettings: string[]
   origin: { ingredient: string, origin: string }[]
   discount?: {

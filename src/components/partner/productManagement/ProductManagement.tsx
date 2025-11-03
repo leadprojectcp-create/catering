@@ -31,8 +31,11 @@ interface MenuItem {
     endDate: string | null
     isAlwaysActive: boolean
   }
-  minOrderQuantity?: number
-  maxOrderQuantity?: number
+  quantityRanges?: {
+    daysBeforeOrder: number
+    minQuantity: number
+    maxQuantity: number
+  }[]
   origin?: { ingredient: string; origin: string }[]
 }
 
@@ -282,9 +285,11 @@ export default function ProductManagement() {
                     <span className={styles.regularPrice}>{item.price.toLocaleString()}원</span>
                   )}
 
-                  {item.minOrderQuantity && item.maxOrderQuantity && (
+                  {item.quantityRanges && item.quantityRanges.length > 0 && (
                     <div className={styles.orderQuantity}>
-                      주문가능 수량 최소 {item.minOrderQuantity}개 ~ {item.maxOrderQuantity}개
+                      최소 {item.quantityRanges[0].minQuantity}개 ~ 최대 {item.quantityRanges[item.quantityRanges.length - 1].maxQuantity}개 주문가능
+                      <br />
+                      {item.quantityRanges[0].daysBeforeOrder}~{item.quantityRanges[item.quantityRanges.length - 1].daysBeforeOrder}일 전 주문 가능
                     </div>
                   )}
 
