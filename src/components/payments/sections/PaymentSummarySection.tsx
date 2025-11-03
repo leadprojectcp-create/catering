@@ -151,7 +151,10 @@ export default function PaymentSummarySection({
       return totalProductPrice >= freeCondition ? 0 : baseFee
     }
 
-    if (type === '유료') return baseFee
+    if (type === '유료') {
+      // 유료 배송: 최초 주문에만 배송비 부과, 추가 주문에는 없음
+      return isAdditionalOrder ? 0 : baseFee
+    }
 
     // 수량별: 추가 주문일 때는 기존 주문 수량과 합산
     if (type === '수량별') {
