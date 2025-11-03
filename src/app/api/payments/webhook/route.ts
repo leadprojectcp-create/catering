@@ -407,7 +407,7 @@ export async function POST(request: NextRequest) {
           })
 
           // 모든 결제가 취소되었는지 확인
-          const allPaymentsCancelled = updatedPaymentInfo.every((payment: any) =>
+          const allPaymentsCancelled = updatedPaymentInfo.every((payment) =>
             payment.status === 'cancelled'
           )
 
