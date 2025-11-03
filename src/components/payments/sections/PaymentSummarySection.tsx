@@ -85,7 +85,11 @@ export default function PaymentSummarySection({
           const orderRef = doc(db, 'orders', orderId)
           const orderDoc = await getDoc(orderRef)
           if (orderDoc.exists()) {
-            setExistingOrder(orderDoc.data())
+            const data = orderDoc.data()
+            setExistingOrder({
+              totalProductPrice: data.totalProductPrice || 0,
+              items: data.items || []
+            })
           }
         } catch (error) {
           console.error('Error fetching existing order:', error)
