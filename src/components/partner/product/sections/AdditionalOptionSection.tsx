@@ -60,6 +60,23 @@ export default function AdditionalOptionSection({ options, onChange, onShowHelpM
     ))
   }
 
+  const handleAdditionalProductNameBlur = (groupIndex: number, valueIndex: number, value: string) => {
+    const trimmedValue = value.trim()
+    if (trimmedValue) {
+      // 현재 그룹 내 다른 추가상품명들과 중복 확인
+      const currentGroup = options[groupIndex]
+      const isDuplicate = currentGroup.values.some((val, idx) =>
+        idx !== valueIndex && val.name.trim() === trimmedValue
+      )
+
+      if (isDuplicate) {
+        alert('이미 존재하는 추가상품명입니다. 다른 이름을 입력해주세요.')
+        // 중복된 경우 해당 필드 비우기
+        updateOptionValue(groupIndex, valueIndex, 'name', '')
+      }
+    }
+  }
+
   const removeOptionValue = (groupIndex: number, valueIndex: number) => {
     onChange(options.map((option, i) =>
       i === groupIndex
@@ -141,6 +158,7 @@ export default function AdditionalOptionSection({ options, onChange, onShowHelpM
                   placeholder="ex) 치즈추가"
                   value={value.name}
                   onChange={(e) => updateOptionValue(groupIndex, valueIndex, 'name', e.target.value)}
+                  onBlur={(e) => handleAdditionalProductNameBlur(groupIndex, valueIndex, e.target.value)}
                   className={styles.textInput}
                 />
                 <div className={styles.priceInputWrapper}>
