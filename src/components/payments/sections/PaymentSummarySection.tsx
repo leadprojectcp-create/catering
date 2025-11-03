@@ -1,12 +1,16 @@
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { doc, getDoc, updateDoc, addDoc, collection, increment, serverTimestamp, deleteDoc, deleteField } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { requestPayment } from '@/lib/services/paymentService'
-import { OrderData, OrderInfo, DeliveryAddress, OrderItem } from '../types'
+import { OrderData, OrderInfo, OrderItem } from '../types'
 import { User } from 'firebase/auth'
+import { useDeliveryFeeCalculation } from '../hooks/useDeliveryFeeCalculation'
+import { useDeliveryAddress } from '../hooks/useDeliveryAddress'
+import { Validator } from '../utils/validation'
+import { calculateTotalProductPrice, calculateTotalQuantity, calculateTotalPrice } from '../utils/orderCalculations'
 import styles from './PaymentSummarySection.module.css'
 
 interface PaymentSummarySectionProps {
@@ -69,163 +73,35 @@ export default function PaymentSummarySection({
 }: PaymentSummarySectionProps) {
   const router = useRouter()
   const [isLoadingDeliveryFee, setIsLoadingDeliveryFee] = useState(false)
-  const [existingOrder, setExistingOrder] = useState<{
-    totalProductPrice: number
-    items: Array<{ quantity: number }>
-  } | null>(null)
 
   // 추가 결제 모드 확인
-  const isAdditionalOrder = searchParams.get('additionalOrderId')
-
-  // 추가 주문일 때 기존 주문 정보 가져오기
-  useEffect(() => {
-    const fetchExistingOrder = async () => {
-      if (isAdditionalOrder && orderId) {
-        try {
-          const orderRef = doc(db, 'orders', orderId)
-          const orderDoc = await getDoc(orderRef)
-          if (orderDoc.exists()) {
-            const data = orderDoc.data()
-            setExistingOrder({
-              totalProductPrice: data.totalProductPrice || 0,
-              items: data.items || []
-            })
-          }
-        } catch (error) {
-          console.error('Error fetching existing order:', error)
-        }
-      }
-    }
-    fetchExistingOrder()
-  }, [isAdditionalOrder, orderId])
+  const isAdditionalOrder = !!searchParams.get('additionalOrderId')
 
   // 총 상품금액과 수량 계산
-  // 추가 주문 모드일 때는 paymentId가 없는 항목들(새로 추가된 것들)만 계산
-  const totalProductPrice = useMemo(() => {
-    if (!orderData) return 0
-    const itemsToCalculate = isAdditionalOrder
-      ? orderData.items.filter(item => !item.paymentId)  // 추가 주문: paymentId 없는 것만
-      : orderData.items  // 최초 주문: 전체
-    return itemsToCalculate.reduce((sum, item) => {
-      // itemPrice는 CartItemsSection에서 이미 추가상품 가격을 포함하여 계산됨
-      const itemTotal = item.itemPrice || (orderData.productPrice * item.quantity)
-      return sum + itemTotal
-    }, 0)
-  }, [orderData, isAdditionalOrder])
+  const totalProductPrice = useMemo(() =>
+    calculateTotalProductPrice(orderData, isAdditionalOrder)
+  , [orderData, isAdditionalOrder])
 
-  const totalQuantity = useMemo(() => {
-    if (!orderData) return 0
-    const itemsToCalculate = isAdditionalOrder
-      ? orderData.items.filter(item => !item.paymentId)  // 추가 주문: paymentId 없는 것만
-      : orderData.items  // 최초 주문: 전체
-    return itemsToCalculate.reduce((sum, item) => sum + item.quantity, 0)
-  }, [orderData, isAdditionalOrder])
+  const totalQuantity = useMemo(() =>
+    calculateTotalQuantity(orderData, isAdditionalOrder)
+  , [orderData, isAdditionalOrder])
 
-  // 택배 배송비 계산 (착불일 경우에도 금액 계산)
-  const calculateParcelDeliveryFee = useMemo(() => {
-    if (!deliveryFeeSettings) return 0
-
-    const { type, baseFee = 0, freeCondition = 0, perQuantity = 0 } = deliveryFeeSettings
-
-    if (type === '무료') return 0
-
-    // 조건부 무료: 추가 주문일 때는 기존 주문 금액과 합산
-    if (type === '조건부 무료') {
-      if (isAdditionalOrder && existingOrder) {
-        const existingTotalPrice = existingOrder.totalProductPrice || 0
-        const combinedPrice = existingTotalPrice + totalProductPrice
-
-        // 기존에 이미 무료 조건을 충족했는지 확인
-        const wasAlreadyFree = existingTotalPrice >= freeCondition
-        // 추가 후 무료 조건을 충족하는지 확인
-        const isNowFree = combinedPrice >= freeCondition
-
-        // 기존에 무료가 아니었는데 추가 후 무료가 되면 기존 배송비를 환불 (-baseFee)
-        if (!wasAlreadyFree && isNowFree) {
-          return -baseFee
-        }
-        // 기존에도 무료였거나 추가 후에도 무료 조건 미달이면 배송비 0원
-        return 0
-      }
-      // 최초 주문일 때
-      return totalProductPrice >= freeCondition ? 0 : baseFee
-    }
-
-    if (type === '유료') {
-      // 유료 배송: 최초 주문에만 배송비 부과, 추가 주문에는 없음
-      return isAdditionalOrder ? 0 : baseFee
-    }
-
-    // 수량별: 추가 주문일 때는 기존 주문 수량과 합산
-    if (type === '수량별') {
-      if (perQuantity > 0) {
-        if (isAdditionalOrder && existingOrder) {
-          // 기존 주문의 총 수량 계산
-          const existingTotalQuantity = existingOrder.items?.reduce((sum: number, item: { quantity: number }) => sum + item.quantity, 0) || 0
-          const combinedQuantity = existingTotalQuantity + totalQuantity
-
-          // 기존 배송비 구간
-          const existingTimes = Math.ceil(existingTotalQuantity / perQuantity)
-          // 추가 후 배송비 구간
-          const combinedTimes = Math.ceil(combinedQuantity / perQuantity)
-
-          // 새로운 구간에 진입했으면 그 차이만큼 배송비 부과
-          const additionalTimes = combinedTimes - existingTimes
-          return baseFee * additionalTimes
-        }
-        // 최초 주문일 때
-        const times = Math.ceil(totalQuantity / perQuantity)
-        return baseFee * times
-      }
-      return baseFee
-    }
-    return 0
-  }, [deliveryFeeSettings, totalProductPrice, totalQuantity, isAdditionalOrder, existingOrder])
-
-  // 배송비 계산
-  const deliveryFee = useMemo(() => {
-    if (deliveryMethod === '퀵업체 배송') {
-      // 추가 주문일 때는 배송비 없음
-      if (isAdditionalOrder) {
-        return 0
-      }
-      return deliveryFeeFromAPI || 0
-    }
-
-    if (deliveryMethod === '택배 배송') {
-      // 착불일 경우 결제 금액에 포함하지 않음
-      if (parcelPaymentMethod === '착불') {
-        return 0
-      }
-
-      // 추가 주문일 때: 조건부 무료와 수량별은 계산된 배송비 적용, 나머지는 0원
-      if (isAdditionalOrder) {
-        if (deliveryFeeSettings?.type === '조건부 무료' || deliveryFeeSettings?.type === '수량별') {
-          return calculateParcelDeliveryFee
-        }
-        return 0
-      }
-
-      // 최초 주문일 때
-      return calculateParcelDeliveryFee
-    }
-
-    return 0
-  }, [isAdditionalOrder, deliveryMethod, deliveryFeeFromAPI, calculateParcelDeliveryFee, parcelPaymentMethod, deliveryFeeSettings])
-
-  // 배송비 프로모션 (퀵업체 배송이고 30만원 이상일 때만 1만원 할인, 추가 주문은 제외)
-  const deliveryPromotion = useMemo(() => {
-    if (isAdditionalOrder) {
-      return 0
-    }
-    // 퀵업체 배송이고, 배송비가 조회되었고, 상품금액이 30만원 이상일 때만 1만원 할인
-    return deliveryMethod === '퀵업체 배송' && deliveryFeeFromAPI && totalProductPrice >= 300000 ? 10000 : 0
-  }, [isAdditionalOrder, deliveryMethod, deliveryFeeFromAPI, totalProductPrice])
+  // 배송비 계산 hook 사용
+  const { deliveryFee, deliveryPromotion, calculateParcelDeliveryFee } = useDeliveryFeeCalculation({
+    deliveryMethod,
+    deliveryFeeFromAPI,
+    deliveryFeeSettings,
+    parcelPaymentMethod,
+    totalProductPrice,
+    totalQuantity,
+    isAdditionalOrder,
+    orderId
+  })
 
   // 총 결제금액
-  const totalPrice = useMemo(() => {
-    return totalProductPrice + deliveryFee - deliveryPromotion - usePoint
-  }, [totalProductPrice, deliveryFee, deliveryPromotion, usePoint])
+  const totalPrice = useMemo(() =>
+    calculateTotalPrice(totalProductPrice, deliveryFee, deliveryPromotion, usePoint)
+  , [totalProductPrice, deliveryFee, deliveryPromotion, usePoint])
 
   // 결제 처리 함수
   const handlePayment = async () => {
@@ -241,16 +117,6 @@ export default function PaymentSummarySection({
       return
     }
 
-    if (!orderInfo.orderer.trim()) {
-      alert('주문자 이름을 입력해주세요.')
-      return
-    }
-
-    if (!orderInfo.phone.trim()) {
-      alert('연락처를 입력해주세요.')
-      return
-    }
-
     // 이메일이 없으면 user 객체에서 가져오기 시도
     let userEmail = orderInfo.email
     if (!userEmail || !userEmail.trim()) {
@@ -263,51 +129,32 @@ export default function PaymentSummarySection({
       }
     }
 
-    // 이메일 검증
-    if (!userEmail || !userEmail.trim()) {
-      alert('이메일 정보를 찾을 수 없습니다. 프로필에서 이메일을 등록해주세요.')
+    // 주문 정보 유효성 검사
+    const orderValidationErrors = Validator.validateOrderInfo({
+      orderer: orderInfo.orderer,
+      phone: orderInfo.phone,
+      email: userEmail,
+      recipient: recipient,
+      deliveryDate: orderInfo.deliveryDate,
+      deliveryTime: orderInfo.deliveryTime,
+      address: orderInfo.address,
+      deliveryMethod: deliveryMethod
+    })
+
+    if (orderValidationErrors.length > 0) {
+      alert(orderValidationErrors[0].message)
       return
     }
 
-    // 이메일 형식 검증
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(userEmail)) {
-      alert(`등록된 이메일 형식이 올바르지 않습니다: ${userEmail}\n프로필에서 올바른 이메일로 변경해주세요.`)
+    // 약관 동의 확인
+    const agreementError = Validator.validateAgreements(agreements)
+    if (agreementError) {
+      alert(agreementError.message)
       return
     }
 
     console.log('=== 이메일 검증 완료 ===')
     console.log('사용할 이메일:', userEmail)
-
-    // 퀵업체 배송일 때만 주소 검증
-    if (deliveryMethod === '퀵업체 배송') {
-      if (!orderInfo.address.trim()) {
-        alert('주소를 입력해주세요.')
-        return
-      }
-    }
-
-    if (!recipient.trim()) {
-      alert('수령인 이름을 입력해주세요.')
-      return
-    }
-
-    if (!orderInfo.deliveryDate) {
-      alert('배송 날짜를 선택해주세요.')
-      return
-    }
-
-    // 택배 배송이 아닐 때만 시간 검증
-    if (deliveryMethod !== '택배 배송' && !orderInfo.deliveryTime) {
-      alert('배송 시간을 선택해주세요.')
-      return
-    }
-
-    // 필수 약관 동의 확인
-    if (!agreements.privacy || !agreements.terms || !agreements.refund || !agreements.marketing) {
-      alert('필수 약관에 모두 동의해주세요.')
-      return
-    }
 
     try {
       onProcessingChange(true)
@@ -664,38 +511,30 @@ export const usePaymentSummary = (props: Omit<PaymentSummarySectionProps, 'onPay
     searchParams, onProcessingChange
   } = props
 
-  const totalProductPrice = orderData
-    ? orderData.items.reduce((sum, item) => {
-        // itemPrice는 CartItemsSection에서 이미 추가상품 가격을 포함하여 계산됨
-        const itemTotal = item.itemPrice || (orderData.productPrice * item.quantity)
-        return sum + itemTotal
-      }, 0)
-    : 0
+  // 추가 주문인지 확인
+  const isAdditionalOrder = !!searchParams.get('additionalOrderId')
 
-  const totalQuantity = orderData
-    ? orderData.items.reduce((sum, item) => sum + item.quantity, 0)
-    : 0
+  // 총 상품금액과 수량 계산
+  const totalProductPrice = calculateTotalProductPrice(orderData, isAdditionalOrder)
+  const totalQuantity = calculateTotalQuantity(orderData, isAdditionalOrder)
 
-  const deliveryFee = deliveryMethod === '퀵업체 배송'
-    ? (deliveryFeeFromAPI || 0)
-    : deliveryMethod === '택배 배송' && deliveryFeeSettings
-    ? (() => {
-        // 착불일 경우 배송비 0
-        if (parcelPaymentMethod === '착불') return 0
+  // 배송비 계산 hook 사용
+  const { deliveryFee, deliveryPromotion } = useDeliveryFeeCalculation({
+    deliveryMethod,
+    deliveryFeeFromAPI,
+    deliveryFeeSettings,
+    parcelPaymentMethod,
+    totalProductPrice,
+    totalQuantity,
+    isAdditionalOrder,
+    orderId
+  })
 
-        if (deliveryFeeSettings.type === '무료') return 0
-        if (deliveryFeeSettings.type === '조건부 무료') {
-          return totalProductPrice >= (deliveryFeeSettings.freeCondition || 0) ? 0 : (deliveryFeeSettings.baseFee || 0)
-        }
-        if (deliveryFeeSettings.type === '수량별') {
-          const times = Math.ceil(totalQuantity / (deliveryFeeSettings.perQuantity || 1))
-          return (deliveryFeeSettings.baseFee || 0) * times
-        }
-        return deliveryFeeSettings.baseFee || 0
-      })()
-    : 0
+  // 배송지 관리 hook
+  const { saveAddress, checkDuplicateAddress } = useDeliveryAddress(user?.uid || null)
 
-  const totalPrice = totalProductPrice + deliveryFee - usePoint
+  // 총 결제금액
+  const totalPrice = calculateTotalPrice(totalProductPrice, deliveryFee, deliveryPromotion, usePoint)
 
   const handlePayment = async () => {
     // [handlePayment 함수 내용 유지 - 너무 길어서 생략]
@@ -710,16 +549,7 @@ export const usePaymentSummary = (props: Omit<PaymentSummarySectionProps, 'onPay
       return
     }
 
-    if (!orderInfo.orderer.trim()) {
-      alert('주문자 이름을 입력해주세요.')
-      return
-    }
-
-    if (!orderInfo.phone.trim()) {
-      alert('연락처를 입력해주세요.')
-      return
-    }
-
+    // 이메일이 없으면 user 객체에서 가져오기 시도
     let userEmail = orderInfo.email
     if (!userEmail || !userEmail.trim()) {
       if (user) {
@@ -731,46 +561,32 @@ export const usePaymentSummary = (props: Omit<PaymentSummarySectionProps, 'onPay
       }
     }
 
-    if (!userEmail || !userEmail.trim()) {
-      alert('이메일 정보를 찾을 수 없습니다. 프로필에서 이메일을 등록해주세요.')
+    // 주문 정보 유효성 검사
+    const orderValidationErrors = Validator.validateOrderInfo({
+      orderer: orderInfo.orderer,
+      phone: orderInfo.phone,
+      email: userEmail,
+      recipient: recipient,
+      deliveryDate: orderInfo.deliveryDate,
+      deliveryTime: orderInfo.deliveryTime,
+      address: orderInfo.address,
+      deliveryMethod: deliveryMethod
+    })
+
+    if (orderValidationErrors.length > 0) {
+      alert(orderValidationErrors[0].message)
       return
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(userEmail)) {
-      alert(`등록된 이메일 형식이 올바르지 않습니다: ${userEmail}\n프로필에서 올바른 이메일로 변경해주세요.`)
+    // 약관 동의 확인
+    const agreementError = Validator.validateAgreements(agreements)
+    if (agreementError) {
+      alert(agreementError.message)
       return
     }
 
     console.log('=== 이메일 검증 완료 ===')
     console.log('사용할 이메일:', userEmail)
-
-    if (deliveryMethod === '퀵업체 배송') {
-      if (!orderInfo.address.trim()) {
-        alert('주소를 입력해주세요.')
-        return
-      }
-    }
-
-    if (!recipient.trim()) {
-      alert('수령인 이름을 입력해주세요.')
-      return
-    }
-
-    if (!orderInfo.deliveryDate) {
-      alert('배송 날짜를 선택해주세요.')
-      return
-    }
-
-    if (deliveryMethod !== '택배 배송' && !orderInfo.deliveryTime) {
-      alert('배송 시간을 선택해주세요.')
-      return
-    }
-
-    if (!agreements.privacy || !agreements.terms || !agreements.refund || !agreements.marketing) {
-      alert('필수 약관에 모두 동의해주세요.')
-      return
-    }
 
     try {
       onProcessingChange(true)
@@ -1030,37 +846,23 @@ export const usePaymentSummary = (props: Omit<PaymentSummarySectionProps, 'onPay
 
       await updateDoc(orderRef, updateData)
 
+      // 배송지 저장
       if ((deliveryMethod === '퀵업체 배송' || deliveryMethod === '택배 배송') && orderInfo.address.trim() && addressName.trim()) {
         try {
-          const userRef = doc(db, 'users', user.uid)
-          const userDoc = await getDoc(userRef)
+          // 중복 확인
+          const isDuplicate = await checkDuplicateAddress(orderInfo.address, orderInfo.detailAddress)
 
-          if (userDoc.exists()) {
-            const userData = userDoc.data()
-            const existingAddresses = userData.deliveryAddresses || []
-
-            const isDuplicate = existingAddresses.some((addr: DeliveryAddress) =>
-              addr.address === orderInfo.address &&
-              addr.detailAddress === orderInfo.detailAddress
-            )
-
-            if (!isDuplicate) {
-              const newAddress = {
-                name: addressName,
-                orderer: recipient,
-                phone: orderInfo.phone,
-                email: userEmail,
-                address: orderInfo.address,
-                detailAddress: orderInfo.detailAddress,
-                zipCode: orderInfo.zipCode || ''
-              }
-
-              await updateDoc(userRef, {
-                deliveryAddresses: [...existingAddresses, newAddress]
-              })
-
-              console.log('배송지 저장 완료:', newAddress)
-            }
+          if (!isDuplicate) {
+            await saveAddress({
+              name: addressName,
+              orderer: recipient,
+              phone: orderInfo.phone,
+              email: userEmail,
+              address: orderInfo.address,
+              detailAddress: orderInfo.detailAddress,
+              zipCode: orderInfo.zipCode || ''
+            })
+            console.log('배송지 저장 완료')
           }
         } catch (addressError) {
           console.error('배송지 저장 실패:', addressError)
