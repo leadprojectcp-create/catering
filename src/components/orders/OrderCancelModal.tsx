@@ -112,14 +112,7 @@ export default function OrderCancelModal({ orderId, deliveryDate, totalAmount, p
         throw new Error(cancelData.error || '결제 취소에 실패했습니다.')
       }
 
-      // Firestore에서 주문 상태 업데이트
-      await updateDoc(doc(db, 'orders', orderId), {
-        orderStatus: 'cancelled',
-        cancelReason: finalReason,
-        cancelledAt: new Date(),
-        refundAmount: refundAmount,
-        refundRate: refundRate,
-      })
+      // 웹훅이 paymentInfo와 orderStatus를 자동으로 업데이트합니다
 
       alert(`주문이 취소되었습니다.\n환불 금액: ${refundAmount.toLocaleString()}원 (${Math.floor(refundRate * 100)}%)`)
       onCancel()

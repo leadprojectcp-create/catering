@@ -406,6 +406,11 @@ export async function POST(request: NextRequest) {
             return payment
           })
 
+          // 모든 결제가 취소되었는지 확인
+          const allPaymentsCancelled = updatedPaymentInfo.every((payment: any) =>
+            payment.status === 'cancelled'
+          )
+
           // paymentInfo가 하나만 있고 취소된 경우 (최초 주문 취소)
           const isSinglePayment = paymentInfo.length === 1
           const isMainPaymentCancelled = updatedPaymentInfo.length > 0 && updatedPaymentInfo[0].status === 'cancelled'
@@ -420,8 +425,9 @@ export async function POST(request: NextRequest) {
             })
             console.log(`[Webhook] Main order ${orderId} cancelled completely`)
           } else {
-            // 추가 주문 취소 (paymentInfo만 업데이트)
+            // 추가 주문 취소 또는 부분 취소
             await updateDoc(orderRef, {
+              orderStatus: allPaymentsCancelled ? 'cancelled' : 'partial_cancelled',
               paymentInfo: updatedPaymentInfo,
             })
             console.log(`[Webhook] Additional order payment ${paymentId} cancelled for order ${orderId}`)
