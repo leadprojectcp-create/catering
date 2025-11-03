@@ -845,7 +845,12 @@ export const usePaymentSummary = (props: Omit<PaymentSummarySectionProps, 'onPay
       }
 
       // 새 결제 정보 추가 (paidAt은 paymentInfo 안에 포함되어 있음)
-      paymentInfoArray.push(verifyData.payment)
+      // PortOne API의 status는 'PAID' (uppercase)이므로 lowercase로 정규화
+      const normalizedPayment = {
+        ...verifyData.payment,
+        status: verifyData.payment.status?.toLowerCase()
+      }
+      paymentInfoArray.push(normalizedPayment)
       if (paymentResult.paymentId) {
         paymentIdArray.push(paymentResult.paymentId)
       }

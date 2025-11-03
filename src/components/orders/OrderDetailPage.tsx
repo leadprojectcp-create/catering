@@ -12,6 +12,10 @@ import Loading from '@/components/Loading'
 import OrderCancelModal from './OrderCancelModal'
 import TaxInvoiceModal from './TaxInvoiceModal'
 import styles from './OrderDetailPage.module.css'
+import OrderHeaderSection from './orderDetail/OrderHeaderSection'
+import RegularOrderSection from './orderDetail/RegularOrderSection'
+import AdditionalOrderSection from './orderDetail/AdditionalOrderSection'
+import RequestSection from './orderDetail/RequestSection'
 
 interface KakaoShareOptions {
   objectType: string
@@ -60,6 +64,9 @@ interface OrderItem {
   price: number
   itemPrice?: number
   productImage?: string
+  isAddItem?: boolean
+  paymentId?: string
+  createdAt?: Date
 }
 
 interface DeliveryInfo {
@@ -72,6 +79,17 @@ interface DeliveryInfo {
   recipientPhone: string
   deliveryRequest?: string
   detailedRequest?: string
+}
+
+interface PaymentInfo {
+  paymentId: string
+  paidAt: Date
+  paymentKey?: string
+  orderId?: string
+  amount?: number
+  method?: string
+  status?: string
+  cancelledAt?: Date
 }
 
 interface Order {
@@ -89,6 +107,7 @@ interface Order {
   paymentStatus: string
   deliveryMethod: string
   deliveryInfo?: DeliveryInfo
+  paymentInfo?: PaymentInfo[]
   // 이전 형식 호환을 위한 필드들
   deliveryDate?: string
   deliveryTime?: string
@@ -403,171 +422,11 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
   return (
     <div className={styles.container}>
       <div className={styles.content}>
-        {/* 상품정보 */}
-        <div className={styles.sectionWrapper}>
-          <h2 className={styles.sectionTitle}>상품정보</h2>
-          <section className={styles.orderDetailSection}>
-            {/* 업체명 및 액션 버튼 */}
-            <div className={styles.storeHeader}>
-            <div className={styles.storeName}>{order.storeName}</div>
-            <div className={styles.storeActions}>
-              <button className={styles.actionButton} onClick={handleChatClick}>
-                <Image src="/icons/chat.png" alt="채팅" width={20} height={20} />
-                <span>채팅</span>
-              </button>
-              {order.partnerPhone && (
-                <a
-                  href={`tel:${order.partnerPhone}`}
-                  className={styles.actionButton}
-                >
-                  <Image src="/icons/phone.png" alt="전화" width={20} height={20} />
-                  <span>전화</span>
-                </a>
-              )}
-            </div>
-          </div>
-
-          <div className={styles.divider}></div>
-
-          {/* 주문 상태 및 정보 */}
-          <div className={styles.orderBasicInfo}>
-            <div className={styles.statusText}>
-              {getStatusText(order.orderStatus, order.paymentStatus)}
-            </div>
-            <div className={styles.orderInfoRow}>
-              <span className={styles.orderInfoLabel}>주문번호</span>
-              <span className={styles.orderInfoValue}>{order.orderNumber || order.id}</span>
-            </div>
-            <div className={styles.orderInfoRow}>
-              <span className={styles.orderInfoLabel}>주문날짜</span>
-              <span className={styles.orderInfoValue}>
-                {order.createdAt.toLocaleString('ko-KR', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                  weekday: 'short',
-                  hour: 'numeric',
-                  minute: 'numeric',
-                  hour12: true
-                })}
-              </span>
-            </div>
-            <div className={styles.orderInfoRow}>
-              <span className={styles.orderInfoLabel}>예약날짜</span>
-              <span className={styles.orderInfoValue}>
-                {order.deliveryInfo?.deliveryDate || order.deliveryDate} {order.deliveryInfo?.deliveryTime || order.deliveryTime}
-              </span>
-            </div>
-            <div className={styles.orderInfoRow}>
-              <span className={styles.orderInfoLabel}>결제상태</span>
-              <span className={styles.paymentInfo}>
-                {order.paymentStatus === 'paid' ? '결제완료' : '결제 미완료'} {order.totalPrice.toLocaleString()}원
-              </span>
-            </div>
-          </div>
-
-          <div className={styles.divider}></div>
-
-          {/* 상품 목록 */}
-          {(() => {
-            const groupedItems: { [key: string]: OrderItem[] } = {}
-            order.items.forEach(item => {
-              if (!groupedItems[item.productName]) {
-                groupedItems[item.productName] = []
-              }
-              groupedItems[item.productName].push(item)
-            })
-
-            return Object.entries(groupedItems).map(([productName, items], groupIndex) => {
-              const firstItem = items[0]
-              return (
-                <div key={groupIndex} className={styles.productItem}>
-                  {firstItem.productImage && (
-                    <Image
-                      src={firstItem.productImage}
-                      alt={productName}
-                      width={100}
-                      height={100}
-                      quality={100}
-                      className={styles.productImage}
-                    />
-                  )}
-
-                  <div className={styles.productInfo}>
-                    <div className={styles.productName}>{productName}</div>
-
-                    {items.map((item, itemIndex) => {
-                      const itemTotalPrice = item.itemPrice || (item.price * item.quantity)
-                      return (
-                        <div key={itemIndex} className={styles.productDetailsBox}>
-                          <div className={styles.productDetailsLeft}>
-                            {/* 상품 옵션 */}
-                            {Object.keys(item.options).length > 0 && (
-                              <div className={styles.optionSection}>
-                                <div className={styles.optionSectionTitle}>상품 옵션</div>
-                                <div className={styles.productOptions}>
-                                  {Object.entries(item.options).map(([key, value]) => {
-                                    let optionPrice = 0
-                                    if (item.optionsWithPrices && item.optionsWithPrices[key]) {
-                                      optionPrice = item.optionsWithPrices[key].price
-                                    }
-                                    return (
-                                      <div key={key} className={styles.optionItem}>
-                                        <span className={styles.optionGroup}>[{key}]</span>
-                                        <span>{value} +{optionPrice.toLocaleString()}원</span>
-                                      </div>
-                                    )
-                                  })}
-                                </div>
-                              </div>
-                            )}
-
-                            {/* 추가상품 */}
-                            {item.additionalOptions && Object.keys(item.additionalOptions).length > 0 && (
-                              <div className={styles.optionSection}>
-                                <div className={styles.optionSectionTitle}>추가상품</div>
-                                <div className={styles.productOptions}>
-                                  {Object.entries(item.additionalOptions).map(([key, value]) => {
-                                    let optionPrice = 0
-                                    if (item.additionalOptionsWithPrices && item.additionalOptionsWithPrices[key]) {
-                                      optionPrice = item.additionalOptionsWithPrices[key].price
-                                    }
-                                    return (
-                                      <div key={key} className={styles.optionItem}>
-                                        <span className={styles.optionGroup}>[{key}]</span>
-                                        <span>{value} +{optionPrice.toLocaleString()}원</span>
-                                      </div>
-                                    )
-                                  })}
-                                </div>
-                              </div>
-                            )}
-                          </div>
-
-                          <div className={styles.productDetailsRight}>
-                            <div className={styles.quantityInfo}>{item.quantity}개</div>
-                            <div className={styles.priceInfo}>{itemTotalPrice.toLocaleString()}원</div>
-                          </div>
-                        </div>
-                      )
-                    })}
-                  </div>
-                </div>
-              )
-            })
-          })()}
-
-          {order.request && (
-            <>
-              <div className={styles.divider}></div>
-              <div className={styles.requestSection}>
-                <div className={styles.requestLabel}>매장 요청사항</div>
-                <div className={styles.requestValue}>{order.request}</div>
-              </div>
-            </>
-          )}
-          </section>
-        </div>
+        {/* 주문 내역 */}
+        <OrderHeaderSection order={order} user={user} />
+        <RegularOrderSection order={order} />
+        <AdditionalOrderSection order={order} />
+        <RequestSection request={order.request} />
 
         {/* 상품 수령 방법 및 배송정보 */}
         <div className={styles.sectionWrapper}>
@@ -735,7 +594,7 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
                 className={styles.cancelButton}
                 onClick={() => setCancelOrderId(order.id)}
               >
-                주문취소
+                전체주문취소
               </button>
               <button
                 className={styles.payButton}
@@ -763,7 +622,7 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
                   className={styles.cancelButton}
                   onClick={() => setCancelOrderId(order.id)}
                 >
-                  주문취소
+                  전체주문취소
                 </button>
               )}
             </>

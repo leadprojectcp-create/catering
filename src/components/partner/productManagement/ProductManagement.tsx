@@ -120,9 +120,29 @@ export default function ProductManagement() {
   const handleDeleteMenu = async (itemId: string) => {
     if (confirm('정말 이 상품을 삭제하시겠습니까?')) {
       try {
+        // 1. 해당 상품이 포함된 장바구니 아이템 찾기
+        const cartQuery = query(
+          collection(db, 'shoppingCart'),
+          where('productId', '==', itemId)
+        )
+        const cartSnapshot = await getDocs(cartQuery)
+
+        // 2. 장바구니 아이템 모두 삭제
+        const cartDeletePromises = cartSnapshot.docs.map(cartDoc =>
+          deleteDoc(doc(db, 'shoppingCart', cartDoc.id))
+        )
+        await Promise.all(cartDeletePromises)
+
+        // 3. 상품 삭제
         await deleteDoc(doc(db, 'products', itemId))
+
         fetchMenuItems()
-        alert('상품이 삭제되었습니다.')
+
+        if (cartSnapshot.size > 0) {
+          alert(`상품이 삭제되었습니다.\n${cartSnapshot.size}개의 장바구니 아이템도 함께 제거되었습니다.`)
+        } else {
+          alert('상품이 삭제되었습니다.')
+        }
       } catch (error) {
         console.error('상품 삭제 실패:', error)
         alert('상품 삭제에 실패했습니다.')

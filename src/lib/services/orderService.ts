@@ -17,6 +17,17 @@ export interface OrderItem {
 
 export type OrderStatus = 'pending' | 'preparing' | 'shipping' | 'completed' | 'rejected' | 'cancelled'
 
+export interface PaymentInfo {
+  paymentId: string
+  paidAt: Date
+  paymentKey?: string
+  orderId?: string
+  amount?: number
+  method?: string
+  status?: string
+  cancelledAt?: Date
+}
+
 export interface Order {
   id?: string
   orderNumber?: string
@@ -49,6 +60,7 @@ export interface Order {
     deliveryRequest?: string
     detailedRequest?: string
   }
+  paymentInfo?: PaymentInfo[]
   address: string
   detailAddress: string
   recipient: string

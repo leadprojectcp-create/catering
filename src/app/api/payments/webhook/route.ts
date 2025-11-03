@@ -381,14 +381,54 @@ export async function POST(request: NextRequest) {
       // paymentId에서 orderId 추출
       const orderId = paymentId.replace(/^payment-/, '').replace(/-\d+$/, '')
 
+      console.log('[Webhook] Transaction.Cancelled 이벤트 수신:', { paymentId, orderId })
+
       if (orderId) {
         const orderRef = doc(db, 'orders', orderId)
-        await updateDoc(orderRef, {
-          paymentStatus: 'cancelled',
-          cancelledAt: new Date(),
-        })
+        const orderDoc = await getDoc(orderRef)
 
-        console.log(`Order ${orderId} cancelled`)
+        if (orderDoc.exists()) {
+          const orderData = orderDoc.data()
+          const paymentInfo = orderData.paymentInfo || []
+
+          console.log('[Webhook] Current paymentInfo:', paymentInfo)
+
+          // paymentInfo 배열에서 해당 paymentId 찾아서 업데이트
+          const updatedPaymentInfo = paymentInfo.map((payment: { paymentId: string }) => {
+            if (payment.paymentId === paymentId) {
+              console.log('[Webhook] Found matching payment, marking as cancelled:', payment.paymentId)
+              return {
+                ...payment,
+                status: 'cancelled',
+                cancelledAt: new Date(),
+              }
+            }
+            return payment
+          })
+
+          // paymentInfo가 하나만 있고 취소된 경우 (최초 주문 취소)
+          const isSinglePayment = paymentInfo.length === 1
+          const isMainPaymentCancelled = updatedPaymentInfo.length > 0 && updatedPaymentInfo[0].status === 'cancelled'
+
+          if (isSinglePayment && isMainPaymentCancelled) {
+            // 전체 주문 취소
+            await updateDoc(orderRef, {
+              paymentStatus: 'cancelled',
+              orderStatus: 'cancelled',
+              paymentInfo: updatedPaymentInfo,
+              cancelledAt: new Date(),
+            })
+            console.log(`[Webhook] Main order ${orderId} cancelled completely`)
+          } else {
+            // 추가 주문 취소 (paymentInfo만 업데이트)
+            await updateDoc(orderRef, {
+              paymentInfo: updatedPaymentInfo,
+            })
+            console.log(`[Webhook] Additional order payment ${paymentId} cancelled for order ${orderId}`)
+          }
+        } else {
+          console.warn(`[Webhook] Order ${orderId} not found`)
+        }
       }
 
       return NextResponse.json({ success: true })

@@ -74,12 +74,6 @@ export default function ShoppingCartPage() {
       setCartItems(validItems)
       setSelectedItems(validItems.map(item => item.id!))
       setProducts(productData)
-
-      // 삭제된 상품이 있으면 알림
-      if (validItems.length < items.length) {
-        const deletedCount = items.length - validItems.length
-        alert(`${deletedCount}개의 상품이 더 이상 판매되지 않아 장바구니에서 제외되었습니다.`)
-      }
     } catch (error) {
       console.error('장바구니 로드 실패:', error)
       alert('장바구니를 불러오는데 실패했습니다.')

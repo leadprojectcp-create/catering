@@ -51,7 +51,7 @@
   padding: 20px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 15px;
 }
 
 .orderBasicInfo {
@@ -64,49 +64,107 @@
   color: #333;
   font-size: 16px;
   font-weight: 700;
-  margin-bottom: 4px;
 }
 
 .orderInfoRow {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 12px;
+  align-items: center;
+  gap: 8px;
 }
 
 .orderInfoLabel {
-  color: #666;
+  color: #999;
   font-size: 14px;
-  font-weight: 500;
-  min-width: 80px;
-  flex-shrink: 0;
+  font-weight: 600;
 }
 
 .orderInfoValue {
-  color: #333;
+  color: #999;
   font-size: 14px;
-  font-weight: 500;
-  text-align: right;
-  flex: 1;
-  word-break: break-word;
+  font-weight: 600;
 }
 
-.storeHeader {
+/* 주문번호 스타일 */
+.orderNumberRow .orderInfoLabel,
+.orderNumberRow .orderInfoValue {
+  color: #4E5968;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* 주문상품 타이틀 */
+.orderTypeTitle {
+  color: #333;
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0;
+}
+
+/* 주문 날짜 텍스트 */
+.orderDateText {
+  color: #999;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* 결제 상태 텍스트 */
+.paymentStatusText {
+  color: #025BD9;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* 주문 정보 그룹 */
+.orderInfoGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* 상품 기본 정보 */
+.productBasicInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* 상품 옵션 그룹 */
+.productOptionsGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.orderHeader {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.orderHeaderLeft {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.orderHeaderRight {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  align-items: flex-start;
+  flex-shrink: 0;
 }
 
 .storeName {
-  color: #333;
-  font-size: 18px;
-  font-weight: 700;
-}
-
-.storeActions {
+  color: #999;
+  font-size: 14px;
+  font-weight: 600;
   display: flex;
-  gap: 8px;
   align-items: center;
+  gap: 4px;
+  cursor: pointer;
 }
 
 .actionButton {
@@ -126,11 +184,7 @@
   font-weight: 600;
 }
 
-.divider {
-  width: 100%;
-  height: 1px;
-  background: #F0F0F3;
-}
+/* .divider 제거됨 - 더 이상 사용하지 않음 */
 
 .paymentInfo {
   color: #025BD9;
@@ -141,27 +195,21 @@
 .productItem {
   display: flex;
   gap: 12px;
-  align-items: flex-start;
+  align-items: center;
 }
 
 .productImage {
-  width: 100px;
-  height: 100px;
+  width: 70px;
+  height: 70px;
   border-radius: 8px;
   object-fit: cover;
   flex-shrink: 0;
 }
 
-@media (max-width: 768px) {
-  .productImage {
-    width: 70px;
-    height: 70px;
-  }
-}
-
 .productInfo {
   display: flex;
   flex-direction: column;
+  justify-content: center;
   gap: 8px;
   flex: 1;
 }
@@ -170,7 +218,41 @@
   color: #333;
   font-size: 16px;
   font-weight: 700;
-  margin-bottom: 8px;
+  margin: 0;
+}
+
+/* 가격 섹션 */
+.priceSection {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+}
+
+.originalPrice {
+  color: #999;
+  font-size: 11px;
+  font-weight: 500;
+  text-decoration: line-through;
+}
+
+.discountedPrice {
+  color: #333;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.discountPercent {
+  color: #EA4335;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.regularPrice {
+  color: #333;
+  font-size: 16px;
+  font-weight: 700;
 }
 
 .productDetailsBox {
@@ -395,14 +477,13 @@
   border: 1px solid #E4E4E4;
   background-color: white;
   color: #333;
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s;
-}
-
-.cancelButton:hover {
-  background-color: #f5f5f5;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-shrink: 0;
 }
 
 .reviewButton {
@@ -434,6 +515,32 @@
   cursor: pointer;
 }
 
+.cancelAdditionalOrderButton {
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: #025BD9;
+  border: none;
+  color: #FFF;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-shrink: 0;
+  transition: all 0.3s;
+}
+
+.cancelAdditionalOrderButton:hover:not(:disabled) {
+  background: #014bb0;
+}
+
+.cancelAdditionalOrderButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 @media print {
   .buttonGroup {
     display: none;
@@ -443,6 +550,16 @@
 @media (max-width: 768px) {
   .buttonGroup {
     flex-direction: column;
+  }
+
+  .orderHeader {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .orderHeaderRight {
+    justify-content: flex-end;
+    width: 100%;
   }
 }
 

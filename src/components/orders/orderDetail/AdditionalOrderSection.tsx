@@ -1,0 +1,273 @@
+'use client'
+
+import { useState } from 'react'
+import Image from 'next/image'
+import { doc, updateDoc } from 'firebase/firestore'
+import { db } from '@/lib/firebase'
+import type { Order, OrderItem } from './types'
+import styles from '../OrderDetailPage.module.css'
+import OrderCancelModal from '../OrderCancelModal'
+
+interface Props {
+  order: Order
+}
+
+// Helper functions
+const isDiscountValid = (item: OrderItem) => {
+  if (!item.discount || !item.discount.discountPercent || item.discount.discountPercent <= 0) {
+    return false
+  }
+
+  // 상시 적용이거나 기간이 설정되지 않은 경우
+  if (!item.discount.startDate || !item.discount.endDate) {
+    return true
+  }
+
+  const now = new Date()
+  const startDate = new Date(item.discount.startDate)
+  const endDate = new Date(item.discount.endDate)
+
+  // 현재 시간이 시작일과 종료일 사이에 있는지 체크
+  return now >= startDate && now <= endDate
+}
+
+const formatOrderDate = (date: Date) => {
+  const datePart = date.toLocaleDateString('ko-KR', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  })
+  const weekday = date.toLocaleDateString('ko-KR', { weekday: 'short' })
+  const timePart = date.toLocaleTimeString('ko-KR', {
+    hour: 'numeric',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: true
+  })
+  return `${datePart} (${weekday}) ${timePart} 주문`
+}
+
+const getPaymentDate = (order: Order, paymentId: string) => {
+  let paymentDate = null
+  if (order.paymentInfo && Array.isArray(order.paymentInfo) && order.paymentInfo.length > 1) {
+    // 현재 paymentId 그룹이 몇 번째 추가 결제인지 찾기
+    const addItemPaymentIds = new Set<string>()
+    order.items.filter(item => item.isAddItem).forEach(item => {
+      if (item.paymentId) addItemPaymentIds.add(item.paymentId)
+    })
+
+    const sortedPaymentIds = Array.from(addItemPaymentIds).sort()
+    const paymentIndexOffset = sortedPaymentIds.indexOf(paymentId) + 1
+
+    if (paymentIndexOffset > 0 && order.paymentInfo[paymentIndexOffset]) {
+      paymentDate = order.paymentInfo[paymentIndexOffset].paidAt
+    }
+  }
+  return paymentDate
+}
+
+export default function AdditionalOrderSection({ order }: Props) {
+  const [cancelModalData, setCancelModalData] = useState<{
+    paymentId: string
+    amount: number
+  } | null>(null)
+  const addItems = order.items.filter(item => item.isAddItem)
+  if (addItems.length === 0) return null
+
+  const handleCancelSuccess = async () => {
+    if (!cancelModalData) return
+
+    try {
+      // Firestore에서 해당 paymentId의 아이템들을 취소 상태로 업데이트
+      const orderRef = doc(db, 'orders', order.id)
+      const updatedItems = order.items.map(item => {
+        if (item.paymentId === cancelModalData.paymentId) {
+          return { ...item, isCancelled: true }
+        }
+        return item
+      })
+
+      await updateDoc(orderRef, {
+        items: updatedItems,
+      })
+
+      window.location.reload()
+    } catch (error) {
+      console.error('주문 상태 업데이트 실패:', error)
+    }
+  }
+
+  // paymentId별로 그룹화
+  const groupedByPaymentId: { [key: string]: OrderItem[] } = {}
+  addItems.forEach(item => {
+    const paymentId = item.paymentId || 'unknown'
+    if (!groupedByPaymentId[paymentId]) {
+      groupedByPaymentId[paymentId] = []
+    }
+    groupedByPaymentId[paymentId].push(item)
+  })
+
+  return (
+    <>
+      {Object.entries(groupedByPaymentId).map(([paymentId, paymentItems]) => {
+        // 같은 paymentId 내에서 상품명별로 다시 그룹화
+        const groupedByProduct: { [key: string]: OrderItem[] } = {}
+        paymentItems.forEach(item => {
+          if (!groupedByProduct[item.productName]) {
+            groupedByProduct[item.productName] = []
+          }
+          groupedByProduct[item.productName].push(item)
+        })
+
+        const paymentTotal = paymentItems.reduce((sum, item) => {
+          return sum + (item.itemPrice || (item.price * item.quantity))
+        }, 0)
+
+        const firstItem = paymentItems[0]
+        const paymentDate = getPaymentDate(order, paymentId)
+
+        // 해당 paymentId의 결제 상태 찾기
+        const paymentInfo = order.paymentInfo?.find((p: { paymentId: string }) => p.paymentId === paymentId)
+        const paymentStatus = paymentInfo?.status || order.paymentStatus
+
+        // 결제 상태 텍스트 (대소문자 구분 없이 비교)
+        let paymentStatusText = '결제 미완료'
+        const normalizedStatus = paymentStatus?.toLowerCase()
+        if (normalizedStatus === 'paid') {
+          paymentStatusText = '결제완료'
+        } else if (normalizedStatus === 'cancelled') {
+          paymentStatusText = '결제취소'
+        }
+
+        return Object.entries(groupedByProduct).map(([productName, items], productIndex) => {
+          const firstProductItem = items[0]
+
+          return (
+            <section key={`add-${paymentId}-${productIndex}`} className={styles.orderDetailSection}>
+              {productIndex === 0 && (
+                <div className={styles.orderInfoGroup}>
+                  <h3 className={styles.orderTypeTitle}>추가주문상품</h3>
+                  <div className={styles.orderDateText}>
+                    {paymentDate ? formatOrderDate(new Date(paymentDate)) :
+                     firstItem.createdAt ? formatOrderDate(new Date(firstItem.createdAt)) : '-'}
+                  </div>
+                  <div className={styles.paymentStatusText}>
+                    {paymentStatusText} {paymentTotal.toLocaleString()}원
+                  </div>
+                </div>
+              )}
+
+              <div className={styles.productBasicInfo}>
+                <div className={styles.productItem}>
+                  {firstProductItem.productImage && (
+                    <Image
+                      src={firstProductItem.productImage}
+                      alt={productName}
+                      width={70}
+                      height={70}
+                      quality={100}
+                      className={styles.productImage}
+                    />
+                  )}
+
+                  <div className={styles.productInfo}>
+                    <div className={styles.productName}>{productName}</div>
+                    {isDiscountValid(firstProductItem) && firstProductItem.discountedPrice ? (
+                      <div className={styles.priceSection}>
+                        <span className={styles.originalPrice}>{firstProductItem.price.toLocaleString()}원</span>
+                        <span className={styles.discountedPrice}>{firstProductItem.discountedPrice.toLocaleString()}원</span>
+                        <span className={styles.discountPercent}>{firstProductItem.discount!.discountPercent}%</span>
+                      </div>
+                    ) : (
+                      <span className={styles.regularPrice}>{firstProductItem.price.toLocaleString()}원</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className={styles.productOptionsGroup}>
+                {items.map((item, itemIndex) => {
+                const itemTotalPrice = item.itemPrice || (item.price * item.quantity)
+                return (
+                  <div key={itemIndex} className={styles.productDetailsBox}>
+                    <div className={styles.productDetailsLeft}>
+                      {/* 상품 옵션 */}
+                      {Object.keys(item.options).length > 0 && (
+                        <div className={styles.optionSection}>
+                          <div className={styles.optionSectionTitle}>상품 옵션</div>
+                          <div className={styles.productOptions}>
+                            {Object.entries(item.options).map(([key, value]) => {
+                              let optionPrice = 0
+                              if (item.optionsWithPrices && item.optionsWithPrices[key]) {
+                                optionPrice = item.optionsWithPrices[key].price
+                              }
+                              return (
+                                <div key={key} className={styles.optionItem}>
+                                  <span className={styles.optionGroup}>[{key}]</span>
+                                  <span>{value} +{optionPrice.toLocaleString()}원</span>
+                                </div>
+                              )
+                            })}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* 추가상품 */}
+                      {item.additionalOptions && Object.keys(item.additionalOptions).length > 0 && (
+                        <div className={styles.optionSection}>
+                          <div className={styles.optionSectionTitle}>추가상품</div>
+                          <div className={styles.productOptions}>
+                            {Object.entries(item.additionalOptions).map(([key, value]) => {
+                              let optionPrice = 0
+                              if (item.additionalOptionsWithPrices && item.additionalOptionsWithPrices[key]) {
+                                optionPrice = item.additionalOptionsWithPrices[key].price
+                              }
+                              return (
+                                <div key={key} className={styles.optionItem}>
+                                  <span className={styles.optionGroup}>[{key}]</span>
+                                  <span>{value} +{optionPrice.toLocaleString()}원</span>
+                                </div>
+                              )
+                            })}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className={styles.productDetailsRight}>
+                      <div className={styles.quantityInfo}>{item.quantity}개</div>
+                      <div className={styles.priceInfo}>{itemTotalPrice.toLocaleString()}원</div>
+                    </div>
+                  </div>
+                )
+                })}
+              </div>
+
+              {/* 추가주문 취소 버튼 - 각 productGroup의 마지막에만 표시 */}
+              {productIndex === Object.keys(groupedByProduct).length - 1 && (
+                <button
+                  onClick={() => setCancelModalData({ paymentId, amount: paymentTotal })}
+                  className={styles.cancelAdditionalOrderButton}
+                >
+                  추가주문취소
+                </button>
+              )}
+            </section>
+          )
+        })
+      })}
+
+      {/* 취소 모달 */}
+      {cancelModalData && (
+        <OrderCancelModal
+          orderId={order.id}
+          deliveryDate={order.deliveryInfo?.deliveryDate || order.deliveryDate || ''}
+          totalAmount={cancelModalData.amount}
+          paymentId={cancelModalData.paymentId}
+          onClose={() => setCancelModalData(null)}
+          onCancel={handleCancelSuccess}
+        />
+      )}
+    </>
+  )
+}
