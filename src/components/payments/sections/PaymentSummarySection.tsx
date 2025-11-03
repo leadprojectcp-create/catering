@@ -2,15 +2,16 @@
 
 import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import { doc, getDoc, updateDoc, addDoc, collection, increment, serverTimestamp, deleteDoc, deleteField } from 'firebase/firestore'
+import { doc, getDoc, updateDoc, addDoc, collection } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { requestPayment } from '@/lib/services/paymentService'
-import { OrderData, OrderInfo, OrderItem } from '../types'
+import { OrderData, OrderInfo } from '../types'
 import { User } from 'firebase/auth'
 import { useDeliveryFeeCalculation } from '../hooks/useDeliveryFeeCalculation'
 import { useDeliveryAddress } from '../hooks/useDeliveryAddress'
 import { Validator } from '../utils/validation'
 import { calculateTotalProductPrice, calculateTotalQuantity, calculateTotalPrice } from '../utils/orderCalculations'
+import { handlePaymentProcess } from '../hooks/usePaymentHandler'
 import styles from './PaymentSummarySection.module.css'
 
 interface PaymentSummarySectionProps {
@@ -537,19 +538,7 @@ export const usePaymentSummary = (props: Omit<PaymentSummarySectionProps, 'onPay
   const totalPrice = calculateTotalPrice(totalProductPrice, deliveryFee, deliveryPromotion, usePoint)
 
   const handlePayment = async () => {
-    // [handlePayment 함수 내용 유지 - 너무 길어서 생략]
-    if (!user) {
-      alert('로그인이 필요합니다.')
-      router.push('/auth/login')
-      return
-    }
-
-    if (!orderData) {
-      alert('주문 정보가 없습니다.')
-      return
-    }
-
-    // 이메일이 없으면 user 객체에서 가져오기 시도
+    // 이메일 가져오기
     let userEmail = orderInfo.email
     if (!userEmail || !userEmail.trim()) {
       if (user) {
@@ -585,328 +574,29 @@ export const usePaymentSummary = (props: Omit<PaymentSummarySectionProps, 'onPay
       return
     }
 
-    console.log('=== 이메일 검증 완료 ===')
-    console.log('사용할 이메일:', userEmail)
-
     try {
       onProcessingChange(true)
 
-      if (!orderId) {
-        alert('주문 정보가 없습니다.')
-        return
-      }
-
-      const cartIdParam = searchParams.get('cartId')
-      let finalOrderId = orderId
-      const additionalOrderIdParam = searchParams.get('additionalOrderId')
-
-      // 추가 주문이 아닌 경우에만 cartId 처리
-      if (cartIdParam && !additionalOrderIdParam) {
-        const cartDocRef = doc(db, 'shoppingCart', cartIdParam)
-        const cartDocSnap = await getDoc(cartDocRef)
-
-        if (!cartDocSnap.exists()) {
-          alert('장바구니 정보를 찾을 수 없습니다.')
-          return
-        }
-
-        const cartData = cartDocSnap.data()
-
-        // 새로운 주문 생성
-        const newOrderData = {
-          uid: cartData.uid,
-          productId: cartData.productId,
-          storeId: cartData.storeId,
-          storeName: cartData.storeName,
-          items: cartData.items,
-          totalProductPrice: cartData.totalProductPrice,
-          totalQuantity: cartData.totalQuantity,
-          deliveryMethod: deliveryMethod, // props에서 가져온 deliveryMethod 사용
-          request: cartData.request,
-          createdAt: cartData.createdAt || new Date(),
-          updatedAt: new Date()
-        }
-
-        const newOrderRef = await addDoc(collection(db, 'orders'), newOrderData)
-        finalOrderId = newOrderRef.id
-        console.log('shoppingCart에서 orders로 이동 완료:', finalOrderId)
-      }
-
-      const storeDoc = await getDoc(doc(db, 'stores', orderData.storeId))
-      const storeData = storeDoc.exists() ? storeDoc.data() : null
-
-      const orderDocRef = doc(db, 'orders', finalOrderId)
-      const orderDocSnap = await getDoc(orderDocRef)
-
-      if (!orderDocSnap.exists()) {
-        alert('주문 정보를 찾을 수 없습니다.')
-        return
-      }
-
-      const orderNumber = `ORD${Date.now()}`
-      const currentOrderData = orderDocSnap.data()
-
-      if (additionalOrderIdParam) {
-        // 추가 주문 - totalPrice도 누적 (paymentInfo는 웹훅에서 처리)
-        const currentTotalPrice = currentOrderData?.totalPrice || 0
-        await updateDoc(orderDocRef, {
-          totalPrice: currentTotalPrice + totalPrice,
-          updatedAt: new Date()
-        })
-      } else {
-        // 새로운 주문 - 기본 주문 정보 저장 (paymentInfo는 웹훅에서 처리)
-        await updateDoc(orderDocRef, {
-          partnerId: storeData?.partnerId,
-          partnerPhone: storeData?.phone,
-          storeName: storeData?.storeName,
-          totalPrice: totalPrice,
-          totalProductPrice: totalProductPrice,
-          deliveryFee: deliveryFee,
-          deliveryMethod: deliveryMethod,
-          usedPoint: usePoint,
-          deliveryInfo: {
-            addressName: addressName,
-            deliveryDate: orderInfo.deliveryDate,
-            deliveryTime: orderInfo.deliveryTime,
-            address: orderInfo.address,
-            detailAddress: orderInfo.detailAddress,
-            zipCode: orderInfo.zipCode || '',
-            entrancePassword: entranceCode || '',
-            recipient: recipient,
-            recipientPhone: orderInfo.phone,
-            deliveryRequest: deliveryRequest,
-            detailedRequest: detailedRequest,
-          },
-          orderer: orderInfo.orderer,
-          phone: orderInfo.phone,
-          orderNumber: orderNumber,
-          orderStatus: 'pending',
-          paymentStatus: 'unpaid',
-          updatedAt: new Date()
-        })
-      }
-
-      console.log('주문 업데이트 완료:', finalOrderId, orderNumber)
-
-      const paymentResult = await requestPayment({
-        orderName: `${orderData.productName} ${orderData.items.length > 1 ? `외 ${orderData.items.length - 1}건` : ''}`,
-        amount: totalPrice,
-        orderId: finalOrderId,
-        customerName: orderInfo.orderer,
-        customerEmail: userEmail,
-        customerPhoneNumber: orderInfo.phone,
+      await handlePaymentProcess({
+        user,
+        orderData,
+        orderInfo,
+        recipient,
+        addressName,
+        deliveryRequest,
+        detailedRequest,
+        entranceCode,
+        deliveryMethod,
+        usePoint,
+        totalPrice,
+        totalProductPrice,
+        deliveryFee,
+        orderId,
+        searchParams,
+        saveAddress,
+        checkDuplicateAddress,
+        onRouter: (path: string) => router.push(path)
       })
-
-      if (!paymentResult.success) {
-        alert(`결제에 실패했습니다.\n${paymentResult.errorMessage || '알 수 없는 오류'}`)
-        return
-      }
-
-      console.log('결제 검증 시작:', paymentResult.paymentId)
-      const verifyResponse = await fetch('/api/payments/verify', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ paymentId: paymentResult.paymentId }),
-      })
-
-      const verifyData = await verifyResponse.json()
-      console.log('결제 검증 결과:', verifyData)
-
-      if (!verifyData.verified) {
-        alert('결제 검증에 실패했습니다. 고객센터에 문의해주세요.')
-        return
-      }
-
-      // 결제 검증 완료 - paymentInfo를 배열로 저장
-      const orderRef = doc(db, 'orders', finalOrderId)
-
-      // 기존 주문 데이터 가져오기 (추가 결제인 경우 배열에 추가)
-      const orderSnapshot = await getDoc(orderRef)
-      const existingOrderData = orderSnapshot.data()
-
-      console.log('[Payment] 기존 주문 데이터:', {
-        paymentInfo: existingOrderData?.paymentInfo,
-        paymentId: existingOrderData?.paymentId,
-        paidAt: existingOrderData?.paidAt
-      })
-
-      // 기존 배열 가져오기 또는 새 배열 생성
-      let paymentInfoArray: unknown[] = []
-      let paymentIdArray: string[] = []
-
-      if (existingOrderData?.paymentInfo) {
-        paymentInfoArray = Array.isArray(existingOrderData.paymentInfo)
-          ? [...existingOrderData.paymentInfo]
-          : [existingOrderData.paymentInfo]
-      }
-
-      if (existingOrderData?.paymentId) {
-        paymentIdArray = Array.isArray(existingOrderData.paymentId)
-          ? [...existingOrderData.paymentId]
-          : [existingOrderData.paymentId]
-      }
-
-      // 새 결제 정보 추가 (paidAt은 paymentInfo 안에 포함되어 있음)
-      // PortOne API의 status는 'PAID' (uppercase)이므로 lowercase로 정규화
-      const normalizedPayment = {
-        ...verifyData.payment,
-        status: verifyData.payment.status?.toLowerCase()
-      }
-      paymentInfoArray.push(normalizedPayment)
-      if (paymentResult.paymentId) {
-        paymentIdArray.push(paymentResult.paymentId)
-      }
-
-      // 업데이트할 데이터 준비
-      const updateData: Record<string, unknown> = {
-        paymentStatus: 'paid',
-        paymentInfo: paymentInfoArray,
-        paymentId: paymentIdArray,
-        verifiedAt: new Date().toISOString()
-      }
-
-      // 결제 완료 시 items에 paymentId 추가
-      // 추가 주문인 경우 sessionStorage의 데이터를 기존 items에 병합
-      const additionalOrderId = searchParams.get('additionalOrderId')
-
-      let finalItems = existingOrderData?.items || []
-
-      // 추가 주문인 경우 sessionStorage에서 추가 주문 데이터 가져와서 병합
-      if (additionalOrderId) {
-        const additionalDataStr = sessionStorage.getItem('additionalOrderData')
-        if (additionalDataStr) {
-          try {
-            const additionalData = JSON.parse(additionalDataStr)
-            console.log('[Payment] sessionStorage에서 추가 주문 데이터 가져옴:', additionalData)
-
-            // 기존 items + 추가 주문 items 병합
-            finalItems = [...finalItems, ...additionalData.items]
-
-            // totalProductPrice와 totalQuantity 업데이트 (기존 값에 추가)
-            const currentTotalProductPrice = existingOrderData?.totalProductPrice || 0
-            const currentTotalQuantity = existingOrderData?.totalQuantity || 0
-
-            updateData.totalProductPrice = currentTotalProductPrice + (additionalData.totalProductPrice || 0)
-            updateData.totalQuantity = currentTotalQuantity + (additionalData.totalQuantity || 0)
-
-            console.log('[Payment] totalProductPrice 업데이트:', {
-              기존: currentTotalProductPrice,
-              추가: additionalData.totalProductPrice,
-              합계: updateData.totalProductPrice
-            })
-            console.log('[Payment] totalQuantity 업데이트:', {
-              기존: currentTotalQuantity,
-              추가: additionalData.totalQuantity,
-              합계: updateData.totalQuantity
-            })
-
-            // sessionStorage 클리어
-            sessionStorage.removeItem('additionalOrderData')
-            console.log('[Payment] sessionStorage 클리어 완료')
-          } catch (error) {
-            console.error('[Payment] sessionStorage 파싱 실패:', error)
-          }
-        }
-      }
-
-      if (Array.isArray(finalItems) && finalItems.length > 0) {
-        console.log('[Payment] items에 paymentId 추가')
-
-        // 새로운 결제 ID (방금 완료된 결제)
-        const currentPaymentId = paymentIdArray[paymentIdArray.length - 1]
-
-        const itemsWithPaymentId = finalItems.map((item: OrderItem) => {
-          // 이미 paymentId가 있으면 그대로 유지 (기존 결제 완료된 아이템)
-          if (item.paymentId) {
-            return item
-          }
-          // paymentId가 없으면 현재 결제 ID 추가
-          return {
-            ...item,
-            paymentId: currentPaymentId,
-            isAddItem: item.isAddItem ?? false  // isAddItem이 없으면 false로 설정 (기존 데이터 호환)
-          }
-        })
-
-        updateData.items = itemsWithPaymentId
-
-        // 임시 필드 삭제
-        updateData.addTotalProductPrice = deleteField()
-        updateData.addTotalQuantity = deleteField()
-
-        console.log('[Payment] paymentId 추가 완료:', {
-          전체_아이템수: itemsWithPaymentId.length,
-          현재_결제ID: currentPaymentId,
-          items: itemsWithPaymentId,
-          추가주문여부: !!additionalOrderId
-        })
-      }
-
-      await updateDoc(orderRef, updateData)
-
-      // 배송지 저장
-      if ((deliveryMethod === '퀵업체 배송' || deliveryMethod === '택배 배송') && orderInfo.address.trim() && addressName.trim()) {
-        try {
-          // 중복 확인
-          const isDuplicate = await checkDuplicateAddress(orderInfo.address, orderInfo.detailAddress)
-
-          if (!isDuplicate) {
-            await saveAddress({
-              name: addressName,
-              orderer: recipient,
-              phone: orderInfo.phone,
-              email: userEmail,
-              address: orderInfo.address,
-              detailAddress: orderInfo.detailAddress,
-              zipCode: orderInfo.zipCode || ''
-            })
-            console.log('배송지 저장 완료')
-          }
-        } catch (addressError) {
-          console.error('배송지 저장 실패:', addressError)
-        }
-      }
-
-      if (usePoint > 0 && user) {
-        try {
-          const userRef = doc(db, 'users', user.uid)
-          await updateDoc(userRef, {
-            point: increment(-usePoint)
-          })
-
-          await addDoc(collection(db, 'points'), {
-            uid: user.uid,
-            amount: -usePoint,
-            type: 'used',
-            reason: '주문 결제 시 포인트 사용',
-            orderId: finalOrderId,
-            productId: orderData?.productId || '',
-            productName: orderData?.productName || '',
-            createdAt: serverTimestamp()
-          })
-
-          console.log('포인트 사용 처리 완료:', usePoint)
-        } catch (pointError) {
-          console.error('포인트 사용 처리 실패:', pointError)
-        }
-      }
-
-      if (cartIdParam) {
-        try {
-          const cartDocRef = doc(db, 'shoppingCart', cartIdParam)
-          await deleteDoc(cartDocRef)
-          console.log('장바구니 삭제 완료:', cartIdParam)
-        } catch (cartDeleteError) {
-          console.error('장바구니 삭제 실패:', cartDeleteError)
-        }
-      }
-
-      sessionStorage.removeItem('orderData')
-
-      alert(`결제가 완료되었습니다!\n주문번호: ${orderNumber}`)
-      router.push('/orders')
     } catch (error) {
       console.error('주문 생성 실패:', error)
       alert('주문 생성에 실패했습니다. 다시 시도해주세요.')

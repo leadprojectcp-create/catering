@@ -1,7 +1,6 @@
 'use client'
 
-import { useState } from 'react'
-import Image from 'next/image'
+import CustomDropdown from '../components/CustomDropdown'
 import styles from './DeliveryRequestSection.module.css'
 
 interface DeliveryRequestSectionProps {
@@ -21,8 +20,6 @@ export default function DeliveryRequestSection({
   onEntranceCodeChange,
   onDetailedRequestChange
 }: DeliveryRequestSectionProps) {
-  const [showRequestDropdown, setShowRequestDropdown] = useState(false)
-
   const requestOptions = [
     '도착 10분전에 전화주세요.',
     '문앞에 놓고 문자한번만 주세요.',
@@ -37,37 +34,12 @@ export default function DeliveryRequestSection({
       <div className={styles.requestContainer}>
         <div className={styles.formRow}>
           <label className={styles.label}>요청사항</label>
-          <div className={styles.customSelectWrapper}>
-            <div
-              className={styles.customSelect}
-              onClick={() => setShowRequestDropdown(!showRequestDropdown)}
-            >
-              <span>{deliveryRequest || '배송 요청사항을 선택해주세요'}</span>
-              <Image
-                src="/icons/arrow.svg"
-                alt="화살표"
-                width={20}
-                height={20}
-                style={{ transform: showRequestDropdown ? 'rotate(-90deg)' : 'rotate(90deg)' }}
-              />
-            </div>
-            {showRequestDropdown && (
-              <div className={styles.customDropdown}>
-                {requestOptions.map((option) => (
-                  <div
-                    key={option}
-                    className={styles.dropdownItem}
-                    onClick={() => {
-                      onDeliveryRequestChange(option)
-                      setShowRequestDropdown(false)
-                    }}
-                  >
-                    {option}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          <CustomDropdown
+            value={deliveryRequest}
+            placeholder="배송 요청사항을 선택해주세요"
+            options={requestOptions}
+            onChange={onDeliveryRequestChange}
+          />
         </div>
         <div className={styles.formRow}>
           <label className={styles.label}>공동현관</label>
