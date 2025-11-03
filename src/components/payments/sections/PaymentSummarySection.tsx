@@ -208,13 +208,14 @@ export default function PaymentSummarySection({
     return 0
   }, [isAdditionalOrder, deliveryMethod, deliveryFeeFromAPI, calculateParcelDeliveryFee, parcelPaymentMethod, deliveryFeeSettings])
 
-  // 배송비 프로모션 (퀵업체 배송이고 배송비가 조회되었을 때만 적용, 추가 주문은 제외)
+  // 배송비 프로모션 (퀵업체 배송이고 30만원 이상일 때만 1만원 할인, 추가 주문은 제외)
   const deliveryPromotion = useMemo(() => {
     if (isAdditionalOrder) {
       return 0
     }
-    return deliveryMethod === '퀵업체 배송' && deliveryFeeFromAPI ? 10000 : 0
-  }, [isAdditionalOrder, deliveryMethod, deliveryFeeFromAPI])
+    // 퀵업체 배송이고, 배송비가 조회되었고, 상품금액이 30만원 이상일 때만 1만원 할인
+    return deliveryMethod === '퀵업체 배송' && deliveryFeeFromAPI && totalProductPrice >= 300000 ? 10000 : 0
+  }, [isAdditionalOrder, deliveryMethod, deliveryFeeFromAPI, totalProductPrice])
 
   // 총 결제금액
   const totalPrice = useMemo(() => {
