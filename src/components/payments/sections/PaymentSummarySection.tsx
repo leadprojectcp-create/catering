@@ -140,9 +140,11 @@ export default function PaymentSummarySection({
         // 추가 후 무료 조건을 충족하는지 확인
         const isNowFree = combinedPrice >= freeCondition
 
-        // 기존에 무료가 아니었는데 추가 후 무료가 되면 배송비 0원
-        // 기존에도 무료였으면 배송비 0원
-        // 추가 후에도 무료 조건 미달이면 배송비 0원 (추가 주문에는 배송비 부과 안 함)
+        // 기존에 무료가 아니었는데 추가 후 무료가 되면 기존 배송비를 환불 (-baseFee)
+        if (!wasAlreadyFree && isNowFree) {
+          return -baseFee
+        }
+        // 기존에도 무료였거나 추가 후에도 무료 조건 미달이면 배송비 0원
         return 0
       }
       // 최초 주문일 때
@@ -594,6 +596,16 @@ export default function PaymentSummarySection({
                 : deliveryFeeSettings?.type === '조건부 무료'
                 ? (calculateParcelDeliveryFee === 0 ? '조건부 무료' : `+${calculateParcelDeliveryFee.toLocaleString()}원`)
                 : `+${calculateParcelDeliveryFee.toLocaleString()}원`}
+            </span>
+          </div>
+        )}
+        {isAdditionalOrder && deliveryMethod === '택배 배송' && deliveryFee !== 0 && (
+          <div className={styles.paymentRow}>
+            <span className={styles.paymentLabel}>
+              {deliveryFee < 0 ? '배송비 환불' : '추가 배송비'}
+            </span>
+            <span className={deliveryFee < 0 ? styles.promotionValue : styles.paymentValue}>
+              {deliveryFee < 0 ? '' : '+'}{deliveryFee.toLocaleString()}원
             </span>
           </div>
         )}

@@ -25,9 +25,9 @@ export default function QuantitySection({
   onChange
 }: QuantitySectionProps) {
   const handleAddRange = () => {
-    // 마지막 range의 maxQuantity가 새로운 range의 minQuantity
+    // 마지막 range의 maxQuantity + 1이 새로운 range의 minQuantity
     const newMinQuantity = quantityRanges.length > 0
-      ? quantityRanges[quantityRanges.length - 1].maxQuantity
+      ? quantityRanges[quantityRanges.length - 1].maxQuantity + 1
       : minOrderQuantity
 
     const newRange: QuantityRange = {
@@ -58,9 +58,9 @@ export default function QuantitySection({
       if (i === index) {
         return { ...range, [field]: numValue }
       }
-      // maxQuantity가 변경되면 다음 range의 minQuantity도 업데이트
+      // maxQuantity가 변경되면 다음 range의 minQuantity도 업데이트 (maxQuantity + 1)
       if (field === 'maxQuantity' && i === index + 1) {
-        return { ...range, minQuantity: numValue }
+        return { ...range, minQuantity: numValue + 1 }
       }
       return range
     })
