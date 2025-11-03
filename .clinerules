@@ -1,0 +1,56 @@
+# Claude Code 규칙
+
+## TypeScript 타입 규칙
+- **절대 `any` 타입을 사용하지 말 것**
+- 타입을 모르는 경우 `unknown` 사용 후 타입 가드 적용
+- 모든 함수의 매개변수와 반환값에 명시적 타입 지정
+- 인터페이스 또는 타입 별칭을 사용하여 복잡한 타입 정의
+
+## 코드 작성 전 확인사항
+- 수정할 파일을 먼저 Read 도구로 읽고 기존 코드 패턴 확인
+- 프로젝트 내 유사한 코드가 있는지 Grep/Glob으로 검색
+- 기존 타입 정의가 있는지 확인하고 재사용
+- 외부 라이브러리 사용 시 타입 정의 확인
+
+## 타입 안전성
+```typescript
+// ❌ 나쁜 예
+const data: any = response.data
+data.forEach((item: any) => console.log(item))
+
+// ✅ 좋은 예
+interface ResponseItem {
+  id: string
+  name: string
+}
+
+const data: ResponseItem[] = response.data
+data.forEach((item: ResponseItem) => console.log(item))
+```
+
+## 타입 가드 사용
+```typescript
+// unknown 사용 시 타입 가드 필수
+function isValidData(data: unknown): data is DataType {
+  return (
+    typeof data === 'object' &&
+    data !== null &&
+    'requiredField' in data
+  )
+}
+```
+
+## Firebase/Firestore 타입
+- Firestore 데이터는 명시적 인터페이스 정의
+- DocumentData 사용 시 적절한 타입 변환 적용
+
+## 일반 규칙
+- ESLint 경고 무시하지 않기
+- 사용하지 않는 import 제거
+- console.log는 개발 중에만 사용하고 제거
+- 에러 처리 시 적절한 에러 타입 지정
+
+## 커밋 전 체크리스트
+- TypeScript 빌드 에러 없음
+- ESLint 에러 없음 (warning은 허용)
+- `any` 타입 사용 여부 확인

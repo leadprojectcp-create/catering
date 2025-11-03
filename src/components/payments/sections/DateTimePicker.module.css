@@ -41,6 +41,29 @@
   z-index: 100;
 }
 
+.dateHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 12px 8px 12px;
+  border-bottom: 1px solid #F5F5F5;
+}
+
+.dateHeader span {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+}
+
+.dateHeader button {
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  color: #666;
+  padding: 0;
+}
+
 .calendarHeader {
   display: flex;
   justify-content: space-between;
@@ -158,7 +181,7 @@
   display: flex;
   justify-content: center;
   gap: 0;
-  padding: 24px 16px;
+  padding: 24px 0;
   height: 225px;
   overflow: hidden;
 }
@@ -168,6 +191,7 @@
   display: flex;
   justify-content: center;
   position: relative;
+  min-width: 0;
 }
 
 .scrollContainer {
@@ -185,6 +209,7 @@
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
   scroll-padding: 68.5px 0;
+  width: 100%;
 }
 
 .scrollContainer::-webkit-scrollbar {
@@ -217,8 +242,8 @@
 .selectionHighlight {
   position: absolute;
   top: 50%;
-  left: 16px;
-  right: 16px;
+  left: 0;
+  right: 0;
   height: 40px;
   transform: translateY(-50%);
   background-color: rgba(2, 91, 217, 0.05);
@@ -276,7 +301,7 @@
   }
 
   .timePickerContainer {
-    padding: 20px 12px;
+    padding: 20px 0;
     height: 200px;
   }
 
@@ -284,6 +309,7 @@
     height: 160px;
     padding: 62px 0;
     scroll-padding: 62px 0;
+    width: 100%;
   }
 
   .scrollItem {
@@ -298,6 +324,8 @@
 
   .selectionHighlight {
     height: 36px;
+    left: 0;
+    right: 0;
   }
 
   .timeDivider {

@@ -73,7 +73,7 @@ export default function OrdersPage() {
   const [cancelOrderId, setCancelOrderId] = useState<string | null>(null)
   const [cancelOrderData, setCancelOrderData] = useState<{ deliveryDate: string; totalAmount: number; paymentId: string | string[] | null } | null>(null)
   const [filterStatus, setFilterStatus] = useState<'all' | 'unpaid' | 'pending' | 'preparing' | 'shipping' | 'completed' | 'cancelled'>('all')
-  const [deliveryMethodFilter, setDeliveryMethodFilter] = useState<'all' | '퀵업체 배송' | '매장 픽업'>('all')
+  const [deliveryMethodFilter, setDeliveryMethodFilter] = useState<'all' | '퀵업체 배송' | '매장 픽업' | '택배 배송'>('all')
   const [dateRange, setDateRange] = useState<{ start: Date | null; end: Date | null }>({ start: null, end: null })
   const [tempDateRange, setTempDateRange] = useState<{ start: Date | null; end: Date | null }>({ start: null, end: null })
   const [showDeliveryDropdown, setShowDeliveryDropdown] = useState(false)
@@ -218,6 +218,25 @@ export default function OrdersPage() {
     }
   }, [])
 
+  // 날짜 선택 모달 열릴 때 백그라운드 스크롤 방지
+  useEffect(() => {
+    if (showDatePicker) {
+      // 스크롤 방지
+      document.body.style.overflow = 'hidden'
+      document.body.style.touchAction = 'none'
+    } else {
+      // 스크롤 방지 해제
+      document.body.style.overflow = ''
+      document.body.style.touchAction = ''
+    }
+
+    // 컴포넌트 언마운트 시 정리
+    return () => {
+      document.body.style.overflow = ''
+      document.body.style.touchAction = ''
+    }
+  }, [showDatePicker])
+
   const getStatusText = (orderStatus: string, paymentStatus: string) => {
     // 결제 상태 우선 체크
     if (paymentStatus === 'unpaid') return '결제 미완료'
@@ -329,7 +348,12 @@ export default function OrdersPage() {
   }
 
   const applyDateRange = () => {
-    setDateRange(tempDateRange)
+    // 시작 날짜는 00:00:00으로, 종료 날짜는 23:59:59로 설정
+    const adjustedDateRange = {
+      start: tempDateRange.start ? new Date(tempDateRange.start.setHours(0, 0, 0, 0)) : null,
+      end: tempDateRange.end ? new Date(tempDateRange.end.setHours(23, 59, 59, 999)) : null
+    }
+    setDateRange(adjustedDateRange)
     setShowDatePicker(false)
   }
 
@@ -406,7 +430,12 @@ export default function OrdersPage() {
       const weekdays = ['일', '월', '화', '수', '목', '금', '토']
       const weekday = weekdays[date.getDay()]
 
-      return `${year}년 ${month}월 ${day}일 (${weekday}) ${timeStr}`
+      // timeStr을 "HH:MM" 형식에서 "오전/오후 H시 M분" 형식으로 변환
+      const [hours, minutes] = timeStr.split(':').map(Number)
+      const period = hours >= 12 ? '오후' : '오전'
+      const displayHours = hours > 12 ? hours - 12 : hours === 0 ? 12 : hours
+
+      return `예약날짜 ${year}년 ${month}월 ${day}일 (${weekday}) ${period} ${displayHours}시 ${minutes}분`
     } catch (error) {
       return `${dateStr} ${timeStr}`
     }
@@ -619,6 +648,15 @@ export default function OrdersPage() {
                   >
                     매장 픽업
                   </div>
+                  <div
+                    className={styles.dropdownItem}
+                    onClick={() => {
+                      setDeliveryMethodFilter('택배 배송')
+                      setShowDeliveryDropdown(false)
+                    }}
+                  >
+                    택배 배송
+                  </div>
                 </div>
               )}
             </div>
@@ -638,7 +676,17 @@ export default function OrdersPage() {
                 <Calendar size={16} className={styles.chevronIcon} />
               </div>
               {showDatePicker && (
-                <div className={styles.calendar}>
+                <div
+                  className={styles.calendar}
+                  onWheel={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                  }}
+                  onTouchMove={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                  }}
+                >
                   <div className={styles.calendarHeader}>
                     <button onClick={goToPreviousMonth} className={styles.navButton}>
                       <ChevronLeft size={20} />
@@ -714,11 +762,18 @@ export default function OrdersPage() {
                 </div>
 
                 <div className={styles.orderDate}>
-                  {order.createdAt.toLocaleDateString('ko-KR', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                  })} 주문
+                  {(() => {
+                    const year = order.createdAt.getFullYear()
+                    const month = order.createdAt.getMonth() + 1
+                    const day = order.createdAt.getDate()
+                    const weekdays = ['일', '월', '화', '수', '목', '금', '토']
+                    const weekday = weekdays[order.createdAt.getDay()]
+                    const hours = order.createdAt.getHours()
+                    const minutes = order.createdAt.getMinutes()
+                    const period = hours >= 12 ? '오후' : '오전'
+                    const displayHours = hours > 12 ? hours - 12 : hours === 0 ? 12 : hours
+                    return `주문날짜 ${year}년 ${month}월 ${day}일 (${weekday}) ${period} ${displayHours}시 ${minutes}분`
+                  })()}
                 </div>
 
                 <div className={styles.orderNumber}>주문번호 {order.orderNumber}</div>

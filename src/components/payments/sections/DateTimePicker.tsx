@@ -67,6 +67,25 @@ export default function DateTimePicker({
     }
   }, [showTimePicker, selectedPeriod, selectedHour, selectedMinute])
 
+  // 모달 열릴 때 백그라운드 스크롤 방지
+  useEffect(() => {
+    if (showDatePicker || showTimePicker) {
+      // 스크롤 방지
+      document.body.style.overflow = 'hidden'
+      document.body.style.touchAction = 'none'
+    } else {
+      // 스크롤 방지 해제
+      document.body.style.overflow = ''
+      document.body.style.touchAction = ''
+    }
+
+    // 컴포넌트 언마운트 시 정리
+    return () => {
+      document.body.style.overflow = ''
+      document.body.style.touchAction = ''
+    }
+  }, [showDatePicker, showTimePicker])
+
   // quantityRanges를 기반으로 현재 수량에 맞는 daysBeforeOrder 계산
   const getMinDaysForQuantity = () => {
     if (!quantityRanges || quantityRanges.length === 0) {
@@ -212,7 +231,21 @@ export default function DateTimePicker({
             readOnly
           />
           {showDatePicker && (
-            <div className={styles.calendarModal}>
+            <div
+              className={styles.calendarModal}
+              onWheel={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+              }}
+              onTouchMove={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+              }}
+            >
+              <div className={styles.dateHeader}>
+                <span>날짜 선택</span>
+                <button onClick={() => setShowDatePicker(false)}>✕</button>
+              </div>
               <div className={styles.calendarHeader}>
                 <button onClick={prevMonth}>
                   <Image
@@ -291,12 +324,32 @@ export default function DateTimePicker({
               readOnly
             />
             {showTimePicker && (
-              <div className={styles.timeModal}>
+              <div
+                className={styles.timeModal}
+                onWheel={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                }}
+                onTouchMove={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                }}
+              >
                 <div className={styles.timeHeader}>
                   <span>시간 선택</span>
                   <button onClick={() => setShowTimePicker(false)}>✕</button>
                 </div>
-                <div className={styles.timePickerContainer}>
+                <div
+                  className={styles.timePickerContainer}
+                  onWheel={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                  }}
+                  onTouchMove={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                  }}
+                >
                   <div className={styles.timeColumn}>
                     <div
                       ref={periodRef}
