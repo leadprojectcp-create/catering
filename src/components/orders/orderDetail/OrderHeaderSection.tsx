@@ -32,7 +32,7 @@ const formatDeliveryDateTime = (dateStr: string, timeStr?: string) => {
   // timeStr 형식: "오후 2시 30분" 등
   try {
     // "2025년 11월 3일" 형식 파싱
-    let match = dateStr.match(/(\d{4})년\s*(\d{1,2})월\s*(\d{1,2})일/)
+    const match = dateStr.match(/(\d{4})년\s*(\d{1,2})월\s*(\d{1,2})일/)
     if (match) {
       const [, year, month, day] = match
       const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day))

@@ -69,7 +69,10 @@ export default function PaymentSummarySection({
 }: PaymentSummarySectionProps) {
   const router = useRouter()
   const [isLoadingDeliveryFee, setIsLoadingDeliveryFee] = useState(false)
-  const [existingOrder, setExistingOrder] = useState<any>(null)
+  const [existingOrder, setExistingOrder] = useState<{
+    totalProductPrice: number
+    items: Array<{ quantity: number }>
+  } | null>(null)
 
   // 추가 결제 모드 확인
   const isAdditionalOrder = searchParams.get('additionalOrderId')
@@ -149,7 +152,7 @@ export default function PaymentSummarySection({
       if (perQuantity > 0) {
         if (isAdditionalOrder && existingOrder) {
           // 기존 주문의 총 수량 계산
-          const existingTotalQuantity = existingOrder.items?.reduce((sum: number, item: any) => sum + item.quantity, 0) || 0
+          const existingTotalQuantity = existingOrder.items?.reduce((sum: number, item: { quantity: number }) => sum + item.quantity, 0) || 0
           const combinedQuantity = existingTotalQuantity + totalQuantity
 
           // 기존 배송비 구간
