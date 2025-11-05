@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
 import styles from './OrderCancelModal.module.css'
 
 interface OrderCancelModalProps {
@@ -50,10 +51,19 @@ export default function OrderCancelModal({ isOpen, onClose, onConfirm }: OrderCa
     <>
       <div className={styles.overlay} onClick={handleClose}></div>
       <div className={styles.modal}>
-        <h2 className={styles.title}>주문 취소</h2>
-        <p className={styles.subtitle}>
-          주문을 취소하시겠습니까? 취소 사유를 선택해주세요.
-        </p>
+        <div className={styles.header}>
+          <div className={styles.headerText}>
+            <h2 className={styles.title}>주문 취소</h2>
+            <p className={styles.subtitle}>
+              주문을 취소하시겠습니까? 취소 사유를 선택해주세요.
+            </p>
+          </div>
+          <button className={styles.closeButton} onClick={handleClose}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M18 6L6 18M6 6L18 18" stroke="#333" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
+        </div>
 
         <div className={styles.reasonList}>
           {cancelReasons.map((reason) => (
@@ -82,13 +92,16 @@ export default function OrderCancelModal({ isOpen, onClose, onConfirm }: OrderCa
         )}
 
         {/* 환급금 안내 */}
-        <div className={styles.infoSection}>
+        <div className={styles.refundSection}>
           <button
             className={styles.infoHeader}
             onClick={() => setShowRefundInfo(!showRefundInfo)}
             type="button"
           >
-            <span>환급금 안내</span>
+            <span className={styles.infoHeaderText}>
+              <Image src="/icons/info-circle.svg" alt="" width={16} height={16} />
+              환급금 안내
+            </span>
             <svg
               width="16"
               height="16"
@@ -114,13 +127,16 @@ export default function OrderCancelModal({ isOpen, onClose, onConfirm }: OrderCa
         </div>
 
         {/* 주문 취소 패널티 규정안내 */}
-        <div className={styles.infoSection}>
+        <div className={styles.penaltySection}>
           <button
             className={styles.infoHeader}
             onClick={() => setShowPenaltyInfo(!showPenaltyInfo)}
             type="button"
           >
-            <span>주문 취소 패널티 규정안내</span>
+            <span className={styles.infoHeaderText}>
+              <Image src="/icons/info-circle.svg" alt="" width={16} height={16} />
+              주문 취소 패널티 규정안내
+            </span>
             <svg
               width="16"
               height="16"
