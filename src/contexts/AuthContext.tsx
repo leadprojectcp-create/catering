@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from 'react'
 import { onAuthStateChanged, User, signOut } from 'firebase/auth'
-import { doc, getDoc } from 'firebase/firestore'
+import { doc, onSnapshot } from 'firebase/firestore'
 import { auth, db } from '@/lib/firebase'
 
 interface UserData {
@@ -47,44 +47,55 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+    let unsubscribeUser: (() => void) | undefined
+
+    const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         setUser(firebaseUser)
 
-        // Firestore에서 사용자 데이터 가져오기
-        try {
-          const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid))
-          if (userDoc.exists()) {
-            const data = userDoc.data()
-            setUserData({
-              uid: firebaseUser.uid,
-              email: data.email,
-              name: data.name,
-              level: data.level || 1, // 기본 레벨 1
-              type: data.type,
-              companyName: data.companyName,
-              phone: data.phone,
-              registrationComplete: data.registrationComplete || false,
-              point: data.point || 0
-            })
-          } else {
-            // 사용자 문서가 없으면 null로 설정
+        // Firestore에서 사용자 데이터 실시간 구독
+        unsubscribeUser = onSnapshot(
+          doc(db, 'users', firebaseUser.uid),
+          (userDoc) => {
+            if (userDoc.exists()) {
+              const data = userDoc.data()
+              setUserData({
+                uid: firebaseUser.uid,
+                email: data.email,
+                name: data.name,
+                level: data.level || 1, // 기본 레벨 1
+                type: data.type,
+                companyName: data.companyName,
+                phone: data.phone,
+                registrationComplete: data.registrationComplete || false,
+                point: data.point || 0
+              })
+            } else {
+              // 사용자 문서가 없으면 null로 설정
+              setUserData(null)
+            }
+            // 로딩 완료
+            setLoading(false)
+          },
+          (error) => {
+            console.error('사용자 데이터 로드 오류:', error)
             setUserData(null)
+            setLoading(false)
           }
-        } catch (error) {
-          console.error('사용자 데이터 로드 오류:', error)
-          setUserData(null)
-        }
+        )
       } else {
         setUser(null)
         setUserData(null)
+        setLoading(false)
       }
-
-      // 로딩 완료
-      setLoading(false)
     })
 
-    return () => unsubscribe()
+    return () => {
+      unsubscribeAuth()
+      if (unsubscribeUser) {
+        unsubscribeUser()
+      }
+    }
   }, [])
 
   return (

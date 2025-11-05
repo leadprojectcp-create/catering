@@ -12,12 +12,39 @@
 .header {
 }
 
+.headerTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
 .title {
   color: #333;
   font-size: 20px;
   font-weight: 700;
   line-height: normal;
-  margin: 0 0 8px 0;
+  margin: 0;
+}
+
+.refundButton {
+  border-radius: 5px;
+  background: #025BD9;
+  border: none;
+  color: #FFF;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.refundButton:hover {
+  background: #0149B3;
+}
+
+.refundButton:active {
+  background: #013A8F;
 }
 
 .balanceAmount {
@@ -374,4 +401,123 @@
 
 .periodOptionActive:hover {
   background-color: #E8F1FF;
+}
+
+/* 환급 신청 모달 */
+.refundModal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  border-radius: 12px;
+  max-width: 500px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  z-index: 1001;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.refundAmountSection {
+  background: #F5F7F9;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.refundAmountLabel {
+  color: #666;
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.refundAmountValue {
+  color: #025BD9;
+  font-size: 28px;
+  font-weight: 800;
+}
+
+.refundFormSection {
+  margin-bottom: 24px;
+}
+
+.formGroup {
+  margin-bottom: 16px;
+}
+
+.formGroup:last-child {
+  margin-bottom: 0;
+}
+
+.formLabel {
+  display: block;
+  color: #333;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.formInput {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #E0E0E0;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #333;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+
+.formInput:focus {
+  outline: none;
+  border-color: #025BD9;
+}
+
+.formInput::placeholder {
+  color: #999;
+}
+
+.refundNotice {
+  background: #FFF9E6;
+  border: 1px solid #FFE7A6;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 24px;
+}
+
+.refundNoticeText {
+  color: #D97706;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.refundSubmitButton {
+  width: 100%;
+  padding: 14px;
+  background: #025BD9;
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.refundSubmitButton:hover {
+  background: #0149B3;
+}
+
+.refundSubmitButton:active {
+  background: #013A8F;
+}
+
+.refundSubmitButton:disabled {
+  background: #CCC;
+  cursor: not-allowed;
 }

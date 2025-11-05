@@ -46,6 +46,11 @@ service cloud.firestore {
       allow update: if isSignedIn() &&
         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['chatRooms']);
 
+      // point 필드만 업데이트 가능 (포인트 적립/사용 시)
+      // 본인만 자신의 포인트 업데이트 가능
+      allow update: if isSignedIn() && isOwner(userId) &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['point']);
+
       // 관리자는 모든 필드 수정 가능
       allow update: if isAdmin();
 

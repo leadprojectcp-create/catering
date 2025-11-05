@@ -88,6 +88,7 @@ export async function handlePaymentProcess(params: UsePaymentHandlerParams): Pro
 
   // 추가 주문인 경우 기존 주문 확인 및 무료 배송 조건 체크
   if (additionalOrderIdParam) {
+    console.log('📦 추가 주문 처리 시작')
     const orderDocRef = doc(db, 'orders', orderId!)
     const orderDocSnap = await getDoc(orderDocRef)
 
@@ -100,28 +101,40 @@ export async function handlePaymentProcess(params: UsePaymentHandlerParams): Pro
     const currentTotalProductPrice = existingOrderData?.totalProductPrice || 0
     const currentDeliveryFee = existingOrderData?.deliveryFee || 0
 
+    console.log('기존 주문 총 상품 금액:', currentTotalProductPrice)
+    console.log('기존 배송비:', currentDeliveryFee)
+    console.log('추가 주문 상품 금액:', totalProductPrice)
+
     // 추가 주문 후 총 상품 금액
     const newTotalProductPrice = currentTotalProductPrice + totalProductPrice
+    console.log('추가 주문 후 총 상품 금액:', newTotalProductPrice)
 
     // 배송비 무료 조건 확인
     const freeDeliveryThreshold = storeData?.freeDeliveryThreshold || 0
     const hadDeliveryFee = currentDeliveryFee > 0
     const meetsCondition = freeDeliveryThreshold > 0 && newTotalProductPrice >= freeDeliveryThreshold
 
+    console.log('무료 배송 기준 금액:', freeDeliveryThreshold)
+    console.log('배송비를 냈었는가?:', hadDeliveryFee)
+    console.log('무료 배송 조건 달성?:', meetsCondition)
+
     // 기존에 배송비를 냈고, 이제 무료 배송 조건을 달성한 경우
     if (hadDeliveryFee && meetsCondition) {
       deliveryFeeRefund = currentDeliveryFee
-      // 실제 결제 금액 = 추가 주문 금액 - 배송비 환급
-      actualPaymentAmount = Math.max(0, totalPrice - deliveryFeeRefund)
+      // 실제 결제 금액 = 추가 주문 금액 - 배송비 환급 (음수 가능)
+      actualPaymentAmount = totalPrice - deliveryFeeRefund
 
       console.log('🎉 무료 배송 조건 달성!')
-      console.log('추가 주문 금액:', totalPrice)
+      console.log('추가 주문 금액 (totalPrice):', totalPrice)
       console.log('배송비 환급:', deliveryFeeRefund)
-      console.log('실제 결제 금액:', actualPaymentAmount)
+      console.log('실제 결제 금액 (actualPaymentAmount):', actualPaymentAmount)
+    } else {
+      console.log('❌ 무료 배송 조건 미달성')
+      console.log('actualPaymentAmount:', actualPaymentAmount)
     }
   }
 
-  // 결제 금액이 0원이면 결제창 없이 포인트 적립만 처리
+  // 결제 금액이 0원 이하면 결제창 없이 포인트 적립만 처리
   let paymentResult: { success: boolean; paymentId?: string; errorMessage?: string } = { success: false }
   let verifyData: { verified: boolean; payment?: unknown } = { verified: false }
 
@@ -160,9 +173,14 @@ export async function handlePaymentProcess(params: UsePaymentHandlerParams): Pro
       alert('결제 검증에 실패했습니다. 고객센터에 문의해주세요.')
       return false
     }
+  } else if (actualPaymentAmount < 0) {
+    // 결제 금액이 음수인 경우: 결제 없이 포인트 적립만 처리
+    console.log('🎉 결제 금액 음수 - 포인트 적립만 처리, 적립 포인트:', Math.abs(actualPaymentAmount))
+    paymentResult = { success: true }
+    verifyData = { verified: true }
   } else {
-    // 결제 금액이 0원인 경우: 결제 없이 포인트 적립만 처리
-    console.log('🎉 결제 금액 0원 - 포인트 적립만 처리')
+    // 결제 금액이 정확히 0원인 경우
+    console.log('🎉 결제 금액 0원 - 주문만 처리')
     paymentResult = { success: true }
     verifyData = { verified: true }
   }
@@ -323,6 +341,11 @@ export async function handlePaymentProcess(params: UsePaymentHandlerParams): Pro
         addTotalQuantity: deleteField()
       }
 
+      // 배송비 환급이 발생한 경우 (actualPaymentAmount < 0) deliveryFee를 0으로 업데이트
+      if (actualPaymentAmount < 0) {
+        updateData.deliveryFee = 0
+      }
+
       // actualPaymentAmount가 0보다 클 때만 paymentInfo, paymentId 저장
       if (actualPaymentAmount > 0) {
         updateData.paymentInfo = paymentInfoArray
@@ -331,34 +354,41 @@ export async function handlePaymentProcess(params: UsePaymentHandlerParams): Pro
 
       await updateDoc(orderRef, updateData)
 
-      // 배송비 환급이 있는 경우 포인트 적립 처리
-      if (deliveryFeeRefund > 0 && user) {
-        // 실제 적립 금액 = 배송비 - 추가 주문 금액
-        const pointAmount = deliveryFeeRefund - totalPrice
+      // 결제 금액이 음수인 경우 포인트 적립 처리
+      if (actualPaymentAmount < 0 && user) {
+        // 실제 적립 금액 = actualPaymentAmount의 절댓값
+        const pointAmount = Math.abs(actualPaymentAmount)
+        console.log('💰 포인트 적립 시작')
+        console.log('- 적립액:', pointAmount)
+        console.log('- 사용자 UID:', user.uid)
+        console.log('- 주문 ID:', finalOrderId)
 
-        if (pointAmount > 0) {
-          try {
-            const userRef = doc(db, 'users', user.uid)
-            await updateDoc(userRef, {
-              point: increment(pointAmount)
-            })
+        try {
+          const userRef = doc(db, 'users', user.uid)
+          console.log('📝 users 컬렉션 업데이트 시작...')
+          await updateDoc(userRef, {
+            point: increment(pointAmount)
+          })
+          console.log('✅ users 컬렉션 업데이트 완료')
 
-            await addDoc(collection(db, 'points'), {
-              uid: user.uid,
-              amount: pointAmount,
-              type: 'earned',
-              reason: '추가 주문으로 무료 배송 조건 달성',
-              orderId: finalOrderId,
-              productId: orderData?.productId || '',
-              productName: orderData?.productName || '',
-              isRefundable: true,
-              createdAt: serverTimestamp()
-            })
+          console.log('📝 points 컬렉션에 이력 저장 시작...')
+          const pointDoc = await addDoc(collection(db, 'points'), {
+            uid: user.uid,
+            amount: pointAmount,
+            type: 'earned',
+            reason: '추가 주문으로 배송비 환급',
+            orderId: finalOrderId,
+            productId: orderData?.productId || '',
+            productName: orderData?.productName || '',
+            isRefundable: true,
+            createdAt: serverTimestamp()
+          })
+          console.log('✅ points 컬렉션 저장 완료, 문서 ID:', pointDoc.id)
 
-            console.log('✅ 배송비 차액 포인트 적립 완료:', pointAmount)
-          } catch (pointError) {
-            console.error('포인트 적립 실패:', pointError)
-          }
+          console.log('🎉 포인트 적립 완료:', pointAmount)
+        } catch (pointError) {
+          console.error('❌ 포인트 적립 실패:', pointError)
+          console.error('에러 상세:', pointError)
         }
       }
 

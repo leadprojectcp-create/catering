@@ -19,6 +19,7 @@ interface PointHistory {
   productName?: string
   reviewId?: string
   uid: string
+  isRefundable?: boolean
 }
 
 type FilterType = 'all' | 'earned' | 'used' | 'expired'
@@ -33,6 +34,11 @@ export default function PointsPage() {
   const [period, setPeriod] = useState<PeriodType>('all')
   const [showPeriodDropdown, setShowPeriodDropdown] = useState(false)
   const [showInfoModal, setShowInfoModal] = useState(false)
+  const [showRefundModal, setShowRefundModal] = useState(false)
+  const [refundAmount, setRefundAmount] = useState(0)
+  const [refundName, setRefundName] = useState('')
+  const [refundAccount, setRefundAccount] = useState('')
+  const [refundSubmitting, setRefundSubmitting] = useState(false)
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -102,6 +108,51 @@ export default function PointsPage() {
     }
   }
 
+  // 환급 가능한 포인트 계산
+  const refundableAmount = pointHistory
+    .filter((item) => item.isRefundable === true && item.type === 'earned')
+    .reduce((sum, item) => sum + item.amount, 0)
+
+  // 환급 신청 모달 열기
+  const handleOpenRefundModal = () => {
+    if (refundableAmount <= 0) {
+      alert('환급 가능한 포인트가 없습니다.')
+      return
+    }
+    setRefundAmount(refundableAmount)
+    setShowRefundModal(true)
+  }
+
+  // 환급 신청 처리
+  const handleRefundSubmit = async () => {
+    if (!refundName.trim() || !refundAccount.trim()) {
+      alert('이름과 계좌번호를 모두 입력해주세요.')
+      return
+    }
+
+    setRefundSubmitting(true)
+    try {
+      // TODO: 환급 신청 로직 구현
+      // 1. refunds 컬렉션에 환급 신청 저장
+      // 2. 환급 가능한 포인트를 사용 처리
+      console.log('환급 신청:', {
+        amount: refundAmount,
+        name: refundName,
+        account: refundAccount
+      })
+
+      alert('환급 신청이 완료되었습니다.')
+      setShowRefundModal(false)
+      setRefundName('')
+      setRefundAccount('')
+    } catch (error) {
+      console.error('환급 신청 실패:', error)
+      alert('환급 신청에 실패했습니다. 다시 시도해주세요.')
+    } finally {
+      setRefundSubmitting(false)
+    }
+  }
+
   // 필터링된 포인트 내역
   const filteredHistory = pointHistory.filter((item) => {
     // 타입 필터
@@ -134,7 +185,12 @@ export default function PointsPage() {
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <h1 className={styles.title}>보유 포인트</h1>
+        <div className={styles.headerTop}>
+          <h1 className={styles.title}>보유 포인트</h1>
+          <button className={styles.refundButton} onClick={handleOpenRefundModal}>
+            환급 신청
+          </button>
+        </div>
         <div className={styles.balanceAmount}>{currentBalance.toLocaleString()}P</div>
       </div>
 
@@ -324,6 +380,66 @@ export default function PointsPage() {
                   <li>유효기간이 지난 포인트는 복구되지 않으니, 유효기간 내 사용을 권장드립니다.</li>
                 </ul>
               </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* 환급 신청 모달 */}
+      {showRefundModal && (
+        <>
+          <div className={styles.modalOverlay} onClick={() => setShowRefundModal(false)}></div>
+          <div className={styles.refundModal}>
+            <div className={styles.modalHeader}>
+              <h2 className={styles.modalTitle}>포인트 환급 신청</h2>
+              <button className={styles.modalCloseButton} onClick={() => setShowRefundModal(false)}>
+                ✕
+              </button>
+            </div>
+
+            <div className={styles.modalContent}>
+              <div className={styles.refundAmountSection}>
+                <div className={styles.refundAmountLabel}>환급 가능 금액</div>
+                <div className={styles.refundAmountValue}>{refundAmount.toLocaleString()}원</div>
+              </div>
+
+              <div className={styles.refundFormSection}>
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>이름</label>
+                  <input
+                    type="text"
+                    className={styles.formInput}
+                    placeholder="예금주명을 입력하세요"
+                    value={refundName}
+                    onChange={(e) => setRefundName(e.target.value)}
+                  />
+                </div>
+
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>계좌번호</label>
+                  <input
+                    type="text"
+                    className={styles.formInput}
+                    placeholder="은행명과 계좌번호를 입력하세요 (예: 국민은행 123-456-7890)"
+                    value={refundAccount}
+                    onChange={(e) => setRefundAccount(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className={styles.refundNotice}>
+                <p className={styles.refundNoticeText}>
+                  환불 내용은 가입하신 계정의 정보와 일치하지 않을 경우 환불되지 않습니다.
+                </p>
+              </div>
+
+              <button
+                className={styles.refundSubmitButton}
+                onClick={handleRefundSubmit}
+                disabled={refundSubmitting}
+              >
+                {refundSubmitting ? '처리 중...' : '환급 신청하기'}
+              </button>
             </div>
           </div>
         </>
