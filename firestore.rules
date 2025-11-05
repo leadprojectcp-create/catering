@@ -73,7 +73,7 @@ service cloud.firestore {
 
     // Stores collection (가게 정보)
     match /stores/{storeId} {
-      // 모든 사용자 읽기 가능
+      // 모든 사용자 읽기 가능 (웹훅 포함)
       allow read: if true;
 
       // 본인 가게만 생성/수정/삭제 가능 (storeId는 userId와 동일)

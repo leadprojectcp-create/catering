@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { doc, getDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import styles from './ChatRoom.module.css'
@@ -16,6 +17,7 @@ interface Product {
 }
 
 export default function ProductMessageCard({ productId }: ProductMessageCardProps) {
+  const router = useRouter()
   const [product, setProduct] = useState<Product | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
@@ -65,6 +67,10 @@ export default function ProductMessageCard({ productId }: ProductMessageCardProp
     return price.toLocaleString('ko-KR')
   }
 
+  const handleProductClick = () => {
+    router.push(`/productDetail/${productId}`)
+  }
+
   if (loading) {
     return (
       <div className={styles.productMessage}>
@@ -82,7 +88,7 @@ export default function ProductMessageCard({ productId }: ProductMessageCardProp
   }
 
   return (
-    <div className={styles.productMessage}>
+    <div className={styles.productMessage} onClick={handleProductClick} style={{ cursor: 'pointer' }}>
       {product.imageUrl && (
         <div className={styles.productImage}>
           <img src={product.imageUrl} alt={product.name} />

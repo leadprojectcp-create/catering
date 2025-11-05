@@ -7,19 +7,31 @@ import { requestQuickDelivery } from '@/lib/services/quickDeliveryService'
 // Force dynamic rendering
 export const dynamic = 'force-dynamic'
 
-// PortOne V1 웹훅
+// PortOne V1/V2 웹훅 (호환)
 export async function POST(request: NextRequest) {
   try {
-    // V1 웹훅은 JSON 형태로 데이터를 받음
     const webhookData = await request.json()
 
-    console.log('[Webhook V1] PortOne V1 웹훅 수신:', webhookData)
+    console.log('[Webhook] PortOne 웹훅 수신:', webhookData)
 
+    // V2 웹훅 형식 체크 (type 필드 존재)
+    if (webhookData.type) {
+      console.log('[Webhook] V2 형식 감지 - 무시함 (V1 API 사용 중)')
+      return NextResponse.json({ success: true, message: 'V2 webhook ignored' })
+    }
+
+    // V1 웹훅 처리
     const { imp_uid, merchant_uid, status } = webhookData
+
+    // 필수 필드 확인
+    if (!imp_uid || !merchant_uid) {
+      console.log('[Webhook] V1 필수 필드 누락:', webhookData)
+      return NextResponse.json({ success: true, message: 'Missing required fields' })
+    }
 
     // 결제 완료 상태 확인
     if (status !== 'paid') {
-      console.log(`[Webhook V1] 결제 상태가 paid가 아님: ${status}`)
+      console.log(`[Webhook] 결제 상태가 paid가 아님: ${status}`)
       return NextResponse.json({ success: true, message: 'Not a paid status' })
     }
 

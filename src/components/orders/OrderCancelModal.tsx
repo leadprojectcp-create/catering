@@ -5,6 +5,8 @@ import { doc, updateDoc, getDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import Image from 'next/image'
 import styles from './OrderCancelModal.module.css'
+import checkEmpty from '@/../../public/icons/check_empty.png'
+import checkActive from '@/../../public/icons/check_active.png'
 
 interface OrderCancelModalProps {
   orderId: string
@@ -16,11 +18,10 @@ interface OrderCancelModalProps {
 }
 
 const cancelReasons = [
-  '단순 변심',
-  '배송 시간 변경',
-  '상품 정보 오류',
-  '가격이 너무 비쌈',
-  '다른 업체 이용',
+  '일정변경',
+  '업체변경',
+  '날짜변경',
+  '단순변심',
   '기타'
 ]
 
@@ -57,7 +58,7 @@ export default function OrderCancelModal({ orderId, deliveryDate, totalAmount, p
   const [selectedReason, setSelectedReason] = useState('')
   const [customReason, setCustomReason] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [showDropdown, setShowDropdown] = useState(false)
+  const [isAgreed, setIsAgreed] = useState(false)
 
   // 환불 비율 및 금액 계산
   const refundRate = calculateRefundRate(deliveryDate)
@@ -77,6 +78,11 @@ export default function OrderCancelModal({ orderId, deliveryDate, totalAmount, p
 
     if (selectedReason === '기타' && !customReason.trim()) {
       alert('취소 사유를 입력해주세요.')
+      return
+    }
+
+    if (!isAgreed) {
+      alert('취소 및 환불규정에 대한 내용을 확인해주세요.')
       return
     }
 
@@ -136,69 +142,25 @@ export default function OrderCancelModal({ orderId, deliveryDate, totalAmount, p
         </div>
 
         <div className={styles.modalBody}>
-          <div className={styles.policyTitle}>주문취소 및 환불규정안내</div>
-          <div className={styles.policyBox}>
-            <div className={styles.policyItem}>• 예약 3일전: 100% 환불</div>
-            <div className={styles.policyItem}>• 예약 2일전: 70% 환불</div>
-            <div className={styles.policyItem}>• 예약 1일전: 50% 환불</div>
-            <div className={styles.policyItem}>• 예약당일: 환불불가</div>
-          </div>
-
-          <div className={styles.refundInfo}>
-            <div className={styles.refundRow}>
-              <span>총 결제금액</span>
-              <span>{totalAmount.toLocaleString()}원</span>
-            </div>
-            <div className={styles.refundRow}>
-              <span>환불 비율</span>
-              <span className={canCancel ? styles.refundRate : styles.noRefund}>
-                {Math.floor(refundRate * 100)}%
-              </span>
-            </div>
-            <div className={styles.refundRow}>
-              <span className={styles.refundLabel}>환불 금액</span>
-              <span className={styles.refundAmount}>{refundAmount.toLocaleString()}원</span>
-            </div>
-          </div>
-
-          {!canCancel && (
-            <div className={styles.warning}>
-              ⚠️ 예약당일 또는 이후에는 환불이 불가능합니다.
-            </div>
-          )}
-
           <p className={styles.description}>취소 사유를 선택 또는 작성해주세요.</p>
 
-          <div className={styles.customSelectWrapper}>
-            <div
-              className={styles.customSelect}
-              onClick={() => setShowDropdown(!showDropdown)}
-            >
-              <span>{selectedReason || '취소 사유를 선택해주세요'}</span>
-              <Image
-                src="/icons/arrow.svg"
-                alt="arrow"
-                width={20}
-                height={20}
-                style={{ transform: showDropdown ? 'rotate(-90deg)' : 'rotate(90deg)' }}
-              />
-            </div>
-            {showDropdown && (
-              <div className={styles.customDropdown}>
-                {cancelReasons.map((reason) => (
-                  <div
-                    key={reason}
-                    className={styles.dropdownItem}
-                    onClick={() => {
-                      setSelectedReason(reason)
-                      setShowDropdown(false)
-                    }}
-                  >
-                    {reason}
-                  </div>
-                ))}
-              </div>
-            )}
+          <div className={styles.radioGroup}>
+            {cancelReasons.map((reason) => (
+              <label key={reason} className={styles.radioLabel}>
+                <input
+                  type="radio"
+                  name="cancelReason"
+                  value={reason}
+                  checked={selectedReason === reason}
+                  onChange={(e) => setSelectedReason(e.target.value)}
+                  className={styles.radioInput}
+                />
+                <span className={styles.radioCircle}>
+                  {selectedReason === reason && <span className={styles.radioCircleInner} />}
+                </span>
+                <span className={styles.radioText}>{reason}</span>
+              </label>
+            ))}
           </div>
 
           {selectedReason === '기타' && (
@@ -210,20 +172,61 @@ export default function OrderCancelModal({ orderId, deliveryDate, totalAmount, p
               rows={4}
             />
           )}
+
+          <div className={styles.policyBox}>
+            <div className={styles.policyTitle}>꼭 알아두세요!</div>
+            <div className={styles.policyDescription}>
+              업체 주문접수 전, 주문취소시 100% 환불취소가 가능합니다.<br />
+              주문접수이후 취소시 아래 환불 규정대로 환불 처리 됩니다.
+            </div>
+            <div className={styles.policyItem}>• 예약일 기준 3일전 : 100% 환불</div>
+            <div className={styles.policyItem}>• 예약일 기준 2일전 : 70% 환불</div>
+            <div className={styles.policyItem}>• 예약일 기준 1일전 : 50% 환불</div>
+            <div className={styles.policyItem}>• 예약일 당일 취소 : 환불불가</div>
+            <div className={styles.policyItem}>• 취소, 환불시 수수료가 발생할 수 있습니다.</div>
+          </div>
+
+          <div className={styles.refundInfoTitle}>환불금액안내</div>
+          <div className={styles.refundInfo}>
+            <div className={styles.refundRow}>
+              <span className={styles.refundRowLabel}>총 결제금액</span>
+              <span className={styles.refundRowValue}>{totalAmount.toLocaleString()}원</span>
+            </div>
+            <div className={styles.refundRow}>
+              <span className={styles.refundRowLabel}>환불 비율</span>
+              <span className={canCancel ? styles.refundRate : styles.noRefund}>
+                {Math.floor(refundRate * 100)}%
+              </span>
+            </div>
+            <div className={styles.refundDivider}></div>
+            <div className={styles.refundRow}>
+              <span className={styles.refundLabel}>총 환불 금액</span>
+              <span className={styles.refundAmount}>{refundAmount.toLocaleString()}원</span>
+            </div>
+          </div>
+
+          {!canCancel && (
+            <div className={styles.warning}>
+              ⚠️ 예약당일 또는 이후에는 환불이 불가능합니다.
+            </div>
+          )}
         </div>
 
         <div className={styles.modalFooter}>
-          <button
-            className={styles.cancelButton}
-            onClick={onClose}
-            disabled={isSubmitting}
-          >
-            취소
-          </button>
+          <label className={styles.checkboxContainer} onClick={() => setIsAgreed(!isAgreed)}>
+            <Image
+              src={isAgreed ? checkActive : checkEmpty}
+              alt="checkbox"
+              width={18}
+              height={18}
+              className={styles.checkboxImage}
+            />
+            <span className={styles.checkboxLabel}>취소 및 환불규정에 대한 내용을 모두확인 했습니다.</span>
+          </label>
           <button
             className={styles.confirmButton}
             onClick={handleCancel}
-            disabled={isSubmitting || !canCancel}
+            disabled={isSubmitting || !canCancel || !isAgreed}
           >
             {isSubmitting ? '취소 중...' : '확인'}
           </button>

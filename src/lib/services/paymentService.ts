@@ -106,7 +106,7 @@ export const requestPayment = async (
     // paymentType에 따라 pay_method 선택
     let payMethod = ''
     if (paymentType === 'easy') {
-      payMethod = 'toss_brandpay'
+      payMethod = 'kakaopay'
     } else {
       payMethod = request.payMethod || 'card'
     }
@@ -133,7 +133,8 @@ export const requestPayment = async (
           console.log('=== 결제창 응답 (V1) ===')
           console.log('Response:', response)
 
-          if (response.success) {
+          // imp_uid가 있으면 결제 성공
+          if (response.imp_uid) {
             // 결제 성공
             resolve({
               success: true,

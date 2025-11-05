@@ -66,7 +66,7 @@ export default function CustomEditor({ value, onChange, placeholder, storeId, pr
 
       // Get the current selection position
       const selection = window.getSelection()
-      let insertionPoint = editorRef.current
+      const insertionPoint = editorRef.current
 
       // Upload files sequentially in the order they were selected
       for (const file of fileArray) {

@@ -82,7 +82,7 @@ export default function PrintOrderSheet({ order, driverInfo }: PrintOrderSheetPr
 
                   <div className={styles.itemPrice}>
                     <span>수량: {item.quantity}개</span>
-                    <span>{formatCurrency(item.price * item.quantity)}</span>
+                    <span>{formatCurrency(item.itemPrice || (item.price * item.quantity))}</span>
                   </div>
                 </div>
               )}

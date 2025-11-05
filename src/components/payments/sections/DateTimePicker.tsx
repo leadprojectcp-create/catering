@@ -60,8 +60,11 @@ export default function DateTimePicker({
 
         // 분 스크롤
         if (minuteRef.current) {
-          const minuteIndex = parseInt(selectedMinute)
-          minuteRef.current.scrollTop = minuteIndex * itemHeight
+          const minuteValues = ['00', '10', '20', '30', '40', '50']
+          const minuteIndex = minuteValues.indexOf(selectedMinute)
+          if (minuteIndex >= 0) {
+            minuteRef.current.scrollTop = minuteIndex * itemHeight
+          }
         }
       }, 0)
     }
@@ -137,16 +140,19 @@ export default function DateTimePicker({
         setSelectedHour(newHour)
       }
     } else if (type === 'minute') {
-      const newMinute = String(index).padStart(2, '0')
-      if (newMinute !== selectedMinute && index >= 0 && index < 60) {
-        setSelectedMinute(newMinute)
+      const minuteValues = ['00', '10', '20', '30', '40', '50']
+      if (index >= 0 && index < minuteValues.length) {
+        const newMinute = minuteValues[index]
+        if (newMinute !== selectedMinute) {
+          setSelectedMinute(newMinute)
+        }
       }
     }
   }
 
   // 시간/분 옵션 생성 (1-12시)
   const hours = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0'))
-  const minutes = Array.from({ length: 60 }, (_, i) => String(i).padStart(2, '0'))
+  const minutes = ['00', '10', '20', '30', '40', '50']
 
   // 달력 날짜 생성
   const generateCalendar = () => {
@@ -374,6 +380,7 @@ export default function DateTimePicker({
                         </div>
                       ))}
                     </div>
+                    <div className={styles.selectionHighlight}></div>
                   </div>
                   <div className={styles.timeColumn}>
                     <div
@@ -399,6 +406,7 @@ export default function DateTimePicker({
                         </div>
                       ))}
                     </div>
+                    <div className={styles.selectionHighlight}></div>
                   </div>
                   <div className={styles.timeColumn}>
                     <div
@@ -406,7 +414,7 @@ export default function DateTimePicker({
                       className={styles.scrollContainer}
                       onScroll={() => handleScroll(minuteRef, 'minute')}
                     >
-                      {minutes.map((minute) => (
+                      {minutes.map((minute, idx) => (
                         <div
                           key={minute}
                           className={`${styles.scrollItem} ${selectedMinute === minute ? styles.scrollItemActive : ''}`}
@@ -415,8 +423,7 @@ export default function DateTimePicker({
                             if (minuteRef.current) {
                               const isMobile = window.innerWidth <= 768
                               const itemHeight = isMobile ? 36 : 40
-                              const index = parseInt(minute)
-                              minuteRef.current.scrollTo({ top: index * itemHeight, behavior: 'auto' })
+                              minuteRef.current.scrollTo({ top: idx * itemHeight, behavior: 'auto' })
                             }
                           }}
                         >
@@ -424,8 +431,8 @@ export default function DateTimePicker({
                         </div>
                       ))}
                     </div>
+                    <div className={styles.selectionHighlight}></div>
                   </div>
-                  <div className={styles.selectionHighlight}></div>
                 </div>
                 <div className={styles.timeFooter}>
                   <button onClick={() => {

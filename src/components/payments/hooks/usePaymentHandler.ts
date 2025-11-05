@@ -190,7 +190,7 @@ export async function handlePaymentProcess(params: UsePaymentHandlerParams): Pro
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ paymentId: paymentResult.paymentId }),
+    body: JSON.stringify({ imp_uid: paymentResult.paymentId }),
   })
 
   const verifyData = await verifyResponse.json()

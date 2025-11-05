@@ -52,7 +52,7 @@ interface LikedProduct {
 export default function Wishlist() {
   const router = useRouter()
   const { user } = useAuth()
-  const [activeTab, setActiveTab] = useState<'stores' | 'products'>('stores')
+  const [activeTab, setActiveTab] = useState<'stores' | 'products'>('products')
   const [likedStores, setLikedStores] = useState<LikedStore[]>([])
   const [likedProducts, setLikedProducts] = useState<LikedProduct[]>([])
   const [loading, setLoading] = useState(true)
@@ -166,16 +166,16 @@ export default function Wishlist() {
 
       <div className={styles.tabs}>
         <button
-          className={`${styles.tab} ${activeTab === 'stores' ? styles.activeTab : ''}`}
-          onClick={() => setActiveTab('stores')}
-        >
-          찜한 가게
-        </button>
-        <button
           className={`${styles.tab} ${activeTab === 'products' ? styles.activeTab : ''}`}
           onClick={() => setActiveTab('products')}
         >
           찜한 상품
+        </button>
+        <button
+          className={`${styles.tab} ${activeTab === 'stores' ? styles.activeTab : ''}`}
+          onClick={() => setActiveTab('stores')}
+        >
+          찜한 가게
         </button>
       </div>
 
@@ -263,7 +263,7 @@ export default function Wishlist() {
               <div
                 key={product.id}
                 className={styles.productCard}
-                onClick={() => router.push(`/product/${product.productId}`)}
+                onClick={() => router.push(`/productDetail/${product.productId}`)}
               >
                 <div className={styles.productImageWrapper}>
                   {product.productImage ? (

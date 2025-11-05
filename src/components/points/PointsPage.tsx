@@ -22,6 +22,7 @@ interface PointHistory {
 }
 
 type FilterType = 'all' | 'earned' | 'used' | 'expired'
+type PeriodType = 'all' | '1month' | '2months' | '3months'
 
 export default function PointsPage() {
   const router = useRouter()
@@ -29,6 +30,8 @@ export default function PointsPage() {
   const [pointHistory, setPointHistory] = useState<PointHistory[]>([])
   const [currentBalance, setCurrentBalance] = useState(0)
   const [filter, setFilter] = useState<FilterType>('all')
+  const [period, setPeriod] = useState<PeriodType>('all')
+  const [showPeriodDropdown, setShowPeriodDropdown] = useState(false)
   const [showInfoModal, setShowInfoModal] = useState(false)
 
   useEffect(() => {
@@ -88,13 +91,36 @@ export default function PointsPage() {
     return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
   }
 
+  // 기간별 필터 텍스트
+  const getPeriodText = (periodType: PeriodType) => {
+    switch (periodType) {
+      case 'all': return '전체기간'
+      case '1month': return '1개월'
+      case '2months': return '2개월'
+      case '3months': return '3개월'
+      default: return '전체기간'
+    }
+  }
+
   // 필터링된 포인트 내역
   const filteredHistory = pointHistory.filter((item) => {
-    if (filter === 'all') return true
-    if (filter === 'earned') return item.type === 'earned'
-    if (filter === 'used') return item.type === 'used'
-    if (filter === 'expired') return item.type === 'expired'
-    return true
+    // 타입 필터
+    let typeMatch = true
+    if (filter === 'earned') typeMatch = item.type === 'earned'
+    else if (filter === 'used') typeMatch = item.type === 'used'
+    else if (filter === 'expired') typeMatch = item.type === 'expired'
+
+    // 기간 필터
+    let periodMatch = true
+    if (period !== 'all') {
+      const now = new Date()
+      const itemDate = item.createdAt.toDate()
+      const monthsAgo = period === '1month' ? 1 : period === '2months' ? 2 : 3
+      const startDate = new Date(now.getFullYear(), now.getMonth() - monthsAgo, now.getDate())
+      periodMatch = itemDate >= startDate
+    }
+
+    return typeMatch && periodMatch
   })
 
   if (loading) {
@@ -141,6 +167,60 @@ export default function PointsPage() {
           >
             소멸
           </button>
+
+          {/* 기간별 필터 드롭다운 */}
+          <div className={styles.periodDropdownContainer}>
+            <button
+              className={styles.periodButton}
+              onClick={() => setShowPeriodDropdown(!showPeriodDropdown)}
+            >
+              {getPeriodText(period)}
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M3 4.5L6 7.5L9 4.5" stroke="#333" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
+
+            {showPeriodDropdown && (
+              <div className={styles.periodDropdown}>
+                <button
+                  className={`${styles.periodOption} ${period === 'all' ? styles.periodOptionActive : ''}`}
+                  onClick={() => {
+                    setPeriod('all')
+                    setShowPeriodDropdown(false)
+                  }}
+                >
+                  전체기간
+                </button>
+                <button
+                  className={`${styles.periodOption} ${period === '1month' ? styles.periodOptionActive : ''}`}
+                  onClick={() => {
+                    setPeriod('1month')
+                    setShowPeriodDropdown(false)
+                  }}
+                >
+                  1개월
+                </button>
+                <button
+                  className={`${styles.periodOption} ${period === '2months' ? styles.periodOptionActive : ''}`}
+                  onClick={() => {
+                    setPeriod('2months')
+                    setShowPeriodDropdown(false)
+                  }}
+                >
+                  2개월
+                </button>
+                <button
+                  className={`${styles.periodOption} ${period === '3months' ? styles.periodOptionActive : ''}`}
+                  onClick={() => {
+                    setPeriod('3months')
+                    setShowPeriodDropdown(false)
+                  }}
+                >
+                  3개월
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* 포인트 안내사항 버튼 */}

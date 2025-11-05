@@ -37,12 +37,16 @@ export interface DeliveryInfo {
 export interface PaymentInfo {
   paymentId: string
   paidAt: Date
+  imp_uid?: string // PortOne V1 결제 ID
+  paid_at?: number // Unix 타임스탬프 (초 단위)
   paymentKey?: string
   orderId?: string
+  merchant_uid?: string
   amount?: number
   method?: string
   status?: string
   cancelledAt?: Date
+  cancelled_at?: number
 }
 
 export interface Order {

@@ -169,7 +169,7 @@ export default function OrderCard({
   }
 
   return (
-    <div className={`${styles.orderCard} ${isExpanded ? styles.orderCardExpanded : ''}`}>
+    <div className={`${styles.orderCard} ${order.orderStatus === 'pending' ? styles.orderCardPending : ''} ${isExpanded ? styles.orderCardExpanded : ''}`}>
       <div className={styles.cardContentWrapper}>
         <div className={styles.cardLeft}>
           <div className={styles.orderHeader}>
@@ -237,7 +237,7 @@ export default function OrderCard({
                     className={`${styles.actionBtn} ${styles.cancelBtn}`}
                     onClick={() => onOpenCancelModal(order.id!)}
                   >
-                    주문취소
+                    전체 주문 취소
                   </button>
                   <button
                     className={`${styles.actionBtn} ${styles.acceptBtn}`}
@@ -253,7 +253,7 @@ export default function OrderCard({
                     className={`${styles.actionBtn} ${styles.cancelBtn}`}
                     onClick={() => onOpenCancelModal(order.id!)}
                   >
-                    주문취소
+                    전체 주문 취소
                   </button>
                   <button
                     className={`${styles.actionBtn} ${styles.acceptBtn}`}

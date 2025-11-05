@@ -48,22 +48,15 @@ const formatOrderDate = (date: Date) => {
 }
 
 const getPaymentDate = (order: Order, paymentId: string) => {
-  let paymentDate = null
-  if (order.paymentInfo && Array.isArray(order.paymentInfo) && order.paymentInfo.length > 1) {
-    // 현재 paymentId 그룹이 몇 번째 추가 결제인지 찾기
-    const addItemPaymentIds = new Set<string>()
-    order.items.filter(item => item.isAddItem).forEach(item => {
-      if (item.paymentId) addItemPaymentIds.add(item.paymentId)
-    })
-
-    const sortedPaymentIds = Array.from(addItemPaymentIds).sort()
-    const paymentIndexOffset = sortedPaymentIds.indexOf(paymentId) + 1
-
-    if (paymentIndexOffset > 0 && order.paymentInfo[paymentIndexOffset]) {
-      paymentDate = order.paymentInfo[paymentIndexOffset].paidAt
+  // paymentInfo 배열에서 imp_uid가 paymentId와 일치하는 항목의 paid_at 값을 반환
+  if (order.paymentInfo && Array.isArray(order.paymentInfo)) {
+    const matchingPayment = order.paymentInfo.find((p: { imp_uid?: string; paid_at?: number }) => p.imp_uid === paymentId)
+    if (matchingPayment?.paid_at) {
+      // Unix 타임스탬프를 밀리초로 변환 (paid_at은 초 단위)
+      return matchingPayment.paid_at * 1000
     }
   }
-  return paymentDate
+  return null
 }
 
 export default function AdditionalOrderSection({ order }: Props) {
