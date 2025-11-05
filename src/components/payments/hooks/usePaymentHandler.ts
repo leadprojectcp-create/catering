@@ -20,6 +20,7 @@ interface UsePaymentHandlerParams {
   deliveryFee: number
   orderId: string | null
   searchParams: URLSearchParams
+  paymentType?: 'general' | 'easy'
   saveAddress: (address: Omit<DeliveryAddress, 'id'>) => Promise<DeliveryAddress>
   checkDuplicateAddress: (address: string, detailAddress: string) => Promise<boolean>
   onRouter: (path: string) => void
@@ -42,6 +43,7 @@ export async function handlePaymentProcess(params: UsePaymentHandlerParams): Pro
     deliveryFee,
     orderId,
     searchParams,
+    paymentType = 'general',
     saveAddress,
     checkDuplicateAddress,
     onRouter
@@ -172,6 +174,8 @@ export async function handlePaymentProcess(params: UsePaymentHandlerParams): Pro
     customerName: orderInfo.orderer,
     customerEmail: userEmail,
     customerPhoneNumber: orderInfo.phone,
+    customerUid: user?.uid,
+    paymentType: paymentType,
   })
 
   if (!paymentResult.success) {

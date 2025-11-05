@@ -90,23 +90,28 @@ env:
       - BUILD
       - RUNTIME
 
-  # PortOne Configuration
-  - variable: NEXT_PUBLIC_PORTONE_STORE_ID
-    value: store-ec72aef6-83e8-4d50-b4c9-a61bd5b3c03b
+  # PortOne V1 Configuration (Test Channels)
+  - variable: NEXT_PUBLIC_PORTONE_IMP_CODE
+    value: imp00240216
     availability:
       - BUILD
       - RUNTIME
-  - variable: NEXT_PUBLIC_PORTONE_CHANNEL_KEY
+  - variable: NEXT_PUBLIC_PORTONE_GENERAL_CHANNEL_KEY
     value: channel-key-b104be90-8bd3-4c6b-be01-7eb9c366af00
     availability:
       - BUILD
       - RUNTIME
-  - variable: PORTONE_API_SECRET
-    value: HSReeOPf8Rq0S9KnqhAiDXnYlgkrwTqZjdBxPMuvNWdwIHn0Q4SHW4j6pKFjFMAlUEM7qrejaLIF2PAq
+  - variable: NEXT_PUBLIC_PORTONE_EASY_CHANNEL_KEY
+    value: channel-key-5ebf141b-d42d-426d-a107-a3f96d6ab5cf
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: PORTONE_API_KEY
+    value: "0231267688217346"
     availability:
       - RUNTIME
-  - variable: PORTONE_WEBHOOK_SECRET
-    value: whsec_Pb4Cw6vtHxG55lZkG3E2T1uMUkCk9Ix/5RcBCcXxJYY=
+  - variable: PORTONE_API_SECRET
+    value: 3ejDNmCUmmjwNaPsqKidgy1FHFCtjnsBZlYoCQra1QXhpFw8usNhRIOeAisR3C8g3nplUjo9UZmCEUsY
     availability:
       - RUNTIME
 

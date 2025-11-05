@@ -16,6 +16,7 @@ import PickupDateTimeSection from './sections/PickupDateTimeSection'
 import DeliveryDateTimeSection from './sections/DeliveryDateTimeSection'
 import DeliveryRequestSection from './sections/DeliveryRequestSection'
 import PaymentSummarySection, { usePaymentSummary } from './sections/PaymentSummarySection'
+import PaymentTypeSection from './sections/PaymentTypeSection'
 import AgreementsSection from './sections/AgreementsSection'
 import { OrderData, DeliveryAddress } from './types'
 import PrivacyPolicy from '@/components/terms/PrivacyPolicy'
@@ -77,6 +78,7 @@ export default function PaymentsPage() {
     daysBeforeOrder: number
   }[]>([])
   const [totalQuantity, setTotalQuantity] = useState(0)
+  const [paymentType, setPaymentType] = useState<'general' | 'easy'>('general')
 
   useEffect(() => {
     const loadData = async () => {
@@ -377,6 +379,7 @@ export default function PaymentsPage() {
     agreements,
     orderId,
     searchParams,
+    paymentType,
     onUsePointChange: setUsePoint,
     onDeliveryFeeFromAPIChange: setDeliveryFeeFromAPI,
     onProcessingChange: setIsProcessing
@@ -491,6 +494,12 @@ export default function PaymentsPage() {
             )}
           </>
         )}
+
+        {/* 결제 타입 선택 */}
+        <PaymentTypeSection
+          paymentType={paymentType}
+          onPaymentTypeChange={setPaymentType}
+        />
 
         {/* 총 결제금액 */}
         <PaymentSummarySection

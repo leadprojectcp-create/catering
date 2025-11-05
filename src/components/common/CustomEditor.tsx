@@ -17,6 +17,7 @@ export default function CustomEditor({ value, onChange, placeholder, storeId, pr
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [showColorPicker, setShowColorPicker] = useState(false)
   const [selectedColor, setSelectedColor] = useState('#000000')
+  const [isUploading, setIsUploading] = useState(false)
   const isInitialMount = useRef(true)
 
   const colors = [
@@ -49,52 +50,68 @@ export default function CustomEditor({ value, onChange, placeholder, storeId, pr
   }, [onChange])
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
+    const files = e.target.files
+    if (!files || files.length === 0) return
+
+    // Convert FileList to Array to maintain order
+    const fileArray = Array.from(files)
+
+    setIsUploading(true)
 
     try {
-      const formData = new FormData()
-      formData.append('file', file)
-      formData.append('type', uploadType)
-      if (storeId) formData.append('storeId', storeId)
-      if (productId) formData.append('productId', productId)
-
-      const response = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData
-      })
-
-      if (!response.ok) throw new Error('이미지 업로드 실패')
-
-      const result = await response.json()
-
-      // Insert image directly into editor content
+      // Focus the editor first
       if (editorRef.current) {
-        // Wrap image in a div for better alignment control
-        const imgWrapper = `<div style="text-align: center;"><img src="${result.url}" alt="상품 이미지" style="max-width: 100%; height: auto; display: inline-block;" /></div>`
-
-        // Focus the editor first
         editorRef.current.focus()
-
-        // Try to use execCommand if selection exists, otherwise append to end
-        const selection = window.getSelection()
-        if (selection && selection.rangeCount > 0) {
-          try {
-            document.execCommand('insertHTML', false, imgWrapper)
-          } catch (error) {
-            // Fallback: append to the end of content
-            editorRef.current.innerHTML += imgWrapper
-          }
-        } else {
-          // No selection, append to end
-          editorRef.current.innerHTML += imgWrapper
-        }
-
-        handleInput()
       }
+
+      // Get the current selection position
+      const selection = window.getSelection()
+      let insertionPoint = editorRef.current
+
+      // Upload files sequentially in the order they were selected
+      for (const file of fileArray) {
+        const formData = new FormData()
+        formData.append('file', file)
+        formData.append('type', uploadType)
+        if (storeId) formData.append('storeId', storeId)
+        if (productId) formData.append('productId', productId)
+
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData
+        })
+
+        if (!response.ok) throw new Error('이미지 업로드 실패')
+
+        const result = await response.json()
+
+        // Insert image directly into editor content
+        if (insertionPoint) {
+          // Wrap image in a div without default alignment
+          const imgWrapper = `<div><img src="${result.url}" alt="상품 이미지" style="max-width: 100%; height: auto; display: inline-block;" /></div>`
+
+          // Try to use execCommand if selection exists, otherwise append to end
+          if (selection && selection.rangeCount > 0) {
+            try {
+              document.execCommand('insertHTML', false, imgWrapper)
+            } catch (error) {
+              // Fallback: append to the end of content
+              insertionPoint.innerHTML += imgWrapper
+            }
+          } else {
+            // No selection, append to end
+            insertionPoint.innerHTML += imgWrapper
+          }
+        }
+      }
+
+      // Update the value after all images are inserted
+      handleInput()
     } catch (error) {
       console.error('이미지 업로드 오류:', error)
       alert('이미지 업로드 중 오류가 발생했습니다.')
+    } finally {
+      setIsUploading(false)
     }
 
     // Reset input
@@ -277,6 +294,7 @@ export default function CustomEditor({ value, onChange, placeholder, storeId, pr
             ref={fileInputRef}
             type="file"
             accept="image/*"
+            multiple
             onChange={handleImageUpload}
             style={{ display: 'none' }}
           />
@@ -291,6 +309,13 @@ export default function CustomEditor({ value, onChange, placeholder, storeId, pr
         data-placeholder={placeholder}
         suppressContentEditableWarning
       />
+
+      {isUploading && (
+        <div className={styles.uploadingOverlay}>
+          <div className={styles.spinner}></div>
+          <p>이미지 업로드 중...</p>
+        </div>
+      )}
     </div>
   )
 }

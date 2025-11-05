@@ -362,6 +362,51 @@
   white-space: pre-wrap;
 }
 
+.memoSection {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.memoTextarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 80px;
+  outline: none;
+}
+
+.memoTextarea:focus {
+  border-color: #025BD9;
+}
+
+.memoSaveButton {
+  align-self: flex-end;
+  padding: 8px 20px;
+  border-radius: 5px;
+  border: 1px solid #025BD9;
+  background: #025BD9;
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.memoSaveButton:hover:not(:disabled) {
+  background: #0149a8;
+  border-color: #0149a8;
+}
+
+.memoSaveButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .printOrderButton {
   display: flex;
   padding: 10px 15px;

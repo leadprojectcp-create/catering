@@ -84,71 +84,32 @@ export default function CategoryProductList({ categoryName }: CategoryProductLis
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        console.log('카테고리:', categoryName)
+        // 이모지 제거한 카테고리 이름
+        const cleanCategoryName = categoryName.replace(/[❤️⚡]/g, '')
+        console.log('카테고리:', categoryName, '/ 정제된 이름:', cleanCategoryName)
 
         let productData: Product[] = []
 
-        // 답례품 카테고리인 경우
-        if (categoryName === '답례품') {
-          const productsQuery = query(
-            collection(db, 'products'),
-            where('additionalSettings', 'array-contains', '답례품'),
-            where('status', '==', 'active')
-          )
-          const productsSnapshot = await getDocs(productsQuery)
-          console.log('답례품 상품 수:', productsSnapshot.docs.length)
+        // 모든 카테고리를 동일하게 처리: products의 category 배열에서 조회
+        const productsQuery = query(
+          collection(db, 'products'),
+          where('category', 'array-contains', cleanCategoryName),
+          where('status', '==', 'active')
+        )
+        const productsSnapshot = await getDocs(productsQuery)
+        console.log('해당 카테고리 전체 상품 수:', productsSnapshot.docs.length)
 
-          productData = productsSnapshot.docs.map(docSnap => {
-            const data = docSnap.data()
-            console.log('상품 데이터:', data)
-            console.log('minOrderDays 값:', data.minOrderDays)
-            return {
-              id: docSnap.id,
-              ...data
-            } as Product
-          })
-        }
-        // 당일배송 카테고리인 경우
-        else if (categoryName === '당일배송') {
-          const productsQuery = query(
-            collection(db, 'products'),
-            where('additionalSettings', 'array-contains', '당일배송'),
-            where('status', '==', 'active')
-          )
-          const productsSnapshot = await getDocs(productsQuery)
-          console.log('당일배송 상품 수:', productsSnapshot.docs.length)
+        productData = productsSnapshot.docs.map(docSnap => {
+          const data = docSnap.data()
+          console.log('상품 데이터:', data)
+          console.log('minOrderDays 값:', data.minOrderDays)
+          return {
+            id: docSnap.id,
+            ...data
+          } as Product
+        })
 
-          productData = productsSnapshot.docs.map(docSnap => {
-            const data = docSnap.data()
-            console.log('상품 데이터:', data)
-            console.log('minOrderDays 값:', data.minOrderDays)
-            return {
-              id: docSnap.id,
-              ...data
-            } as Product
-          })
-        } else {
-          // 일반 카테고리의 경우: products의 category 배열에서 조회
-          const productsQuery = query(
-            collection(db, 'products'),
-            where('category', 'array-contains', categoryName),
-            where('status', '==', 'active')
-          )
-          const productsSnapshot = await getDocs(productsQuery)
-          console.log('해당 카테고리 전체 상품 수:', productsSnapshot.docs.length)
-
-          productData = productsSnapshot.docs.map(docSnap => {
-            const data = docSnap.data()
-            console.log('상품 데이터:', data)
-            console.log('minOrderDays 값:', data.minOrderDays)
-            return {
-              id: docSnap.id,
-              ...data
-            } as Product
-          })
-
-          console.log('active 상품 수:', productData.length)
-        }
+        console.log('active 상품 수:', productData.length)
 
         // 각 상품의 storeId로 storeName과 리뷰 정보 가져오기
         const productsWithStoreNameAndReviews = await Promise.all(

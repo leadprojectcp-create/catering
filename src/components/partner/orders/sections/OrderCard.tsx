@@ -32,6 +32,8 @@ export default function OrderCard({
   onPrint,
 }: OrderCardProps) {
   const [allowAdditionalOrder, setAllowAdditionalOrder] = useState(order.allowAdditionalOrder ?? false)
+  const [memo, setMemo] = useState(order.partnerMemo || '')
+  const [isSavingMemo, setIsSavingMemo] = useState(false)
 
   const handleToggleAdditionalOrder = async () => {
     if (!order.id) return
@@ -46,6 +48,24 @@ export default function OrderCard({
     } catch (error) {
       console.error('추가주문허용 업데이트 실패:', error)
       alert('업데이트에 실패했습니다.')
+    }
+  }
+
+  const handleSaveMemo = async () => {
+    if (!order.id) return
+
+    setIsSavingMemo(true)
+    try {
+      const orderRef = doc(db, 'orders', order.id)
+      await updateDoc(orderRef, {
+        partnerMemo: memo
+      })
+      alert('메모가 저장되었습니다.')
+    } catch (error) {
+      console.error('메모 저장 실패:', error)
+      alert('메모 저장에 실패했습니다.')
+    } finally {
+      setIsSavingMemo(false)
     }
   }
 
@@ -393,6 +413,26 @@ export default function OrderCard({
               <h3 className={styles.detailTitle}>매장요청</h3>
               <div className={styles.requestText}>
                 {order.request || order.detailedRequest || '요청사항이 없습니다.'}
+              </div>
+
+              <div className={styles.detailSectionDivider}></div>
+
+              <h3 className={styles.detailTitle}>메모</h3>
+              <div className={styles.memoSection}>
+                <textarea
+                  className={styles.memoTextarea}
+                  placeholder="주문에 대한 메모를 입력하세요"
+                  value={memo}
+                  onChange={(e) => setMemo(e.target.value)}
+                  rows={4}
+                />
+                <button
+                  className={styles.memoSaveButton}
+                  onClick={handleSaveMemo}
+                  disabled={isSavingMemo}
+                >
+                  {isSavingMemo ? '저장 중...' : '메모 저장'}
+                </button>
               </div>
             </div>
           </div>

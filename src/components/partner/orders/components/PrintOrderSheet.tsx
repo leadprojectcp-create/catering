@@ -110,6 +110,15 @@ export default function PrintOrderSheet({ order, driverInfo }: PrintOrderSheetPr
         </div>
       </div>
 
+      {order.partnerMemo && (
+        <div className={styles.section}>
+          <h2 className={styles.sectionTitle}>메모</h2>
+          <div className={styles.request}>
+            {order.partnerMemo}
+          </div>
+        </div>
+      )}
+
       {order.deliveryMethod === '퀵업체 배송' ? (
         <>
           {/* 퀵업체 배송 */}

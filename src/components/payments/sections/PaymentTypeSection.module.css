@@ -1,0 +1,91 @@
+.section {
+  margin-bottom: 32px;
+}
+
+.sectionTitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 16px;
+}
+
+.paymentTypeWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px;
+  border-radius: 20px;
+  border: 1px solid #F4F4F4;
+  background: #FFF;
+}
+
+.radioLabel {
+  display: flex;
+  cursor: pointer;
+}
+
+.radioLabel:has(input:disabled) {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.radioInput {
+  display: none;
+}
+
+.radioBox {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+}
+
+.radioCircle {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid #E0E0E0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  margin-top: 2px;
+}
+
+.radioInput:checked + .radioBox .radioCircle {
+  border-color: #2E5FE6;
+}
+
+.radioCircleInner {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #2E5FE6;
+}
+
+.radioContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.paymentTitle {
+  color: #333;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.paymentDescription {
+  color: #999;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+@media (max-width: 768px) {
+  .paymentDescription {
+    word-break: keep-all;
+  }
+}

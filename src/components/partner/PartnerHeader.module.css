@@ -427,6 +427,13 @@
   flex-shrink: 0;
 }
 
+/* 포스기 및 태블릿 반응형 */
+@media (max-width: 1024px) {
+  .container {
+    padding: 0 20px;
+  }
+}
+
 /* 모바일 반응형 */
 @media (max-width: 768px) {
   .container {

@@ -86,6 +86,7 @@ export interface Order {
   partnerNotified?: boolean
   partnerNotifiedAt?: Date | Timestamp | FieldValue
   allowAdditionalOrder?: boolean
+  partnerMemo?: string
   createdAt?: Date | Timestamp | FieldValue
   updatedAt?: Date | Timestamp | FieldValue
 }

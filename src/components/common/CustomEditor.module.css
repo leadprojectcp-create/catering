@@ -3,6 +3,7 @@
   border-radius: 8px;
   overflow: hidden;
   background: white;
+  position: relative;
 }
 
 .toolbar {
@@ -198,4 +199,47 @@
 
 .editorContent span {
   line-height: normal;
+}
+
+/* 업로드 오버레이 */
+.uploadingOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.9);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  z-index: 1000;
+  border-radius: 8px;
+}
+
+.uploadingOverlay p {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 500;
+  color: #333;
+}
+
+/* 스피너 애니메이션 */
+.spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #025BD9;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }

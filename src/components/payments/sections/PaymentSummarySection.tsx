@@ -43,6 +43,7 @@ interface PaymentSummarySectionProps {
   }
   orderId: string | null
   searchParams: URLSearchParams
+  paymentType?: 'general' | 'easy'
   onUsePointChange: (point: number) => void
   onDeliveryFeeFromAPIChange: (fee: number | null) => void
   onProcessingChange: (isProcessing: boolean) => void
@@ -509,7 +510,7 @@ export const usePaymentSummary = (props: Omit<PaymentSummarySectionProps, 'onPay
     user, deliveryMethod, deliveryFeeFromAPI, usePoint, parcelPaymentMethod,
     deliveryFeeSettings, orderData, orderInfo, recipient, addressName,
     deliveryRequest, detailedRequest, entranceCode, agreements, orderId,
-    searchParams, onProcessingChange
+    searchParams, paymentType = 'general', onProcessingChange
   } = props
 
   // 추가 주문인지 확인
@@ -593,6 +594,7 @@ export const usePaymentSummary = (props: Omit<PaymentSummarySectionProps, 'onPay
         deliveryFee,
         orderId,
         searchParams,
+        paymentType,
         saveAddress,
         checkDuplicateAddress,
         onRouter: (path: string) => router.push(path)
