@@ -50,6 +50,11 @@ function isValidData(data: unknown): data is DataType {
 - console.log는 개발 중에만 사용하고 제거
 - 에러 처리 시 적절한 에러 타입 지정
 
+## 워크플로우 규칙
+- **빌드하지 말 것**: 빌드는 사용자가 직접 테스트합니다
+- **Git 커밋/푸시 하지 말 것**: 코드 수정만 수행합니다
+- 사용자가 명시적으로 요청하지 않는 한 빌드 및 Git 작업을 수행하지 않습니다
+
 ## 커밋 전 체크리스트
 - TypeScript 빌드 에러 없음
 - ESLint 에러 없음 (warning은 허용)

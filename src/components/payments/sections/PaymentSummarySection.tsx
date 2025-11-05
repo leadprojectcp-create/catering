@@ -431,10 +431,12 @@ export default function PaymentSummarySection({
               <span className={styles.paymentLabel}>배송비</span>
               <span className={styles.paymentValue}>+{deliveryFee.toLocaleString()}원</span>
             </div>
-            <div className={styles.paymentRow}>
-              <span className={styles.paymentLabel}>배송비 프로모션</span>
-              <span className={styles.promotionValue}>-10,000원</span>
-            </div>
+            {totalProductPrice >= 300000 && (
+              <div className={styles.paymentRow}>
+                <span className={styles.paymentLabel}>배송비 프로모션</span>
+                <span className={styles.promotionValue}>-10,000원</span>
+              </div>
+            )}
           </>
         )}
         {!isAdditionalOrder && deliveryMethod === '택배 배송' && (
@@ -572,6 +574,12 @@ export const usePaymentSummary = (props: Omit<PaymentSummarySectionProps, 'onPay
     const agreementError = Validator.validateAgreements(agreements)
     if (agreementError) {
       alert(agreementError.message)
+      return
+    }
+
+    // 퀵업체 배송 시 배송비 조회 필수 검증 (추가 주문 제외)
+    if (!isAdditionalOrder && deliveryMethod === '퀵업체 배송' && !deliveryFeeFromAPI) {
+      alert('퀵업체 배송을 선택하셨습니다.\n반드시 "배송비 조회" 버튼을 눌러 배송비를 확인해주세요.')
       return
     }
 
