@@ -16,7 +16,6 @@ import PickupDateTimeSection from './sections/PickupDateTimeSection'
 import DeliveryDateTimeSection from './sections/DeliveryDateTimeSection'
 import DeliveryRequestSection from './sections/DeliveryRequestSection'
 import PaymentSummarySection, { usePaymentSummary } from './sections/PaymentSummarySection'
-import PaymentTypeSection from './sections/PaymentTypeSection'
 import AgreementsSection from './sections/AgreementsSection'
 import { OrderData, DeliveryAddress } from './types'
 import PrivacyPolicy from '@/components/terms/PrivacyPolicy'
@@ -78,7 +77,8 @@ export default function PaymentsPage() {
     daysBeforeOrder: number
   }[]>([])
   const [totalQuantity, setTotalQuantity] = useState(0)
-  const [paymentType, setPaymentType] = useState<'general' | 'easy'>('general')
+  // PortOne 결제창에서 결제 수단을 선택하므로 고정값 사용
+  const paymentMethod = 'card'
 
   useEffect(() => {
     const loadData = async () => {
@@ -361,7 +361,13 @@ export default function PaymentsPage() {
   }, [orderInfo.deliveryDate, orderInfo.deliveryTime, orderInfo.address])
 
   // usePaymentSummary hook 사용
-  const { handlePayment, totalPrice: calculatedTotalPrice } = usePaymentSummary({
+  const {
+    handlePayment,
+    totalPrice: calculatedTotalPrice,
+    actualPaymentAmount,
+    deliveryFeeRefund,
+    expectedPointReward
+  } = usePaymentSummary({
     user,
     deliveryMethod,
     deliveryFeeFromAPI,
@@ -379,7 +385,7 @@ export default function PaymentsPage() {
     agreements,
     orderId,
     searchParams,
-    paymentType,
+    paymentMethod,
     onUsePointChange: setUsePoint,
     onDeliveryFeeFromAPIChange: setDeliveryFeeFromAPI,
     onProcessingChange: setIsProcessing
@@ -495,12 +501,6 @@ export default function PaymentsPage() {
           </>
         )}
 
-        {/* 결제 타입 선택 */}
-        <PaymentTypeSection
-          paymentType={paymentType}
-          onPaymentTypeChange={setPaymentType}
-        />
-
         {/* 총 결제금액 */}
         <PaymentSummarySection
           user={user}
@@ -520,6 +520,7 @@ export default function PaymentsPage() {
           agreements={agreements}
           orderId={orderId}
           searchParams={searchParams}
+          paymentMethod={paymentMethod}
           onUsePointChange={setUsePoint}
           onDeliveryFeeFromAPIChange={setDeliveryFeeFromAPI}
           onProcessingChange={setIsProcessing}
@@ -551,7 +552,12 @@ export default function PaymentsPage() {
           onClick={handlePayment}
           className={styles.paymentButton}
         >
-          {calculatedTotalPrice.toLocaleString()}원 결제하기
+          {actualPaymentAmount < 0
+            ? `${Math.abs(actualPaymentAmount).toLocaleString()}P 적립하기`
+            : actualPaymentAmount === 0
+              ? '주문 완료하기'
+              : `${actualPaymentAmount.toLocaleString()}원 결제하기`
+          }
         </button>
       </div>
 

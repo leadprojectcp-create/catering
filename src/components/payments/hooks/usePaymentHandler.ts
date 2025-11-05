@@ -20,7 +20,7 @@ interface UsePaymentHandlerParams {
   deliveryFee: number
   orderId: string | null
   searchParams: URLSearchParams
-  paymentType?: 'general' | 'easy'
+  paymentMethod: 'card' | 'kakaopay' | 'naverpay'
   saveAddress: (address: Omit<DeliveryAddress, 'id'>) => Promise<DeliveryAddress>
   checkDuplicateAddress: (address: string, detailAddress: string) => Promise<boolean>
   onRouter: (path: string) => void
@@ -43,7 +43,7 @@ export async function handlePaymentProcess(params: UsePaymentHandlerParams): Pro
     deliveryFee,
     orderId,
     searchParams,
-    paymentType = 'general',
+    paymentMethod,
     saveAddress,
     checkDuplicateAddress,
     onRouter
@@ -82,7 +82,11 @@ export async function handlePaymentProcess(params: UsePaymentHandlerParams): Pro
   const storeDoc = await getDoc(doc(db, 'stores', orderData.storeId))
   const storeData = storeDoc.exists() ? storeDoc.data() : null
 
-  // 추가 주문인 경우 기존 주문 확인
+  // 추가 주문 시 배송비 환급 계산
+  let deliveryFeeRefund = 0
+  let actualPaymentAmount = totalPrice
+
+  // 추가 주문인 경우 기존 주문 확인 및 무료 배송 조건 체크
   if (additionalOrderIdParam) {
     const orderDocRef = doc(db, 'orders', orderId!)
     const orderDocSnap = await getDoc(orderDocRef)
@@ -91,41 +95,76 @@ export async function handlePaymentProcess(params: UsePaymentHandlerParams): Pro
       alert('주문 정보를 찾을 수 없습니다.')
       return false
     }
+
+    const existingOrderData = orderDocSnap.data()
+    const currentTotalProductPrice = existingOrderData?.totalProductPrice || 0
+    const currentDeliveryFee = existingOrderData?.deliveryFee || 0
+
+    // 추가 주문 후 총 상품 금액
+    const newTotalProductPrice = currentTotalProductPrice + totalProductPrice
+
+    // 배송비 무료 조건 확인
+    const freeDeliveryThreshold = storeData?.freeDeliveryThreshold || 0
+    const hadDeliveryFee = currentDeliveryFee > 0
+    const meetsCondition = freeDeliveryThreshold > 0 && newTotalProductPrice >= freeDeliveryThreshold
+
+    // 기존에 배송비를 냈고, 이제 무료 배송 조건을 달성한 경우
+    if (hadDeliveryFee && meetsCondition) {
+      deliveryFeeRefund = currentDeliveryFee
+      // 실제 결제 금액 = 추가 주문 금액 - 배송비 환급
+      actualPaymentAmount = Math.max(0, totalPrice - deliveryFeeRefund)
+
+      console.log('🎉 무료 배송 조건 달성!')
+      console.log('추가 주문 금액:', totalPrice)
+      console.log('배송비 환급:', deliveryFeeRefund)
+      console.log('실제 결제 금액:', actualPaymentAmount)
+    }
   }
 
-  // 포트원 결제창 호출 (결제 검증 전에는 DB에 아무것도 저장하지 않음)
-  const paymentResult = await requestPayment({
-    orderName: `${orderData.productName} ${orderData.items.length > 1 ? `외 ${orderData.items.length - 1}건` : ''}`,
-    amount: totalPrice,
-    orderId: cartIdParam || orderId || 'temp',
-    customerName: orderInfo.orderer,
-    customerEmail: userEmail,
-    customerPhoneNumber: orderInfo.phone,
-    customerUid: user?.uid,
-    paymentType: paymentType,
-  })
+  // 결제 금액이 0원이면 결제창 없이 포인트 적립만 처리
+  let paymentResult: { success: boolean; paymentId?: string; errorMessage?: string } = { success: false }
+  let verifyData: { verified: boolean; payment?: unknown } = { verified: false }
 
-  if (!paymentResult.success) {
-    alert(`결제에 실패했습니다.\n${paymentResult.errorMessage || '알 수 없는 오류'}`)
-    return false
-  }
+  if (actualPaymentAmount > 0) {
+    // 포트원 결제창 호출 (실제 결제 금액으로)
+    paymentResult = await requestPayment({
+      orderName: `${orderData.productName} ${orderData.items.length > 1 ? `외 ${orderData.items.length - 1}건` : ''}`,
+      amount: actualPaymentAmount,
+      orderId: cartIdParam || orderId || 'temp',
+      customerName: orderInfo.orderer,
+      customerEmail: userEmail,
+      customerPhoneNumber: orderInfo.phone,
+      customerUid: user?.uid,
+      payMethod: paymentMethod,
+    })
 
-  // 서버에서 결제 검증
-  console.log('결제 검증 시작:', paymentResult.paymentId)
-  const verifyResponse = await fetch('/api/payments/verify', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ imp_uid: paymentResult.paymentId }),
-  })
+    if (!paymentResult.success) {
+      alert(`결제에 실패했습니다.\n${paymentResult.errorMessage || '알 수 없는 오류'}`)
+      return false
+    }
 
-  const verifyData = await verifyResponse.json()
-  console.log('결제 검증 결과:', verifyData)
+    // 서버에서 결제 검증
+    console.log('결제 검증 시작:', paymentResult.paymentId)
+    const verifyResponse = await fetch('/api/payments/verify', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ imp_uid: paymentResult.paymentId }),
+    })
 
-  if (!verifyData.verified) {
-    alert('결제 검증에 실패했습니다. 고객센터에 문의해주세요.')
-    return false
+    verifyData = await verifyResponse.json()
+    console.log('결제 검증 결과:', verifyData)
+
+    if (!verifyData.verified) {
+      alert('결제 검증에 실패했습니다. 고객센터에 문의해주세요.')
+      return false
+    }
+  } else {
+    // 결제 금액이 0원인 경우: 결제 없이 포인트 적립만 처리
+    console.log('🎉 결제 금액 0원 - 포인트 적립만 처리')
+    paymentResult = { success: true }
+    verifyData = { verified: true }
   }
 
   // ✅ 결제 검증 성공! 이제 DB에 저장 시작
@@ -206,32 +245,42 @@ export async function handlePaymentProcess(params: UsePaymentHandlerParams): Pro
       : [existingOrderData.paymentId]
   }
 
-  const normalizedPayment = {
-    ...verifyData.payment,
-    status: verifyData.payment.status?.toLowerCase()
-  }
-  paymentInfoArray.push(normalizedPayment)
-  if (paymentResult.paymentId) {
-    paymentIdArray.push(paymentResult.paymentId)
+  // actualPaymentAmount가 0보다 클 때만 결제 정보 저장
+  if (actualPaymentAmount > 0 && verifyData.payment) {
+    const payment = verifyData.payment as { status?: string; [key: string]: unknown }
+    const normalizedPayment = {
+      ...payment,
+      status: payment.status?.toLowerCase()
+    }
+    paymentInfoArray.push(normalizedPayment)
+    if (paymentResult.paymentId) {
+      paymentIdArray.push(paymentResult.paymentId)
+    }
   }
 
   // 장바구니에서 생성된 경우: 이미 모든 정보가 저장되어 있으므로 paymentInfo만 업데이트
   if (cartIdParam && !additionalOrderIdParam) {
-    const currentPaymentId = paymentIdArray[paymentIdArray.length - 1]
+    const currentPaymentId = paymentIdArray.length > 0 ? paymentIdArray[paymentIdArray.length - 1] : undefined
     const existingItems = existingOrderData?.items || []
 
     const itemsWithPaymentId = existingItems.map((item: OrderItem) => ({
       ...item,
-      paymentId: currentPaymentId,
+      ...(currentPaymentId && { paymentId: currentPaymentId }),
       isAddItem: false
     }))
 
-    await updateDoc(orderRef, {
-      paymentInfo: paymentInfoArray,
-      paymentId: paymentIdArray,
+    const updateData: Record<string, unknown> = {
       items: itemsWithPaymentId,
       verifiedAt: new Date().toISOString()
-    })
+    }
+
+    // actualPaymentAmount가 0보다 클 때만 paymentInfo, paymentId 저장
+    if (actualPaymentAmount > 0) {
+      updateData.paymentInfo = paymentInfoArray
+      updateData.paymentId = paymentIdArray
+    }
+
+    await updateDoc(orderRef, updateData)
     console.log('✅ 장바구니 주문 결제 정보 업데이트 완료')
   }
   // 추가 주문인 경우
@@ -250,35 +299,91 @@ export async function handlePaymentProcess(params: UsePaymentHandlerParams): Pro
       const currentTotalProductPrice = existingOrderData?.totalProductPrice || 0
       const currentTotalQuantity = existingOrderData?.totalQuantity || 0
       const currentTotalPrice = existingOrderData?.totalPrice || 0
-      const currentPaymentId = paymentIdArray[paymentIdArray.length - 1]
+      const currentPaymentId = paymentIdArray.length > 0 ? paymentIdArray[paymentIdArray.length - 1] : undefined
+
+      // 추가 주문 후 총 상품 금액
+      const newTotalProductPrice = currentTotalProductPrice + (additionalData.totalProductPrice || 0)
 
       const itemsWithPaymentId = newItems.map((item: OrderItem) => ({
         ...item,
-        paymentId: currentPaymentId,
+        ...(currentPaymentId && { paymentId: currentPaymentId }),
         isAddItem: true
       }))
 
-      await updateDoc(orderRef, {
+      // 실제 결제한 금액만 totalPrice에 추가
+      const updateData: Record<string, unknown> = {
         paymentStatus: 'paid',
-        paymentInfo: paymentInfoArray,
-        paymentId: paymentIdArray,
         items: [...existingItems, ...itemsWithPaymentId],
-        totalProductPrice: currentTotalProductPrice + (additionalData.totalProductPrice || 0),
+        totalProductPrice: newTotalProductPrice,
         totalQuantity: currentTotalQuantity + (additionalData.totalQuantity || 0),
-        totalPrice: currentTotalPrice + totalPrice,
+        totalPrice: currentTotalPrice + actualPaymentAmount,
         verifiedAt: new Date().toISOString(),
         updatedAt: new Date(),
         addTotalProductPrice: deleteField(),
         addTotalQuantity: deleteField()
-      })
+      }
+
+      // actualPaymentAmount가 0보다 클 때만 paymentInfo, paymentId 저장
+      if (actualPaymentAmount > 0) {
+        updateData.paymentInfo = paymentInfoArray
+        updateData.paymentId = paymentIdArray
+      }
+
+      await updateDoc(orderRef, updateData)
+
+      // 배송비 환급이 있는 경우 포인트 적립 처리
+      if (deliveryFeeRefund > 0 && user) {
+        // 실제 적립 금액 = 배송비 - 추가 주문 금액
+        const pointAmount = deliveryFeeRefund - totalPrice
+
+        if (pointAmount > 0) {
+          try {
+            const userRef = doc(db, 'users', user.uid)
+            await updateDoc(userRef, {
+              point: increment(pointAmount)
+            })
+
+            await addDoc(collection(db, 'points'), {
+              uid: user.uid,
+              amount: pointAmount,
+              type: 'earned',
+              reason: '추가 주문으로 무료 배송 조건 달성',
+              orderId: finalOrderId,
+              productId: orderData?.productId || '',
+              productName: orderData?.productName || '',
+              isRefundable: true,
+              createdAt: serverTimestamp()
+            })
+
+            console.log('✅ 배송비 차액 포인트 적립 완료:', pointAmount)
+          } catch (pointError) {
+            console.error('포인트 적립 실패:', pointError)
+          }
+        }
+      }
 
       console.log('✅ 추가 주문 결제 완료:', {
-        기존: currentTotalPrice,
-        추가: totalPrice,
-        합계: currentTotalPrice + totalPrice
+        기존총액: currentTotalPrice,
+        추가주문금액: totalPrice,
+        실제결제금액: actualPaymentAmount,
+        배송비환급: deliveryFeeRefund,
+        포인트적립: deliveryFeeRefund > 0 ? deliveryFeeRefund - totalPrice : 0,
+        최종총액: currentTotalPrice + actualPaymentAmount
       })
 
       sessionStorage.removeItem('additionalOrderData')
+
+      // 배송비 환급이 있는 경우 사용자에게 알림
+      if (deliveryFeeRefund > 0) {
+        const pointAmount = deliveryFeeRefund - totalPrice
+        setTimeout(() => {
+          if (pointAmount > 0) {
+            alert(`🎉 무료 배송 조건을 달성하셨습니다!\n결제 금액: ${actualPaymentAmount.toLocaleString()}원\n포인트 적립: ${pointAmount.toLocaleString()}원`)
+          } else {
+            alert(`🎉 무료 배송 조건을 달성하셨습니다!\n결제 금액: ${actualPaymentAmount.toLocaleString()}원`)
+          }
+        }, 100)
+      }
     } catch (error) {
       console.error('[Payment] 추가 주문 처리 실패:', error)
       alert('추가 주문 처리에 실패했습니다.')
@@ -287,22 +392,28 @@ export async function handlePaymentProcess(params: UsePaymentHandlerParams): Pro
   }
   // 일반 주문 (바로 구매)인 경우
   else {
-    const currentPaymentId = paymentIdArray[paymentIdArray.length - 1]
+    const currentPaymentId = paymentIdArray.length > 0 ? paymentIdArray[paymentIdArray.length - 1] : undefined
     const existingItems = existingOrderData?.items || []
 
     const itemsWithPaymentId = existingItems.map((item: OrderItem) => ({
       ...item,
-      paymentId: currentPaymentId,
+      ...(currentPaymentId && { paymentId: currentPaymentId }),
       isAddItem: false
     }))
 
-    await updateDoc(orderRef, {
+    const updateData: Record<string, unknown> = {
       paymentStatus: 'paid',
-      paymentInfo: paymentInfoArray,
-      paymentId: paymentIdArray,
       items: itemsWithPaymentId,
       verifiedAt: new Date().toISOString()
-    })
+    }
+
+    // actualPaymentAmount가 0보다 클 때만 paymentInfo, paymentId 저장
+    if (actualPaymentAmount > 0) {
+      updateData.paymentInfo = paymentInfoArray
+      updateData.paymentId = paymentIdArray
+    }
+
+    await updateDoc(orderRef, updateData)
     console.log('✅ 일반 주문 결제 정보 업데이트 완료')
   }
 

@@ -18,8 +18,6 @@ interface PaymentParams {
   buyer_email: string
   buyer_name: string
   buyer_tel: string
-  customer_id?: string
-  customer_uid?: string
   m_redirect_url?: string
 }
 
@@ -40,8 +38,7 @@ export interface PaymentRequest {
   customerEmail: string
   customerPhoneNumber: string
   customerUid?: string
-  paymentType?: 'general' | 'easy'
-  payMethod?: 'card' | 'trans' | 'vbank' | 'phone' | 'kakao' | 'kakaopay' | 'tosspay' | 'naverpay'
+  payMethod: 'card' | 'kakaopay' | 'naverpay'
 }
 
 // 결제 결과 타입
@@ -91,28 +88,11 @@ export const requestPayment = async (
     // 결제 ID 생성
     const merchantUid = `order-${request.orderId}-${Date.now()}`
 
-    // paymentType에 따라 채널 키 선택
-    const paymentType = request.paymentType || 'general'
-    let channelKey = ''
+    // 일반결제 채널 키 사용
+    const channelKey = process.env.NEXT_PUBLIC_PORTONE_GENERAL_CHANNEL_KEY!
 
-    if (paymentType === 'easy') {
-      // 간편결제 채널
-      channelKey = process.env.NEXT_PUBLIC_PORTONE_EASY_CHANNEL_KEY!
-    } else {
-      // 일반결제 채널
-      channelKey = process.env.NEXT_PUBLIC_PORTONE_GENERAL_CHANNEL_KEY!
-    }
-
-    // paymentType에 따라 pay_method 선택
-    let payMethod = ''
-    if (paymentType === 'easy') {
-      payMethod = 'kakaopay'
-    } else {
-      payMethod = request.payMethod || 'card'
-    }
-
-    // 간편결제(브랜드페이)인 경우 customer_id 사용 (Firebase UID)
-    const customerId = paymentType === 'easy' ? request.customerUid : undefined
+    // 결제 수단
+    const payMethod = request.payMethod
 
     // 결제 요청
     return new Promise((resolve) => {
@@ -126,7 +106,6 @@ export const requestPayment = async (
           buyer_email: request.customerEmail,
           buyer_name: request.customerName,
           buyer_tel: request.customerPhoneNumber,
-          customer_id: customerId,
           m_redirect_url: `${window.location.origin}/payments/complete?orderId=${request.orderId}`,
         },
         (response) => {

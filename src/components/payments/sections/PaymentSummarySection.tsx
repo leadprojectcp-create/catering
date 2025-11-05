@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { doc, getDoc, updateDoc, addDoc, collection } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
@@ -43,7 +43,7 @@ interface PaymentSummarySectionProps {
   }
   orderId: string | null
   searchParams: URLSearchParams
-  paymentType?: 'general' | 'easy'
+  paymentMethod: 'card' | 'kakaopay' | 'naverpay'
   onUsePointChange: (point: number) => void
   onDeliveryFeeFromAPIChange: (fee: number | null) => void
   onProcessingChange: (isProcessing: boolean) => void
@@ -68,6 +68,7 @@ export default function PaymentSummarySection({
   agreements,
   orderId,
   searchParams,
+  paymentMethod,
   onUsePointChange,
   onDeliveryFeeFromAPIChange,
   onProcessingChange,
@@ -100,7 +101,72 @@ export default function PaymentSummarySection({
     orderId
   })
 
-  // 총 결제금액
+  // 배송비 환급 및 포인트 적립 계산 (추가 주문인 경우)
+  const [deliveryFeeRefund, setDeliveryFeeRefund] = useState(0)
+  const [expectedPointReward, setExpectedPointReward] = useState(0)
+
+  // 추가 주문 시 배송비 환급 계산
+  useEffect(() => {
+    const calculateRefund = async () => {
+      if (!isAdditionalOrder || !orderId || !orderData) return
+
+      try {
+        // 기존 주문 정보 가져오기
+        const orderDocRef = doc(db, 'orders', orderId)
+        const orderDocSnap = await getDoc(orderDocRef)
+
+        if (!orderDocSnap.exists()) return
+
+        const existingOrderData = orderDocSnap.data()
+        const currentTotalProductPrice = existingOrderData?.totalProductPrice || 0
+        const currentDeliveryFee = existingOrderData?.deliveryFee || 0
+
+        // 추가 주문 후 총 상품 금액
+        const newTotalProductPrice = currentTotalProductPrice + totalProductPrice
+
+        // 가게 정보 가져오기
+        const storeDoc = await getDoc(doc(db, 'stores', orderData.storeId))
+        const storeData = storeDoc.exists() ? storeDoc.data() : null
+        const freeDeliveryThreshold = storeData?.freeDeliveryThreshold || 0
+
+        // 배송비 무료 조건 확인
+        const hadDeliveryFee = currentDeliveryFee > 0
+        const meetsCondition = freeDeliveryThreshold > 0 && newTotalProductPrice >= freeDeliveryThreshold
+
+        // 기존에 배송비를 냈고, 이제 무료 배송 조건을 달성한 경우
+        if (hadDeliveryFee && meetsCondition) {
+          const refund = currentDeliveryFee
+          const pointAmount = Math.max(0, refund - totalProductPrice)
+
+          setDeliveryFeeRefund(refund)
+          setExpectedPointReward(pointAmount)
+
+          console.log('🎉 무료 배송 조건 달성 예상!')
+          console.log('추가 주문 금액:', totalProductPrice)
+          console.log('배송비 환급:', refund)
+          console.log('실제 결제 금액:', Math.max(0, totalProductPrice - refund))
+          console.log('포인트 적립 예상:', pointAmount)
+        } else {
+          setDeliveryFeeRefund(0)
+          setExpectedPointReward(0)
+        }
+      } catch (error) {
+        console.error('배송비 환급 계산 실패:', error)
+      }
+    }
+
+    calculateRefund()
+  }, [isAdditionalOrder, orderId, orderData, totalProductPrice])
+
+  // 실제 결제 금액 (배송비 환급 반영) - 음수 가능
+  const actualPaymentAmount = useMemo(() => {
+    if (deliveryFeeRefund > 0) {
+      return totalProductPrice - deliveryFeeRefund - usePoint
+    }
+    return calculateTotalPrice(totalProductPrice, deliveryFee, deliveryPromotion, usePoint)
+  }, [totalProductPrice, deliveryFee, deliveryPromotion, usePoint, deliveryFeeRefund])
+
+  // 총 결제금액 (화면 표시용)
   const totalPrice = useMemo(() =>
     calculateTotalPrice(totalProductPrice, deliveryFee, deliveryPromotion, usePoint)
   , [totalProductPrice, deliveryFee, deliveryPromotion, usePoint])
@@ -261,6 +327,7 @@ export default function PaymentSummarySection({
         customerName: orderInfo.orderer,
         customerEmail: userEmail,
         customerPhoneNumber: orderInfo.phone,
+        payMethod: paymentMethod,
       })
 
       if (!paymentResult.success) {
@@ -453,15 +520,26 @@ export default function PaymentSummarySection({
             </span>
           </div>
         )}
-        {isAdditionalOrder && deliveryMethod === '택배 배송' && deliveryFee !== 0 && (
-          <div className={styles.paymentRow}>
-            <span className={styles.paymentLabel}>
-              {deliveryFee < 0 ? '배송비 환불' : '추가 배송비'}
-            </span>
-            <span className={deliveryFee < 0 ? styles.promotionValue : styles.paymentValue}>
-              {deliveryFee < 0 ? '' : '+'}{deliveryFee.toLocaleString()}원
-            </span>
-          </div>
+        {isAdditionalOrder && (
+          <>
+            {deliveryFeeRefund > 0 ? (
+              <div className={styles.paymentRow}>
+                <span className={styles.paymentLabel}>🎉 무료 배송 조건 달성! 포인트 적립</span>
+                <span className={styles.promotionValue}>+{expectedPointReward.toLocaleString()}P</span>
+              </div>
+            ) : (
+              deliveryMethod === '택배 배송' && deliveryFee !== 0 && (
+                <div className={styles.paymentRow}>
+                  <span className={styles.paymentLabel}>
+                    {deliveryFee < 0 ? '배송비 환불' : '추가 배송비'}
+                  </span>
+                  <span className={deliveryFee < 0 ? styles.promotionValue : styles.paymentValue}>
+                    {deliveryFee < 0 ? '' : '+'}{deliveryFee.toLocaleString()}원
+                  </span>
+                </div>
+              )
+            )}
+          </>
         )}
         <div className={styles.paymentRowPoint}>
           <span className={styles.paymentLabel}>포인트</span>
@@ -497,7 +575,12 @@ export default function PaymentSummarySection({
         </div>
         <div className={styles.paymentTotal}>
           <span>총 결제금액</span>
-          <span className={styles.finalPrice}>{totalPrice.toLocaleString()}원</span>
+          <span className={styles.finalPrice}>
+            {(isAdditionalOrder && deliveryFeeRefund > 0
+              ? actualPaymentAmount
+              : totalPrice
+            ).toLocaleString()}원
+          </span>
         </div>
       </div>
     </section>
@@ -512,7 +595,7 @@ export const usePaymentSummary = (props: Omit<PaymentSummarySectionProps, 'onPay
     user, deliveryMethod, deliveryFeeFromAPI, usePoint, parcelPaymentMethod,
     deliveryFeeSettings, orderData, orderInfo, recipient, addressName,
     deliveryRequest, detailedRequest, entranceCode, agreements, orderId,
-    searchParams, paymentType = 'general', onProcessingChange
+    searchParams, paymentMethod, onProcessingChange
   } = props
 
   // 추가 주문인지 확인
@@ -539,6 +622,65 @@ export const usePaymentSummary = (props: Omit<PaymentSummarySectionProps, 'onPay
 
   // 총 결제금액
   const totalPrice = calculateTotalPrice(totalProductPrice, deliveryFee, deliveryPromotion, usePoint)
+
+  // 배송비 환급 및 포인트 적립 계산 (추가 주문인 경우)
+  const [deliveryFeeRefund, setDeliveryFeeRefund] = useState(0)
+  const [expectedPointReward, setExpectedPointReward] = useState(0)
+
+  // 추가 주문 시 배송비 환급 계산
+  useEffect(() => {
+    const calculateRefund = async () => {
+      if (!isAdditionalOrder || !orderId || !orderData) return
+
+      try {
+        // 기존 주문 정보 가져오기
+        const orderDocRef = doc(db, 'orders', orderId)
+        const orderDocSnap = await getDoc(orderDocRef)
+
+        if (!orderDocSnap.exists()) return
+
+        const existingOrderData = orderDocSnap.data()
+        const currentTotalProductPrice = existingOrderData?.totalProductPrice || 0
+        const currentDeliveryFee = existingOrderData?.deliveryFee || 0
+
+        // 추가 주문 후 총 상품 금액
+        const newTotalProductPrice = currentTotalProductPrice + totalProductPrice
+
+        // 가게 정보 가져오기
+        const storeDoc = await getDoc(doc(db, 'stores', orderData.storeId))
+        const storeData = storeDoc.exists() ? storeDoc.data() : null
+        const freeDeliveryThreshold = storeData?.freeDeliveryThreshold || 0
+
+        // 배송비 무료 조건 확인
+        const hadDeliveryFee = currentDeliveryFee > 0
+        const meetsCondition = freeDeliveryThreshold > 0 && newTotalProductPrice >= freeDeliveryThreshold
+
+        // 기존에 배송비를 냈고, 이제 무료 배송 조건을 달성한 경우
+        if (hadDeliveryFee && meetsCondition) {
+          const refund = currentDeliveryFee
+          const pointAmount = Math.max(0, refund - totalProductPrice)
+
+          setDeliveryFeeRefund(refund)
+          setExpectedPointReward(pointAmount)
+        } else {
+          setDeliveryFeeRefund(0)
+          setExpectedPointReward(0)
+        }
+      } catch (error) {
+        console.error('배송비 환급 계산 실패:', error)
+      }
+    }
+
+    calculateRefund()
+  }, [isAdditionalOrder, orderId, orderData, totalProductPrice])
+
+  // 실제 결제 금액 (배송비 환급 반영) - 음수 가능
+  const actualPaymentAmount = useMemo(() => {
+    if (deliveryFeeRefund > 0) {
+      return totalProductPrice - deliveryFeeRefund - usePoint
+    }
+    return calculateTotalPrice(totalProductPrice, deliveryFee, deliveryPromotion, usePoint)
+  }, [totalProductPrice, deliveryFee, deliveryPromotion, usePoint, deliveryFeeRefund])
 
   const handlePayment = async () => {
     // 이메일 가져오기
@@ -602,7 +744,7 @@ export const usePaymentSummary = (props: Omit<PaymentSummarySectionProps, 'onPay
         deliveryFee,
         orderId,
         searchParams,
-        paymentType,
+        paymentMethod,
         saveAddress,
         checkDuplicateAddress,
         onRouter: (path: string) => router.push(path)
@@ -615,5 +757,11 @@ export const usePaymentSummary = (props: Omit<PaymentSummarySectionProps, 'onPay
     }
   }
 
-  return { handlePayment, totalPrice }
+  return {
+    handlePayment,
+    totalPrice,
+    actualPaymentAmount,
+    deliveryFeeRefund,
+    expectedPointReward
+  }
 }

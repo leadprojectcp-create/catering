@@ -101,11 +101,6 @@ env:
     availability:
       - BUILD
       - RUNTIME
-  - variable: NEXT_PUBLIC_PORTONE_EASY_CHANNEL_KEY
-    value: channel-key-5ebf141b-d42d-426d-a107-a3f96d6ab5cf
-    availability:
-      - BUILD
-      - RUNTIME
   - variable: PORTONE_API_KEY
     value: "0231267688217346"
     availability:

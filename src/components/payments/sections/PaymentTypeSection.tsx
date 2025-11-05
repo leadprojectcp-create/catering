@@ -3,13 +3,13 @@
 import styles from './PaymentTypeSection.module.css'
 
 interface PaymentTypeSectionProps {
-  paymentType: 'general' | 'easy'
-  onPaymentTypeChange: (type: 'general' | 'easy') => void
+  paymentMethod: 'card' | 'kakaopay' | 'naverpay'
+  onPaymentMethodChange: (method: 'card' | 'kakaopay' | 'naverpay') => void
 }
 
 export default function PaymentTypeSection({
-  paymentType,
-  onPaymentTypeChange
+  paymentMethod,
+  onPaymentMethodChange
 }: PaymentTypeSectionProps) {
   return (
     <section className={styles.section}>
@@ -18,15 +18,15 @@ export default function PaymentTypeSection({
         <label className={styles.radioLabel}>
           <input
             type="radio"
-            name="paymentType"
-            value="general"
-            checked={paymentType === 'general'}
-            onChange={() => onPaymentTypeChange('general')}
+            name="paymentMethod"
+            value="card"
+            checked={paymentMethod === 'card'}
+            onChange={() => onPaymentMethodChange('card')}
             className={styles.radioInput}
           />
           <div className={styles.radioBox}>
             <span className={styles.radioCircle}>
-              {paymentType === 'general' && <span className={styles.radioCircleInner} />}
+              {paymentMethod === 'card' && <span className={styles.radioCircleInner} />}
             </span>
             <div className={styles.radioContent}>
               <div className={styles.paymentTitle}>일반결제</div>
@@ -40,20 +40,42 @@ export default function PaymentTypeSection({
         <label className={styles.radioLabel}>
           <input
             type="radio"
-            name="paymentType"
-            value="easy"
-            checked={paymentType === 'easy'}
-            onChange={() => onPaymentTypeChange('easy')}
+            name="paymentMethod"
+            value="kakaopay"
+            checked={paymentMethod === 'kakaopay'}
+            onChange={() => onPaymentMethodChange('kakaopay')}
             className={styles.radioInput}
           />
           <div className={styles.radioBox}>
             <span className={styles.radioCircle}>
-              {paymentType === 'easy' && <span className={styles.radioCircleInner} />}
+              {paymentMethod === 'kakaopay' && <span className={styles.radioCircleInner} />}
             </span>
             <div className={styles.radioContent}>
-              <div className={styles.paymentTitle}>간편결제</div>
+              <div className={styles.paymentTitle}>카카오페이</div>
               <div className={styles.paymentDescription}>
-                (카카오페이, 네이버페이, 토스페이, 애플페이, 삼성페이, 페이코, L-pay, SSG 페이)
+                간편결제
+              </div>
+            </div>
+          </div>
+        </label>
+
+        <label className={styles.radioLabel}>
+          <input
+            type="radio"
+            name="paymentMethod"
+            value="naverpay"
+            checked={paymentMethod === 'naverpay'}
+            onChange={() => onPaymentMethodChange('naverpay')}
+            className={styles.radioInput}
+          />
+          <div className={styles.radioBox}>
+            <span className={styles.radioCircle}>
+              {paymentMethod === 'naverpay' && <span className={styles.radioCircleInner} />}
+            </span>
+            <div className={styles.radioContent}>
+              <div className={styles.paymentTitle}>네이버페이</div>
+              <div className={styles.paymentDescription}>
+                간편결제
               </div>
             </div>
           </div>
