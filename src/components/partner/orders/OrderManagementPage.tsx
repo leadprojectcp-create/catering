@@ -171,6 +171,9 @@ export default function OrderManagementPage() {
       await updateOrderStatus(orderId, newStatus)
       setOrders(orders.map(o => o.id === orderId ? { ...o, orderStatus: newStatus } : o))
       alert('주문 상태가 변경되었습니다.')
+
+      // 상태 변경 후 해당 탭으로 이동
+      handleFilterChange(newStatus as FilterStatus)
     } catch (error) {
       console.error('상태 변경 실패:', error)
       alert('상태 변경에 실패했습니다.')
