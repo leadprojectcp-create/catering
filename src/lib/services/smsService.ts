@@ -2,11 +2,20 @@
  * 알리고(Aligo) SMS 발송 서비스
  */
 
+// 버튼 타입 정의
+interface TemplateButton {
+  ordering?: string
+  name?: string
+  linkType?: string
+  linkMo?: string
+  [key: string]: unknown
+}
+
 // 템플릿 캐시 (메모리에 저장)
-const templateCache: Record<string, { message: string; buttons: any[] }> = {}
+const templateCache: Record<string, { message: string; buttons: TemplateButton[] }> = {}
 
 // 템플릿 조회 함수
-async function fetchTemplate(templateCode: string): Promise<{ message: string; buttons: any[] } | null> {
+async function fetchTemplate(templateCode: string): Promise<{ message: string; buttons: TemplateButton[] } | null> {
   // 캐시에 있으면 반환
   if (templateCache[templateCode]) {
     return templateCache[templateCode]
