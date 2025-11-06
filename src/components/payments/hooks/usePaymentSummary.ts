@@ -41,7 +41,7 @@ interface UsePaymentSummaryParams {
   orderId: string | null
   searchParams: URLSearchParams
   paymentMethod: 'card' | 'kakaopay' | 'naverpay'
-  paymentType: 'general' | 'easy'
+  paymentType: 'card' | 'vbank' | 'trans' | 'easy'
   onUsePointChange: (point: number) => void
   onDeliveryFeeFromAPIChange: (fee: number | null) => void
   onProcessingChange: (isProcessing: boolean) => void

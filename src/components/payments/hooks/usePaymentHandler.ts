@@ -23,7 +23,7 @@ interface UsePaymentHandlerParams {
   orderId: string | null
   searchParams: URLSearchParams
   paymentMethod: 'card' | 'kakaopay' | 'naverpay'
-  paymentType: 'general' | 'easy'
+  paymentType: 'card' | 'vbank' | 'trans' | 'easy'
   saveAddress: (address: Omit<DeliveryAddress, 'id'>) => Promise<DeliveryAddress>
   checkDuplicateAddress: (address: string, detailAddress: string) => Promise<boolean>
   onRouter: (path: string) => void
@@ -145,9 +145,9 @@ export async function handlePaymentProcess(params: UsePaymentHandlerParams): Pro
 
   if (actualPaymentAmount > 0) {
     // 결제 타입에 따라 채널키 결정
-    const channelKey = paymentType === 'general'
-      ? 'channel-key-b104be90-8bd3-4c6b-be01-7eb9c366af00'  // 일반결제(카드/계좌이체/가상계좌)
-      : 'channel-key-6df294ea-31b7-40c9-b214-52d87f5a243a'  // 간편결제
+    const channelKey = paymentType === 'easy'
+      ? process.env.NEXT_PUBLIC_PORTONE_EASY_CHANNEL_KEY!  // 간편결제
+      : process.env.NEXT_PUBLIC_PORTONE_GENERAL_CHANNEL_KEY!  // 일반결제(카드/계좌이체/가상계좌)
 
     // 포트원 결제창 호출 (실제 결제 금액으로)
     paymentResult = await requestPayment({
