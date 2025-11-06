@@ -507,7 +507,13 @@ export default function CartItemsSection({
               <div className={styles.optionSection}>
                 <div className={styles.optionSectionTitle}>상품 옵션</div>
                 {Object.entries(item.options).map(([groupName, optionValue]) => {
-                  const optionNames = optionValue.split(',').map(name => name.trim())
+                  // 콤마로 split 시도, 없으면 공백 2개 이상으로 split
+                  let optionNames = optionValue.split(',').map(name => name.trim())
+
+                  // split 결과가 1개이고 공백이 포함되어 있으면 공백으로 재시도
+                  if (optionNames.length === 1 && optionValue.includes('  ')) {
+                    optionNames = optionValue.split(/\s{2,}/).map(name => name.trim()).filter(name => name)
+                  }
 
                   return (
                     <div key={groupName}>
