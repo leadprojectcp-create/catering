@@ -533,12 +533,32 @@ export default function CartItemsSection({
               <div className={styles.optionSection}>
                 <div className={styles.optionSectionTitle}>추가상품</div>
                 {Object.entries(item.additionalOptions).map(([groupName, optionValue]) => {
-                  const optionNames = optionValue.split(',').map(name => name.trim())
+                  // 콤마로 split 시도, 없으면 공백 3개 이상으로 split
+                  let optionNames = optionValue.split(',').map(name => name.trim())
+
+                  // split 결과가 1개이고 공백이 포함되어 있으면 공백으로 재시도
+                  if (optionNames.length === 1 && optionValue.includes('  ')) {
+                    // 공백 2개 이상을 구분자로 사용
+                    optionNames = optionValue.split(/\s{2,}/).map(name => name.trim()).filter(name => name)
+                  }
 
                   return (
                     <div key={`additional-${groupName}`}>
                       {optionNames.map((optionName, idx) => {
+                        console.log('[CartItemsSection] 추가 옵션 가격 조회:', {
+                          groupName,
+                          optionName,
+                          optionValue,
+                          optionNamesSplit: optionNames,
+                          productAdditionalOptions: product.additionalOptions
+                        })
+
+                        // product.additionalOptions에서 실제 옵션 찾기
+                        const group = product.additionalOptions?.find(g => g.groupName === groupName)
+                        console.log('[CartItemsSection] 찾은 그룹:', group)
+
                         const optionPrice = getAdditionalOptionPrice(product, groupName, optionName)
+                        console.log('[CartItemsSection] 조회된 가격:', optionPrice)
 
                         return (
                           <div key={`additional-${groupName}-${idx}`} className={styles.selectedOption}>

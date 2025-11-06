@@ -93,7 +93,7 @@ export const getOptionPrice = (product: Product, groupName: string, optionName: 
 
 // 추가옵션 가격 조회 헬퍼 함수
 export const getAdditionalOptionPrice = (product: Product, groupName: string, optionName: string): number => {
-  const group = product.additionalOptions?.find(g => g.groupName === groupName)
-  const option = group?.values.find(v => v.name === optionName)
+  const group = product.additionalOptions?.find(g => g.groupName?.trim() === groupName?.trim())
+  const option = group?.values.find(v => v.name?.trim() === optionName?.trim())
   return option?.price || 0
 }
