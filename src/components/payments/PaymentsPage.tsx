@@ -1,10 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import Script from 'next/script'
-import { doc, getDoc } from 'firebase/firestore'
-import { db } from '@/lib/firebase'
 import { useAuth } from '@/contexts/AuthContext'
 import Loading from '@/components/Loading'
 import DeliveryInfoSection from './sections/DeliveryInfoSection'
@@ -15,343 +13,68 @@ import PickupRecipientSection from './sections/PickupRecipientSection'
 import PickupDateTimeSection from './sections/PickupDateTimeSection'
 import DeliveryDateTimeSection from './sections/DeliveryDateTimeSection'
 import DeliveryRequestSection from './sections/DeliveryRequestSection'
-import PaymentSummarySection, { usePaymentSummary } from './sections/PaymentSummarySection'
+import PaymentSummarySection from './sections/PaymentSummarySection'
+import { usePaymentSummary } from './hooks/usePaymentSummary'
+import { useOrderData } from './hooks/useOrderData'
+import { usePaymentForm } from './hooks/usePaymentForm'
 import AgreementsSection from './sections/AgreementsSection'
-import { OrderData, DeliveryAddress } from './types'
 import PrivacyPolicy from '@/components/terms/PrivacyPolicy'
 import RefundPolicy from '@/components/terms/RefundPolicy'
 import PaymentTerms from './sections/PaymentTerms'
 import styles from './PaymentsPage.module.css'
 
 export default function PaymentsPage() {
-  const router = useRouter()
   const searchParams = useSearchParams()
   const { user } = useAuth()
-  const [loading, setLoading] = useState(true)
-  const [orderId, setOrderId] = useState<string | null>(null)
-  const [orderData, setOrderData] = useState<OrderData | null>(null)
-  const [deliveryMethod, setDeliveryMethod] = useState('pickup')
-  const [orderInfo, setOrderInfo] = useState({
-    orderer: '',
-    phone: '',
-    email: '',
-    detailAddress: '',
-    address: '',
-    zipCode: '',
-    deliveryDate: '',
-    deliveryTime: '',
-    request: ''
-  })
-  const [agreements, setAgreements] = useState({
-    privacy: false,
-    terms: false,
-    refund: false,
-    marketing: false
-  })
-  const [savedAddresses, setSavedAddresses] = useState<DeliveryAddress[]>([])
-  const [addressName, setAddressName] = useState('')
+
   const [isPostcodeLoaded, setIsPostcodeLoaded] = useState(false)
-  const [recipient, setRecipient] = useState('')
-  const [deliveryRequest, setDeliveryRequest] = useState('')
-  const [detailedRequest, setDetailedRequest] = useState('')
-  const [entranceCode, setEntranceCode] = useState('')
-  const [agreeAll, setAgreeAll] = useState(false)
   const [showDateInfoModal, setShowDateInfoModal] = useState(false)
   const [showTermsModal, setShowTermsModal] = useState<string | null>(null)
-  const [usePoint, setUsePoint] = useState(0)
-  const [availablePoint, setAvailablePoint] = useState(0)
-  const [minOrderDays, setMinOrderDays] = useState(0)
   const [deliveryFeeFromAPI, setDeliveryFeeFromAPI] = useState<number | null>(null)
-  const [deliveryFeeSettings, setDeliveryFeeSettings] = useState<{
-    type: '무료' | '조건부 무료' | '유료' | '수량별'
-    baseFee?: number
-    freeCondition?: number
-    paymentMethods?: ('선결제' | '착불')[]
-    perQuantity?: number
-  } | null>(null)
-  const [parcelPaymentMethod, setParcelPaymentMethod] = useState<'선결제' | '착불'>('선결제')
   const [isProcessing, setIsProcessing] = useState(false)
-  const [quantityRanges, setQuantityRanges] = useState<{
-    minQuantity: number
-    maxQuantity: number
-    daysBeforeOrder: number
-  }[]>([])
-  const [totalQuantity, setTotalQuantity] = useState(0)
+
   // PortOne 결제창에서 결제 수단을 선택하므로 고정값 사용
   const paymentMethod = 'card'
 
-  useEffect(() => {
-    const loadData = async () => {
-      // URL에서 cartId, orderId, additionalOrderId 가져오기
-      const cartIdParam = searchParams.get('cartId')
-      const orderIdParam = searchParams.get('orderId')
-      const additionalOrderIdParam = searchParams.get('additionalOrderId')
+  // 주문 데이터 로딩 hook
+  const {
+    loading,
+    orderId,
+    orderData,
+    deliveryMethod,
+    minOrderDays,
+    quantityRanges,
+    totalQuantity,
+    deliveryFeeSettings,
+    parcelPaymentMethod,
+    savedAddresses,
+    availablePoint,
+    setDeliveryMethod,
+    setParcelPaymentMethod,
+    setSavedAddresses
+  } = useOrderData(user)
 
-      const id = cartIdParam || orderIdParam
-      const collection = cartIdParam ? 'shoppingCart' : 'orders'
-
-      if (!id) {
-        alert('주문 정보가 없습니다.')
-        router.push('/')
-        return
-      }
-
-      setOrderId(id)
-
-      // 추가 주문인 경우 기존 주문 정보 로드
-      if (additionalOrderIdParam) {
-        try {
-          const originalOrderDoc = await getDoc(doc(db, 'orders', additionalOrderIdParam))
-          if (originalOrderDoc.exists()) {
-            const originalOrderData = originalOrderDoc.data()
-
-            // 기존 주문의 배송 정보를 복원
-            if (originalOrderData.deliveryInfo) {
-              const deliveryInfo = originalOrderData.deliveryInfo
-              setAddressName(deliveryInfo.addressName || '')
-              setOrderInfo(prev => ({
-                ...prev,
-                deliveryDate: deliveryInfo.deliveryDate || '',
-                deliveryTime: deliveryInfo.deliveryTime || '',
-                address: deliveryInfo.address || '',
-                detailAddress: deliveryInfo.detailAddress || ''
-              }))
-              setEntranceCode(deliveryInfo.entrancePassword || '')
-              setRecipient(deliveryInfo.recipient || '')
-              setDeliveryRequest(deliveryInfo.deliveryRequest || '')
-              setDetailedRequest(deliveryInfo.detailedRequest || '')
-            }
-
-            // 배송 방법 복원
-            if (originalOrderData.deliveryMethod) {
-              setDeliveryMethod(originalOrderData.deliveryMethod)
-            }
-
-            // 주문자 정보 복원
-            setOrderInfo(prev => ({
-              ...prev,
-              orderer: originalOrderData.orderer || prev.orderer,
-              phone: originalOrderData.phone || prev.phone
-            }))
-          }
-        } catch (error) {
-          console.error('기존 주문 정보 로드 실패:', error)
-        }
-      }
-
-      try {
-        // Firestore에서 주문 정보 가져오기 (shoppingCart 또는 orders)
-        const orderDoc = await getDoc(doc(db, collection, id))
-
-        if (!orderDoc.exists()) {
-          alert('주문 정보를 찾을 수 없습니다.')
-          router.push('/')
-          return
-        }
-
-        const orderDocData = orderDoc.data()
-
-        // 상품 정보 가져오기 (첫 번째 상품 기준)
-        const firstItem = orderDocData.items[0]
-        const productDoc = await getDoc(doc(db, 'products', firstItem.productId))
-
-        let deliveryMethods: string[] = []
-        let productImage = ''
-        if (productDoc.exists()) {
-          const productData = productDoc.data()
-          deliveryMethods = productData.deliveryMethods || []
-
-          // products 컬렉션에서 이미지 가져오기
-          if (productData.images && productData.images.length > 0) {
-            productImage = productData.images[0]
-          }
-
-          // minOrderDays 가져오기
-          if (productData.minOrderDays !== undefined) {
-            setMinOrderDays(productData.minOrderDays)
-          }
-
-          // quantityRanges 가져오기
-          if (productData.quantityRanges && productData.quantityRanges.length > 0) {
-            setQuantityRanges(productData.quantityRanges)
-          }
-
-          // deliveryFeeSettings 가져오기
-          if (productData.deliveryFeeSettings) {
-            setDeliveryFeeSettings(productData.deliveryFeeSettings)
-          }
-
-          // orderDocData에서 저장된 택배 결제방법 확인 (우선순위 1)
-          if (orderDocData.parcelPaymentMethod) {
-            setParcelPaymentMethod(orderDocData.parcelPaymentMethod)
-          } else if (productData.deliveryFeeSettings?.paymentMethods && productData.deliveryFeeSettings.paymentMethods.length > 0) {
-            // 저장된 값이 없으면 첫 번째 값을 기본값으로 설정 (우선순위 2)
-            setParcelPaymentMethod(productData.deliveryFeeSettings.paymentMethods[0])
-          }
-
-          // orderDocData에서 저장된 배송방법 확인
-          if (orderDocData.deliveryMethod) {
-            setDeliveryMethod(orderDocData.deliveryMethod)
-          } else if (deliveryMethods.length > 0) {
-            setDeliveryMethod(deliveryMethods[0])
-          }
-        }
-
-        // 추가 주문인 경우 sessionStorage에서 데이터 가져오기
-        let items = orderDocData.items
-        let totalPrice = orderDocData.totalProductPrice
-
-        if (additionalOrderIdParam) {
-          const additionalDataStr = sessionStorage.getItem('additionalOrderData')
-          if (additionalDataStr) {
-            try {
-              const additionalData = JSON.parse(additionalDataStr)
-              console.log('[PaymentsPage] sessionStorage에서 추가 주문 데이터 로드:', additionalData)
-
-              // sessionStorage의 추가 주문 items만 사용 (기존 items에 추가하지 않음)
-              items = additionalData.items
-              totalPrice = additionalData.totalProductPrice
-            } catch (error) {
-              console.error('[PaymentsPage] sessionStorage 파싱 실패:', error)
-            }
-          }
-        }
-
-        // OrderData 형식으로 변환
-        const data: OrderData = {
-          storeId: orderDocData.storeId,
-          storeName: orderDocData.storeName,
-          productId: firstItem.productId,
-          productName: firstItem.productName,
-          productPrice: firstItem.price,
-          productImage: productImage,
-          items: items,
-          totalPrice: totalPrice,
-          storeRequest: orderDocData.request || '',
-          deliveryMethods: deliveryMethods,
-          minOrderDays: minOrderDays,
-          deliveryFeeSettings: deliveryFeeSettings || undefined
-        }
-
-        console.log('[PaymentsPage] OrderData 생성:', {
-          hasItems: !!items,
-          itemsLength: items?.length,
-          isAdditionalOrder: !!additionalOrderIdParam
-        })
-
-        // 총 수량 계산
-        const calculatedTotalQuantity = items.reduce((sum: number, item: { quantity: number }) => sum + item.quantity, 0)
-        setTotalQuantity(calculatedTotalQuantity)
-
-        setOrderData(data)
-
-        // orders 컬렉션에서 가져온 경우 기존 주문 정보 복원
-        if (orderIdParam && orderDocData) {
-          // 배송 정보 복원
-          if (orderDocData.deliveryInfo) {
-            const deliveryInfo = orderDocData.deliveryInfo
-            setAddressName(deliveryInfo.addressName || '')
-
-            setOrderInfo(prev => ({
-              ...prev,
-              deliveryDate: deliveryInfo.deliveryDate || '',
-              deliveryTime: deliveryInfo.deliveryTime || '',
-              address: deliveryInfo.address || '',
-              detailAddress: deliveryInfo.detailAddress || ''
-            }))
-            setEntranceCode(deliveryInfo.entrancePassword || '')
-            setRecipient(deliveryInfo.recipient || '')
-            setDeliveryRequest(deliveryInfo.deliveryRequest || '')
-            setDetailedRequest(deliveryInfo.detailedRequest || '')
-          } else {
-            // 이전 형식의 데이터 복원
-            let detailAddr = orderDocData.detailAddress || ''
-            let entranceCodeValue = ''
-            const match = detailAddr.match(/^(.+?)\s*\((.+)\)$/)
-            if (match) {
-              detailAddr = match[1].trim()
-              entranceCodeValue = match[2].trim()
-            }
-
-            setOrderInfo(prev => ({
-              ...prev,
-              deliveryDate: orderDocData.deliveryDate || '',
-              deliveryTime: orderDocData.deliveryTime || '',
-              address: orderDocData.address || '',
-              detailAddress: detailAddr
-            }))
-            setEntranceCode(entranceCodeValue)
-            setRecipient(orderDocData.recipient || '')
-            setDeliveryRequest(orderDocData.request || '')
-            setDetailedRequest(orderDocData.detailedRequest || '')
-          }
-
-          // 주문자 정보 복원
-          setOrderInfo(prev => ({
-            ...prev,
-            orderer: orderDocData.orderer || prev.orderer,
-            phone: orderDocData.phone || prev.phone
-          }))
-
-          // 배송 방법 복원
-          if (orderDocData.deliveryMethod) {
-            setDeliveryMethod(orderDocData.deliveryMethod)
-          }
-        }
-
-        // Firestore에서 저장된 배송지 목록 및 사용자 정보 불러오기
-        if (user) {
-          const userDocRef = doc(db, 'users', user.uid)
-          const userDoc = await getDoc(userDocRef)
-
-          if (userDoc.exists()) {
-            const userData = userDoc.data()
-
-            // 저장된 배송지 불러오기
-            if (userData.deliveryAddresses) {
-              setSavedAddresses(userData.deliveryAddresses)
-            }
-
-            // Firestore에서 사용자 정보 설정
-            if (userData.email) {
-              setOrderInfo(prev => ({
-                ...prev,
-                email: userData.email
-              }))
-            }
-
-            // 사용자 이름 설정 (수령인 및 주문자)
-            if (userData.name) {
-              setRecipient(userData.name)
-              setOrderInfo(prev => ({
-                ...prev,
-                orderer: userData.name
-              }))
-            }
-
-            // 사용자 전화번호 설정 (연락처)
-            if (userData.phone) {
-              setOrderInfo(prev => ({
-                ...prev,
-                phone: userData.phone
-              }))
-            }
-
-            // 포인트 설정
-            if (userData.point !== undefined) {
-              setAvailablePoint(userData.point)
-            }
-          }
-        }
-      } catch (error) {
-        console.error('데이터 로딩 실패:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    loadData()
-  }, [user, searchParams, router])
+  // 폼 상태 관리 hook
+  const {
+    orderInfo,
+    recipient,
+    addressName,
+    deliveryRequest,
+    detailedRequest,
+    entranceCode,
+    agreements,
+    agreeAll,
+    usePoint,
+    setOrderInfo,
+    setRecipient,
+    setAddressName,
+    setDeliveryRequest,
+    setDetailedRequest,
+    setEntranceCode,
+    setAgreements,
+    setAgreeAll,
+    setUsePoint
+  } = usePaymentForm(user, orderId)
 
   // 배송 정보가 변경되면 배송비 조회를 다시 해야 하므로 deliveryFeeFromAPI 초기화
   useEffect(() => {
@@ -391,10 +114,9 @@ export default function PaymentsPage() {
     onProcessingChange: setIsProcessing
   })
 
-  // 주소 검색 핸들러
   // 다음 Postcode API 로드 핸들러
   const handlePostcodeLoad = () => {
-    setIsPostcodeLoaded(true);
+    setIsPostcodeLoaded(true)
   }
 
   if (loading || isProcessing) {
@@ -474,20 +196,20 @@ export default function PaymentsPage() {
                   onOrderInfoChange={setOrderInfo}
                   onRecipientChange={setRecipient}
                   onAddressNameChange={setAddressName}
-              onSavedAddressesChange={setSavedAddresses}
-            />
+                  onSavedAddressesChange={setSavedAddresses}
+                />
 
-            <DeliveryDateTimeSection
-              deliveryDate={orderInfo.deliveryDate}
-              deliveryTime={orderInfo.deliveryTime}
-              minOrderDays={minOrderDays}
-              deliveryMethod={deliveryMethod}
-              quantityRanges={quantityRanges}
-              totalQuantity={totalQuantity}
-              onDateChange={(date) => setOrderInfo({...orderInfo, deliveryDate: date})}
-              onTimeChange={(time) => setOrderInfo({...orderInfo, deliveryTime: time})}
-              onShowDateInfoModal={() => setShowDateInfoModal(true)}
-            />
+                <DeliveryDateTimeSection
+                  deliveryDate={orderInfo.deliveryDate}
+                  deliveryTime={orderInfo.deliveryTime}
+                  minOrderDays={minOrderDays}
+                  deliveryMethod={deliveryMethod}
+                  quantityRanges={quantityRanges}
+                  totalQuantity={totalQuantity}
+                  onDateChange={(date) => setOrderInfo({...orderInfo, deliveryDate: date})}
+                  onTimeChange={(time) => setOrderInfo({...orderInfo, deliveryTime: time})}
+                  onShowDateInfoModal={() => setShowDateInfoModal(true)}
+                />
                 <DeliveryRequestSection
                   deliveryRequest={deliveryRequest}
                   entranceCode={entranceCode}

@@ -15,6 +15,7 @@ interface UsePaymentHandlerParams {
   detailedRequest: string
   entranceCode: string
   deliveryMethod: string
+  parcelPaymentMethod: '선결제' | '착불'
   usePoint: number
   totalPrice: number
   totalProductPrice: number
@@ -38,6 +39,7 @@ export async function handlePaymentProcess(params: UsePaymentHandlerParams): Pro
     detailedRequest,
     entranceCode,
     deliveryMethod,
+    parcelPaymentMethod,
     usePoint,
     totalPrice,
     totalProductPrice,
@@ -215,6 +217,7 @@ export async function handlePaymentProcess(params: UsePaymentHandlerParams): Pro
       totalQuantity: cartData.totalQuantity,
       deliveryFee: deliveryFee,
       deliveryMethod: deliveryMethod,
+      parcelPaymentMethod: deliveryMethod === 'parcel' ? parcelPaymentMethod : undefined,
       usedPoint: usePoint,
       deliveryInfo: {
         addressName: addressName,
