@@ -8,6 +8,7 @@ import Loading from '@/components/Loading'
 import DeliveryInfoSection from './sections/DeliveryInfoSection'
 import DeliveryMethodSection from './sections/DeliveryMethodSection'
 import ParcelPaymentMethodSection from './sections/ParcelPaymentMethodSection'
+import PaymentMethodSection from './sections/PaymentMethodSection'
 import OrderProductSection from './sections/OrderProductSection'
 import PickupRecipientSection from './sections/PickupRecipientSection'
 import PickupDateTimeSection from './sections/PickupDateTimeSection'
@@ -32,6 +33,7 @@ export default function PaymentsPage() {
   const [showTermsModal, setShowTermsModal] = useState<string | null>(null)
   const [deliveryFeeFromAPI, setDeliveryFeeFromAPI] = useState<number | null>(null)
   const [isProcessing, setIsProcessing] = useState(false)
+  const [paymentType, setPaymentType] = useState<'general' | 'easy'>('general')
 
   // PortOne 결제창에서 결제 수단을 선택하므로 고정값 사용
   const paymentMethod = 'card'
@@ -109,6 +111,7 @@ export default function PaymentsPage() {
     orderId,
     searchParams,
     paymentMethod,
+    paymentType,
     onUsePointChange: setUsePoint,
     onDeliveryFeeFromAPIChange: setDeliveryFeeFromAPI,
     onProcessingChange: setIsProcessing
@@ -222,6 +225,12 @@ export default function PaymentsPage() {
             )}
           </>
         )}
+
+        {/* 결제 수단 선택 */}
+        <PaymentMethodSection
+          paymentType={paymentType}
+          onPaymentTypeChange={setPaymentType}
+        />
 
         {/* 총 결제금액 */}
         <PaymentSummarySection

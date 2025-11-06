@@ -41,6 +41,7 @@ interface UsePaymentSummaryParams {
   orderId: string | null
   searchParams: URLSearchParams
   paymentMethod: 'card' | 'kakaopay' | 'naverpay'
+  paymentType: 'general' | 'easy'
   onUsePointChange: (point: number) => void
   onDeliveryFeeFromAPIChange: (fee: number | null) => void
   onProcessingChange: (isProcessing: boolean) => void
@@ -55,7 +56,7 @@ export function usePaymentSummary(params: UsePaymentSummaryParams) {
     user, deliveryMethod, deliveryFeeFromAPI, usePoint, parcelPaymentMethod,
     deliveryFeeSettings, orderData, orderInfo, recipient, addressName,
     deliveryRequest, detailedRequest, entranceCode, agreements, orderId,
-    searchParams, paymentMethod, onProcessingChange
+    searchParams, paymentMethod, paymentType, onProcessingChange
   } = params
 
   // 추가 주문인지 확인
@@ -163,6 +164,7 @@ export function usePaymentSummary(params: UsePaymentSummaryParams) {
         orderId,
         searchParams,
         paymentMethod,
+        paymentType,
         saveAddress,
         checkDuplicateAddress,
         onRouter: (path: string) => router.push(path)

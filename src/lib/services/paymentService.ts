@@ -39,6 +39,7 @@ export interface PaymentRequest {
   customerPhoneNumber: string
   customerUid?: string
   payMethod: 'card' | 'kakaopay' | 'naverpay'
+  channelKey?: string
 }
 
 // 결제 결과 타입
@@ -88,8 +89,8 @@ export const requestPayment = async (
     // 결제 ID 생성
     const merchantUid = `order-${request.orderId}-${Date.now()}`
 
-    // 일반결제 채널 키 사용
-    const channelKey = process.env.NEXT_PUBLIC_PORTONE_GENERAL_CHANNEL_KEY!
+    // 전달받은 채널키 사용, 없으면 기본 일반결제 채널키 사용
+    const channelKey = request.channelKey || process.env.NEXT_PUBLIC_PORTONE_GENERAL_CHANNEL_KEY!
 
     // 결제 수단
     const payMethod = request.payMethod
