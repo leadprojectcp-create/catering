@@ -558,32 +558,36 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
             onClose={() => setIsModalOpen(false)}
             onDragStart={handleDragStart}
           >
-            {(product.optionsEnabled || product.additionalOptionsEnabled) && (
-              <OptionSelectSection
-                product={product}
-                quantity={quantity}
-                cartItems={cartItems}
-                onQuantityChange={setQuantity}
-                onCartItemsChange={setCartItems}
-              />
-            )}
+            {product && (
+              <>
+                {(product.optionsEnabled || product.additionalOptionsEnabled) && (
+                  <OptionSelectSection
+                    product={product}
+                    quantity={quantity}
+                    cartItems={cartItems}
+                    onQuantityChange={setQuantity}
+                    onCartItemsChange={setCartItems}
+                  />
+                )}
 
-            <CartItemsSection
-              user={user}
-              productId={productId}
-              product={product}
-              storeName={store?.storeName || ''}
-              cartItems={cartItems}
-              storeRequest={storeRequest}
-              editingCartItemId={editingCartItemId}
-              isEditingOrder={isEditingOrder}
-              additionalOrderId={additionalOrderId}
-              onRemoveItem={removeFromCart}
-              onUpdateQuantity={updateCartQuantity}
-              onQuantityInputChange={handleQuantityInputChange}
-              onStoreRequestChange={setStoreRequest}
-              onEditingCartItemIdChange={setEditingCartItemId}
-            />
+                <CartItemsSection
+                  user={user}
+                  productId={productId}
+                  product={product}
+                  storeName={store?.storeName || ''}
+                  cartItems={cartItems}
+                  storeRequest={storeRequest}
+                  editingCartItemId={editingCartItemId}
+                  isEditingOrder={isEditingOrder}
+                  additionalOrderId={additionalOrderId}
+                  onRemoveItem={removeFromCart}
+                  onUpdateQuantity={updateCartQuantity}
+                  onQuantityInputChange={handleQuantityInputChange}
+                  onStoreRequestChange={setStoreRequest}
+                  onEditingCartItemIdChange={setEditingCartItemId}
+                />
+              </>
+            )}
           </BottomModal>
         </>
       )}

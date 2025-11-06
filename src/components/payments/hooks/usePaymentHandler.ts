@@ -1,6 +1,7 @@
 import { doc, getDoc, updateDoc, addDoc, collection, increment, serverTimestamp, deleteDoc, deleteField } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { requestPayment } from '@/lib/services/paymentService'
+import { sendOrderAlimtalk } from '@/lib/services/smsService'
 import { OrderData, OrderInfo, OrderItem, DeliveryAddress } from '../types'
 import { User } from 'firebase/auth'
 
@@ -498,6 +499,39 @@ export async function handlePaymentProcess(params: UsePaymentHandlerParams): Pro
     } catch (cartDeleteError) {
       console.error('장바구니 삭제 실패:', cartDeleteError)
     }
+  }
+
+  // 알림톡 발송
+  try {
+    const isAdditionalOrder = !!additionalOrderIdParam
+    const finalOrderSnapshot = await getDoc(orderRef)
+    const finalOrderData = finalOrderSnapshot.data()
+
+    const totalQuantity = finalOrderData?.totalQuantity || 0
+    const finalTotalProductPrice = finalOrderData?.totalProductPrice || 0
+
+    let additionalQuantity = 0
+    let additionalProductPrice = 0
+
+    if (isAdditionalOrder && finalOrderData?.items) {
+      const additionalItems = finalOrderData.items.filter((item: OrderItem) => item.isAddItem === true)
+      additionalQuantity = additionalItems.reduce((sum: number, item: OrderItem) => sum + item.quantity, 0)
+      additionalProductPrice = additionalItems.reduce((sum: number, item: OrderItem) => sum + (item.itemPrice || 0), 0)
+    }
+
+    await sendOrderAlimtalk({
+      partnerPhone: storeData?.phone,
+      customerPhone: orderInfo.phone,
+      isAdditionalOrder,
+      storeName: orderData.storeName || '',
+      orderNumber,
+      totalQuantity,
+      totalProductPrice: finalTotalProductPrice,
+      additionalQuantity,
+      additionalProductPrice,
+    })
+  } catch (alimtalkError) {
+    console.error('알림톡 발송 실패:', alimtalkError)
   }
 
   sessionStorage.removeItem('orderData')

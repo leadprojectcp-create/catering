@@ -423,12 +423,21 @@ export default function OrdersPage() {
 
   const formatReservationDateTime = (dateStr: string, timeStr: string) => {
     try {
+      if (!dateStr) {
+        return ''
+      }
+
       // dateStr이 "2025-01-15" 형식이라고 가정
       const [year, month, day] = dateStr.split('-').map(Number)
       const date = new Date(year, month - 1, day)
 
       const weekdays = ['일', '월', '화', '수', '목', '금', '토']
       const weekday = weekdays[date.getDay()]
+
+      // timeStr이 없으면 날짜만 반환
+      if (!timeStr) {
+        return `예약날짜 ${year}년 ${month}월 ${day}일 (${weekday})`
+      }
 
       // timeStr을 "HH:MM" 형식에서 "오전/오후 H시 M분" 형식으로 변환
       const [hours, minutes] = timeStr.split(':').map(Number)
@@ -437,7 +446,7 @@ export default function OrdersPage() {
 
       return `예약날짜 ${year}년 ${month}월 ${day}일 (${weekday}) ${period} ${displayHours}시 ${minutes}분`
     } catch (error) {
-      return `${dateStr} ${timeStr}`
+      return dateStr || ''
     }
   }
 
@@ -795,12 +804,14 @@ export default function OrdersPage() {
                           {item.productName}
                           {order.items.length > 1 && ` 외 ${order.items.length - 1}개`}
                         </div>
-                        <div className={styles.reservationDateTime}>
-                          {formatReservationDateTime(
-                            order.deliveryInfo?.deliveryDate || order.deliveryDate,
-                            order.deliveryInfo?.deliveryTime || order.deliveryTime
-                          )}
-                        </div>
+                        {(order.deliveryInfo?.deliveryDate || order.deliveryDate) && (
+                          <div className={styles.reservationDateTime}>
+                            {formatReservationDateTime(
+                              order.deliveryInfo?.deliveryDate || order.deliveryDate,
+                              order.deliveryInfo?.deliveryTime || order.deliveryTime
+                            )}
+                          </div>
+                        )}
                         <div className={`${styles.deliveryMethod} ${
                           order.deliveryMethod === '퀵업체 배송'
                             ? styles.deliveryMethodQuick

@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/firebase'
-import { doc, updateDoc, getDoc } from 'firebase/firestore'
-import { sendKakaoAlimtalk } from '@/lib/services/smsService'
+import { doc, getDoc } from 'firebase/firestore'
 import { requestQuickDelivery } from '@/lib/services/quickDeliveryService'
 
 // Force dynamic rendering
@@ -121,90 +120,22 @@ export async function POST(request: NextRequest) {
               storeName: storeData?.storeName,
             })
 
-            if (partnerPhone) {
-              // 추가 주문 여부 확인
-              const isAdditionalOrder = orderData.paymentInfo && Array.isArray(orderData.paymentInfo) && orderData.paymentInfo.length > 1
-              const alreadyNotified = orderData.partnerNotified === true
-
-              // 알림톡 발송
-              if (!alreadyNotified || isAdditionalOrder) {
-                const totalQuantity = orderData.totalQuantity || orderData.items?.reduce(
-                  (sum: number, item: { quantity: number }) => sum + item.quantity,
-                  0
-                ) || 0
-                const totalProductPrice = orderData.totalProductPrice || orderData.totalPrice || 0
-
-                let additionalQuantity = 0
-                let additionalProductPrice = 0
-
-                if (isAdditionalOrder && orderData.items) {
-                  const additionalItems = orderData.items.filter(
-                    (item: { isAddItem?: boolean }) => item.isAddItem === true
-                  )
-
-                  additionalQuantity = additionalItems.reduce(
-                    (sum: number, item: { quantity: number }) => sum + item.quantity,
-                    0
-                  )
-
-                  additionalProductPrice = additionalItems.reduce(
-                    (sum: number, item: { itemPrice?: number }) => sum + (item.itemPrice || 0),
-                    0
-                  )
+            // 퀵배송 요청
+            if (orderData.deliveryMethod === '퀵업체 배송' && !orderData.quickDeliveryOrderNo) {
+              try {
+                console.log(`[Webhook V1] 퀵배송 요청 시작`)
+                const quickDeliveryData = {
+                  startPhone: orderData.storePhone || '',
+                  startAddress: orderData.storeAddress || '',
+                  startAddressDetail: orderData.storeAddressDetail || '',
+                  destPhone: orderData.phone || '',
+                  destAddress: orderData.address || '',
+                  destAddressDetail: orderData.addressDetail || '',
+                  hddMemo: orderData.requirements || ''
                 }
-
-                const alimtalkParams = {
-                  storeName: orderData.storeName || '',
-                  orderNumber: orderData.orderNumber || orderId,
-                  totalQuantity: String(totalQuantity),
-                  totalProductPrice: String(totalProductPrice),
-                  additionalQuantity: String(additionalQuantity),
-                  additionalProductPrice: String(additionalProductPrice),
-                }
-
-                const partnerTemplateCode = isAdditionalOrder ? 'UD_3133' : 'UD_0958'
-                const customerTemplateCode = isAdditionalOrder ? 'UD_3135' : 'UD_3134'
-
-                try {
-                  // 파트너 알림톡
-                  console.log(`[Webhook V1] 파트너 알림톡 발송: ${partnerPhone}`)
-                  const partnerKakaoSuccess = await sendKakaoAlimtalk(partnerPhone, partnerTemplateCode, alimtalkParams)
-
-                  if (partnerKakaoSuccess && !isAdditionalOrder) {
-                    await updateDoc(orderRef, {
-                      partnerNotified: true,
-                      partnerNotifiedAt: new Date(),
-                    })
-                  }
-
-                  // 고객 알림톡
-                  const customerPhone = orderData.phone
-                  if (customerPhone) {
-                    console.log(`[Webhook V1] 고객 알림톡 발송: ${customerPhone}`)
-                    await sendKakaoAlimtalk(customerPhone, customerTemplateCode, alimtalkParams)
-                  }
-                } catch (alimtalkError) {
-                  console.error('[Webhook V1] 알림톡 발송 실패:', alimtalkError)
-                }
-
-                // 퀵배송 요청
-                if (orderData.deliveryMethod === '퀵업체 배송' && !orderData.quickDeliveryOrderNo) {
-                  try {
-                    console.log(`[Webhook V1] 퀵배송 요청 시작`)
-                    const quickDeliveryData = {
-                      startPhone: orderData.storePhone || '',
-                      startAddress: orderData.storeAddress || '',
-                      startAddressDetail: orderData.storeAddressDetail || '',
-                      destPhone: orderData.phone || '',
-                      destAddress: orderData.address || '',
-                      destAddressDetail: orderData.addressDetail || '',
-                      hddMemo: orderData.requirements || ''
-                    }
-                    await requestQuickDelivery(quickDeliveryData)
-                  } catch (quickError) {
-                    console.error('[Webhook V1] 퀵배송 요청 실패:', quickError)
-                  }
-                }
+                await requestQuickDelivery(quickDeliveryData)
+              } catch (quickError) {
+                console.error('[Webhook V1] 퀵배송 요청 실패:', quickError)
               }
             }
           }

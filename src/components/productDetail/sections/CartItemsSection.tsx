@@ -71,7 +71,7 @@ const calculateItemPrice = (
     })
   })
 
-  if (additionalOptions) {
+  if (additionalOptions && product.additionalOptions) {
     Object.entries(additionalOptions).forEach(([groupName, optionValue]) => {
       const optionNames = optionValue.split(',').map(name => name.trim())
       optionNames.forEach(optionName => {
@@ -125,6 +125,11 @@ const createAdditionalOptionsWithPrices = (
   additionalOptions: { [key: string]: string }
 ): { [key: string]: { name: string; price: number } } => {
   const additionalOptionsWithPrices: { [key: string]: { name: string; price: number } } = {}
+
+  if (!product.additionalOptions) {
+    console.warn('[CartItemsSection] product.additionalOptions가 없습니다.')
+    return additionalOptionsWithPrices
+  }
 
   Object.entries(additionalOptions).forEach(([groupName, optionValue]) => {
     const optionNames = optionValue.split(',').map(name => name.trim())
@@ -524,7 +529,7 @@ export default function CartItemsSection({
                 })}
               </div>
             )}
-            {item.additionalOptions && Object.keys(item.additionalOptions).length > 0 && (
+            {item.additionalOptions && Object.keys(item.additionalOptions).length > 0 && product.additionalOptions && (
               <div className={styles.optionSection}>
                 <div className={styles.optionSectionTitle}>추가상품</div>
                 {Object.entries(item.additionalOptions).map(([groupName, optionValue]) => {
