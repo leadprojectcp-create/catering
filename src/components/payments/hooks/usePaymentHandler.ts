@@ -204,7 +204,7 @@ export async function handlePaymentProcess(params: UsePaymentHandlerParams): Pro
 
     const cartData = cartDocSnap.data()
 
-    const newOrderData = {
+    const newOrderData: Record<string, unknown> = {
       uid: cartData.uid,
       productId: cartData.productId,
       storeId: cartData.storeId,
@@ -217,7 +217,6 @@ export async function handlePaymentProcess(params: UsePaymentHandlerParams): Pro
       totalQuantity: cartData.totalQuantity,
       deliveryFee: deliveryFee,
       deliveryMethod: deliveryMethod,
-      parcelPaymentMethod: deliveryMethod === 'parcel' ? parcelPaymentMethod : undefined,
       usedPoint: usePoint,
       deliveryInfo: {
         addressName: addressName,
@@ -240,6 +239,11 @@ export async function handlePaymentProcess(params: UsePaymentHandlerParams): Pro
       request: cartData.request,
       createdAt: cartData.createdAt || new Date(),
       updatedAt: new Date()
+    }
+
+    // 택배 배송인 경우에만 parcelPaymentMethod 추가
+    if (deliveryMethod === '택배 배송') {
+      newOrderData.parcelPaymentMethod = parcelPaymentMethod
     }
 
     const newOrderRef = await addDoc(collection(db, 'orders'), newOrderData)
