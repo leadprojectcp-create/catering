@@ -99,7 +99,7 @@ export default function OrderCancelModal({ isOpen, onClose, onConfirm }: OrderCa
             type="button"
           >
             <span className={styles.infoHeaderText}>
-              <Image src="/icons/info-circle.svg" alt="" width={16} height={16} />
+              <Image src="/icons/info.svg" alt="" width={16} height={16} />
               환급금 안내
             </span>
             <svg
@@ -134,7 +134,7 @@ export default function OrderCancelModal({ isOpen, onClose, onConfirm }: OrderCa
             type="button"
           >
             <span className={styles.infoHeaderText}>
-              <Image src="/icons/info-circle.svg" alt="" width={16} height={16} />
+              <Image src="/icons/info.svg" alt="" width={16} height={16} />
               주문 취소 패널티 규정안내
             </span>
             <svg

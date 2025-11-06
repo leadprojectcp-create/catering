@@ -106,6 +106,7 @@ interface Order {
   orderStatus: string
   paymentStatus: string
   deliveryMethod: string
+  parcelPaymentMethod?: '선결제' | '착불'
   deliveryInfo?: DeliveryInfo
   paymentInfo?: PaymentInfo[]
   // 이전 형식 호환을 위한 필드들
@@ -572,7 +573,12 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
             </div>
             <div className={styles.infoRow}>
               <span className={styles.infoLabel}>배송비</span>
-              <span className={styles.infoValue}>+{order.deliveryFee.toLocaleString()}원</span>
+              <span className={styles.infoValue}>
+                {order.deliveryMethod === '택배 배송' && order.parcelPaymentMethod && (
+                  <span>({order.parcelPaymentMethod}) </span>
+                )}
+                +{order.deliveryFee.toLocaleString()}원
+              </span>
             </div>
             <div className={styles.infoRow}>
               <span className={styles.infoLabel}>포인트 사용</span>

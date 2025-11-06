@@ -34,8 +34,8 @@ export default function PrintOrderSheet({ order, driverInfo }: PrintOrderSheetPr
 
       <div className={styles.section}>
         <h2 className={styles.sectionTitle}>주문 상품</h2>
-        {order.items.map((item, index) => {
-          const showProductName = index === 0 || order.items[index - 1].productName !== item.productName
+        {order.items.filter(item => !item.isAddItem).map((item, index, filteredItems) => {
+          const showProductName = index === 0 || filteredItems[index - 1].productName !== item.productName
           return (
             <div key={index} className={styles.itemSection}>
               {showProductName && (
@@ -90,6 +90,68 @@ export default function PrintOrderSheet({ order, driverInfo }: PrintOrderSheetPr
           )
         })}
       </div>
+
+      {/* 추가 주문 상품 섹션 */}
+      {order.items.some(item => item.isAddItem) && (
+        <div className={styles.section}>
+          <h2 className={styles.sectionTitle}>추가주문상품</h2>
+          {order.items.filter(item => item.isAddItem).map((item, index, filteredItems) => {
+            const showProductName = index === 0 || filteredItems[index - 1].productName !== item.productName
+            return (
+              <div key={index} className={styles.itemSection}>
+                {showProductName && (
+                  <div className={styles.productName}>{item.productName}</div>
+                )}
+
+                {(Object.keys(item.options).length > 0 || (item.additionalOptions && Object.keys(item.additionalOptions).length > 0)) && (
+                  <div className={styles.itemDetails}>
+                    {/* 상품 옵션 */}
+                    {Object.keys(item.options).length > 0 && (
+                      <div className={styles.optionGroup}>
+                        <div className={styles.optionTitle}>상품 옵션</div>
+                        {Object.entries(item.options).map(([key, value], optIdx) => {
+                          let optionPrice = 0
+                          if (item.optionsWithPrices && item.optionsWithPrices[key]) {
+                            optionPrice = item.optionsWithPrices[key].price
+                          }
+                          return (
+                            <div key={optIdx} className={styles.option}>
+                              [{key}] {value} {optionPrice > 0 && `+${optionPrice.toLocaleString()}원`}
+                            </div>
+                          )
+                        })}
+                      </div>
+                    )}
+
+                    {/* 추가상품 */}
+                    {item.additionalOptions && Object.keys(item.additionalOptions).length > 0 && (
+                      <div className={styles.optionGroup}>
+                        <div className={styles.optionTitle}>추가상품</div>
+                        {Object.entries(item.additionalOptions).map(([key, value], optIdx) => {
+                          let optionPrice = 0
+                          if (item.additionalOptionsWithPrices && item.additionalOptionsWithPrices[key]) {
+                            optionPrice = item.additionalOptionsWithPrices[key].price
+                          }
+                          return (
+                            <div key={optIdx} className={styles.option}>
+                              [{key}] {value} {optionPrice > 0 && `+${optionPrice.toLocaleString()}원`}
+                            </div>
+                          )
+                        })}
+                      </div>
+                    )}
+
+                    <div className={styles.itemPrice}>
+                      <span>수량: {item.quantity}개</span>
+                      <span>{formatCurrency(item.itemPrice || (item.price * item.quantity))}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      )}
 
       <div className={styles.section}>
         <h2 className={styles.sectionTitle}>결제 정보</h2>

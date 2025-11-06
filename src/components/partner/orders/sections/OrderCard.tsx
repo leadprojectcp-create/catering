@@ -287,7 +287,9 @@ export default function OrderCard({
         <div className={styles.orderDetails}>
           <div className={styles.detailsLeft}>
             <div className={styles.detailCard}>
-              <h3 className={styles.detailTitle}>주문정보</h3>
+              <div className={styles.detailTitleRow}>
+                <h3 className={styles.detailTitle}>주문정보</h3>
+              </div>
               <div className={styles.detailRow}>
                 <span className={styles.detailLabel}>주문일시</span>
                 <span className={styles.detailValue}>{formatDate(order.createdAt)}</span>
@@ -300,14 +302,14 @@ export default function OrderCard({
               <div className={styles.detailSectionDivider}></div>
 
               <div className={styles.detailTitleRow}>
-                <h3 className={styles.detailTitle}>주문상품상세</h3>
+                <h3 className={styles.detailTitle}>주문상품</h3>
                 {order.orderStatus === 'preparing' && (
                   <div className={styles.additionalOrderToggle}>
                     <Image
-                      src="/icons/info-circle.svg"
+                      src="/icons/info.svg"
                       alt="정보"
-                      width={16}
-                      height={16}
+                      width={20}
+                      height={20}
                     />
                     <span className={styles.additionalOrderLabel}>추가주문허용</span>
                     <button
@@ -325,8 +327,9 @@ export default function OrderCard({
                   </div>
                 )}
               </div>
-              {order.items.map((item, index) => {
-                const showProductName = index === 0 || order.items[index - 1].productName !== item.productName
+              {/* Regular order items */}
+              {order.items.filter(item => !item.isAddItem).map((item, index, filteredItems) => {
+                const showProductName = index === 0 || filteredItems[index - 1].productName !== item.productName
                 const hasOptions = Object.keys(item.options || {}).length > 0
                 const hasAdditionalOptions = item.additionalOptions && Object.keys(item.additionalOptions).length > 0
 
@@ -392,17 +395,108 @@ export default function OrderCard({
                 )
               })}
 
+              {/* Additional order items section */}
+              {order.items.some(item => item.isAddItem) && (
+                <>
+                  <div className={styles.detailSectionDivider}></div>
+                  <div className={styles.detailTitleRow}>
+                    <h3 className={styles.detailTitle}>추가주문상품</h3>
+                  </div>
+                  {order.items.filter(item => item.isAddItem).map((item, index, filteredItems) => {
+                    const showProductName = index === 0 || filteredItems[index - 1].productName !== item.productName
+                    const hasOptions = Object.keys(item.options || {}).length > 0
+                    const hasAdditionalOptions = item.additionalOptions && Object.keys(item.additionalOptions).length > 0
+
+                    return (
+                      <div key={index} className={styles.orderItemSection}>
+                        {showProductName && (
+                          <span className={styles.orderItemName}>{item.productName}</span>
+                        )}
+
+                        {/* 모든 상품에 대해 orderItemContent 표시 */}
+                        <div className={styles.orderItemContent}>
+                            <div className={styles.orderItemLeft}>
+                              {/* 상품 옵션 */}
+                              {hasOptions ? (
+                                <div className={styles.optionGroup}>
+                                  <div className={styles.optionGroupTitle}>상품 옵션</div>
+                                  {Object.entries(item.options).map(([key, value], optIdx) => {
+                                    let optionPrice = 0
+                                    if (item.optionsWithPrices && item.optionsWithPrices[key]) {
+                                      optionPrice = item.optionsWithPrices[key].price
+                                    }
+                                    return (
+                                      <div key={optIdx} className={styles.orderItemOption}>
+                                        [{key}] {value} {optionPrice > 0 && `+${optionPrice.toLocaleString()}원`}
+                                      </div>
+                                    )
+                                  })}
+                                </div>
+                              ) : (
+                                <div className={styles.optionGroup}>
+                                  <div className={styles.optionGroupTitle}>상품 옵션</div>
+                                  <div className={styles.orderItemOption}>
+                                    [기본] 기본 +0원
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* 추가상품 */}
+                              {item.additionalOptions && Object.keys(item.additionalOptions).length > 0 && (
+                                <div className={styles.optionGroup}>
+                                  <div className={styles.optionGroupTitle}>추가상품</div>
+                                  {Object.entries(item.additionalOptions).map(([key, value], optIdx) => {
+                                    let optionPrice = 0
+                                    if (item.additionalOptionsWithPrices && item.additionalOptionsWithPrices[key]) {
+                                      optionPrice = item.additionalOptionsWithPrices[key].price
+                                    }
+                                    return (
+                                      <div key={optIdx} className={styles.orderItemOption}>
+                                        [{key}] {value} {optionPrice > 0 && `+${optionPrice.toLocaleString()}원`}
+                                      </div>
+                                    )
+                                  })}
+                                </div>
+                              )}
+                            </div>
+
+                            <div className={styles.orderItemRight}>
+                              <span className={styles.orderItemQuantity}>{item.quantity}개</span>
+                              <span className={styles.orderItemPrice}>{formatCurrency(item.itemPrice || item.price * item.quantity)}</span>
+                            </div>
+                          </div>
+                      </div>
+                    )
+                  })}
+                </>
+              )}
+
               <div className={styles.detailSectionDivider}></div>
 
-              <h3 className={styles.detailTitle}>결제정보</h3>
+              <div className={styles.detailTitleRow}>
+                <h3 className={styles.detailTitle}>결제정보</h3>
+              </div>
               <div className={styles.totalSection}>
                 <div className={styles.totalRow}>
                   <span className={styles.totalLabel}>총 상품갯수</span>
                   <span className={styles.totalValue}>{order.totalQuantity || order.items.reduce((sum, item) => sum + item.quantity, 0)}개</span>
                 </div>
                 <div className={styles.totalRow}>
-                  <span className={styles.totalLabel}>총 상품금액</span>
+                  <span className={styles.totalLabel}>배송비</span>
                   <span className={styles.totalValue}>
+                    {order.deliveryMethod === '택배 배송' && order.parcelPaymentMethod && order.deliveryFee > 0 && (
+                      <span>({order.parcelPaymentMethod}) </span>
+                    )}
+                    {order.deliveryFee === 0 ? (
+                      <span>조건부 무료 (가게부담)</span>
+                    ) : (
+                      `+${formatCurrency(order.deliveryFee)}`
+                    )}
+                  </span>
+                </div>
+                <div className={styles.totalRow}>
+                  <span className={styles.totalLabel}>총 상품금액</span>
+                  <span className={styles.totalProductValue}>
                     {formatCurrency(order.totalProductPrice)}
                   </span>
                 </div>
@@ -410,14 +504,18 @@ export default function OrderCard({
 
               <div className={styles.detailSectionDivider}></div>
 
-              <h3 className={styles.detailTitle}>매장요청</h3>
+              <div className={styles.detailTitleRow}>
+                <h3 className={styles.detailTitle}>매장요청</h3>
+              </div>
               <div className={styles.requestText}>
                 {order.request || order.detailedRequest || '요청사항이 없습니다.'}
               </div>
 
               <div className={styles.detailSectionDivider}></div>
 
-              <h3 className={styles.detailTitle}>메모</h3>
+              <div className={styles.detailTitleRow}>
+                <h3 className={styles.detailTitle}>메모</h3>
+              </div>
               <div className={styles.memoSection}>
                 <textarea
                   className={styles.memoTextarea}
@@ -442,7 +540,9 @@ export default function OrderCard({
               <>
                 {/* 퀵업체 배송 */}
                 <div className={styles.detailCard}>
-                  <h3 className={styles.detailTitle}>배송날짜</h3>
+                  <div className={styles.detailTitleRow}>
+                    <h3 className={styles.detailTitle}>배송날짜</h3>
+                  </div>
                   <div className={styles.detailRow}>
                     <span className={styles.detailLabel}>배송날짜</span>
                     <span className={styles.detailValue}>
@@ -471,7 +571,9 @@ export default function OrderCard({
 
                   <div className={styles.detailSectionDivider}></div>
 
-                  <h3 className={styles.detailTitle}>배송정보</h3>
+                  <div className={styles.detailTitleRow}>
+                    <h3 className={styles.detailTitle}>배송정보</h3>
+                  </div>
                   <div className={styles.detailRow}>
                     <span className={styles.detailLabel}>배송방법</span>
                     <span className={styles.detailValue}>퀵 업체 배송</span>
@@ -507,7 +609,9 @@ export default function OrderCard({
                   {/* 기사 정보 */}
                   {order.quickDeliveryOrderNo && (
                     <>
-                      <h3 className={styles.detailTitle}>기사 정보</h3>
+                      <div className={styles.detailTitleRow}>
+                        <h3 className={styles.detailTitle}>기사 정보</h3>
+                      </div>
                       {driverInfo ? (
                         <>
                           <div className={styles.detailRow}>
@@ -544,7 +648,9 @@ export default function OrderCard({
                     </>
                   )}
 
-                  <h3 className={styles.detailTitle}>배송요청</h3>
+                  <div className={styles.detailTitleRow}>
+                    <h3 className={styles.detailTitle}>배송요청</h3>
+                  </div>
                   {order.deliveryInfo?.entrancePassword && (
                     <div className={styles.detailRow}>
                       <span className={styles.detailLabel}>공동현관</span>
@@ -571,7 +677,9 @@ export default function OrderCard({
               <>
                 {/* 택배 배송 */}
                 <div className={styles.detailCard}>
-                  <h3 className={styles.detailTitle}>배송날짜</h3>
+                  <div className={styles.detailTitleRow}>
+                    <h3 className={styles.detailTitle}>배송날짜</h3>
+                  </div>
                   <div className={styles.detailRow}>
                     <span className={styles.detailLabel}>배송날짜</span>
                     <span className={styles.detailValue}>
@@ -589,7 +697,9 @@ export default function OrderCard({
 
                   <div className={styles.detailSectionDivider}></div>
 
-                  <h3 className={styles.detailTitle}>배송정보</h3>
+                  <div className={styles.detailTitleRow}>
+                    <h3 className={styles.detailTitle}>배송정보</h3>
+                  </div>
                   <div className={styles.detailRow}>
                     <span className={styles.detailLabel}>배송방법</span>
                     <span className={styles.detailValue}>택배 배송</span>
@@ -628,7 +738,9 @@ export default function OrderCard({
 
                   <div className={styles.detailSectionDivider}></div>
 
-                  <h3 className={styles.detailTitle}>택배정보</h3>
+                  <div className={styles.detailTitleRow}>
+                    <h3 className={styles.detailTitle}>택배정보</h3>
+                  </div>
                   <div className={styles.detailRow}>
                     <span className={styles.detailLabel}>택배사</span>
                     <span className={styles.detailValue}>{order.carrier || '-'}</span>
@@ -650,7 +762,9 @@ export default function OrderCard({
 
                   <div className={styles.detailSectionDivider}></div>
 
-                  <h3 className={styles.detailTitle}>배송요청</h3>
+                  <div className={styles.detailTitleRow}>
+                    <h3 className={styles.detailTitle}>배송요청</h3>
+                  </div>
                   {order.deliveryInfo?.entrancePassword && (
                     <div className={styles.detailRow}>
                       <span className={styles.detailLabel}>공동현관</span>
@@ -677,7 +791,9 @@ export default function OrderCard({
               <>
                 {/* 매장 픽업 */}
                 <div className={styles.detailCard}>
-                  <h3 className={styles.detailTitle}>픽업날짜</h3>
+                  <div className={styles.detailTitleRow}>
+                    <h3 className={styles.detailTitle}>픽업날짜</h3>
+                  </div>
                   <div className={styles.detailRow}>
                     <span className={styles.detailLabel}>픽업날짜</span>
                     <span className={styles.detailValue}>
@@ -706,7 +822,9 @@ export default function OrderCard({
 
                   <div className={styles.detailSectionDivider}></div>
 
-                  <h3 className={styles.detailTitle}>수령인 정보</h3>
+                  <div className={styles.detailTitleRow}>
+                    <h3 className={styles.detailTitle}>수령인 정보</h3>
+                  </div>
                   <div className={styles.detailRow}>
                     <span className={styles.detailLabel}>수령인</span>
                     <span className={styles.detailValue}>{order.deliveryInfo?.recipient || order.recipient}</span>

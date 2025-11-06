@@ -45,6 +45,7 @@ export interface Order {
   orderStatus: OrderStatus
   paymentStatus: 'paid' | 'unpaid'
   deliveryMethod: string
+  parcelPaymentMethod?: '선결제' | '착불'
   deliveryDate: string
   deliveryTime: string
   deliveryInfo?: {
