@@ -331,14 +331,14 @@ export default function ShoppingCartPage() {
 
                       // 상품 옵션 가격 추가
                       if (itemOption.optionsWithPrices) {
-                        Object.values(itemOption.optionsWithPrices).forEach((opt: any) => {
+                        Object.values(itemOption.optionsWithPrices).forEach((opt: { price?: number }) => {
                           basePrice += opt.price || 0
                         })
                       }
 
                       // 추가상품 가격 추가
                       if (itemOption.additionalOptionsWithPrices) {
-                        Object.values(itemOption.additionalOptionsWithPrices).forEach((opt: any) => {
+                        Object.values(itemOption.additionalOptionsWithPrices).forEach((opt: { price?: number }) => {
                           basePrice += opt.price || 0
                         })
                       }
