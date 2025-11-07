@@ -200,9 +200,10 @@
   z-index: 200;
 }
 
+/* PC에서도 오버레이를 표시하되 투명하게 */
 @media (min-width: 769px) {
   .overlay {
-    display: none;
+    background-color: transparent;
   }
 }
 
