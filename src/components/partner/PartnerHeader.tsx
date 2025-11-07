@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
+import OptimizedImage from '@/components/common/OptimizedImage'
 import styles from './PartnerHeader.module.css'
 import { usePathname } from 'next/navigation'
 import { useRouter } from 'next/navigation'
@@ -185,11 +186,11 @@ export default function PartnerHeader({ chatRoomTitle, chatRoomPhone, chatRoomMe
                   <Image
                     src="/assets/partners_logo.png"
                     alt="파트너 로고"
-                    width={250}
-                    height={50}
+                    width={160}
+                    height={0}
                     quality={100}
                     unoptimized
-                    style={{ width: '250px', height: 'auto' }}
+                    style={{ width: '160px', height: 'auto' }}
                     priority
                   />
                 </Link>
@@ -236,13 +237,11 @@ export default function PartnerHeader({ chatRoomTitle, chatRoomPhone, chatRoomMe
                       }}
                     >
                       <span className={styles.phoneIcon}>
-                        <Image
+                        <OptimizedImage
                           src="/icons/phone.png"
                           alt="전화"
                           width={20}
                           height={20}
-                          quality={100}
-                          unoptimized
                         />
                       </span>
                       <span>전화</span>
@@ -255,38 +254,32 @@ export default function PartnerHeader({ chatRoomTitle, chatRoomPhone, chatRoomMe
                     {/* 페이지 타이틀이 있을 때만 홈 아이콘 표시 */}
                     {pageTitle && (
                       <Link href="/partner/dashboard" className={styles.iconLink}>
-                        <Image
+                        <OptimizedImage
                           src={pathname === '/partner/dashboard' ? '/partner-menu-icons/home_active.png' : '/partner-menu-icons/home.png'}
                           alt="홈"
                           width={24}
                           height={24}
-                          quality={100}
-                          unoptimized
                         />
                       </Link>
                     )}
 
                     {/* 리뷰관리 아이콘 */}
                     <Link href="/partner/reviews" className={styles.iconLink}>
-                      <Image
+                      <OptimizedImage
                         src={pathname.startsWith('/partner/reviews') ? '/partner-menu-icons/review_active.png' : '/partner-menu-icons/review.png'}
                         alt="리뷰관리"
                         width={24}
                         height={24}
-                        quality={100}
-                        unoptimized
                       />
                     </Link>
 
                     {/* 채팅 아이콘 */}
                     <Link href="/chat" className={styles.iconLink}>
-                      <Image
+                      <OptimizedImage
                         src={pathname === '/chat' ? '/partner-menu-icons/chat_active.png' : '/partner-menu-icons/chat.png'}
                         alt="채팅"
                         width={24}
                         height={24}
-                        quality={100}
-                        unoptimized
                       />
                       {unreadCount > 0 && (
                         <span className={styles.chatBadge}>{unreadCount}</span>
@@ -295,25 +288,21 @@ export default function PartnerHeader({ chatRoomTitle, chatRoomPhone, chatRoomMe
 
                     {/* 상품관리 아이콘 */}
                     <Link href="/partner/product/management" className={styles.iconLink}>
-                      <Image
+                      <OptimizedImage
                         src={pathname.startsWith('/partner/product') ? '/partner-menu-icons/goods_active.png' : '/partner-menu-icons/goods.png'}
                         alt="상품관리"
                         width={24}
                         height={24}
-                        quality={100}
-                        unoptimized
                       />
                     </Link>
 
                     {/* 주문관리 아이콘 */}
                     <Link href="/partner/order/history" className={styles.iconLink}>
-                      <Image
+                      <OptimizedImage
                         src={pathname.startsWith('/partner/order') ? '/partner-menu-icons/order_active.png' : '/partner-menu-icons/order.png'}
                         alt="주문관리"
                         width={24}
                         height={24}
-                        quality={100}
-                        unoptimized
                       />
                     </Link>
 
@@ -368,13 +357,11 @@ export default function PartnerHeader({ chatRoomTitle, chatRoomPhone, chatRoomMe
               {partnerMenuItems.map((category) => (
                 <div key={category.category} className={styles.menuCategory}>
                   <h3 className={styles.categoryTitle}>
-                    <Image
+                    <OptimizedImage
                       src={category.iconSrc}
                       alt={category.category}
                       width={16}
                       height={16}
-                      quality={100}
-                      unoptimized
                     />
                     {category.category}
                   </h3>
@@ -399,13 +386,11 @@ export default function PartnerHeader({ chatRoomTitle, chatRoomPhone, chatRoomMe
                 className={styles.userPageButton}
                 onClick={closeDrawer}
               >
-                <Image
+                <OptimizedImage
                   src="/assets/menu_logo.png"
                   alt="단체모임"
                   width={24}
                   height={24}
-                  quality={100}
-                  unoptimized
                 />
                 <span>사용자 페이지로</span>
                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -422,13 +407,11 @@ export default function PartnerHeader({ chatRoomTitle, chatRoomPhone, chatRoomMe
                     className={styles.drawerMenuItemWithIcon}
                     onClick={closeDrawer}
                   >
-                    <Image
+                    <OptimizedImage
                       src="/partner-menu-icons/settlement.png"
                       alt="정산계좌관리"
                       width={20}
                       height={20}
-                      quality={100}
-                      unoptimized
                     />
                     <span>정산계좌관리</span>
                   </Link>
@@ -439,13 +422,11 @@ export default function PartnerHeader({ chatRoomTitle, chatRoomPhone, chatRoomMe
                     className={styles.drawerMenuItemWithIcon}
                     onClick={closeDrawer}
                   >
-                    <Image
+                    <OptimizedImage
                       src="/partner-menu-icons/partner_settings.png"
                       alt="설정"
                       width={20}
                       height={20}
-                      quality={100}
-                      unoptimized
                     />
                     <span>설정</span>
                   </Link>
@@ -456,13 +437,11 @@ export default function PartnerHeader({ chatRoomTitle, chatRoomPhone, chatRoomMe
                     className={styles.drawerMenuItemWithIcon}
                     onClick={closeDrawer}
                   >
-                    <Image
+                    <OptimizedImage
                       src="/partner-menu-icons/notice.png"
                       alt="공지사항"
                       width={20}
                       height={20}
-                      quality={100}
-                      unoptimized
                     />
                     <span>공지사항</span>
                   </Link>
@@ -473,13 +452,11 @@ export default function PartnerHeader({ chatRoomTitle, chatRoomPhone, chatRoomMe
                     className={styles.drawerMenuItemWithIcon}
                     onClick={closeDrawer}
                   >
-                    <Image
+                    <OptimizedImage
                       src="/partner-menu-icons/partner_consumer.png"
                       alt="고객센터"
                       width={20}
                       height={20}
-                      quality={100}
-                      unoptimized
                     />
                     <span>고객센터</span>
                   </Link>
@@ -489,13 +466,11 @@ export default function PartnerHeader({ chatRoomTitle, chatRoomPhone, chatRoomMe
                     onClick={handleLogout}
                     className={styles.drawerMenuItemWithIcon}
                   >
-                    <Image
+                    <OptimizedImage
                       src="/partner-menu-icons/partner_logout.png"
                       alt="로그아웃"
                       width={20}
                       height={20}
-                      quality={100}
-                      unoptimized
                     />
                     <span>로그아웃</span>
                   </button>

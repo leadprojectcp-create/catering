@@ -9,6 +9,7 @@ import { doc, getDoc } from 'firebase/firestore'
 import { auth, db } from '@/lib/firebase'
 import { handleRedirectResult, signInWithGoogle, signInWithKakao } from '@/lib/auth'
 import AuthGuard from './AuthGuard'
+import Loading from '@/components/Loading'
 import styles from './LoginPage.module.css'
 
 export default function LoginPage() {
@@ -135,6 +136,9 @@ export default function LoginPage() {
 
   return (
     <AuthGuard requireAuth={false}>
+      {/* 소셜 로그인 로딩 오버레이 */}
+      {loadingProvider !== null && <Loading />}
+
       <div className={styles.container}>
       <div className={styles.formCard}>
         <div className={styles.header}>

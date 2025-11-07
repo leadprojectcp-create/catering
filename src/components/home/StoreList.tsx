@@ -161,9 +161,9 @@ export default function StoreList({ selectedCategory }: StoreListProps) {
                         // 상위 10개 스토어의 첫 번째 이미지만 priority
                         const shouldPrioritize = storeIndex < 10 && index === 0
 
-                        // BunnyCDN 이미지 최적화: 260px (레티나 대응), WebP 포맷, 85% 품질
+                        // BunnyCDN 이미지 최적화: 짧은 쪽을 260px으로 보장 (레티나 대응)
                         const optimizedImage = image.includes('b-cdn.net')
-                          ? `${image}?width=130&format=webp&quality=100`
+                          ? `${image}?width=260&height=260&format=webp&quality=100`
                           : image
 
                         return (
@@ -173,7 +173,7 @@ export default function StoreList({ selectedCategory }: StoreListProps) {
                                 src={optimizedImage}
                                 alt={`${store.storeName || '가게'} 이미지 ${index + 1}`}
                                 fill
-                                sizes="130px"
+                                sizes="(max-width: 768px) 260px, 346px"
                                 className={styles.cardImage}
                                 style={{ objectFit: 'cover' }}
                                 priority={shouldPrioritize}
@@ -193,9 +193,6 @@ export default function StoreList({ selectedCategory }: StoreListProps) {
 
                 {/* 카드 정보 */}
                 <div className={styles.cardInfo}>
-                  <div className={styles.categoryRow}>
-                    <span className={styles.category}>{store.categories?.[0] || ''}</span>
-                  </div>
                   <div className={styles.titleRow}>
                     <h3 className={styles.cardTitle}>{store.storeName}</h3>
                     <span className={styles.district}>

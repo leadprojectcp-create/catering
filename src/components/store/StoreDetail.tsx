@@ -147,12 +147,30 @@ export default function StoreDetail({ storeId }: StoreDetailProps) {
                 src={images[currentImageIndex]}
                 alt={store.storeName}
                 fill
-                sizes="(max-width: 768px) 100vw, 390px"
+                sizes="390px"
                 className={styles.image}
                 style={{ objectFit: 'cover' }}
                 priority
               />
             </div>
+
+            {/* 다음/이전 이미지 미리 로드 */}
+            {images.length > 1 && (
+              <>
+                <link
+                  rel="preload"
+                  as="image"
+                  href={images[(currentImageIndex + 1) % images.length]}
+                />
+                {currentImageIndex > 0 && (
+                  <link
+                    rel="preload"
+                    as="image"
+                    href={images[currentImageIndex - 1]}
+                  />
+                )}
+              </>
+            )}
 
             {images.length > 1 && (
               <>

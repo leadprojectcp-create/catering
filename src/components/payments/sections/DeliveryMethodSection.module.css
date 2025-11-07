@@ -89,3 +89,17 @@
   font-weight: 400;
   text-align: right;
 }
+
+.deliveryFeeNotice {
+  color: #EA4335;
+  font-size: 14px;
+  font-weight: 500;
+  margin-top: -4px;
+  padding-left: 0;
+}
+
+@media (max-width: 768px) {
+  .deliveryFeeNotice {
+    font-size: 10px;
+  }
+}

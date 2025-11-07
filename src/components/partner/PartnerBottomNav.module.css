@@ -1,66 +1,56 @@
 .bottomNav {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background-color: white;
-  border-top: 1px solid #F0F0F3;
-  z-index: 100;
   display: none;
 }
 
-.navContainer {
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
-  height: 60px;
-  max-width: 768px;
-  margin: 0 auto;
-  padding: 0 10px;
-}
-
-.navItem {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  flex: 1;
-  height: 100%;
-  background: none;
-  border: none;
-  cursor: pointer;
-  transition: all 0.2s;
-  padding: 8px 4px;
-}
-
-.navIcon {
-  width: 24px;
-  height: 24px;
-  image-rendering: -webkit-optimize-contrast;
-  image-rendering: crisp-edges;
-}
-
-.navLabel {
-  font-size: 11px;
-  font-weight: 500;
-  color: #999;
-  transition: color 0.2s;
-  white-space: nowrap;
-}
-
-.navItem.active .navLabel {
-  color: #025BD9;
-  font-weight: 600;
-}
-
-.navItem:active {
-  transform: scale(0.95);
-}
-
-/* 모바일에서만 표시 */
 @media (max-width: 768px) {
   .bottomNav {
-    display: block;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background: white;
+    border-top: 1px solid #e5e5e5;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    z-index: 100;
+    padding: 0 8px;
+  }
+
+  .navContainer {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    width: 100%;
+  }
+
+  .navItem {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    cursor: pointer;
+    flex: 1;
+    padding: 8px 0;
+    gap: 4px;
+    color: #333;
+  }
+
+  .navItem.active .navLabel {
+    font-weight: 700;
+  }
+
+  .navIcon {
+    width: 24px;
+    height: 24px;
+  }
+
+  .navLabel {
+    font-size: 12px;
+    font-weight: 500;
+    color: #333;
   }
 }

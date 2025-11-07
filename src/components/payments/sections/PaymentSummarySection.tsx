@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react'
 import { User } from 'firebase/auth'
+import OptimizedImage from '@/components/common/OptimizedImage'
 import { OrderData, OrderInfo } from '../types'
 import { useDeliveryFeeCalculation } from '../hooks/useDeliveryFeeCalculation'
 import { useDeliveryFeeInquiry } from '../hooks/useDeliveryFeeInquiry'
@@ -162,7 +163,20 @@ export default function PaymentSummarySection({
         {/* 택배 배송 - 배송비 표시 */}
         {!isAdditionalOrder && deliveryMethod === '택배 배송' && (
           <div className={styles.paymentRow}>
-            <span className={styles.paymentLabel}>배송비</span>
+            <div>
+              <div className={styles.paymentLabel}>배송비</div>
+              {deliveryFeeSettings?.type === '수량별' && deliveryFeeSettings.perQuantity && deliveryFeeSettings.baseFee && (
+                <div className={styles.deliveryFeeInfo}>
+                  <OptimizedImage
+                    src="/icons/delivery.svg"
+                    alt="배송비"
+                    width={16}
+                    height={16}
+                  />
+                  {deliveryFeeSettings.perQuantity}개당 {deliveryFeeSettings.baseFee.toLocaleString()}원
+                </div>
+              )}
+            </div>
             <span className={styles.paymentValue}>
               {parcelPaymentMethod === '착불'
                 ? `착불(${calculateParcelDeliveryFee.toLocaleString()}원)`

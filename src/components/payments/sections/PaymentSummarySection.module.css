@@ -14,7 +14,7 @@
 
 .paymentContainer {
   border-radius: 20px;
-  border: 1px solid #F4F4F4;
+  border: 1px solid #DDD;
   padding: 16px;
   background: white;
   display: flex;
@@ -53,6 +53,17 @@
 
 .deliveryFeeNotice {
   color: #EA4335;
+  font-size: 14px;
+  font-weight: 500;
+  margin-top: -4px;
+  padding-left: 0;
+}
+
+.deliveryFeeInfo {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #666;
   font-size: 14px;
   font-weight: 500;
   margin-top: -4px;
@@ -206,6 +217,10 @@
   }
 
   .deliveryFeeNotice {
+    font-size: 10px;
+  }
+
+  .deliveryFeeInfo {
     font-size: 10px;
   }
 }

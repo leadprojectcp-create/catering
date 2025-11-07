@@ -78,11 +78,6 @@
   align-items: center;
   justify-content: center;
   text-decoration: none;
-  transition: opacity 0.3s ease;
-}
-
-.iconLink:hover {
-  opacity: 0.7;
 }
 
 .iconLink img {
@@ -265,6 +260,11 @@
 
   .drawerOpen {
     right: 0;
+  }
+
+  /* 드로어 내비게이션에 하단 마진 추가 (주소창 겹침 방지) */
+  .drawerNav {
+    padding-bottom: 80px;
   }
 }
 

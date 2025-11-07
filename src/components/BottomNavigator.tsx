@@ -96,8 +96,8 @@ export default function BottomNavigator() {
     }
   ]
 
-  // 채팅룸 페이지에서는 바텀 네비게이터 숨기기
-  if (pathname.startsWith('/chat/') || pathname.startsWith('/partner')) {
+  // 채팅룸 페이지, 채팅 목록 페이지, 파트너 페이지에서는 바텀 네비게이터 숨기기
+  if (pathname.startsWith('/chat') || pathname.startsWith('/partner')) {
     return null
   }
 

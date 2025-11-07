@@ -464,10 +464,6 @@
 }
 
 @media (max-width: 768px) {
-  .container {
-    padding: 32px 16px;
-  }
-
   .reviewCard {
     padding: 12px;
   }

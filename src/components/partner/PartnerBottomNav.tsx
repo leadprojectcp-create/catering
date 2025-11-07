@@ -36,19 +36,25 @@ export default function PartnerBottomNav() {
       label: '상품관리',
       icon: '/partner-menu-icons/goods.png',
       activeIcon: '/partner-menu-icons/goods_active.png',
-      path: '/partner/products',
+      path: '/partner/product/management',
     },
     {
       label: '주문관리',
       icon: '/partner-menu-icons/order.png',
       activeIcon: '/partner-menu-icons/order_active.png',
-      path: '/partner/orders',
+      path: '/partner/order/history',
     },
   ]
 
   const isActive = (path: string) => {
     if (path === '/partner/dashboard') {
       return pathname === path
+    }
+    if (path === '/partner/product/management') {
+      return pathname.startsWith('/partner/product')
+    }
+    if (path === '/partner/order/history') {
+      return pathname.startsWith('/partner/order')
     }
     return pathname.startsWith(path)
   }

@@ -4,6 +4,6 @@ interface OptimizedImageProps extends Omit<ImageProps, 'quality'> {
   quality?: number
 }
 
-export default function OptimizedImage({ quality = 85, ...props }: OptimizedImageProps) {
+export default function OptimizedImage({ quality = 100, ...props }: OptimizedImageProps) {
   return <Image quality={quality} {...props} />
 }
