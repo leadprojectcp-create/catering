@@ -121,22 +121,36 @@ const ProductInfoSection = memo(function ProductInfoSection({
             </button>
           </div>
 
-          {/* 별점 정보 */}
+          {/* 별점 및 배송비 정보 */}
           {product.reviewCount !== undefined && (
-            <div className={styles.rating}>
-              <OptimizedImage
-                src="/icons/star.png"
-                alt="별점"
-                width={16}
-                height={16}
-                className={styles.starIcon}
-              />
-              <span className={styles.ratingScore}>
-                {product.averageRating?.toFixed(1) || '0.0'}
-              </span>
-              <span className={styles.reviewCount}>
-                ({product.reviewCount?.toLocaleString() || '0'})
-              </span>
+            <div className={styles.ratingAndDeliveryRow}>
+              <div className={styles.ratingInfo}>
+                <OptimizedImage
+                  src="/icons/star.png"
+                  alt="별점"
+                  width={16}
+                  height={16}
+                  className={styles.starIcon}
+                />
+                <span className={styles.ratingScore}>
+                  {product.averageRating?.toFixed(1) || '0.0'}
+                </span>
+                <span className={styles.reviewCount}>
+                  ({product.reviewCount?.toLocaleString() || '0'})
+                </span>
+              </div>
+              {product.deliveryFeeSettings && (
+                <div className={styles.deliveryFeeInfo}>
+                  <OptimizedImage src="/icons/delivery.svg" alt="배송" width={16} height={16} />
+                  {product.deliveryFeeSettings.type === '무료' && '배송비 무료'}
+                  {product.deliveryFeeSettings.type === '조건부 무료' &&
+                    `${product.deliveryFeeSettings.freeCondition?.toLocaleString()}원 이상 구매 시, 배송비 무료`}
+                  {product.deliveryFeeSettings.type === '유료' &&
+                    `배송비 ${product.deliveryFeeSettings.baseFee?.toLocaleString()}원`}
+                  {product.deliveryFeeSettings.type === '수량별' &&
+                    `${product.deliveryFeeSettings.perQuantity}개당, 배송비 ${product.deliveryFeeSettings.baseFee?.toLocaleString()}원`}
+                </div>
+              )}
             </div>
           )}
 

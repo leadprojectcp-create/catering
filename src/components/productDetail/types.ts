@@ -82,6 +82,11 @@ export interface Review {
   content: string
   images?: string[]
   createdAt: Date
+  reply?: {
+    content: string
+    createdAt: Date
+    partnerId: string
+  }
 }
 
 // 옵션 가격 조회 헬퍼 함수

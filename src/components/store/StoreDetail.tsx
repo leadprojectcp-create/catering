@@ -242,10 +242,23 @@ export default function StoreDetail({ storeId }: StoreDetailProps) {
           {store.address && (
             <div className={styles.detailItem}>
               <OptimizedImage src="/icons/map_pin.png" alt="주소" width={24} height={24} />
-              <span className={styles.detailValue}>
-                {store.address.fullAddress}
-                {store.address.detail && ` ${store.address.detail}`}
-              </span>
+              <div className={styles.addressWrapper}>
+                <span className={styles.detailValue}>
+                  {store.address.fullAddress}
+                  {store.address.detail && ` ${store.address.detail}`}
+                </span>
+                <button
+                  className={styles.locationButton}
+                  onClick={() => {
+                    const address = store.address?.fullAddress || ''
+                    const naverMapUrl = `https://map.naver.com/v5/search/${encodeURIComponent(address)}`
+                    window.open(naverMapUrl, '_blank')
+                  }}
+                >
+                  <OptimizedImage src="/icons/location_icon.svg" alt="위치" width={24} height={24} />
+                  <span>위치</span>
+                </button>
+              </div>
             </div>
           )}
 

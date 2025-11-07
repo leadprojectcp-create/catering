@@ -62,6 +62,12 @@ function isValidData(data: unknown): data is DataType {
 - **Firestore Rules 배포하지 말 것**: `firebase deploy --only firestore:rules` 명령어를 절대 실행하지 않습니다
 - 사용자가 명시적으로 요청하지 않는 한 빌드, Git 작업, Firebase 배포를 수행하지 않습니다
 
+## CSS 스타일 규칙
+- **마우스 호버 효과를 절대 추가하지 말 것**
+- `:hover` 스타일을 사용하지 않음
+- `transition` 효과를 사용하지 않음
+- 클릭 가능한 요소에는 `cursor: pointer`만 적용
+
 ## 커밋 전 체크리스트
 - TypeScript 빌드 에러 없음
 - ESLint 에러 없음 (warning은 허용)

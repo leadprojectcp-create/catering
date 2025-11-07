@@ -63,11 +63,18 @@
   line-height: 1.4;
 }
 
-.rating {
+.ratingAndDeliveryRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+}
+
+.ratingInfo {
   display: flex;
   align-items: center;
   gap: 4px;
-  margin: 0;
 }
 
 .starIcon {
@@ -83,6 +90,15 @@
 
 .reviewCount {
   color: #999;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.deliveryFeeInfo {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #666;
   font-size: 14px;
   font-weight: 500;
 }
@@ -156,12 +172,12 @@
 }
 
 .settingBadge {
-  border-radius: 3px;
-  background: #025BD9;
   display: inline-flex;
   padding: 3px 10px;
   justify-content: center;
   align-items: center;
+  border-radius: 3px;
+  background: #025BD9;
   color: #FFF;
   font-size: 13px;
   font-weight: 700;
@@ -222,18 +238,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: 24px;
+  height: 24px;
   background: transparent;
   border: none;
   cursor: pointer;
   padding: 0;
   flex-shrink: 0;
-  transition: all 0.3s ease;
-}
-
-.likeButton:hover {
-  transform: scale(1.1);
 }
 
 .prevButton,

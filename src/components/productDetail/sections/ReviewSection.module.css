@@ -148,6 +148,43 @@
   white-space: pre-wrap;
 }
 
+/* 사장님 댓글 */
+.replyContainer {
+  margin-top: 12px;
+  border-radius: 12px;
+  background: #F5F7F9;
+  padding: 12px 16px;
+}
+
+.replyHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.replyStoreName {
+  color: #333;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 150%;
+}
+
+.replyDate {
+  color: #4E5968;
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.replyContent {
+  color: #333;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 150%;
+  margin: 0;
+  white-space: pre-wrap;
+}
+
 /* 이미지 모달 */
 .imageModal {
   position: fixed;

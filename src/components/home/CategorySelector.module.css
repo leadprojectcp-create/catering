@@ -1,6 +1,6 @@
 .container {
   width: 100%;
-  max-width: 900px;
+  max-width: 840px;
   margin: 0 auto;
   display: flex;
   justify-content: center;
@@ -58,7 +58,6 @@
   justify-content: center;
   cursor: pointer;
   position: relative;
-  transition: all 0.2s ease;
   flex-shrink: 0;
   width: calc((100% - (6 * 24px)) / 7);
 }
@@ -70,10 +69,6 @@
   }
 }
 
-.categoryCard:hover {
-  opacity: 0.8;
-}
-
 
 .categoryIcon {
   width: 72px;
@@ -82,10 +77,6 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 8px;
-  transition: all 0.2s ease;
-  background-color: #F5F5F5;
-  border-radius: 20px;
 }
 
 .categoryIcon img {

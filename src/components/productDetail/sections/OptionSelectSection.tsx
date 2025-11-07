@@ -137,7 +137,29 @@ export default function OptionSelectSection({
   const handleReset = () => {
     setSelectedOptions([])
     setSelectedAdditionalOptions([])
+    setExpandedOptions({})
     onQuantityChange(1)
+
+    // 필수 옵션이 없고 추가 옵션만 있는 경우 기본 상품 1개로 초기화
+    if (!product.optionsEnabled && product.additionalOptionsEnabled) {
+      onCartItemsChange([{
+        options: {},
+        additionalOptions: undefined,
+        quantity: 1
+      }])
+    }
+    // 필수 옵션도 없고 추가 옵션도 없는 경우 기본 상품 1개로 초기화
+    else if (!product.optionsEnabled && !product.additionalOptionsEnabled) {
+      onCartItemsChange([{
+        options: {},
+        additionalOptions: undefined,
+        quantity: 1
+      }])
+    }
+    // 필수 옵션이 있는 경우 빈 배열로 초기화
+    else {
+      onCartItemsChange([])
+    }
   }
 
   return (

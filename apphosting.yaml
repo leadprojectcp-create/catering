@@ -100,7 +100,7 @@ env:
       - BUILD
       - RUNTIME
   - variable: NEXT_PUBLIC_PORTONE_EASY_CHANNEL_KEY
-    value: channel-key-5ebf141b-d42d-426d-a107-a3f96d6ab5cf
+    value: channel-key-6df294ea-31b7-40c9-b214-52d87f5a243a
     availability:
       - BUILD
       - RUNTIME

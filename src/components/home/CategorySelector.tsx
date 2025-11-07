@@ -58,9 +58,6 @@ export default function CategorySelector({
       <div className={styles.categoryGrid}>
         {categories.map((category) => {
           const isSelected = selectedCategories.includes(category.id)
-          const hasBackground = category.id === 'ai' || category.id === 'magazine'
-          const backgroundImage = category.id === 'ai' ? '/icons/ai_bg.png' :
-                                  category.id === 'magazine' ? '/icons/magazine_bg.png' : null
 
           return (
             <button
@@ -69,15 +66,7 @@ export default function CategorySelector({
               className={`${styles.categoryCard} ${isSelected ? styles.selected : ''}`}
               onClick={() => handleCategoryClick(category.id, category.name)}
             >
-              <div
-                className={styles.categoryIcon}
-                style={hasBackground && backgroundImage ? {
-                  backgroundImage: `url(${backgroundImage})`,
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center',
-                  backgroundColor: 'transparent'
-                } : undefined}
-              >
+              <div className={styles.categoryIcon}>
                 <Image
                   src={category.icon}
                   alt={category.name}

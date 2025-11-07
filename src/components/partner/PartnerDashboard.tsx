@@ -819,12 +819,12 @@ export default function PartnerDashboard() {
 
             {/* 실시간 주문현황 */}
             <div className={styles.realtimeOrderSection}>
-              <h2 className={styles.realtimeOrderTitle}>
+              <Link href="/partner/order/history" className={styles.realtimeOrderTitle}>
                 실시간 주문현황
                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
                   <path d="M7.5 5L12.5 10L7.5 15" stroke="#4E5968" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
-              </h2>
+              </Link>
               <div className={styles.realtimeOrderGrid}>
                 <div className={styles.realtimeOrderItem}>
                   <span className={styles.realtimeOrderLabel}>신규주문</span>

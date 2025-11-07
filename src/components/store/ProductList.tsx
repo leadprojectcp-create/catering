@@ -30,6 +30,7 @@ interface Product {
   minOrderDays?: number
   deliveryMethods?: string[]
   additionalSettings?: string[]
+  productTypes?: string[]
   quantityRanges?: {
     minQuantity: number
     maxQuantity: number
@@ -181,7 +182,20 @@ export default function ProductList({ storeId }: ProductListProps) {
                 onClick={() => router.push(`/productDetail/${product.id}?storeId=${storeId}`)}
               >
               <div className={styles.info}>
-                <h3 className={styles.productName}>{product.name}</h3>
+                <h3 className={styles.productName}>
+                  {product.productTypes?.map((type, index) => {
+                    const typeText = type === '대표상품' ? '대표' : type === '추천상품' ? '추천' : type === '시즌상품' ? '시즌' : type
+                    const badgeClass = type === '대표상품' ? styles.productTypeFeatured :
+                                      type === '추천상품' ? styles.productTypeRecommended :
+                                      type === '시즌상품' ? styles.productTypeSeasonal : ''
+                    return (
+                      <span key={index} className={`${styles.productTypeBadge} ${badgeClass}`}>
+                        {typeText}
+                      </span>
+                    )
+                  })}
+                  <span>{product.name}</span>
+                </h3>
 
                 {/* 가격 정보 */}
                 {isDiscountValid(product) && product.discountedPrice ? (

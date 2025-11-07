@@ -127,6 +127,36 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.productTypeBadge {
+  display: inline-flex;
+  padding: 3px 5px;
+  justify-content: center;
+  align-items: center;
+  border-radius: 30px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: normal;
+  flex-shrink: 0;
+}
+
+.productTypeFeatured {
+  background: #FFA813;
+  color: #FFF;
+}
+
+.productTypeRecommended {
+  background: #FFF5E3;
+  color: #F79B2C;
+}
+
+.productTypeSeasonal {
+  background: #5911FF;
+  color: #FFFFFF;
 }
 
 .priceSection {

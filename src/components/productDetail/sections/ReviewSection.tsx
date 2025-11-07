@@ -2,12 +2,18 @@
 
 import { useState, useMemo, useRef, useEffect } from 'react'
 import Image from 'next/image'
+import { doc, getDoc } from 'firebase/firestore'
+import { db } from '@/lib/firebase'
 import { Review } from '../types'
 import styles from './ReviewSection.module.css'
 
 interface ReviewSectionProps {
   reviews: Review[]
   loadingReviews: boolean
+}
+
+interface PartnerStore {
+  storeName: string
 }
 
 type SortType = '베스트순' | '최신순' | '별점 높은 순' | '별점 낮은 순'
@@ -18,7 +24,35 @@ export default function ReviewSection({ reviews, loadingReviews }: ReviewSection
   const [selectedImages, setSelectedImages] = useState<string[]>([])
   const [touchStart, setTouchStart] = useState(0)
   const [touchEnd, setTouchEnd] = useState(0)
+  const [partnerStores, setPartnerStores] = useState<{ [key: string]: string }>({})
   const modalRef = useRef<HTMLDivElement>(null)
+
+  // 파트너 스토어 이름 가져오기
+  useEffect(() => {
+    const fetchPartnerStores = async () => {
+      const partnerIds = reviews
+        .filter(r => r.reply?.partnerId)
+        .map(r => r.reply!.partnerId)
+        .filter((id, index, self) => self.indexOf(id) === index) // 중복 제거
+
+      const storeNames: { [key: string]: string } = {}
+      for (const partnerId of partnerIds) {
+        try {
+          const storeDoc = await getDoc(doc(db, 'stores', partnerId))
+          if (storeDoc.exists()) {
+            storeNames[partnerId] = storeDoc.data().storeName || '사장님'
+          }
+        } catch (error) {
+          console.error('스토어 정보 로딩 실패:', error)
+        }
+      }
+      setPartnerStores(storeNames)
+    }
+
+    if (reviews.length > 0) {
+      fetchPartnerStores()
+    }
+  }, [reviews])
 
   // 리뷰 정렬 로직
   const sortedReviews = useMemo(() => {
@@ -197,6 +231,25 @@ export default function ReviewSection({ reviews, loadingReviews }: ReviewSection
                 </div>
               )}
               <p className={styles.reviewContent}>{review.content}</p>
+
+              {/* 사장님 댓글 */}
+              {review.reply && (
+                <div className={styles.replyContainer}>
+                  <div className={styles.replyHeader}>
+                    <span className={styles.replyStoreName}>
+                      {partnerStores[review.reply.partnerId] || '사장님'}
+                    </span>
+                    <span className={styles.replyDate}>
+                      {review.reply.createdAt.toLocaleDateString('ko-KR', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit'
+                      }).replace(/\. /g, '.').replace(/\.$/, '')} 작성
+                    </span>
+                  </div>
+                  <p className={styles.replyContent}>{review.reply.content}</p>
+                </div>
+              )}
             </div>
           ))}
         </div>
