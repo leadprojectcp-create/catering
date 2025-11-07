@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import Image from 'next/image'
+import OptimizedImage from '@/components/common/OptimizedImage'
 import { useAuth } from '@/contexts/AuthContext'
 import { getCartItems, deleteCartItem, updateCartItem, type CartItem, type CartItemOption } from '@/lib/services/cartService'
 import { doc, getDoc } from 'firebase/firestore'
@@ -281,17 +281,16 @@ export default function ShoppingCartPage() {
                     className={styles.checkbox}
                   />
 
-                  <div className={styles.itemImage}>
-                    {item.productImage && (
-                      <Image
-                        src={item.productImage}
-                        alt={item.productName || '상품'}
-                        width={100}
-                        height={100}
-                        style={{ objectFit: 'cover' }}
-                      />
-                    )}
-                  </div>
+                  {item.productImage && (
+                    <OptimizedImage
+                      src={item.productImage}
+                      alt={item.productName || '상품'}
+                      width={100}
+                      height={100}
+                      quality={100}
+                      className={styles.itemImage}
+                    />
+                  )}
 
                   <div className={styles.itemInfo}>
                     <div className={styles.storeName}>{item.storeName}</div>
@@ -319,59 +318,84 @@ export default function ShoppingCartPage() {
 
                 {/* items 배열의 모든 옵션 표시 */}
                 <div className={styles.optionsContainer}>
-                  {item.items.map((itemOption, index) => (
-                    <div key={index} className={styles.itemOptionGroup}>
-                      <div className={styles.optionsWrapper}>
-                        {/* 상품 옵션 */}
-                        <div className={styles.optionSection}>
-                          <div className={styles.optionSectionTitle}>상품 옵션</div>
-                          <div className={styles.optionsList}>
-                            {Object.keys(itemOption.options).length > 0 ? (
-                              Object.entries(itemOption.options).map(([groupName, value]) => {
-                                // 옵션 가격 찾기
-                                let optionPrice = 0
-                                if (itemOption.optionsWithPrices && itemOption.optionsWithPrices[groupName]) {
-                                  optionPrice = itemOption.optionsWithPrices[groupName].price
-                                }
-                                return (
-                                  <div key={groupName} className={styles.optionText}>
-                                    <span className={styles.optionGroupName}>[{groupName}]</span> {value} +{optionPrice.toLocaleString()}원
-                                  </div>
-                                )
-                              })
-                            ) : (
-                              <div className={styles.optionText}>
-                                <span className={styles.optionGroupName}>[기본]</span> 기본 +0원
-                              </div>
-                            )}
-                          </div>
-                        </div>
+                  {item.items.map((itemOption, index) => {
+                    // 총 가격 계산 - OrderDetailPage와 동일한 로직
+                    let itemTotalPrice = 0
 
-                        {/* 추가상품 */}
-                        {itemOption.additionalOptions && Object.keys(itemOption.additionalOptions).length > 0 && (
+                    // itemPrice가 있으면 사용 (이미 계산된 값)
+                    if (itemOption.itemPrice) {
+                      itemTotalPrice = itemOption.itemPrice
+                    } else {
+                      // itemPrice가 없으면 계산
+                      let basePrice = item.productPrice || 0
+
+                      // 상품 옵션 가격 추가
+                      if (itemOption.optionsWithPrices) {
+                        Object.values(itemOption.optionsWithPrices).forEach((opt: any) => {
+                          basePrice += opt.price || 0
+                        })
+                      }
+
+                      // 추가상품 가격 추가
+                      if (itemOption.additionalOptionsWithPrices) {
+                        Object.values(itemOption.additionalOptionsWithPrices).forEach((opt: any) => {
+                          basePrice += opt.price || 0
+                        })
+                      }
+
+                      itemTotalPrice = basePrice * itemOption.quantity
+                    }
+
+                    return (
+                      <div key={index} className={styles.itemOptionGroup}>
+                        <div className={styles.optionsWrapper}>
+                          {/* 상품 옵션 */}
                           <div className={styles.optionSection}>
-                            <div className={styles.optionSectionTitle}>추가상품</div>
+                            <div className={styles.optionSectionTitle}>상품 옵션</div>
                             <div className={styles.optionsList}>
-                              {Object.entries(itemOption.additionalOptions).map(([groupName, value]) => {
-                                // 추가옵션 가격 찾기
-                                let optionPrice = 0
-                                if (itemOption.additionalOptionsWithPrices && itemOption.additionalOptionsWithPrices[groupName]) {
-                                  optionPrice = itemOption.additionalOptionsWithPrices[groupName].price
-                                }
-                                return (
-                                  <div key={groupName} className={styles.optionText}>
-                                    <span className={styles.optionGroupName}>[{groupName}]</span> {value} +{optionPrice.toLocaleString()}원
-                                  </div>
-                                )
-                              })}
+                              {Object.keys(itemOption.options).length > 0 ? (
+                                Object.entries(itemOption.options).map(([groupName, value]) => {
+                                  return (
+                                    <div key={groupName} className={styles.optionText}>
+                                      <span className={styles.optionGroupName}>[{groupName}]</span>
+                                      <span>{value}</span>
+                                    </div>
+                                  )
+                                })
+                              ) : (
+                                <div className={styles.optionText}>
+                                  <span className={styles.optionGroupName}>[기본]</span>
+                                  <span>기본</span>
+                                </div>
+                              )}
                             </div>
                           </div>
-                        )}
-                      </div>
 
-                      <span className={styles.optionQuantity}>{itemOption.quantity}개</span>
-                    </div>
-                  ))}
+                          {/* 추가상품 */}
+                          {itemOption.additionalOptions && Object.keys(itemOption.additionalOptions).length > 0 && (
+                            <div className={styles.optionSection}>
+                              <div className={styles.optionSectionTitle}>추가상품</div>
+                              <div className={styles.optionsList}>
+                                {Object.entries(itemOption.additionalOptions).map(([groupName, value]) => {
+                                  return (
+                                    <div key={groupName} className={styles.optionText}>
+                                      <span className={styles.optionGroupName}>[{groupName}]</span>
+                                      <span>{value}</span>
+                                    </div>
+                                  )
+                                })}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className={styles.optionQuantity}>
+                          <span className={styles.optionQuantityValue}>{itemOption.quantity}개</span>
+                          <span className={styles.optionQuantityValue}>{itemTotalPrice.toLocaleString()}원</span>
+                        </div>
+                      </div>
+                    )
+                  })}
                 </div>
 
                 {/* 구분선 */}

@@ -298,20 +298,12 @@ export default function AddProductPage() {
           alert('조건부 무료 배송 시 무료 배송 조건 금액을 입력해주세요.')
           return
         }
-        if (!formData.deliveryFeeSettings.paymentMethods || formData.deliveryFeeSettings.paymentMethods.length === 0) {
-          alert('조건부 무료 배송 시 결제 방식(선결제/착불)을 최소 1개 이상 선택해주세요.')
-          return
-        }
       }
 
       // 유료인 경우
       if (formData.deliveryFeeSettings.type === '유료') {
         if (!formData.deliveryFeeSettings.baseFee || formData.deliveryFeeSettings.baseFee <= 0) {
           alert('유료 배송 시 기본 배송비를 입력해주세요.')
-          return
-        }
-        if (!formData.deliveryFeeSettings.paymentMethods || formData.deliveryFeeSettings.paymentMethods.length === 0) {
-          alert('유료 배송 시 결제 방식(선결제/착불)을 최소 1개 이상 선택해주세요.')
           return
         }
       }
@@ -324,10 +316,6 @@ export default function AddProductPage() {
         }
         if (!formData.deliveryFeeSettings.perQuantity || formData.deliveryFeeSettings.perQuantity <= 0) {
           alert('수량별 배송 시 반복 부과 수량을 입력해주세요.')
-          return
-        }
-        if (!formData.deliveryFeeSettings.paymentMethods || formData.deliveryFeeSettings.paymentMethods.length === 0) {
-          alert('수량별 배송 시 결제 방식(선결제/착불)을 최소 1개 이상 선택해주세요.')
           return
         }
       }
@@ -363,8 +351,8 @@ export default function AddProductPage() {
         uploadedImageUrls.push(uploadResult.url)
       }
 
-      // 옵션 필터링 (설정이 활성화된 경우에만)
-      const filteredOptions = optionsEnabled ? formData.options
+      // 옵션 필터링 (비활성화되어도 기존 데이터 유지)
+      const filteredOptions = formData.options
         .filter(option =>
           option.groupName.trim() !== '' &&
           option.values.some(v => v.name.trim() !== '')
@@ -372,10 +360,10 @@ export default function AddProductPage() {
         .map(option => ({
           ...option,
           values: option.values.filter(v => v.name.trim() !== '')
-        })) : []
+        }))
 
-      // 추가상품 옵션 필터링 (설정이 활성화된 경우에만)
-      const filteredAdditionalOptions = additionalOptionsEnabled ? formData.additionalOptions
+      // 추가상품 옵션 필터링 (비활성화되어도 기존 데이터 유지)
+      const filteredAdditionalOptions = formData.additionalOptions
         .filter(option =>
           option.groupName.trim() !== '' &&
           option.values.some(v => v.name.trim() !== '')
@@ -383,7 +371,7 @@ export default function AddProductPage() {
         .map(option => ({
           ...option,
           values: option.values.filter(v => v.name.trim() !== '')
-        })) : []
+        }))
 
       // orderType을 'single'로 고정하여 전송
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

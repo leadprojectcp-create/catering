@@ -574,10 +574,16 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
             <div className={styles.infoRow}>
               <span className={styles.infoLabel}>배송비</span>
               <span className={styles.infoValue}>
-                {order.deliveryMethod === '택배 배송' && order.parcelPaymentMethod && (
-                  <span>({order.parcelPaymentMethod}) </span>
+                {order.parcelPaymentMethod === '착불' && order.deliveryMethod === '택배 배송' ? (
+                  <span>착불({order.deliveryFee > 0 ? order.deliveryFee.toLocaleString() : '0'}원)</span>
+                ) : order.deliveryFee === 0 ? (
+                  <span>조건부 무료</span>
+                ) : (
+                  <>
+                    {order.parcelPaymentMethod && <span>({order.parcelPaymentMethod}) </span>}
+                    +{order.deliveryFee.toLocaleString()}원
+                  </>
                 )}
-                +{order.deliveryFee.toLocaleString()}원
               </span>
             </div>
             <div className={styles.infoRow}>

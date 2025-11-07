@@ -468,6 +468,22 @@ export default function OrderCard({
                       </div>
                     )
                   })}
+
+                  {/* 추가주문 취소 버튼 */}
+                  <div className={styles.cancelAdditionalOrderButtonWrapper}>
+                    <button
+                      className={styles.cancelAdditionalOrderButton}
+                      onClick={() => {
+                        if (window.confirm('추가주문을 취소하시겠습니까?')) {
+                          // TODO: 추가주문 취소 로직 구현
+                          alert('추가주문 취소 기능은 곧 구현될 예정입니다.')
+                        }
+                      }}
+                      type="button"
+                    >
+                      추가주문 취소하기
+                    </button>
+                  </div>
                 </>
               )}
 
@@ -484,13 +500,15 @@ export default function OrderCard({
                 <div className={styles.totalRow}>
                   <span className={styles.totalLabel}>배송비</span>
                   <span className={styles.totalValue}>
-                    {order.deliveryMethod === '택배 배송' && order.parcelPaymentMethod && order.deliveryFee > 0 && (
-                      <span>({order.parcelPaymentMethod}) </span>
-                    )}
                     {order.deliveryFee === 0 ? (
                       <span>조건부 무료 (가게부담)</span>
                     ) : (
-                      `+${formatCurrency(order.deliveryFee)}`
+                      <>
+                        {order.deliveryMethod === '택배 배송' && order.parcelPaymentMethod && (
+                          <span>({order.parcelPaymentMethod}) </span>
+                        )}
+                        {order.parcelPaymentMethod === '착불' ? formatCurrency(order.deliveryFee) : `+${formatCurrency(order.deliveryFee)}`}
+                      </>
                     )}
                   </span>
                 </div>

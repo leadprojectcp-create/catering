@@ -435,6 +435,28 @@
   width: 100%;
 }
 
+.cancelAdditionalOrderButtonWrapper {
+  margin-top: 8px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.cancelAdditionalOrderButton {
+  padding: 8px 16px;
+  border-radius: 10px;
+  border: 1px solid #F4F4F4;
+  background: #FFF;
+  color: #333;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cancelAdditionalOrderButton:hover {
+  background: #F4F4F4;
+}
+
 @media (max-width: 768px) {
   .orderCard {
     padding: 12px;

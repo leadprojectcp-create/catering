@@ -502,37 +502,54 @@ export default function CartItemsSection({
                 </button>
               )}
             </div>
-            {/* 옵션이 있을 때만 표시 */}
-            {Object.keys(item.options).length > 0 && (
+            {/* 옵션 표시 - 옵션이 있을 때 또는 옵션이 비활성화되어 있을 때 */}
+            {(Object.keys(item.options).length > 0 || !product.optionsEnabled) && (
               <div className={styles.optionSection}>
                 <div className={styles.optionSectionTitle}>상품 옵션</div>
-                {Object.entries(item.options).map(([groupName, optionValue]) => {
-                  // 콤마로 split 시도, 없으면 공백 2개 이상으로 split
-                  let optionNames = optionValue.split(',').map(name => name.trim())
+                {Object.keys(item.options).length > 0 ? (
+                  Object.entries(item.options).map(([groupName, optionValue]) => {
+                    // 콤마로 split 시도, 없으면 공백 2개 이상으로 split
+                    let optionNames = optionValue.split(',').map(name => name.trim())
 
-                  // split 결과가 1개이고 공백이 포함되어 있으면 공백으로 재시도
-                  if (optionNames.length === 1 && optionValue.includes('  ')) {
-                    optionNames = optionValue.split(/\s{2,}/).map(name => name.trim()).filter(name => name)
-                  }
+                    // split 결과가 1개이고 공백이 포함되어 있으면 공백으로 재시도
+                    if (optionNames.length === 1 && optionValue.includes('  ')) {
+                      optionNames = optionValue.split(/\s{2,}/).map(name => name.trim()).filter(name => name)
+                    }
 
-                  return (
-                    <div key={groupName}>
-                      {optionNames.map((optionName, idx) => {
-                        const optionPrice = getOptionPrice(product, groupName, optionName)
+                    return (
+                      <div key={groupName}>
+                        {optionNames.map((optionName, idx) => {
+                          const optionPrice = getOptionPrice(product, groupName, optionName)
+                          // 상품 기본 가격 (할인가가 있으면 할인가, 없으면 원가)
+                          const basePrice = (isDiscountValid(product) && product.discountedPrice)
+                            ? product.discountedPrice
+                            : product.price
+                          const totalPrice = basePrice + optionPrice
 
-                        return (
-                          <div key={`${groupName}-${idx}`} className={styles.selectedOption}>
-                            <div>
-                              <span className={styles.optionGroupName}>[{groupName}]</span>
-                              <span>{optionName}</span>
+                          return (
+                            <div key={`${groupName}-${idx}`} className={styles.selectedOption}>
+                              <div>
+                                <span className={styles.optionGroupName}>[{groupName}]</span>
+                                <span>{optionName}</span>
+                              </div>
+                              <span className={styles.optionPrice}>{totalPrice.toLocaleString()}원</span>
                             </div>
-                            <span className={styles.optionPrice}>+{optionPrice.toLocaleString()}원</span>
-                          </div>
-                        )
-                      })}
+                          )
+                        })}
+                      </div>
+                    )
+                  })
+                ) : (
+                  <div className={styles.selectedOption}>
+                    <div>
+                      <span className={styles.optionGroupName}>[기본]</span>
+                      <span>기본</span>
                     </div>
-                  )
-                })}
+                    <span className={styles.optionPrice}>
+                      {((isDiscountValid(product) && product.discountedPrice) ? product.discountedPrice : product.price).toLocaleString()}원
+                    </span>
+                  </div>
+                )}
               </div>
             )}
             {item.additionalOptions && Object.keys(item.additionalOptions).length > 0 && product.additionalOptions && (

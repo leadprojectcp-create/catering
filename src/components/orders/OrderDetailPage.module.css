@@ -259,7 +259,6 @@
   display: flex;
   flex-direction: row;
   justify-content: space-between;
-  align-items: center;
   background: #F5F7F9;
   padding: 12px;
   border-radius: 8px;
@@ -269,7 +268,7 @@
 .productDetailsLeft {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
   flex: 1;
 }
 
@@ -277,6 +276,7 @@
   display: flex;
   flex-direction: column;
   align-items: flex-end;
+  justify-content: center;
   gap: 4px;
   flex-shrink: 0;
 }
@@ -301,10 +301,27 @@
 
 .optionItem {
   display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.optionItemFirstRow {
+  display: flex;
   gap: 4px;
   color: #333;
   font-size: 14px;
   font-weight: 500;
+  padding-left: 8px;
+}
+
+.optionItemSecondRow {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  color: #333;
+  font-size: 14px;
+  font-weight: 700;
 }
 
 .optionGroup {
@@ -364,8 +381,8 @@
   display: inline-flex;
   align-items: center;
   padding: 4px 10px;
-  border-radius: 4px;
-  font-size: 15px;
+  border-radius: 3px;
+  font-size: 14px;
   font-weight: 600;
   width: fit-content;
 }
@@ -378,6 +395,17 @@
 .deliveryMethodPickup {
   background: #FCF4FF;
   color: #5911FF;
+}
+
+.deliveryMethodLabel:not(.deliveryMethodQuick):not(.deliveryMethodPickup) {
+  background: #FFF7E9;
+  color: #FF8B00;
+}
+
+.deliverySection .divider {
+  height: 1px;
+  background: #F4F4F4;
+  margin: 0;
 }
 
 .deliveryInfoSection {

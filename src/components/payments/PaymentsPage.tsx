@@ -7,7 +7,6 @@ import { useAuth } from '@/contexts/AuthContext'
 import Loading from '@/components/Loading'
 import DeliveryInfoSection from './sections/DeliveryInfoSection'
 import DeliveryMethodSection from './sections/DeliveryMethodSection'
-import ParcelPaymentMethodSection from './sections/ParcelPaymentMethodSection'
 import PaymentMethodSection from './sections/PaymentMethodSection'
 import OrderProductSection from './sections/OrderProductSection'
 import PickupRecipientSection from './sections/PickupRecipientSection'
@@ -48,13 +47,14 @@ export default function PaymentsPage() {
     quantityRanges,
     totalQuantity,
     deliveryFeeSettings,
-    parcelPaymentMethod,
     savedAddresses,
     availablePoint,
     setDeliveryMethod,
-    setParcelPaymentMethod,
     setSavedAddresses
   } = useOrderData(user)
+
+  // 착불 기능 제거 - 항상 선결제로 고정
+  const parcelPaymentMethod = '선결제' as const
 
   // 폼 상태 관리 hook
   const {
@@ -151,18 +151,9 @@ export default function PaymentsPage() {
             <DeliveryMethodSection
               deliveryMethods={orderData?.deliveryMethods}
               selectedMethod={deliveryMethod}
+              deliveryFeeSettings={deliveryFeeSettings}
               onMethodChange={setDeliveryMethod}
             />
-
-            {/* 택배 배송 - 배송비 결제 방식 */}
-            {deliveryMethod === '택배 배송' && deliveryFeeSettings && (
-              <ParcelPaymentMethodSection
-                deliveryFeeSettings={deliveryFeeSettings}
-                parcelPaymentMethod={parcelPaymentMethod}
-                totalPrice={orderData?.items.reduce((sum, item) => sum + ((item.price || 0) * item.quantity), 0) || 0}
-                onMethodChange={setParcelPaymentMethod}
-              />
-            )}
 
             {/* 매장 픽업 - 수령인 정보 */}
             {deliveryMethod === '매장 픽업' && (

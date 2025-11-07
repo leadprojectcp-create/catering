@@ -22,7 +22,6 @@ interface UsePaymentSummaryParams {
     type: '무료' | '조건부 무료' | '유료' | '수량별'
     baseFee?: number
     freeCondition?: number
-    paymentMethods?: ('선결제' | '착불')[]
     perQuantity?: number
   } | null
   orderData: OrderData | null
@@ -71,7 +70,6 @@ export function usePaymentSummary(params: UsePaymentSummaryParams) {
     deliveryMethod,
     deliveryFeeFromAPI,
     deliveryFeeSettings,
-    parcelPaymentMethod,
     totalProductPrice,
     totalQuantity,
     isAdditionalOrder,
@@ -90,15 +88,15 @@ export function usePaymentSummary(params: UsePaymentSummaryParams) {
   })
 
   // 총 결제금액
-  const totalPrice = calculateTotalPrice(totalProductPrice, deliveryFee, deliveryPromotion, usePoint)
+  const totalPrice = calculateTotalPrice(totalProductPrice, deliveryFee, deliveryPromotion, usePoint, parcelPaymentMethod)
 
   // 실제 결제 금액 (배송비 환급 반영) - 음수 가능
   const actualPaymentAmount = useMemo(() => {
     if (deliveryFeeRefund > 0) {
       return totalProductPrice - deliveryFeeRefund - usePoint
     }
-    return calculateTotalPrice(totalProductPrice, deliveryFee, deliveryPromotion, usePoint)
-  }, [totalProductPrice, deliveryFee, deliveryPromotion, usePoint, deliveryFeeRefund])
+    return calculateTotalPrice(totalProductPrice, deliveryFee, deliveryPromotion, usePoint, parcelPaymentMethod)
+  }, [totalProductPrice, deliveryFee, deliveryPromotion, usePoint, deliveryFeeRefund, parcelPaymentMethod])
 
   const handlePayment = async () => {
     // 이메일 가져오기

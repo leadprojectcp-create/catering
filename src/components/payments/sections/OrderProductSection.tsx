@@ -36,114 +36,126 @@ export default function OrderProductSection({ orderData, orderId, isCartMode, ad
           <div className={styles.productList}>
             {orderData.storeName && <div className={styles.storeName}>{orderData.storeName}</div>}
             <div className={styles.productItem}>
-              {/* 상품 이미지 - 한 번만 표시 */}
-              {orderData.productImage && orderData.productImage.trim() !== '' ? (
-                <Image
-                  src={orderData.productImage}
-                  alt={orderData.productName}
-                  width={100}
-                  height={100}
-                  quality={100}
-                  className={styles.productImage}
-                />
-              ) : (
-                <div className={styles.productImage} style={{ background: '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <span style={{ color: '#999', fontSize: '12px' }}>이미지 없음</span>
-                </div>
-              )}
-              <div className={styles.productInfo}>
+              {/* 상단: 이미지와 상품명/수정 버튼 */}
+              <div className={styles.productHeader}>
+                {/* 상품 이미지 */}
+                {orderData.productImage && orderData.productImage.trim() !== '' ? (
+                  <Image
+                    src={orderData.productImage}
+                    alt={orderData.productName}
+                    width={70}
+                    height={70}
+                    quality={100}
+                    className={styles.productImage}
+                  />
+                ) : (
+                  <div className={styles.productImage} style={{ background: '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <span style={{ color: '#999', fontSize: '12px' }}>이미지 없음</span>
+                  </div>
+                )}
                 {/* 상품명과 수정 버튼 */}
-                <div className={styles.productNameAndButton}>
-                  <div className={styles.productName}>{orderData.productName}</div>
-                  <button
-                    onClick={handleEditProduct}
-                    className={styles.editButton}
-                  >
-                    주문수정
-                  </button>
+                <div className={styles.productInfo}>
+                  <div className={styles.productNameAndButton}>
+                    <div className={styles.productName}>{orderData.productName}</div>
+                    <button
+                      onClick={handleEditProduct}
+                      className={styles.editButton}
+                    >
+                      주문수정
+                    </button>
+                  </div>
                 </div>
+              </div>
 
-                {/* 각 아이템의 옵션들만 반복 */}
-                {/* additionalOrderId가 있으면 paymentId 없는 항목 표시, 없으면 isAddItem=false인 항목 표시 */}
-                {(() => {
-                  let itemsToDisplay: OrderItem[] = []
+              {/* 하단: 각 아이템의 옵션들 */}
+              {/* additionalOrderId가 있으면 paymentId 없는 항목 표시, 없으면 isAddItem=false인 항목 표시 */}
+              {(() => {
+                let itemsToDisplay: OrderItem[] = []
 
-                  if (additionalOrderId) {
-                    // 추가 주문 결제 모드 (결제 전): paymentId가 없는 항목들 (방금 추가된 것들)
-                    itemsToDisplay = orderData.items.filter(item => !item.paymentId)
-                  } else {
-                    // 일반 모드: 최초 주문 상품만 표시 (isAddItem이 false이거나 없는 것들)
-                    itemsToDisplay = orderData.items.filter(item => !item.isAddItem)
-                  }
+                if (additionalOrderId) {
+                  // 추가 주문 결제 모드 (결제 전): paymentId가 없는 항목들 (방금 추가된 것들)
+                  itemsToDisplay = orderData.items.filter(item => !item.paymentId)
+                } else {
+                  // 일반 모드: 최초 주문 상품만 표시 (isAddItem이 false이거나 없는 것들)
+                  itemsToDisplay = orderData.items.filter(item => !item.isAddItem)
+                }
 
-                  return itemsToDisplay.map((item, index) => (
-                    <div key={index}>
-                      <div className={styles.productDetailsBox}>
-                        <div className={styles.productDetailsLeft}>
-                          {/* 상품 옵션 */}
-                          {Object.keys(item.options).length > 0 ? (
-                            <div className={styles.optionSection}>
-                              <div className={styles.optionSectionTitle}>상품 옵션</div>
-                              <div className={styles.productOptions}>
-                                {Object.entries(item.options).map(([key, value]) => {
-                                  let optionPrice = 0
-                                  if (item.optionsWithPrices && item.optionsWithPrices[key]) {
-                                    optionPrice = item.optionsWithPrices[key].price
-                                  }
-                                  return (
-                                    <div key={key} className={styles.optionItem}>
+                return itemsToDisplay.map((item, index) => (
+                  <div key={index}>
+                    <div className={styles.productDetailsBox}>
+                      {/* 왼쪽: 상품 옵션 및 추가상품 */}
+                      <div className={styles.productDetailsLeft}>
+                        {/* 상품 옵션 */}
+                        {Object.keys(item.options).length > 0 ? (
+                          <div className={styles.optionSection}>
+                            <div className={styles.optionSectionTitle}>상품 옵션</div>
+                            <div className={styles.productOptions}>
+                              {Object.entries(item.options).map(([key, value]) => {
+                                return (
+                                  <div key={key} className={styles.optionItem}>
+                                    <div className={styles.optionItemFirstRow}>
                                       <span className={styles.optionGroup}>[{key}]</span>
-                                      <span>{value} +{optionPrice.toLocaleString()}원</span>
+                                      <span>{value}</span>
                                     </div>
-                                  )
-                                })}
-                              </div>
+                                  </div>
+                                )
+                              })}
                             </div>
-                          ) : (
-                            /* 필수 옵션이 없을 때 기본 옵션 표시 */
-                            <div className={styles.optionSection}>
-                              <div className={styles.optionSectionTitle}>상품 옵션</div>
-                              <div className={styles.productOptions}>
-                                <div className={styles.optionItem}>
+                          </div>
+                        ) : (
+                          <div className={styles.optionSection}>
+                            <div className={styles.optionSectionTitle}>상품 옵션</div>
+                            <div className={styles.productOptions}>
+                              <div className={styles.optionItem}>
+                                <div className={styles.optionItemFirstRow}>
                                   <span className={styles.optionGroup}>[기본]</span>
-                                  <span> +0원</span>
+                                  <span>기본</span>
                                 </div>
                               </div>
                             </div>
-                          )}
+                          </div>
+                        )}
 
-                          {/* 추가상품 */}
-                          {item.additionalOptions && Object.keys(item.additionalOptions).length > 0 && (
-                            <div className={styles.optionSection}>
-                              <div className={styles.optionSectionTitle}>추가상품</div>
-                              <div className={styles.productOptions}>
-                                {Object.entries(item.additionalOptions).map(([key, value]) => {
-                                  let optionPrice = 0
-                                  if (item.additionalOptionsWithPrices && item.additionalOptionsWithPrices[key]) {
-                                    optionPrice = item.additionalOptionsWithPrices[key].price
-                                  }
-                                  return (
-                                    <div key={key} className={styles.optionItem}>
+                        {/* 추가상품 */}
+                        {item.additionalOptions && Object.keys(item.additionalOptions).length > 0 && (
+                          <div className={styles.optionSection}>
+                            <div className={styles.optionSectionTitle}>추가상품</div>
+                            <div className={styles.productOptions}>
+                              {Object.entries(item.additionalOptions).map(([key, value]) => {
+                                return (
+                                  <div key={key} className={styles.optionItem}>
+                                    <div className={styles.optionItemFirstRow}>
                                       <span className={styles.optionGroup}>[{key}]</span>
-                                      <span>{value} +{optionPrice.toLocaleString()}원</span>
+                                      <span>{value}</span>
                                     </div>
-                                  )
-                                })}
-                              </div>
+                                  </div>
+                                )
+                              })}
                             </div>
-                          )}
-                        </div>
+                          </div>
+                        )}
+                      </div>
 
-                        <div className={styles.productDetailsRight}>
-                          <div className={styles.productQuantity}>{item.quantity}개</div>
+                      {/* 오른쪽: 수량 및 가격 */}
+                      <div className={styles.productDetailsRight}>
+                        <div className={styles.optionItemSecondRow}>
+                          <span>{item.quantity}개</span>
+                          <span>{(((item.price || 0) + Object.entries(item.additionalOptions || {}).reduce((sum, [key]) => {
+                            let optionPrice = 0
+                            if (item.additionalOptionsWithPrices && item.additionalOptionsWithPrices[key]) {
+                              optionPrice = item.additionalOptionsWithPrices[key].price
+                            }
+                            return sum + optionPrice
+                          }, 0)) * (item.quantity || 1)).toLocaleString()}원</span>
                         </div>
                       </div>
                     </div>
-                  ))
-                })()}
+                  </div>
+                ))
+              })()}
 
-                {/* 추가 주문 내역 표시 (paymentId로 그룹핑) - 결제 완료 후에만 표시 */}
-                {!additionalOrderId && (() => {
+              {/* 추가 주문 내역 표시 (paymentId로 그룹핑) - 결제 완료 후에만 표시 */}
+              {!additionalOrderId && (() => {
                   // isAddItem=true인 항목들만 필터링
                   const addItems = orderData.items.filter(item => item.isAddItem)
 
@@ -168,6 +180,7 @@ export default function OrderProductSection({ orderData, orderId, isCartMode, ad
                           {items.map((item, itemIndex) => (
                             <div key={`${paymentId}-${itemIndex}`}>
                               <div className={styles.productDetailsBox}>
+                                {/* 왼쪽: 상품 옵션 및 추가상품 */}
                                 <div className={styles.productDetailsLeft}>
                                   {/* 상품 옵션 */}
                                   {Object.keys(item.options).length > 0 ? (
@@ -175,14 +188,12 @@ export default function OrderProductSection({ orderData, orderId, isCartMode, ad
                                       <div className={styles.optionSectionTitle}>상품 옵션</div>
                                       <div className={styles.productOptions}>
                                         {Object.entries(item.options).map(([key, value]) => {
-                                          let optionPrice = 0
-                                          if (item.optionsWithPrices && item.optionsWithPrices[key]) {
-                                            optionPrice = item.optionsWithPrices[key].price
-                                          }
                                           return (
                                             <div key={key} className={styles.optionItem}>
-                                              <span className={styles.optionGroup}>[{key}]</span>
-                                              <span>{value} +{optionPrice.toLocaleString()}원</span>
+                                              <div className={styles.optionItemFirstRow}>
+                                                <span className={styles.optionGroup}>[{key}]</span>
+                                                <span>{value}</span>
+                                              </div>
                                             </div>
                                           )
                                         })}
@@ -193,8 +204,10 @@ export default function OrderProductSection({ orderData, orderId, isCartMode, ad
                                       <div className={styles.optionSectionTitle}>상품 옵션</div>
                                       <div className={styles.productOptions}>
                                         <div className={styles.optionItem}>
-                                          <span className={styles.optionGroup}>[기본]</span>
-                                          <span>[기본] +0원</span>
+                                          <div className={styles.optionItemFirstRow}>
+                                            <span className={styles.optionGroup}>[기본]</span>
+                                            <span>기본</span>
+                                          </div>
                                         </div>
                                       </div>
                                     </div>
@@ -206,14 +219,12 @@ export default function OrderProductSection({ orderData, orderId, isCartMode, ad
                                       <div className={styles.optionSectionTitle}>추가상품</div>
                                       <div className={styles.productOptions}>
                                         {Object.entries(item.additionalOptions).map(([key, value]) => {
-                                          let optionPrice = 0
-                                          if (item.additionalOptionsWithPrices && item.additionalOptionsWithPrices[key]) {
-                                            optionPrice = item.additionalOptionsWithPrices[key].price
-                                          }
                                           return (
                                             <div key={key} className={styles.optionItem}>
-                                              <span className={styles.optionGroup}>[{key}]</span>
-                                              <span>{value} +{optionPrice.toLocaleString()}원</span>
+                                              <div className={styles.optionItemFirstRow}>
+                                                <span className={styles.optionGroup}>[{key}]</span>
+                                                <span>{value}</span>
+                                              </div>
                                             </div>
                                           )
                                         })}
@@ -222,8 +233,18 @@ export default function OrderProductSection({ orderData, orderId, isCartMode, ad
                                   )}
                                 </div>
 
+                                {/* 오른쪽: 수량 및 가격 */}
                                 <div className={styles.productDetailsRight}>
-                                  <div className={styles.productQuantity}>{item.quantity}개</div>
+                                  <div className={styles.optionItemSecondRow}>
+                                    <span>{item.quantity}개</span>
+                                    <span>{(((item.price || 0) + Object.entries(item.additionalOptions || {}).reduce((sum, [key]) => {
+                                      let optionPrice = 0
+                                      if (item.additionalOptionsWithPrices && item.additionalOptionsWithPrices[key]) {
+                                        optionPrice = item.additionalOptionsWithPrices[key].price
+                                      }
+                                      return sum + optionPrice
+                                    }, 0)) * (item.quantity || 1)).toLocaleString()}원</span>
+                                  </div>
                                 </div>
                               </div>
                             </div>
@@ -233,7 +254,6 @@ export default function OrderProductSection({ orderData, orderId, isCartMode, ad
                     </div>
                   )
                 })()}
-              </div>
             </div>
           </div>
         )}

@@ -5,7 +5,6 @@ export interface DeliveryFeeSettings {
   type: '무료' | '조건부 무료' | '유료' | '수량별'
   baseFee?: number
   freeCondition?: number
-  paymentMethods?: ('선결제' | '착불')[]
   perQuantity?: number  // 몇 개마다 배송비를 반복 부과할지
 }
 
@@ -58,20 +57,6 @@ export default function DeliveryMethodSection({
   const handleNumberInput = (field: keyof DeliveryFeeSettings, value: string) => {
     const numValue = parseNumber(value)
     handleFeeSettingChange(field, numValue)
-  }
-
-  const handlePaymentMethodToggle = (method: '선결제' | '착불') => {
-    if (!onDeliveryFeeChange || !deliveryFeeSettings) return
-
-    const currentMethods = deliveryFeeSettings.paymentMethods || []
-    const newMethods = currentMethods.includes(method)
-      ? currentMethods.filter(m => m !== method)
-      : [...currentMethods, method]
-
-    onDeliveryFeeChange({
-      ...deliveryFeeSettings,
-      paymentMethods: newMethods
-    })
   }
 
   const isParcelDeliverySelected = deliveryMethods.includes('택배 배송')
@@ -208,41 +193,6 @@ export default function DeliveryMethodSection({
                 />
                 <span>원 이상 무료</span>
               </div>
-              <div className={styles.inputRow}>
-                <label className={styles.inputLabel}>결제 방식</label>
-                <div className={styles.checkboxGroup}>
-                  <label className={styles.checkboxLabel}>
-                    <input
-                      type="checkbox"
-                      checked={deliveryFeeSettings.paymentMethods?.includes('선결제') || false}
-                      onChange={() => handlePaymentMethodToggle('선결제')}
-                      className={styles.hiddenCheckbox}
-                    />
-                    <span className={styles.customCheckbox}>
-                      <img
-                        src={deliveryFeeSettings.paymentMethods?.includes('선결제') ? "/icons/check_active.png" : "/icons/check.png"}
-                        alt="체크박스"
-                      />
-                    </span>
-                    선결제
-                  </label>
-                  <label className={styles.checkboxLabel}>
-                    <input
-                      type="checkbox"
-                      checked={deliveryFeeSettings.paymentMethods?.includes('착불') || false}
-                      onChange={() => handlePaymentMethodToggle('착불')}
-                      className={styles.hiddenCheckbox}
-                    />
-                    <span className={styles.customCheckbox}>
-                      <img
-                        src={deliveryFeeSettings.paymentMethods?.includes('착불') ? "/icons/check_active.png" : "/icons/check.png"}
-                        alt="체크박스"
-                      />
-                    </span>
-                    착불
-                  </label>
-                </div>
-              </div>
             </div>
           )}
 
@@ -259,41 +209,6 @@ export default function DeliveryMethodSection({
                   className={styles.input}
                 />
                 <span>원</span>
-              </div>
-              <div className={styles.inputRow}>
-                <label className={styles.inputLabel}>결제 방식</label>
-                <div className={styles.checkboxGroup}>
-                  <label className={styles.checkboxLabel}>
-                    <input
-                      type="checkbox"
-                      checked={deliveryFeeSettings.paymentMethods?.includes('선결제') || false}
-                      onChange={() => handlePaymentMethodToggle('선결제')}
-                      className={styles.hiddenCheckbox}
-                    />
-                    <span className={styles.customCheckbox}>
-                      <img
-                        src={deliveryFeeSettings.paymentMethods?.includes('선결제') ? "/icons/check_active.png" : "/icons/check.png"}
-                        alt="체크박스"
-                      />
-                    </span>
-                    선결제
-                  </label>
-                  <label className={styles.checkboxLabel}>
-                    <input
-                      type="checkbox"
-                      checked={deliveryFeeSettings.paymentMethods?.includes('착불') || false}
-                      onChange={() => handlePaymentMethodToggle('착불')}
-                      className={styles.hiddenCheckbox}
-                    />
-                    <span className={styles.customCheckbox}>
-                      <img
-                        src={deliveryFeeSettings.paymentMethods?.includes('착불') ? "/icons/check_active.png" : "/icons/check.png"}
-                        alt="체크박스"
-                      />
-                    </span>
-                    착불
-                  </label>
-                </div>
               </div>
             </div>
           )}
@@ -322,41 +237,6 @@ export default function DeliveryMethodSection({
                   className={styles.input}
                 />
                 <span>개마다</span>
-              </div>
-              <div className={styles.inputRow}>
-                <label className={styles.inputLabel}>결제 방식</label>
-                <div className={styles.checkboxGroup}>
-                  <label className={styles.checkboxLabel}>
-                    <input
-                      type="checkbox"
-                      checked={deliveryFeeSettings.paymentMethods?.includes('선결제') || false}
-                      onChange={() => handlePaymentMethodToggle('선결제')}
-                      className={styles.hiddenCheckbox}
-                    />
-                    <span className={styles.customCheckbox}>
-                      <img
-                        src={deliveryFeeSettings.paymentMethods?.includes('선결제') ? "/icons/check_active.png" : "/icons/check.png"}
-                        alt="체크박스"
-                      />
-                    </span>
-                    선결제
-                  </label>
-                  <label className={styles.checkboxLabel}>
-                    <input
-                      type="checkbox"
-                      checked={deliveryFeeSettings.paymentMethods?.includes('착불') || false}
-                      onChange={() => handlePaymentMethodToggle('착불')}
-                      className={styles.hiddenCheckbox}
-                    />
-                    <span className={styles.customCheckbox}>
-                      <img
-                        src={deliveryFeeSettings.paymentMethods?.includes('착불') ? "/icons/check_active.png" : "/icons/check.png"}
-                        alt="체크박스"
-                      />
-                    </span>
-                    착불
-                  </label>
-                </div>
               </div>
             </div>
           )}

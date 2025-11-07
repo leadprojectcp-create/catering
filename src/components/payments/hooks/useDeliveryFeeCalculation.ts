@@ -6,7 +6,6 @@ interface DeliveryFeeSettings {
   type: '무료' | '조건부 무료' | '유료' | '수량별'
   baseFee?: number
   freeCondition?: number
-  paymentMethods?: ('선결제' | '착불')[]
   perQuantity?: number
 }
 
@@ -14,7 +13,6 @@ interface UseDeliveryFeeCalculationProps {
   deliveryMethod: string
   deliveryFeeFromAPI: number | null
   deliveryFeeSettings: DeliveryFeeSettings | null
-  parcelPaymentMethod: '선결제' | '착불'
   totalProductPrice: number
   totalQuantity: number
   isAdditionalOrder: boolean
@@ -30,7 +28,6 @@ export function useDeliveryFeeCalculation({
   deliveryMethod,
   deliveryFeeFromAPI,
   deliveryFeeSettings,
-  parcelPaymentMethod,
   totalProductPrice,
   totalQuantity,
   isAdditionalOrder,
@@ -120,10 +117,6 @@ export function useDeliveryFeeCalculation({
     }
 
     if (deliveryMethod === '택배 배송') {
-      if (parcelPaymentMethod === '착불') {
-        return 0
-      }
-
       if (isAdditionalOrder) {
         if (deliveryFeeSettings?.type === '조건부 무료' || deliveryFeeSettings?.type === '수량별') {
           return calculateParcelDeliveryFee
@@ -135,7 +128,7 @@ export function useDeliveryFeeCalculation({
     }
 
     return 0
-  }, [isAdditionalOrder, deliveryMethod, deliveryFeeFromAPI, calculateParcelDeliveryFee, parcelPaymentMethod, deliveryFeeSettings])
+  }, [isAdditionalOrder, deliveryMethod, deliveryFeeFromAPI, calculateParcelDeliveryFee, deliveryFeeSettings])
 
   // 배송비 프로모션 (퀵업체 배송이고 30만원 이상일 때만 1만원 할인, 추가 주문은 제외)
   const deliveryPromotion = useMemo(() => {

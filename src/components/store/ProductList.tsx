@@ -30,6 +30,11 @@ interface Product {
   minOrderDays?: number
   deliveryMethods?: string[]
   additionalSettings?: string[]
+  quantityRanges?: {
+    minQuantity: number
+    maxQuantity: number
+    daysBeforeOrder: number
+  }[]
 }
 
 interface ProductListProps {
@@ -198,10 +203,12 @@ export default function ProductList({ storeId }: ProductListProps) {
                   </div>
                 )}
 
-                {/* 최소 주문일 정보 */}
-                {product.minOrderDays && product.minOrderDays > 0 && (
+                {/* 주문일 정보 */}
+                {product.quantityRanges && product.quantityRanges.length > 0 && !(product.quantityRanges[0].daysBeforeOrder === 0 && product.quantityRanges[product.quantityRanges.length - 1].daysBeforeOrder === 0) && (
                   <div className={styles.minOrderDays}>
-                    최소 {product.minOrderDays}일 전 주문 가능
+                    {product.quantityRanges[0].daysBeforeOrder === product.quantityRanges[product.quantityRanges.length - 1].daysBeforeOrder
+                      ? `${product.quantityRanges[0].daysBeforeOrder}일 전 주문 가능`
+                      : `${product.quantityRanges[0].daysBeforeOrder}일 ~ ${product.quantityRanges[product.quantityRanges.length - 1].daysBeforeOrder}일 전 주문 가능`}
                   </div>
                 )}
 

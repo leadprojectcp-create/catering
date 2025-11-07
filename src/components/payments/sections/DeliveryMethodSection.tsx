@@ -6,12 +6,19 @@ import styles from './DeliveryMethodSection.module.css'
 interface DeliveryMethodSectionProps {
   deliveryMethods?: string[]
   selectedMethod: string
+  deliveryFeeSettings?: {
+    type: '무료' | '조건부 무료' | '유료' | '수량별'
+    baseFee?: number
+    freeCondition?: number
+    perQuantity?: number
+  } | null
   onMethodChange: (method: string) => void
 }
 
 export default function DeliveryMethodSection({
   deliveryMethods,
   selectedMethod,
+  deliveryFeeSettings,
   onMethodChange
 }: DeliveryMethodSectionProps) {
   if (!deliveryMethods || deliveryMethods.length === 0) {
@@ -70,6 +77,60 @@ export default function DeliveryMethodSection({
                 <span>{method}</span>
                 <div className={styles.deliveryMethodDescription}>{description}</div>
               </div>
+              {method === '택배 배송' && deliveryFeeSettings && (
+                <div className={styles.deliveryFeeInfo}>
+                  {deliveryFeeSettings.type === '무료' && (
+                    <div className={styles.deliveryFeeTextWithIcon}>
+                      <OptimizedImage
+                        src="/icons/delivery.svg"
+                        alt="배송비"
+                        width={16}
+                        height={16}
+                      />
+                      <div className={styles.deliveryFeeText}>배송비 무료</div>
+                    </div>
+                  )}
+                  {deliveryFeeSettings.type === '유료' && deliveryFeeSettings.baseFee && (
+                    <div className={styles.deliveryFeeTextWithIcon}>
+                      <OptimizedImage
+                        src="/icons/delivery.svg"
+                        alt="배송비"
+                        width={16}
+                        height={16}
+                      />
+                      <div className={styles.deliveryFeeText}>배송비 {deliveryFeeSettings.baseFee.toLocaleString()}원</div>
+                    </div>
+                  )}
+                  {deliveryFeeSettings.type === '조건부 무료' && deliveryFeeSettings.freeCondition && (
+                    <div className={styles.deliveryFeeTextContainer}>
+                      <div className={styles.deliveryFeeTextWithIcon}>
+                        <OptimizedImage
+                          src="/icons/delivery.svg"
+                          alt="배송비"
+                          width={16}
+                          height={16}
+                        />
+                        <div className={styles.deliveryFeeText}>{deliveryFeeSettings.freeCondition.toLocaleString()}원 이상</div>
+                      </div>
+                      <div className={styles.deliveryFeeText}>무료 배송</div>
+                    </div>
+                  )}
+                  {deliveryFeeSettings.type === '수량별' && deliveryFeeSettings.perQuantity && deliveryFeeSettings.baseFee && (
+                    <div className={styles.deliveryFeeTextContainer}>
+                      <div className={styles.deliveryFeeTextWithIcon}>
+                        <OptimizedImage
+                          src="/icons/delivery.svg"
+                          alt="배송비"
+                          width={16}
+                          height={16}
+                        />
+                        <div className={styles.deliveryFeeText}>{deliveryFeeSettings.perQuantity}개당</div>
+                      </div>
+                      <div className={styles.deliveryFeeText}>{deliveryFeeSettings.baseFee.toLocaleString()}원</div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )
         })}

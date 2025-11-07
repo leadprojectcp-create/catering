@@ -21,14 +21,11 @@ interface UseOrderDataResult {
     type: '무료' | '조건부 무료' | '유료' | '수량별'
     baseFee?: number
     freeCondition?: number
-    paymentMethods?: ('선결제' | '착불')[]
     perQuantity?: number
   } | null
-  parcelPaymentMethod: '선결제' | '착불'
   savedAddresses: DeliveryAddress[]
   availablePoint: number
   setDeliveryMethod: (method: string) => void
-  setParcelPaymentMethod: (method: '선결제' | '착불') => void
   setSavedAddresses: (addresses: DeliveryAddress[]) => void
 }
 
@@ -48,10 +45,8 @@ export function useOrderData(user: User | null): UseOrderDataResult {
     type: '무료' | '조건부 무료' | '유료' | '수량별'
     baseFee?: number
     freeCondition?: number
-    paymentMethods?: ('선결제' | '착불')[]
     perQuantity?: number
   } | null>(null)
-  const [parcelPaymentMethod, setParcelPaymentMethod] = useState<'선결제' | '착불'>('선결제')
   const [quantityRanges, setQuantityRanges] = useState<{
     minQuantity: number
     maxQuantity: number
@@ -117,17 +112,10 @@ export function useOrderData(user: User | null): UseOrderDataResult {
             setQuantityRanges(productData.quantityRanges)
           }
 
-          // deliveryFeeSettings 가져오기
+          // deliveryFeeSettings 가져오기 (paymentMethods 필드 제거)
           if (productData.deliveryFeeSettings) {
-            setDeliveryFeeSettings(productData.deliveryFeeSettings)
-          }
-
-          // orderDocData에서 저장된 택배 결제방법 확인 (우선순위 1)
-          if (orderDocData.parcelPaymentMethod) {
-            setParcelPaymentMethod(orderDocData.parcelPaymentMethod)
-          } else if (productData.deliveryFeeSettings?.paymentMethods && productData.deliveryFeeSettings.paymentMethods.length > 0) {
-            // 저장된 값이 없으면 첫 번째 값을 기본값으로 설정 (우선순위 2)
-            setParcelPaymentMethod(productData.deliveryFeeSettings.paymentMethods[0])
+            const { paymentMethods, ...rest } = productData.deliveryFeeSettings
+            setDeliveryFeeSettings(rest)
           }
 
           // orderDocData에서 저장된 배송방법 확인
@@ -224,11 +212,9 @@ export function useOrderData(user: User | null): UseOrderDataResult {
     quantityRanges,
     totalQuantity,
     deliveryFeeSettings,
-    parcelPaymentMethod,
     savedAddresses,
     availablePoint,
     setDeliveryMethod,
-    setParcelPaymentMethod,
     setSavedAddresses
   }
 }

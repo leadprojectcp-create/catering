@@ -20,7 +20,6 @@ interface PaymentSummarySectionProps {
     type: '무료' | '조건부 무료' | '유료' | '수량별'
     baseFee?: number
     freeCondition?: number
-    paymentMethods?: ('선결제' | '착불')[]
     perQuantity?: number
   } | null
   orderData: OrderData | null
@@ -76,7 +75,6 @@ export default function PaymentSummarySection({
     deliveryMethod,
     deliveryFeeFromAPI,
     deliveryFeeSettings,
-    parcelPaymentMethod,
     totalProductPrice,
     totalQuantity,
     isAdditionalOrder,
@@ -104,13 +102,13 @@ export default function PaymentSummarySection({
     if (deliveryFeeRefund > 0) {
       return totalProductPrice - deliveryFeeRefund - usePoint
     }
-    return calculateTotalPrice(totalProductPrice, deliveryFee, deliveryPromotion, usePoint)
-  }, [totalProductPrice, deliveryFee, deliveryPromotion, usePoint, deliveryFeeRefund])
+    return calculateTotalPrice(totalProductPrice, deliveryFee, deliveryPromotion, usePoint, parcelPaymentMethod)
+  }, [totalProductPrice, deliveryFee, deliveryPromotion, usePoint, deliveryFeeRefund, parcelPaymentMethod])
 
   // 총 결제금액 (화면 표시용)
   const totalPrice = useMemo(() =>
-    calculateTotalPrice(totalProductPrice, deliveryFee, deliveryPromotion, usePoint)
-  , [totalProductPrice, deliveryFee, deliveryPromotion, usePoint])
+    calculateTotalPrice(totalProductPrice, deliveryFee, deliveryPromotion, usePoint, parcelPaymentMethod)
+  , [totalProductPrice, deliveryFee, deliveryPromotion, usePoint, parcelPaymentMethod])
 
   return (
     <section className={styles.section}>

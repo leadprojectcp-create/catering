@@ -62,7 +62,10 @@ export function calculateTotalPrice(
   totalProductPrice: number,
   deliveryFee: number,
   deliveryPromotion: number,
-  usePoint: number
+  usePoint: number,
+  parcelPaymentMethod?: '선결제' | '착불'
 ): number {
-  return totalProductPrice + deliveryFee - deliveryPromotion - usePoint
+  // 착불일 때는 배송비를 결제 금액에 포함하지 않음
+  const actualDeliveryFee = parcelPaymentMethod === '착불' ? 0 : deliveryFee
+  return totalProductPrice + actualDeliveryFee - deliveryPromotion - usePoint
 }

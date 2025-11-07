@@ -133,21 +133,21 @@ export default function RegularOrderSection({ order }: Props) {
                       <div className={styles.productOptions}>
                         {Object.keys(item.options).length > 0 ? (
                           Object.entries(item.options).map(([key, value]) => {
-                            let optionPrice = 0
-                            if (item.optionsWithPrices && item.optionsWithPrices[key]) {
-                              optionPrice = item.optionsWithPrices[key].price
-                            }
                             return (
                               <div key={key} className={styles.optionItem}>
-                                <span className={styles.optionGroup}>[{key}]</span>
-                                <span>{value} +{optionPrice.toLocaleString()}원</span>
+                                <div className={styles.optionItemFirstRow}>
+                                  <span className={styles.optionGroup}>[{key}]</span>
+                                  <span>{value}</span>
+                                </div>
                               </div>
                             )
                           })
                         ) : (
                           <div className={styles.optionItem}>
-                            <span className={styles.optionGroup}>[기본]</span>
-                            <span>기본 +0원</span>
+                            <div className={styles.optionItemFirstRow}>
+                              <span className={styles.optionGroup}>[기본]</span>
+                              <span>기본</span>
+                            </div>
                           </div>
                         )}
                       </div>
@@ -159,14 +159,12 @@ export default function RegularOrderSection({ order }: Props) {
                         <div className={styles.optionSectionTitle}>추가상품</div>
                         <div className={styles.productOptions}>
                           {Object.entries(item.additionalOptions).map(([key, value]) => {
-                            let optionPrice = 0
-                            if (item.additionalOptionsWithPrices && item.additionalOptionsWithPrices[key]) {
-                              optionPrice = item.additionalOptionsWithPrices[key].price
-                            }
                             return (
                               <div key={key} className={styles.optionItem}>
-                                <span className={styles.optionGroup}>[{key}]</span>
-                                <span>{value} +{optionPrice.toLocaleString()}원</span>
+                                <div className={styles.optionItemFirstRow}>
+                                  <span className={styles.optionGroup}>[{key}]</span>
+                                  <span>{value}</span>
+                                </div>
                               </div>
                             )
                           })}
@@ -176,8 +174,10 @@ export default function RegularOrderSection({ order }: Props) {
                   </div>
 
                   <div className={styles.productDetailsRight}>
-                    <div className={styles.quantityInfo}>{item.quantity}개</div>
-                    <div className={styles.priceInfo}>{itemTotalPrice.toLocaleString()}원</div>
+                    <div className={styles.optionItemSecondRow}>
+                      <span>{item.quantity}개</span>
+                      <span>{itemTotalPrice.toLocaleString()}원</span>
+                    </div>
                   </div>
                 </div>
               )

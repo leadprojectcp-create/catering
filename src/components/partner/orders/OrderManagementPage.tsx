@@ -85,10 +85,19 @@ export default function OrderManagementPage() {
     const unsubscribe = onSnapshot(
       ordersQuery,
       (snapshot) => {
+        console.log('=== Firestore 실시간 업데이트 수신 ===')
+        console.log('변경된 문서 수:', snapshot.docChanges().length)
+        snapshot.docChanges().forEach(change => {
+          if (change.type === 'modified') {
+            console.log('수정된 주문:', change.doc.id, change.doc.data())
+          }
+        })
+
         const ordersData = snapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data()
         })) as Order[]
+        console.log('전체 주문 수:', ordersData.length)
         setOrders(ordersData)
         setLoading(false)
       },
@@ -209,11 +218,24 @@ export default function OrderManagementPage() {
     if (!trackingOrderId) return
 
     try {
+      console.log('=== 택배 정보 저장 시작 ===')
+      console.log('주문 ID:', trackingOrderId)
+      console.log('택배사:', carrier)
+      console.log('송장번호:', trackingNumber)
+
       await updateOrderStatus(trackingOrderId, 'shipping', undefined, carrier, trackingNumber)
+
+      console.log('상태 업데이트 완료, 로컬 state 업데이트 시작')
       setOrders(orders.map(o => o.id === trackingOrderId ? { ...o, orderStatus: 'shipping', carrier, trackingNumber } : o))
+
+      // 필터를 '배송·픽업중' 탭으로 자동 변경
+      setFilter('shipping')
+      updateURL({ filter: 'shipping' })
+
       setShowTrackingModal(false)
       setTrackingOrderId(null)
       alert('택배 정보가 저장되고 주문 상태가 변경되었습니다.')
+      console.log('=== 택배 정보 저장 완료 ===')
     } catch (error) {
       console.error('택배 정보 저장 실패:', error)
       alert('택배 정보 저장에 실패했습니다.')
