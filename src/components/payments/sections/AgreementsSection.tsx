@@ -67,10 +67,10 @@ export default function AgreementsSection({
                 onClick={(e) => e.stopPropagation()}
               />
               <Image
-                src={agreements.terms ? '/icons/check_active.png' : '/icons/check_empty.png'}
+                src={agreements.terms ? '/icons/check_empty_active.svg' : '/icons/check_empty_disactive.svg'}
                 alt="체크박스"
-                width={20}
-                height={20}
+                width={16}
+                height={16}
                 className={styles.checkboxIcon}
               />
             </div>
@@ -99,10 +99,10 @@ export default function AgreementsSection({
                 onClick={(e) => e.stopPropagation()}
               />
               <Image
-                src={agreements.refund ? '/icons/check_active.png' : '/icons/check_empty.png'}
+                src={agreements.refund ? '/icons/check_empty_active.svg' : '/icons/check_empty_disactive.svg'}
                 alt="체크박스"
-                width={20}
-                height={20}
+                width={16}
+                height={16}
                 className={styles.checkboxIcon}
               />
             </div>
@@ -131,10 +131,10 @@ export default function AgreementsSection({
                 onClick={(e) => e.stopPropagation()}
               />
               <Image
-                src={agreements.marketing ? '/icons/check_active.png' : '/icons/check_empty.png'}
+                src={agreements.marketing ? '/icons/check_empty_active.svg' : '/icons/check_empty_disactive.svg'}
                 alt="체크박스"
-                width={20}
-                height={20}
+                width={16}
+                height={16}
                 className={styles.checkboxIcon}
               />
             </div>

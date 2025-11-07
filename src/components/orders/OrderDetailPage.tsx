@@ -11,6 +11,7 @@ import { addCartItem } from '@/lib/services/cartService'
 import Loading from '@/components/Loading'
 import OrderCancelModal from './OrderCancelModal'
 import TaxInvoiceModal from './TaxInvoiceModal'
+import TrackingInfoModal from './TrackingInfoModal'
 import styles from './OrderDetailPage.module.css'
 import OrderHeaderSection from './orderDetail/OrderHeaderSection'
 import RegularOrderSection from './orderDetail/RegularOrderSection'
@@ -123,6 +124,13 @@ interface Order {
   paymentId?: string
   transactionId?: string
   orderNumber?: string
+  // 택배 정보
+  carrier?: string
+  trackingNumber?: string
+  trackingInfo?: {
+    carrier: string
+    trackingNumber: string
+  }
   createdAt: Date
   usedPoint?: number
   // 퀵 배송 관련 필드
@@ -162,6 +170,7 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
   const [loading, setLoading] = useState(true)
   const [cancelOrderId, setCancelOrderId] = useState<string | null>(null)
   const [showTaxInvoiceModal, setShowTaxInvoiceModal] = useState(false)
+  const [showTrackingModal, setShowTrackingModal] = useState(false)
   const [quickDeliveryDriver, setQuickDeliveryDriver] = useState<QuickDeliveryDriver | null>(null)
   const [loadingDriver, setLoadingDriver] = useState(false)
 
@@ -451,6 +460,46 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
                 <span>배송기사 전화</span>
               </button>
             )}
+            {order.deliveryMethod === '매장 픽업' && (
+              <button
+                className={styles.actionButton}
+                onClick={async () => {
+                  try {
+                    // storeId로 가게 주소 가져오기
+                    const storeDoc = await getDoc(doc(db, 'stores', order.storeId))
+                    if (storeDoc.exists()) {
+                      const storeData = storeDoc.data()
+                      const address = storeData.address?.fullAddress || ''
+                      const naverMapUrl = `https://map.naver.com/v5/search/${encodeURIComponent(address)}`
+                      window.open(naverMapUrl, '_blank')
+                    } else {
+                      alert('가게 정보를 찾을 수 없습니다.')
+                    }
+                  } catch (error) {
+                    console.error('가게 정보 조회 실패:', error)
+                    alert('길찾기를 실행할 수 없습니다.')
+                  }
+                }}
+              >
+                <Image src="/icons/load_search.svg" alt="길찾기" width={20} height={20} />
+                <span>길찾기</span>
+              </button>
+            )}
+            {order.deliveryMethod === '택배 배송' && (
+              <button
+                className={styles.actionButton}
+                onClick={() => {
+                  if (!order.trackingInfo?.carrier && !order.carrier) {
+                    alert('택배 정보가 등록되지 않았습니다.')
+                    return
+                  }
+                  setShowTrackingModal(true)
+                }}
+              >
+                <Image src="/icons/parcel_search.svg" alt="송장 조회" width={20} height={20} />
+                <span>송장 조회</span>
+              </button>
+            )}
           </div>
 
           <div className={styles.divider}></div>
@@ -663,6 +712,15 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
           paymentId={order.paymentId}
           totalAmount={order.totalPrice}
           onClose={() => setShowTaxInvoiceModal(false)}
+        />
+      )}
+
+      {/* 택배 조회 모달 */}
+      {showTrackingModal && order && (order.trackingInfo || order.carrier) && (
+        <TrackingInfoModal
+          carrier={order.trackingInfo?.carrier || order.carrier || ''}
+          trackingNumber={order.trackingInfo?.trackingNumber || order.trackingNumber || ''}
+          onClose={() => setShowTrackingModal(false)}
         />
       )}
     </div>

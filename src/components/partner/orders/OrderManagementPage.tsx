@@ -223,10 +223,16 @@ export default function OrderManagementPage() {
       console.log('택배사:', carrier)
       console.log('송장번호:', trackingNumber)
 
-      await updateOrderStatus(trackingOrderId, 'shipping', undefined, carrier, trackingNumber)
+      // 네스티드 객체 형태로 변환
+      const trackingInfo = {
+        carrier,
+        trackingNumber
+      }
+
+      await updateOrderStatus(trackingOrderId, 'shipping', undefined, trackingInfo)
 
       console.log('상태 업데이트 완료, 로컬 state 업데이트 시작')
-      setOrders(orders.map(o => o.id === trackingOrderId ? { ...o, orderStatus: 'shipping', carrier, trackingNumber } : o))
+      setOrders(orders.map(o => o.id === trackingOrderId ? { ...o, orderStatus: 'shipping', trackingInfo } : o))
 
       // 필터를 '배송·픽업중' 탭으로 자동 변경
       setFilter('shipping')

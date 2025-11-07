@@ -761,12 +761,12 @@ export default function OrderCard({
                   </div>
                   <div className={styles.detailRow}>
                     <span className={styles.detailLabel}>택배사</span>
-                    <span className={styles.detailValue}>{order.carrier || '-'}</span>
+                    <span className={styles.detailValue}>{order.trackingInfo?.carrier || order.carrier || '-'}</span>
                   </div>
                   <div className={styles.detailRow}>
                     <span className={styles.detailLabel}>송장번호</span>
                     <div className={styles.trackingNumberRow}>
-                      <span className={styles.detailValue}>{order.trackingNumber || '-'}</span>
+                      <span className={styles.detailValue}>{order.trackingInfo?.trackingNumber || order.trackingNumber || '-'}</span>
                       <button
                         className={styles.editTrackingBtn}
                         onClick={() => onOpenTrackingModal(order.id!)}

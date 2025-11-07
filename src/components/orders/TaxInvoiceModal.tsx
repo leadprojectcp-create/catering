@@ -271,7 +271,7 @@ export default function TaxInvoiceModal({
 
           <div className={styles.formGroup}>
             <label className={styles.label}>
-              이메일 <span className={styles.required}>*</span>
+              계산서를 받을 이메일주소를 정확히 입력해주세요 <span className={styles.required}>*</span>
             </label>
             <input
               type="email"
@@ -281,7 +281,6 @@ export default function TaxInvoiceModal({
               placeholder="세금계산서 수신 이메일"
               required
             />
-            <p className={styles.helperText}>세금계산서가 이 이메일로 발송됩니다.</p>
           </div>
 
           <div className={styles.buttonGroup}>

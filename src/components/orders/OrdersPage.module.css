@@ -115,8 +115,8 @@
 }
 
 .orderDate {
-  color: #4E5968;
-  font-size: 14px;
+  color: #999;
+  font-size: 12px;
   font-weight: 500;
 }
 
@@ -618,8 +618,8 @@
   }
 
   .productImage {
-    width: 70px;
-    height: 70px;
+    width: 100px;
+    height: 100px;
   }
 
   .orderFooter {

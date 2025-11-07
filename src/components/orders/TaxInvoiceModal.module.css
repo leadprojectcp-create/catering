@@ -25,8 +25,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 24px 24px 16px;
-  border-bottom: 1px solid #e5e5e5;
+  padding: 12px;
 }
 
 .modalTitle {
@@ -52,7 +51,7 @@
 }
 
 .form {
-  padding: 24px;
+  padding: 16px;
 }
 
 .formGroup {
@@ -63,7 +62,6 @@
 .formRow {
   display: flex;
   gap: 12px;
-  margin-bottom: 20px;
 }
 
 .label {
@@ -90,7 +88,7 @@
 
 .input:focus {
   outline: none;
-  border-color: #FF6B00;
+  border-color: #025BD9;
 }
 
 .helperText {
@@ -120,10 +118,10 @@
 .saveButton {
   flex: 1;
   padding: 14px 0;
-  border: 1px solid #FF6B00;
+  border: 1px solid #025BD9;
   border-radius: 6px;
   background-color: white;
-  color: #FF6B00;
+  color: #025BD9;
   font-size: 15px;
   font-weight: 500;
   cursor: pointer;
@@ -134,7 +132,7 @@
   padding: 14px 0;
   border: none;
   border-radius: 6px;
-  background-color: #FF6B00;
+  background-color: #025BD9;
   color: white;
   font-size: 15px;
   font-weight: 500;

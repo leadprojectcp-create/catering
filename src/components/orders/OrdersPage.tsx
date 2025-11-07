@@ -10,6 +10,7 @@ import { createOrGetChatRoom } from '@/lib/services/chatService'
 import { addCartItem } from '@/lib/services/cartService'
 import Loading from '@/components/Loading'
 import OrderCancelModal from './OrderCancelModal'
+import OptimizedImage from '@/components/common/OptimizedImage'
 import { ChevronDown, ChevronLeft, ChevronRight, Calendar } from 'lucide-react'
 import styles from './OrdersPage.module.css'
 
@@ -791,7 +792,7 @@ export default function OrdersPage() {
                   {order.items.slice(0, 1).map((item, index) => (
                     <div key={index} className={styles.orderItem}>
                       {item.productImage && (
-                        <Image
+                        <OptimizedImage
                           src={item.productImage}
                           alt={item.productName}
                           width={100}
@@ -872,20 +873,6 @@ export default function OrdersPage() {
                   ) : (order.paymentStatus === 'unpaid' || order.paymentStatus === 'failed') ? (
                     <>
                       <button
-                        className={styles.cancelButton}
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          setCancelOrderId(order.id)
-                          setCancelOrderData({
-                            deliveryDate: order.deliveryInfo?.deliveryDate || '',
-                            totalAmount: order.totalPrice || 0,
-                            paymentId: order.paymentId || null
-                          })
-                        }}
-                      >
-                        주문취소
-                      </button>
-                      <button
                         className={styles.detailButton}
                         onClick={(e) => {
                           e.stopPropagation()
@@ -906,22 +893,6 @@ export default function OrdersPage() {
                     </>
                   ) : (
                     <>
-                      {order.orderStatus === 'pending' && (
-                        <button
-                          className={styles.cancelButton}
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            setCancelOrderId(order.id)
-                            setCancelOrderData({
-                              deliveryDate: order.deliveryInfo?.deliveryDate || '',
-                              totalAmount: order.totalPrice || 0,
-                              paymentId: order.paymentId || null
-                            })
-                          }}
-                        >
-                          주문취소
-                        </button>
-                      )}
                       <button
                         className={styles.detailButton}
                         onClick={(e) => {

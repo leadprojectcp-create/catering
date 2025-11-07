@@ -72,6 +72,10 @@ export interface Order {
   cancelReason?: string
   carrier?: string
   trackingNumber?: string
+  trackingInfo?: {
+    carrier: string
+    trackingNumber: string
+  }
   quickDeliveryOrderNo?: number
   quickDeliveryStatus?: 'requested' | 'failed' | 'error'
   quickDeliveryInfo?: {
@@ -92,42 +96,7 @@ export interface Order {
   updatedAt?: Date | Timestamp | FieldValue
 }
 
-// 주문번호 생성 함수 (간단한 버전)
-export const generateOrderNumber = (): string => {
-  const now = new Date()
-  const year = now.getFullYear()
-  const month = String(now.getMonth() + 1).padStart(2, '0')
-  const day = String(now.getDate()).padStart(2, '0')
-  const dateStr = `${year}${month}${day}`
-
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
-  let randomStr = ''
-  for (let i = 0; i < 6; i++) {
-    randomStr += chars.charAt(Math.floor(Math.random() * chars.length))
-  }
-
-  return `${dateStr}${randomStr}`
-}
-
 const COLLECTION_NAME = 'orders'
-
-// 주문 생성
-export const createOrder = async (orderData: Omit<Order, 'id'>): Promise<string> => {
-  try {
-    const orderNumber = generateOrderNumber()
-    const docRef = await addDoc(collection(db, COLLECTION_NAME), {
-      ...orderData,
-      orderNumber,
-      orderStatus: 'pending',
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp()
-    })
-    return docRef.id
-  } catch (error) {
-    console.error('주문 생성 실패:', error)
-    throw error
-  }
-}
 
 // 모든 주문 가져오기 (관리자용)
 export const getAllOrders = async (): Promise<Order[]> => {
@@ -171,8 +140,7 @@ export const updateOrderStatus = async (
   orderId: string,
   status: OrderStatus,
   cancelReason?: string,
-  carrier?: string,
-  trackingNumber?: string
+  trackingInfo?: { carrier: string; trackingNumber: string }
 ): Promise<void> => {
   try {
     const orderRef = doc(db, COLLECTION_NAME, orderId)
@@ -186,12 +154,9 @@ export const updateOrderStatus = async (
       updateData.cancelReason = cancelReason
     }
 
-    // 택배 정보가 있으면 추가
-    if (carrier) {
-      updateData.carrier = carrier
-    }
-    if (trackingNumber) {
-      updateData.trackingNumber = trackingNumber
+    // 택배 정보가 있으면 네스티드 객체로 추가
+    if (trackingInfo) {
+      updateData.trackingInfo = trackingInfo
     }
 
     await updateDoc(orderRef, updateData)

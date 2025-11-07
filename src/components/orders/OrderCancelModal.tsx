@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { doc, updateDoc, getDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import Image from 'next/image'
@@ -64,6 +64,15 @@ export default function OrderCancelModal({ orderId, deliveryDate, totalAmount, p
   const refundRate = calculateRefundRate(deliveryDate)
   const refundAmount = Math.floor(totalAmount * refundRate)
   const canCancel = refundRate > 0
+
+  // 모달이 열릴 때 body 스크롤 방지
+  useEffect(() => {
+    document.body.style.overflow = 'hidden'
+
+    return () => {
+      document.body.style.overflow = 'unset'
+    }
+  }, [])
 
   const handleCancel = async () => {
     if (!canCancel) {

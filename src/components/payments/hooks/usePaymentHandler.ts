@@ -143,7 +143,11 @@ export async function handlePaymentProcess(params: UsePaymentHandlerParams): Pro
   }
 
   // ✅ 결제 검증 성공! 이제 DB에 저장 시작
-  const orderNumber = `ORD${Date.now()}`
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+  let orderNumber = ''
+  for (let i = 0; i < 8; i++) {
+    orderNumber += chars.charAt(Math.floor(Math.random() * chars.length))
+  }
   let finalOrderId = orderId
 
   // 장바구니에서 주문하는 경우: orders 컬렉션에 새로 생성
