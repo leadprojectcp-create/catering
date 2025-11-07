@@ -71,6 +71,19 @@
 
 .itemTop {
   display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.topRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.bottomRow {
+  display: flex;
   gap: 10px;
   align-items: flex-start;
 }
@@ -86,7 +99,6 @@
   background-repeat: no-repeat;
   background-position: center;
   border: none;
-  align-self: center;
 }
 
 .checkbox:checked {
@@ -302,7 +314,8 @@
 .itemActions {
   display: flex;
   gap: 8px;
-  align-items: flex-start;
+  align-items: center;
+  margin-left: auto;
 }
 
 .actionButtons {
@@ -498,41 +511,26 @@
 
   .headerActions {
     width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .selectAllButton {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    order: 0;
+  }
+
+  .deleteSelectedButton {
+    order: 1;
+    margin-left: auto;
   }
 
   .cartItem {
     flex-direction: column;
     gap: 15px;
-  }
-
-  .itemTop {
-    flex-wrap: wrap;
-    gap: 10px;
-  }
-
-  .checkbox {
-    order: -2;
-    width: 100%;
-    max-width: 20px;
-  }
-
-  .itemActions {
-    order: -2;
-    justify-content: flex-end;
-    margin-left: auto;
-    width: auto;
-  }
-
-  .itemImage {
-    order: 0;
-    width: 100px;
-    height: 100px;
-  }
-
-  .itemInfo {
-    order: 0;
-    flex: 1;
-    min-width: 0;
   }
 
   .itemsList {

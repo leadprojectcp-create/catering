@@ -122,7 +122,10 @@ export default function ChatContainer({ isPartner = false }: ChatContainerProps)
 
     const chatRoomsRef = ref(realtimeDb, 'chatRooms')
     const unsubscribe = onValue(chatRoomsRef, (snapshot) => {
-      if (!snapshot.exists()) return
+      if (!snapshot.exists()) {
+        console.log('[ChatContainer] chatRooms 데이터 없음')
+        return
+      }
 
       console.log('[ChatContainer] chatRooms 데이터 변경 감지')
 
@@ -133,18 +136,21 @@ export default function ChatContainer({ isPartner = false }: ChatContainerProps)
           if (roomSnapshot.exists()) {
             const roomData = roomSnapshot.val()
             const unreadCount = roomData.unreadCount?.[user.uid] || 0
-            const lastMessage = roomData.lastMessage || room.lastMessage
-            const lastMessageTime = roomData.lastMessageTime || room.lastMessageTime
+            const lastMessage = roomData.lastMessage
+            const lastMessageTime = roomData.lastMessageTime
 
-            // unreadCount, lastMessage, lastMessageTime이 변경된 경우에만 업데이트
-            if (room.unreadCount !== unreadCount ||
-                room.lastMessage !== lastMessage ||
-                room.lastMessageTime !== lastMessageTime) {
-              console.log(`[ChatContainer] 채팅방 ${room.id} 업데이트:`, {
-                unreadCount: `${room.unreadCount} -> ${unreadCount}`,
-                lastMessage: lastMessage
-              })
-              return { ...room, unreadCount, lastMessage, lastMessageTime }
+            console.log(`[ChatContainer] 채팅방 ${room.id} 실시간 데이터:`, {
+              unreadCount,
+              lastMessage,
+              lastMessageTime
+            })
+
+            // 항상 최신 데이터로 업데이트
+            return {
+              ...room,
+              unreadCount,
+              lastMessage: lastMessage || room.lastMessage,
+              lastMessageTime: lastMessageTime || room.lastMessageTime
             }
           }
           return room

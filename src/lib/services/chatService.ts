@@ -83,8 +83,10 @@ export const createOrGetChatRoom = async (
     const newRoomRef = push(chatRoomsRef)
     const roomId = newRoomRef.key!
 
-    const newRoom: Omit<ChatRoom, 'id'> = {
+    const newRoom: Omit<ChatRoom, 'id'> & { userId: string; partnerId: string } = {
       participants: [userId, storeOwnerId],
+      userId: userId,
+      partnerId: storeOwnerId,
       storeId,
       storeName,
       createdAt: Date.now()

@@ -274,45 +274,50 @@ export default function ShoppingCartPage() {
           {cartItems.map(item => (
               <div key={item.id} className={styles.cartItem}>
                 <div className={styles.itemTop}>
-                  <input
-                    type="checkbox"
-                    checked={selectedItems.includes(item.id!)}
-                    onChange={() => handleSelectItem(item.id!)}
-                    className={styles.checkbox}
-                  />
-
-                  {item.productImage && (
-                    <OptimizedImage
-                      src={item.productImage}
-                      alt={item.productName || '상품'}
-                      width={100}
-                      height={100}
-                      quality={100}
-                      className={styles.itemImage}
+                  {/* 첫 번째 줄: 체크박스와 버튼들 */}
+                  <div className={styles.topRow}>
+                    <input
+                      type="checkbox"
+                      checked={selectedItems.includes(item.id!)}
+                      onChange={() => handleSelectItem(item.id!)}
+                      className={styles.checkbox}
                     />
-                  )}
-
-                  <div className={styles.itemInfo}>
-                    <div className={styles.storeName}>{item.storeName}</div>
-                    <div className={styles.itemName}>{item.productName || '상품'}</div>
-                    <div className={styles.itemPrice}>
-                      {(item.totalProductPrice || calculateItemPrice(item)).toLocaleString()}원
+                    <div className={styles.itemActions}>
+                      <button
+                        onClick={() => handleEditItem(item)}
+                        className={styles.editButton}
+                      >
+                        주문수정
+                      </button>
+                      <button
+                        onClick={() => handleDeleteItem(item.id!)}
+                        className={styles.deleteButton}
+                      >
+                        주문삭제
+                      </button>
                     </div>
                   </div>
 
-                  <div className={styles.itemActions}>
-                    <button
-                      onClick={() => handleEditItem(item)}
-                      className={styles.editButton}
-                    >
-                      주문수정
-                    </button>
-                    <button
-                      onClick={() => handleDeleteItem(item.id!)}
-                      className={styles.deleteButton}
-                    >
-                      주문삭제
-                    </button>
+                  {/* 두 번째 줄: 이미지와 정보 */}
+                  <div className={styles.bottomRow}>
+                    {item.productImage && (
+                      <OptimizedImage
+                        src={item.productImage}
+                        alt={item.productName || '상품'}
+                        width={100}
+                        height={100}
+                        quality={100}
+                        className={styles.itemImage}
+                      />
+                    )}
+
+                    <div className={styles.itemInfo}>
+                      <div className={styles.storeName}>{item.storeName}</div>
+                      <div className={styles.itemName}>{item.productName || '상품'}</div>
+                      <div className={styles.itemPrice}>
+                        {(item.totalProductPrice || calculateItemPrice(item)).toLocaleString()}원
+                      </div>
+                    </div>
                   </div>
                 </div>
 
