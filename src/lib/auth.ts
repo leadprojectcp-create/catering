@@ -1,6 +1,7 @@
 import {
   createUserWithEmailAndPassword,
   signInWithPopup,
+  signInWithRedirect,
   getRedirectResult,
   GoogleAuthProvider,
   OAuthProvider
@@ -73,6 +74,14 @@ export async function signupUser(userData: SignupData) {
       console.log('Social user detected, skipping Firebase Auth creation')
       firebaseUser = currentUser
     } else if (userData.password) {
+      // 일반 회원가입 전에 이메일 중복 체크 (소셜 로그인 포함)
+      console.log('Checking for existing email...')
+      const existingUser = await checkExistingUser(userData.email)
+      if (existingUser.exists) {
+        const userType = existingUser.type === 'partner' ? '파트너 회원' : '일반 회원'
+        return { success: false, error: `이미 ${userType}으로 가입된 이메일입니다.` }
+      }
+
       // 일반 회원가입 - Firebase Auth 계정 생성
       console.log('Creating Firebase user...')
       const userCredential = await createUserWithEmailAndPassword(
@@ -83,7 +92,7 @@ export async function signupUser(userData: SignupData) {
       firebaseUser = userCredential.user
       console.log('Firebase user created successfully:', firebaseUser.uid)
     } else {
-      throw new Error('비밀번호가 필요합니다.')
+      return { success: false, error: '비밀번호가 필요합니다.' }
     }
 
     // 3. Firestore에 사용자 정보 저장
@@ -231,58 +240,90 @@ async function handleSocialUser(
   }
 }
 
-// 구글 로그인 (팝업 방식)
+// WebView 감지 함수
+function isWebView() {
+  if (typeof window === 'undefined') return false
+
+  const userAgent = window.navigator.userAgent.toLowerCase()
+  const isAndroid = /android/.test(userAgent)
+  const isIOS = /iphone|ipad|ipod/.test(userAgent)
+
+  // Android WebView 감지
+  const isAndroidWebView = isAndroid && /wv/.test(userAgent)
+
+  // iOS WebView 감지 (Safari가 아닌 경우)
+  const isIOSWebView = isIOS && !/(safari)/.test(userAgent)
+
+  return isAndroidWebView || isIOSWebView
+}
+
+// 구글 로그인 (환경에 따라 Popup 또는 Redirect)
 export async function signInWithGoogle() {
   try {
+    console.log('[signInWithGoogle] Starting Google login...')
     const provider = new GoogleAuthProvider()
     provider.addScope('email')
     provider.addScope('profile')
-    // 추가 정보를 위한 스코프 (구글에서는 전화번호 직접 제공 안함)
     provider.addScope('https://www.googleapis.com/auth/userinfo.email')
     provider.addScope('https://www.googleapis.com/auth/userinfo.profile')
 
-    const result = await signInWithPopup(auth, provider)
+    const useRedirect = isWebView()
+    console.log('[signInWithGoogle] Using redirect:', useRedirect)
 
-    // 구글에서 가져온 추가 정보 처리
-    const credential = GoogleAuthProvider.credentialFromResult(result)
-    const token = credential?.accessToken
+    if (useRedirect) {
+      // WebView에서는 Redirect 사용
+      console.log('[signInWithGoogle] Calling signInWithRedirect...')
+      await signInWithRedirect(auth, provider)
+      return { success: true, isRedirecting: true }
+    } else {
+      // 일반 브라우저에서는 Popup 사용
+      console.log('[signInWithGoogle] Calling signInWithPopup...')
+      const result = await signInWithPopup(auth, provider)
+      console.log('[signInWithGoogle] Popup login successful')
 
-    // 구글 API에서 추가 정보 가져오기 시도
-    let additionalInfo = {
-      name: result.user.displayName,
-      email: result.user.email, // Firebase에서 제공하는 이메일을 기본값으로
-      phone: null
-    }
+      // 추가 정보 가져오기
+      const credential = GoogleAuthProvider.credentialFromResult(result)
+      const token = credential?.accessToken
 
-    if (token) {
-      try {
-        const response = await fetch(`https://www.googleapis.com/oauth2/v2/userinfo?access_token=${token}`)
-        if (response.ok) {
-          const userInfo = await response.json()
-          additionalInfo = {
-            name: userInfo.name || result.user.displayName,
-            email: userInfo.email || result.user.email, // API 이메일이 없으면 Firebase 이메일 사용
-            // 전화번호는 구글에서 직접 제공하지 않으므로 null
-            phone: null
-          }
-        }
-      } catch (error) {
-        console.warn('Failed to fetch additional Google user info:', error)
-        // API 호출 실패 시에도 Firebase 기본 정보 사용
+      let additionalInfo = {
+        name: result.user.displayName,
+        email: result.user.email,
+        phone: null
       }
-    }
 
-    return await handleSocialUser(result.user, 'google', additionalInfo)
+      if (token) {
+        try {
+          const response = await fetch(`https://www.googleapis.com/oauth2/v2/userinfo?access_token=${token}`)
+          if (response.ok) {
+            const userInfo = await response.json()
+            additionalInfo = {
+              name: userInfo.name || result.user.displayName,
+              email: userInfo.email || result.user.email,
+              phone: null
+            }
+          }
+        } catch (error) {
+          console.warn('Failed to fetch additional Google user info:', error)
+        }
+      }
+
+      return await handleSocialUser(result.user, 'google', additionalInfo)
+    }
   } catch (error: unknown) {
-    console.error('Google login error:', error)
+    console.error('[signInWithGoogle] Error:', error)
+    // 사용자가 팝업을 닫은 경우
+    if ((error as { code?: string }).code === 'auth/popup-closed-by-user') {
+      return { success: false, error: '로그인이 취소되었습니다.' }
+    }
     return { success: false, error: '구글 로그인 중 오류가 발생했습니다.' }
   }
 }
 
 
-// 카카오톡 로그인 (기존 방식)
+// 카카오톡 로그인 (환경에 따라 Popup 또는 Redirect)
 export async function signInWithKakao() {
   try {
+    console.log('[signInWithKakao] Starting Kakao login...')
     const provider = new OAuthProvider('oidc.kakao')
 
     provider.addScope('openid')
@@ -293,49 +334,48 @@ export async function signInWithKakao() {
       'prompt': 'consent'
     })
 
-    const result = await signInWithPopup(auth, provider)
+    const useRedirect = isWebView()
+    console.log('[signInWithKakao] Using redirect:', useRedirect)
 
-    console.log('Kakao user info:', {
-      displayName: result.user.displayName,
-      email: result.user.email,
-      uid: result.user.uid,
-      providerData: result.user.providerData,
-      emailVerified: result.user.emailVerified
-    })
+    if (useRedirect) {
+      // WebView에서는 Redirect 사용
+      console.log('[signInWithKakao] Calling signInWithRedirect...')
+      await signInWithRedirect(auth, provider)
+      return { success: true, isRedirecting: true }
+    } else {
+      // 일반 브라우저에서는 Popup 사용
+      console.log('[signInWithKakao] Calling signInWithPopup...')
+      const result = await signInWithPopup(auth, provider)
+      console.log('[signInWithKakao] Popup login successful')
 
-    // 추가 디버깅 정보
-    console.log('Provider data:', result.user.providerData)
-    console.log('Provider data 0:', result.user.providerData[0])
-    console.log('Firebase user metadata:', result.user.metadata)
+      let userEmail = result.user.email
 
-    // Firebase Auth의 user.email이 null이면 providerData에서 이메일 추출
-    let userEmail = result.user.email
-
-    if (!userEmail && result.user.providerData.length > 0) {
-      userEmail = result.user.providerData[0].email
-      console.log('Got email from providerData:', userEmail)
-    }
-
-    if (!userEmail) {
-      console.error('Kakao login: No email provided')
-      return {
-        success: false,
-        error: '카카오 계정에서 이메일 정보를 가져올 수 없습니다. 카카오 계정 설정에서 이메일을 공개로 설정하고 다시 시도해주세요.',
-        needsEmailSetup: true
+      if (!userEmail && result.user.providerData.length > 0) {
+        userEmail = result.user.providerData[0].email
       }
+
+      if (!userEmail) {
+        return {
+          success: false,
+          error: '카카오 계정에서 이메일 정보를 가져올 수 없습니다. 카카오 계정 설정에서 이메일을 공개로 설정하고 다시 시도해주세요.',
+          needsEmailSetup: true
+        }
+      }
+
+      const additionalInfo = {
+        name: result.user.displayName || userEmail.split('@')[0] || '',
+        email: userEmail,
+        phone: null
+      }
+
+      return await handleSocialUser(result.user, 'kakao', additionalInfo)
     }
-
-    const additionalInfo = {
-      name: result.user.displayName || userEmail.split('@')[0] || '',
-      email: userEmail,
-      phone: null
-    }
-
-    console.log('Kakao additionalInfo:', additionalInfo)
-
-    return await handleSocialUser(result.user, 'kakao', additionalInfo)
   } catch (error: unknown) {
-    console.error('Kakao login error:', error)
+    console.error('[signInWithKakao] Error:', error)
+    // 사용자가 팝업을 닫은 경우
+    if ((error as { code?: string }).code === 'auth/popup-closed-by-user') {
+      return { success: false, error: '로그인이 취소되었습니다.' }
+    }
     return { success: false, error: '카카오톡 로그인 중 오류가 발생했습니다.' }
   }
 }
@@ -350,6 +390,63 @@ export async function handleRedirectResult() {
       const providerId = result.providerId || ''
       const provider = providerId.includes('google') ? 'google' :
                       providerId.includes('apple') ? 'apple' : 'kakao'
+
+      // Google 로그인 추가 정보 처리
+      if (provider === 'google') {
+        const credential = GoogleAuthProvider.credentialFromResult(result)
+        const token = credential?.accessToken
+
+        let additionalInfo = {
+          name: result.user.displayName,
+          email: result.user.email,
+          phone: null
+        }
+
+        if (token) {
+          try {
+            const response = await fetch(`https://www.googleapis.com/oauth2/v2/userinfo?access_token=${token}`)
+            if (response.ok) {
+              const userInfo = await response.json()
+              additionalInfo = {
+                name: userInfo.name || result.user.displayName,
+                email: userInfo.email || result.user.email,
+                phone: null
+              }
+            }
+          } catch (error) {
+            console.warn('Failed to fetch additional Google user info:', error)
+          }
+        }
+
+        return await handleSocialUser(result.user, 'google', additionalInfo)
+      }
+
+      // Kakao 로그인 추가 정보 처리
+      if (provider === 'kakao') {
+        let userEmail = result.user.email
+
+        if (!userEmail && result.user.providerData.length > 0) {
+          userEmail = result.user.providerData[0].email
+        }
+
+        if (!userEmail) {
+          return {
+            success: false,
+            error: '카카오 계정에서 이메일 정보를 가져올 수 없습니다. 카카오 계정 설정에서 이메일을 공개로 설정하고 다시 시도해주세요.',
+            needsEmailSetup: true
+          }
+        }
+
+        const additionalInfo = {
+          name: result.user.displayName || userEmail.split('@')[0] || '',
+          email: userEmail,
+          phone: null
+        }
+
+        return await handleSocialUser(result.user, 'kakao', additionalInfo)
+      }
+
+      // 기타 provider
       return await handleSocialUser(result.user, provider)
     }
     return null

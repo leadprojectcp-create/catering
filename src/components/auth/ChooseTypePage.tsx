@@ -4,11 +4,15 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ChevronRight } from 'lucide-react'
+import { signOut } from 'firebase/auth'
+import { auth } from '@/lib/firebase'
+import { useAuth } from '@/contexts/AuthContext'
 import AuthGuard from './AuthGuard'
 import styles from './ChooseTypePage.module.css'
 
 export default function ChooseTypePage() {
   const router = useRouter()
+  const { user } = useAuth()
   const [selectedType, setSelectedType] = useState<'user' | 'partner' | null>(null)
 
   const handleContinue = () => {
@@ -18,6 +22,16 @@ export default function ChooseTypePage() {
     params.set('type', selectedType)
 
     router.push(`/signup/terms?${params.toString()}`)
+  }
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth)
+      router.push('/login')
+    } catch (error) {
+      console.error('로그아웃 실패:', error)
+      alert('로그아웃 중 오류가 발생했습니다.')
+    }
   }
 
   return (
@@ -86,6 +100,23 @@ export default function ChooseTypePage() {
               로그인으로 돌아가기
             </Link>
           </div>
+
+          {user && (
+            <div className={styles.backLink}>
+              <button
+                onClick={handleLogout}
+                className={styles.backLinkText}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  padding: 0,
+                  cursor: 'pointer'
+                }}
+              >
+                로그아웃
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

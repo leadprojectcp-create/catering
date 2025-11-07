@@ -27,20 +27,24 @@ export default function LoginPage() {
     const checkRedirectResult = async () => {
       try {
         const result = await handleRedirectResult()
+        console.log('[LoginPage] handleRedirectResult:', result)
         if (result) {
           if (result.success) {
             if ('isExistingUser' in result && result.isExistingUser && 'registrationComplete' in result && result.registrationComplete) {
               // 사용자 타입 확인
+              console.log('[LoginPage] 기존 사용자, 가입 완료됨')
               const user = auth.currentUser
               if (user) {
                 const userDoc = await getDoc(doc(db, 'users', user.uid))
                 if (userDoc.exists()) {
                   const userData = userDoc.data()
+                  console.log('[LoginPage] userData:', userData)
 
                   // AuthGuard가 자동으로 타입에 맞는 페이지로 리다이렉트함
                 }
               }
             } else {
+              console.log('[LoginPage] 신규 사용자 또는 가입 미완료 - /signup/choose-type으로 리다이렉트')
               router.push('/signup/choose-type')
             }
           } else {

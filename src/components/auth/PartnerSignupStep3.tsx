@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import AuthGuard from './AuthGuard'
+import Loading from '@/components/Loading'
 import styles from './SignupPage.module.css'
 
 interface Step2Data {
@@ -77,7 +78,7 @@ export default function PartnerSignupStep3() {
   }
 
   if (!step2Data) {
-    return <div>Loading...</div>
+    return <Loading />
   }
 
   return (

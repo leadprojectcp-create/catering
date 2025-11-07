@@ -4,15 +4,17 @@ import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Eye, EyeOff } from 'lucide-react'
-import { onAuthStateChanged } from 'firebase/auth'
+import { onAuthStateChanged, signOut } from 'firebase/auth'
 import { doc, getDoc, setDoc } from 'firebase/firestore'
 import { auth, db } from '@/lib/firebase'
+import { useAuth } from '@/contexts/AuthContext'
 import AuthGuard from './AuthGuard'
 import styles from './SignupPage.module.css'
 
 export default function PartnerSignupStep1() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const { user } = useAuth()
 
   // 약관 동의 정보 받기 및 날짜 추가
   const createTermsAgreements = () => {
@@ -195,6 +197,16 @@ export default function PartnerSignupStep1() {
     return `${minutes}:${secs.toString().padStart(2, '0')}`
   }
 
+  const handleLogout = async () => {
+    try {
+      await signOut(auth)
+      router.push('/login')
+    } catch (error) {
+      console.error('로그아웃 실패:', error)
+      alert('로그아웃 중 오류가 발생했습니다.')
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
@@ -324,7 +336,7 @@ export default function PartnerSignupStep1() {
   }
 
   return (
-    <AuthGuard requireAuth={false}>
+    <AuthGuard requireAuth={false} requireCompleteRegistration={false}>
       <div className={styles.container}>
         <div className={styles.formCard}>
           <div className={styles.header}>
@@ -527,6 +539,23 @@ export default function PartnerSignupStep1() {
                 이전으로 돌아가기
               </Link>
             </div>
+
+            {user && (
+              <div className={styles.backLink}>
+                <button
+                  onClick={handleLogout}
+                  className={styles.backLinkText}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    padding: 0,
+                    cursor: 'pointer'
+                  }}
+                >
+                  로그아웃
+                </button>
+              </div>
+            )}
           </form>
         </div>
       </div>

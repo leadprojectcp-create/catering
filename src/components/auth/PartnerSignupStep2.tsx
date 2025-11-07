@@ -5,7 +5,11 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import Script from 'next/script'
+import { signOut } from 'firebase/auth'
+import { auth } from '@/lib/firebase'
+import { useAuth } from '@/contexts/AuthContext'
 import AuthGuard from './AuthGuard'
+import Loading from '@/components/Loading'
 import { DaumPostcodeData } from '@/components/payments/types'
 import styles from './SignupPage.module.css'
 
@@ -23,6 +27,7 @@ interface Step1Data {
 
 export default function PartnerSignupStep2() {
   const router = useRouter()
+  const { user } = useAuth()
   const [step1Data, setStep1Data] = useState<Step1Data | null>(null)
   const [formData, setFormData] = useState({
     storeName: '',
@@ -164,6 +169,16 @@ export default function PartnerSignupStep2() {
     setUploadedFileName('')
   }
 
+  const handleLogout = async () => {
+    try {
+      await signOut(auth)
+      router.push('/login')
+    } catch (error) {
+      console.error('로그아웃 실패:', error)
+      alert('로그아웃 중 오류가 발생했습니다.')
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
@@ -259,7 +274,7 @@ export default function PartnerSignupStep2() {
   }
 
   if (!step1Data) {
-    return <div>Loading...</div>
+    return <Loading />
   }
 
   return (
@@ -459,6 +474,23 @@ export default function PartnerSignupStep2() {
                 이전으로 돌아가기
               </Link>
             </div>
+
+            {user && (
+              <div className={styles.backLink}>
+                <button
+                  onClick={handleLogout}
+                  className={styles.backLinkText}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    padding: 0,
+                    cursor: 'pointer'
+                  }}
+                >
+                  로그아웃
+                </button>
+              </div>
+            )}
           </form>
         </div>
       </div>

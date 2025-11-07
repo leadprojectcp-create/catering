@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { doc, updateDoc, getDoc } from 'firebase/firestore'
 import { auth, db } from '@/lib/firebase'
-import { onAuthStateChanged, User } from 'firebase/auth'
+import { onAuthStateChanged, User, signOut } from 'firebase/auth'
 import AuthGuard from './AuthGuard'
 import styles from './SocialAdditionalInfoPage.module.css'
 
@@ -163,6 +163,16 @@ export default function SocialAdditionalInfoPage() {
     }
   }
 
+  const handleLogout = async () => {
+    try {
+      await signOut(auth)
+      router.push('/login')
+    } catch (error) {
+      console.error('로그아웃 실패:', error)
+      alert('로그아웃 중 오류가 발생했습니다.')
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
@@ -228,7 +238,7 @@ export default function SocialAdditionalInfoPage() {
   const isPartner = existingUserData?.type === 'partner'
 
   return (
-    <AuthGuard requireAuth={true}>
+    <AuthGuard requireAuth={true} requireCompleteRegistration={false}>
       <div className={styles.container}>
         <div className={styles.formCard}>
           <div className={styles.header}>
@@ -383,6 +393,23 @@ export default function SocialAdditionalInfoPage() {
                 로그인으로 돌아가기
               </Link>
             </div>
+
+            {user && (
+              <div className={styles.backLink}>
+                <button
+                  onClick={handleLogout}
+                  className={styles.backLinkText}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    padding: 0,
+                    cursor: 'pointer'
+                  }}
+                >
+                  로그아웃
+                </button>
+              </div>
+            )}
           </form>
         </div>
       </div>

@@ -4,13 +4,17 @@ import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Eye, EyeOff } from 'lucide-react'
+import { signOut } from 'firebase/auth'
+import { auth } from '@/lib/firebase'
 import { signupUser } from '@/lib/auth'
+import { useAuth } from '@/contexts/AuthContext'
 import AuthGuard from './AuthGuard'
 import styles from './SignupPage.module.css'
 
 export default function SignupPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const { user } = useAuth()
   const selectedType = searchParams.get('type') as 'user' | 'partner' | null
 
   // 약관 동의 정보 받기
@@ -143,6 +147,16 @@ export default function SignupPage() {
       setError('인증 중 오류가 발생했습니다.')
     } finally {
       setIsVerifying(false)
+    }
+  }
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth)
+      router.push('/login')
+    } catch (error) {
+      console.error('로그아웃 실패:', error)
+      alert('로그아웃 중 오류가 발생했습니다.')
     }
   }
 
@@ -390,6 +404,23 @@ export default function SignupPage() {
               이전으로 돌아가기
             </Link>
           </div>
+
+          {user && (
+            <div className={styles.backLink}>
+              <button
+                onClick={handleLogout}
+                className={styles.backLinkText}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  padding: 0,
+                  cursor: 'pointer'
+                }}
+              >
+                로그아웃
+              </button>
+            </div>
+          )}
         </form>
       </div>
     </div>

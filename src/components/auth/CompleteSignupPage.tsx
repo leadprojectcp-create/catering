@@ -6,6 +6,7 @@ import { User, Mail, Building, Phone } from 'lucide-react'
 import { doc, setDoc } from 'firebase/firestore'
 import { auth, db } from '@/lib/firebase'
 import AuthGuard from './AuthGuard'
+import Loading from '@/components/Loading'
 import styles from './CompleteSignupPage.module.css'
 
 export default function CompleteSignupPage() {
@@ -112,7 +113,7 @@ export default function CompleteSignupPage() {
   }
 
   if (!userType) {
-    return <div>로딩 중...</div>
+    return <Loading />
   }
 
   return (
