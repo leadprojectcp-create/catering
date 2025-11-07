@@ -33,7 +33,12 @@ export default function DeliveryAddressModal({
           <div key={address.id} className={styles.addressItem}>
             <div className={styles.addressInfo}>
               <div className={styles.topRow}>
-                <div className={styles.addressName}>{address.name}</div>
+                <div className={styles.nameRow}>
+                  <div className={styles.addressName}>{address.name}</div>
+                  {address.defaultDelivery && (
+                    <div className={styles.defaultBadge}>기본배송지</div>
+                  )}
+                </div>
                 <div className={styles.buttonGroup}>
                   <button onClick={() => onDeleteAddress(address.id)} className={styles.deleteButton}>
                     삭제

@@ -93,6 +93,33 @@
   pointer-events: none;
 }
 
+.defaultAddressCheckbox {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.checkboxIcon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.checkboxLabel span {
+  color: #999;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: normal;
+  user-select: none;
+}
+
 @media (max-width: 768px) {
   .sectionTitle {
     font-size: 16px;

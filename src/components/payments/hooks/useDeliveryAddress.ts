@@ -14,17 +14,26 @@ export function useDeliveryAddress(userId: string | null) {
       throw new Error('로그인이 필요합니다.')
     }
 
+    const userDocRef = doc(db, 'users', userId)
+    const userDoc = await getDoc(userDocRef)
+    const currentAddresses = userDoc.data()?.deliveryAddresses || []
+
+    // 기본 배송지로 설정하는 경우, 기존 기본 배송지 해제
+    let updatedAddresses = currentAddresses
+    if (address.defaultDelivery) {
+      updatedAddresses = currentAddresses.map((addr: DeliveryAddress) => ({
+        ...addr,
+        defaultDelivery: false
+      }))
+    }
+
     const newAddress: DeliveryAddress = {
       ...address,
       id: Date.now().toString()
     }
 
-    const userDocRef = doc(db, 'users', userId)
-    const userDoc = await getDoc(userDocRef)
-    const currentAddresses = userDoc.data()?.deliveryAddresses || []
-
     await setDoc(userDocRef, {
-      deliveryAddresses: [...currentAddresses, newAddress]
+      deliveryAddresses: [...updatedAddresses, newAddress]
     }, { merge: true })
 
     return newAddress

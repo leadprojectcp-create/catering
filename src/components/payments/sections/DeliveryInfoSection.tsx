@@ -1,6 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { doc, setDoc } from 'firebase/firestore'
+import { db } from '@/lib/firebase'
 import DeliveryAddressModal from './DeliveryAddressModal'
 import { DeliveryAddress, OrderInfo, DaumPostcodeData } from '../types'
 import { useDeliveryAddress } from '../hooks/useDeliveryAddress'
@@ -30,9 +32,20 @@ export default function DeliveryInfoSection({
   onSavedAddressesChange
 }: DeliveryInfoSectionProps) {
   const [showAddressList, setShowAddressList] = useState(false)
+  const [isDefaultAddress, setIsDefaultAddress] = useState(false)
 
   // 배송지 관리 hook
   const { saveAddress, deleteAddress: deleteAddressHook, checkDuplicateAddress } = useDeliveryAddress(userId)
+
+  // 컴포넌트 로드 시 기본 배송지 자동 불러오기
+  useEffect(() => {
+    if (savedAddresses.length > 0 && !orderInfo.address) {
+      const defaultAddress = savedAddresses.find(addr => addr.defaultDelivery)
+      if (defaultAddress) {
+        loadAddress(defaultAddress)
+      }
+    }
+  }, [savedAddresses])
 
   // 주소 검색
   const handleAddressSearch = () => {
@@ -67,6 +80,7 @@ export default function DeliveryInfoSection({
     })
     onRecipientChange(address.orderer)
     onAddressNameChange(address.name)
+    setIsDefaultAddress(address.defaultDelivery || false)
   }
 
   // 배송지 삭제
@@ -119,10 +133,17 @@ export default function DeliveryInfoSection({
         email: orderInfo.email,
         address: orderInfo.address,
         detailAddress: orderInfo.detailAddress,
-        zipCode: orderInfo.zipCode
+        zipCode: orderInfo.zipCode,
+        defaultDelivery: isDefaultAddress
       })
 
-      onSavedAddressesChange([...savedAddresses, newAddress])
+      // 기본 배송지로 설정한 경우, 기존 배송지들의 defaultDelivery를 false로 업데이트
+      const updatedAddresses = isDefaultAddress
+        ? savedAddresses.map(addr => ({ ...addr, defaultDelivery: false }))
+        : savedAddresses
+
+      onSavedAddressesChange([...updatedAddresses, newAddress])
+      setIsDefaultAddress(false) // 체크박스 초기화
       alert('배송지 정보가 저장되었습니다.')
     } catch (error) {
       console.error('배송지 정보 저장 실패:', error)
@@ -225,6 +246,74 @@ export default function DeliveryInfoSection({
             />
           </div>
         </div>
+
+        {/* 기본 배송지 설정 체크박스 - 배송지 정보가 입력된 경우에만 표시 */}
+        {orderInfo.address && (
+          <div className={styles.defaultAddressCheckbox}>
+            <label className={styles.checkboxLabel} onClick={async () => {
+              if (!isDefaultAddress && savedAddresses.length === 0) {
+                // 저장된 배송지가 없을 때만 자동으로 배송지 저장
+                await handleSaveClick()
+              } else if (savedAddresses.length > 0) {
+                // 이미 배송지가 있는 경우 DB 업데이트
+                if (!userId) return
+
+                try {
+                  const newValue = !isDefaultAddress
+
+                  // 현재 입력된 배송지 정보와 일치하는 배송지 찾기
+                  const matchingAddress = savedAddresses.find(addr =>
+                    addr.address === orderInfo.address &&
+                    addr.detailAddress === orderInfo.detailAddress
+                  )
+
+                  if (matchingAddress && newValue) {
+                    // 모든 배송지의 defaultDelivery를 false로, 선택된 것만 true로
+                    const updatedAddresses = savedAddresses.map(addr => ({
+                      ...addr,
+                      defaultDelivery: addr.id === matchingAddress.id
+                    }))
+
+                    // DB 업데이트
+                    const userDocRef = doc(db, 'users', userId)
+                    await setDoc(userDocRef, {
+                      deliveryAddresses: updatedAddresses
+                    }, { merge: true })
+
+                    // 로컬 상태 업데이트
+                    onSavedAddressesChange(updatedAddresses)
+                  } else if (matchingAddress && !newValue) {
+                    // 체크 해제
+                    const updatedAddresses = savedAddresses.map(addr => ({
+                      ...addr,
+                      defaultDelivery: addr.id === matchingAddress.id ? false : addr.defaultDelivery
+                    }))
+
+                    const userDocRef = doc(db, 'users', userId)
+                    await setDoc(userDocRef, {
+                      deliveryAddresses: updatedAddresses
+                    }, { merge: true })
+
+                    onSavedAddressesChange(updatedAddresses)
+                  }
+
+                  setIsDefaultAddress(newValue)
+                } catch (error) {
+                  console.error('기본 배송지 설정 실패:', error)
+                }
+              } else {
+                setIsDefaultAddress(!isDefaultAddress)
+              }
+            }}>
+              <img
+                src={isDefaultAddress ? '/icons/check_active.png' : '/icons/check_empty.png'}
+                alt="checkbox"
+                className={styles.checkboxIcon}
+              />
+              <span>기본 배송지 설정</span>
+            </label>
+          </div>
+        )}
       </div>
     </section>
   )

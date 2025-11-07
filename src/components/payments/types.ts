@@ -51,6 +51,8 @@ export interface DeliveryAddress {
   deliveryDate?: string
   deliveryTime?: string
   request?: string
+  isDefault?: boolean
+  defaultDelivery?: boolean
 }
 
 export interface OrderInfo {
