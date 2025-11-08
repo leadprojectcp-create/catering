@@ -55,6 +55,13 @@ export default function RootLayout({
                   const auth = getAuth();
                   const db = getFirestore();
 
+                  // 이미 로그인되어 있는지 확인 (자동 로그인 시 중복 처리 방지)
+                  const currentUser = auth.currentUser;
+                  if (currentUser && currentUser.uid === result.uid) {
+                    console.log('[Native] User already logged in, skipping duplicate login');
+                    return;
+                  }
+
                   // ID 토큰으로 credential 생성
                   const credential = GoogleAuthProvider.credential(result.idToken);
                   const userCredential = await signInWithCredential(auth, credential);
