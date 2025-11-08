@@ -116,13 +116,13 @@ ${productListText}
 
     // 4. 추천된 상품 ID로 실제 상품 데이터 필터링
     const recommendedProductIds = aiResponse.recommendations.map(
-      (r: any) => r.productId
+      (r: { productId: string; reason: string }) => r.productId
     )
     const recommendedProducts = products
       .filter((p) => recommendedProductIds.includes(p.id))
       .map((p) => {
         const recommendation = aiResponse.recommendations.find(
-          (r: any) => r.productId === p.id
+          (r: { productId: string; reason: string }) => r.productId === p.id
         )
         return {
           ...p,

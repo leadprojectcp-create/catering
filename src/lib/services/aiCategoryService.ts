@@ -98,7 +98,7 @@ export async function updateAICategory(
       updates.imageUrl = imageUrl
     }
 
-    await updateDoc(docRef, updates as any)
+    await updateDoc(docRef, updates as Partial<Record<string, unknown>>)
   } catch (error) {
     console.error('AI 카테고리 수정 에러:', error)
     throw error
