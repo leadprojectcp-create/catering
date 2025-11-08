@@ -327,5 +327,14 @@ service cloud.firestore {
       // 관리자는 모든 포인트 내역 수정 가능
       allow update: if isAdmin();
     }
+
+    // AI Recommended Categories collection - AI 추천 카테고리
+    match /aiRecommendedCategories/{categoryId} {
+      // 모든 사용자 읽기 가능 (활성 카테고리는 공개)
+      allow read: if true;
+
+      // 관리자(level 10)만 생성/수정/삭제 가능
+      allow create, update, delete: if isAdmin();
+    }
   }
 }
