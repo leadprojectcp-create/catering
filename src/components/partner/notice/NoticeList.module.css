@@ -173,11 +173,6 @@
 }
 
 @media (max-width: 768px) {
-  .container {
-    padding: 16px;
-    padding-top: 80px;
-  }
-
   .pageHeader h1 {
     font-size: 20px;
   }

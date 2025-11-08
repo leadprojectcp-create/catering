@@ -145,11 +145,6 @@
 }
 
 @media (max-width: 768px) {
-  .container {
-    padding: 16px;
-    padding-top: 80px;
-  }
-
   .categoryBadge {
     font-size: 13px;
     padding: 3px 8px;
