@@ -8,7 +8,6 @@ interface GoogleLoginResult {
   uid: string
   email: string | null
   displayName: string | null
-  photoURL: string | null
   idToken: string
 }
 
@@ -16,7 +15,6 @@ interface KakaoLoginResult {
   uid: string
   email: string | null
   displayName: string | null
-  photoURL: string | null
   idToken: string
 }
 
@@ -24,6 +22,7 @@ declare global {
   interface Window {
     handleNativeGoogleLogin?: (result: GoogleLoginResult) => Promise<void>
     handleNativeKakaoLogin?: (result: KakaoLoginResult) => Promise<void>
+    nativeFcmToken?: string
   }
 }
 
@@ -48,7 +47,8 @@ export default function NativeAuthBridge() {
           'google',
           {
             name: result.displayName,
-            email: result.email
+            email: result.email,
+            fcmToken: window.nativeFcmToken || null
           }
         )
 
@@ -108,7 +108,8 @@ export default function NativeAuthBridge() {
           'kakao',
           {
             name: result.displayName,
-            email: result.email
+            email: result.email,
+            fcmToken: window.nativeFcmToken || null
           }
         )
 

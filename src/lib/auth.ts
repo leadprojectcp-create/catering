@@ -160,7 +160,7 @@ export async function handleSocialUser(
     name?: string | null;
     email?: string | null;
     phone?: string | null;
-    picture?: string | null
+    fcmToken?: string | null
   } = {}
 ) {
   try {
@@ -173,12 +173,25 @@ export async function handleSocialUser(
       const userData = userDoc.data()
       const userEmail = additionalInfo.email || firebaseUser.email || userData.email || ''
 
-      await setDoc(userRef, {
+      const updateData: {
+        email: string;
+        lastLoginAt: Date;
+        updatedAt: Date;
+        fcmToken?: string;
+      } = {
         ...userData,
         email: userEmail, // 이메일 확실히 저장
         lastLoginAt: new Date(),
         updatedAt: new Date()
-      }, { merge: true })
+      }
+
+      // FCM 토큰이 있으면 저장
+      if (additionalInfo.fcmToken) {
+        updateData.fcmToken = additionalInfo.fcmToken
+        console.log('[handleSocialUser] Updating FCM token for existing user:', additionalInfo.fcmToken)
+      }
+
+      await setDoc(userRef, updateData, { merge: true })
 
       return {
         success: true,
@@ -213,7 +226,18 @@ export async function handleSocialUser(
       console.log('New social user detected, creating incomplete registration')
       console.log('Social user email:', userEmail, 'from additionalInfo:', additionalInfo.email, 'from firebaseUser:', firebaseUser.email)
 
-      const socialUserData = {
+      const socialUserData: {
+        email: string | null;
+        name: string;
+        phone: string;
+        provider: string;
+        level: number;
+        type: string;
+        registrationComplete: boolean;
+        createdAt: Date;
+        updatedAt: Date;
+        fcmToken?: string;
+      } = {
         email: additionalInfo.email || firebaseUser.email || userEmail,
         name: additionalInfo.name || firebaseUser.displayName || (additionalInfo.email || firebaseUser.email || userEmail)?.split('@')[0] || '',
         phone: additionalInfo.phone || '',
@@ -223,6 +247,12 @@ export async function handleSocialUser(
         registrationComplete: false,
         createdAt: new Date(),
         updatedAt: new Date()
+      }
+
+      // FCM 토큰이 있으면 저장
+      if (additionalInfo.fcmToken) {
+        socialUserData.fcmToken = additionalInfo.fcmToken
+        console.log('[handleSocialUser] Saving FCM token for new user:', additionalInfo.fcmToken)
       }
 
       await setDoc(userRef, socialUserData)
