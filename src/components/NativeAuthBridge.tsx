@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 import { getAuth, signInWithCredential, GoogleAuthProvider, OAuthProvider } from 'firebase/auth'
 import { handleSocialUser } from '@/lib/auth'
 
@@ -29,8 +28,6 @@ declare global {
 }
 
 export default function NativeAuthBridge() {
-  const router = useRouter()
-
   useEffect(() => {
     if (typeof window === 'undefined') return
 
@@ -137,14 +134,10 @@ export default function NativeAuthBridge() {
         }
 
         console.log('[NativeAuth] Kakao login successful')
-      } catch (error: any) {
+      } catch (error) {
         console.error('[NativeAuth] Kakao login failed:', error)
-        console.error('[NativeAuth] Error details:', {
-          message: error?.message,
-          code: error?.code,
-          stack: error?.stack
-        })
-        alert(`카카오 로그인 실패: ${error?.message || error}`)
+        const errorMessage = error instanceof Error ? error.message : String(error)
+        alert(`카카오 로그인 실패: ${errorMessage}`)
         throw error
       }
     }
