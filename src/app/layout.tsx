@@ -4,6 +4,7 @@ import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
 import LayoutWrapper from "@/components/LayoutWrapper";
 import PageWrapper from "@/components/PageWrapper";
+import NativeAuthBridge from "@/components/NativeAuthBridge";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -44,16 +45,6 @@ export default function RootLayout({
               if (window.Kakao && !window.Kakao.isInitialized()) {
                 window.Kakao.init('${process.env.NEXT_PUBLIC_KAKAO_JS_KEY || ''}');
               }
-
-              // 네이티브 앱 Google 로그인 결과 처리
-              window.handleNativeGoogleLogin = async function(result) {
-                console.log('[Native] Received:', result);
-                const { getAuth, signInWithCredential, GoogleAuthProvider } = await import('firebase/auth');
-                const auth = getAuth();
-                const credential = GoogleAuthProvider.credential(result.idToken);
-                await signInWithCredential(auth, credential);
-                console.log('[Native] Signed in');
-              };
 
               document.addEventListener('touchstart', function(event) {
                 if (event.touches.length > 1) {
@@ -125,6 +116,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <AuthProvider>
+          <NativeAuthBridge />
           <PageWrapper>
             {children}
           </PageWrapper>
