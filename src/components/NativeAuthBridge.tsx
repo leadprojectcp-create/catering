@@ -87,8 +87,8 @@ export default function NativeAuthBridge() {
         console.log('[NativeAuth] Kakao login started:', result)
 
         const auth = getAuth()
-        // 앱에서는 kakao-app 사용 (Native App Key)
-        const provider = new OAuthProvider('kakao-app')
+        // 앱에서는 oidc.kakao-app 사용 (Native App Key)
+        const provider = new OAuthProvider('oidc.kakao-app')
 
         console.log('[NativeAuth] Creating credential with idToken:', result.idToken)
 
