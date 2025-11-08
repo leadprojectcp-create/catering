@@ -51,17 +51,60 @@ export default function RootLayout({
                 try {
                   // Firebase Auth로 직접 signIn (이미 네이티브에서 인증됨)
                   const { getAuth, signInWithCredential, GoogleAuthProvider } = await import('firebase/auth');
+                  const { getFirestore, doc, getDoc, setDoc } = await import('firebase/firestore');
                   const auth = getAuth();
+                  const db = getFirestore();
 
                   // ID 토큰으로 credential 생성
                   const credential = GoogleAuthProvider.credential(result.idToken);
-                  await signInWithCredential(auth, credential);
+                  const userCredential = await signInWithCredential(auth, credential);
+                  const firebaseUser = userCredential.user;
 
-                  console.log('[Native] Successfully signed in to Firebase');
-                  // 페이지 새로고침하여 AuthContext가 업데이트되도록 함
-                  window.location.reload();
+                  console.log('[Native] Successfully signed in to Firebase, checking user data...');
+
+                  // 기존 사용자 확인 (handleSocialUser 로직과 동일)
+                  const userRef = doc(db, 'users', firebaseUser.uid);
+                  const userDoc = await getDoc(userRef);
+
+                  if (userDoc.exists()) {
+                    // 기존 사용자 - 로그인 처리
+                    const userData = userDoc.data();
+                    await setDoc(userRef, {
+                      ...userData,
+                      email: result.email || firebaseUser.email || userData.email || '',
+                      lastLoginAt: new Date(),
+                      updatedAt: new Date()
+                    }, { merge: true });
+
+                    console.log('[Native] Existing user, registration complete:', userData.registrationComplete);
+
+                    // 가입 완료 여부에 따라 리다이렉트
+                    if (userData.registrationComplete) {
+                      window.location.href = '/';
+                    } else {
+                      window.location.href = '/signup/choose-type';
+                    }
+                  } else {
+                    // 신규 사용자 - 초기 문서 생성
+                    console.log('[Native] New user, creating initial document');
+                    await setDoc(userRef, {
+                      uid: firebaseUser.uid,
+                      email: result.email || firebaseUser.email || '',
+                      displayName: result.displayName || firebaseUser.displayName || '',
+                      photoURL: result.photoURL || firebaseUser.photoURL || '',
+                      provider: 'google',
+                      registrationComplete: false,
+                      createdAt: new Date(),
+                      updatedAt: new Date(),
+                      lastLoginAt: new Date()
+                    });
+
+                    // 신규 사용자는 회원 타입 선택으로 이동
+                    window.location.href = '/signup/choose-type';
+                  }
                 } catch (error) {
                   console.error('[Native] Error signing in with credential:', error);
+                  alert('로그인 처리 중 오류가 발생했습니다.');
                 }
               };
 
