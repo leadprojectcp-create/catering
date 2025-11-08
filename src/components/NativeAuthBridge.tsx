@@ -1,7 +1,9 @@
 'use client'
 
 import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { getAuth, signInWithCredential, GoogleAuthProvider, OAuthProvider } from 'firebase/auth'
+import { handleSocialUser } from '@/lib/auth'
 
 interface GoogleLoginResult {
   uid: string
@@ -27,6 +29,8 @@ declare global {
 }
 
 export default function NativeAuthBridge() {
+  const router = useRouter()
+
   useEffect(() => {
     if (typeof window === 'undefined') return
 
@@ -37,7 +41,43 @@ export default function NativeAuthBridge() {
 
         const auth = getAuth()
         const credential = GoogleAuthProvider.credential(result.idToken)
-        await signInWithCredential(auth, credential)
+        const userCredential = await signInWithCredential(auth, credential)
+
+        console.log('[NativeAuth] Firebase authentication successful')
+
+        // 웹과 동일한 handleSocialUser 함수 사용
+        const socialResult = await handleSocialUser(
+          userCredential.user,
+          'google',
+          {
+            name: result.displayName,
+            email: result.email,
+            phone: null,
+            picture: result.photoURL
+          }
+        )
+
+        console.log('[NativeAuth] handleSocialUser result:', socialResult)
+
+        if (socialResult.success) {
+          if ('isExistingUser' in socialResult && socialResult.isExistingUser && 'registrationComplete' in socialResult && socialResult.registrationComplete) {
+            // 기존 사용자이고 가입이 완료된 경우 - 메인 페이지로 이동
+            console.log('[NativeAuth] Existing user with complete registration, redirecting to home')
+            window.location.href = '/'
+          } else if ('isExistingUser' in socialResult && socialResult.isExistingUser && 'registrationComplete' in socialResult && !socialResult.registrationComplete) {
+            // 기존 사용자이지만 가입이 완료되지 않은 경우 - 회원 타입 선택으로 이동
+            console.log('[NativeAuth] Existing user with incomplete registration, redirecting to choose-type')
+            window.location.href = '/signup/choose-type'
+          } else if ('isExistingUser' in socialResult && !socialResult.isExistingUser) {
+            // 신규 사용자 - 회원 타입 선택 페이지로 이동
+            console.log('[NativeAuth] New user, redirecting to choose-type')
+            window.location.href = '/signup/choose-type'
+          }
+        } else {
+          // 에러 처리
+          console.error('[NativeAuth] Social user handle failed:', socialResult.error)
+          alert(socialResult.error || '로그인 중 오류가 발생했습니다.')
+        }
 
         console.log('[NativeAuth] Google login successful')
       } catch (error) {

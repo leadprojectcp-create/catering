@@ -153,7 +153,7 @@ export async function signupUser(userData: SignupData) {
 }
 
 // 소셜 로그인용 사용자 데이터 처리
-async function handleSocialUser(
+export async function handleSocialUser(
   firebaseUser: { uid: string; email?: string | null; displayName?: string | null },
   provider: string,
   additionalInfo: {
