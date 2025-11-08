@@ -52,7 +52,10 @@ export default function NativeAuthBridge() {
         console.log('[NativeAuth] Kakao login started:', { uid: result.uid, email: result.email })
 
         const auth = getAuth()
-        const credential = OAuthProvider.credential('oidc.kakao', result.idToken)
+        const provider = new OAuthProvider('oidc.kakao')
+        const credential = provider.credential({
+          idToken: result.idToken
+        })
         await signInWithCredential(auth, credential)
 
         console.log('[NativeAuth] Kakao login successful')
