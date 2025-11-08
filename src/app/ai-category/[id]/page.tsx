@@ -1,11 +1,12 @@
 import AICategoryProductList from '@/components/aiCategory/AICategoryProductList'
 
 interface Props {
-  params: {
+  params: Promise<{
     id: string
-  }
+  }>
 }
 
-export default function AICategoryPage({ params }: Props) {
-  return <AICategoryProductList categoryId={params.id} />
+export default async function AICategoryPage({ params }: Props) {
+  const { id } = await params
+  return <AICategoryProductList categoryId={id} />
 }
