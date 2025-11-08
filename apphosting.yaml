@@ -167,10 +167,8 @@ env:
       - BUILD
       - RUNTIME
 
-  # OpenAI Configuration
-  # Note: Set OPENAI_API_KEY in Firebase Console > App Hosting > Environment Variables
-  # or update this value before deployment
+  # OpenAI Configuration (using Secret Manager)
   - variable: OPENAI_API_KEY
-    value: your-openai-api-key-here
+    secret: OPENAI_API_KEY
     availability:
       - RUNTIME
