@@ -228,7 +228,8 @@ export const sendMessage = async (
 
       // FCM 푸시 알림 전송 (비동기, 실패해도 메시지 전송은 성공)
       try {
-        await fetch('/api/send-fcm', {
+        console.log('[sendMessage] FCM 푸시 알림 전송 시작:', { roomId, senderId, senderName, message: text })
+        const fcmResponse = await fetch('/api/send-fcm', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -240,6 +241,11 @@ export const sendMessage = async (
             message: text
           })
         })
+        const fcmResult = await fcmResponse.json()
+        console.log('[sendMessage] FCM 푸시 알림 응답:', fcmResult)
+        if (!fcmResponse.ok) {
+          console.error('[sendMessage] FCM 푸시 알림 전송 실패:', fcmResult)
+        }
       } catch (fcmError) {
         console.error('[sendMessage] FCM 전송 실패 (메시지는 전송됨):', fcmError)
       }
