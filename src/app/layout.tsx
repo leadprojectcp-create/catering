@@ -45,6 +45,31 @@ export default function RootLayout({
                 window.Kakao.init('${process.env.NEXT_PUBLIC_KAKAO_JS_KEY || ''}');
               }
 
+              // 네이티브 앱에서 Google 로그인 결과 처리
+              window.handleNativeGoogleLogin = async function(result) {
+                console.log('[Native] Received Google login result:', result);
+                try {
+                  // Firebase Auth로 직접 signIn (이미 네이티브에서 인증됨)
+                  const { getAuth, signInWithCredential, GoogleAuthProvider } = await import('firebase/auth');
+                  const auth = getAuth();
+
+                  // ID 토큰으로 credential 생성
+                  const credential = GoogleAuthProvider.credential(result.idToken);
+                  await signInWithCredential(auth, credential);
+
+                  console.log('[Native] Successfully signed in to Firebase');
+                  // 페이지 새로고침하여 AuthContext가 업데이트되도록 함
+                  window.location.reload();
+                } catch (error) {
+                  console.error('[Native] Error signing in with credential:', error);
+                }
+              };
+
+              window.handleNativeGoogleLoginError = function(error) {
+                console.error('[Native] Google login error:', error);
+                alert('로그인 중 오류가 발생했습니다.');
+              };
+
               document.addEventListener('touchstart', function(event) {
                 if (event.touches.length > 1) {
                   event.preventDefault();

@@ -261,6 +261,14 @@ function isWebView() {
 export async function signInWithGoogle() {
   try {
     console.log('[signInWithGoogle] Starting Google login...')
+
+    // 네이티브 앱인 경우 메시지 전달
+    if (typeof window !== 'undefined' && (window as any).isNativeApp && (window as any).ReactNativeWebView) {
+      console.log('[signInWithGoogle] Detected native app, sending message to native')
+      ;(window as any).ReactNativeWebView.postMessage(JSON.stringify({ type: 'GOOGLE_LOGIN' }))
+      return { success: true, isNativeHandling: true }
+    }
+
     const provider = new GoogleAuthProvider()
     provider.addScope('email')
     provider.addScope('profile')
@@ -324,6 +332,14 @@ export async function signInWithGoogle() {
 export async function signInWithKakao() {
   try {
     console.log('[signInWithKakao] Starting Kakao login...')
+
+    // 네이티브 앱인 경우 메시지 전달
+    if (typeof window !== 'undefined' && (window as any).isNativeApp && (window as any).ReactNativeWebView) {
+      console.log('[signInWithKakao] Detected native app, sending message to native')
+      ;(window as any).ReactNativeWebView.postMessage(JSON.stringify({ type: 'KAKAO_LOGIN' }))
+      return { success: true, isNativeHandling: true }
+    }
+
     const provider = new OAuthProvider('oidc.kakao')
 
     provider.addScope('openid')
