@@ -1,26 +1,42 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { initializeApp, getApps, cert } from 'firebase-admin/app'
-import { getMessaging } from 'firebase-admin/messaging'
-import { getFirestore } from 'firebase-admin/firestore'
 
-// Firebase Admin 초기화
-if (!getApps().length) {
-  const serviceAccount = {
-    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-    clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-    privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n')
+// Firebase Admin을 동적으로 import하여 빌드 시점 에러 방지
+function initializeFirebaseAdmin() {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { initializeApp, getApps, cert } = require('firebase-admin/app')
+
+  if (!getApps().length) {
+    const serviceAccount = {
+      projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n')
+    }
+
+    initializeApp({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      credential: cert(serviceAccount as any)
+    })
   }
-
-  initializeApp({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    credential: cert(serviceAccount as any)
-  })
 }
 
-const adminDb = getFirestore()
+function getAdminDb() {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { getFirestore } = require('firebase-admin/firestore')
+  return getFirestore()
+}
+
+function getAdminMessaging() {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { getMessaging } = require('firebase-admin/messaging')
+  return getMessaging()
+}
 
 export async function POST(request: NextRequest) {
   try {
+    // Firebase Admin 초기화
+    initializeFirebaseAdmin()
+    const adminDb = getAdminDb()
+
     const { roomId, senderId, senderName, message } = await request.json()
 
     if (!roomId || !senderId || !message) {
@@ -86,7 +102,7 @@ export async function POST(request: NextRequest) {
     }
 
     // FCM 메시지 전송
-    const messaging = getMessaging()
+    const messaging = getAdminMessaging()
     const fcmMessage = {
       token: fcmToken,
       notification: {
