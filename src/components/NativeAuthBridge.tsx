@@ -87,13 +87,19 @@ export default function NativeAuthBridge() {
     // Kakao 로그인 핸들러
     window.handleNativeKakaoLogin = async (result: KakaoLoginResult) => {
       try {
-        console.log('[NativeAuth] Kakao login started:', { uid: result.uid, email: result.email })
+        console.log('[NativeAuth] Kakao login started:', result)
 
         const auth = getAuth()
         const provider = new OAuthProvider('oidc.kakao')
+
+        console.log('[NativeAuth] Creating credential with idToken:', result.idToken)
+
         const credential = provider.credential({
           idToken: result.idToken
         })
+
+        console.log('[NativeAuth] Credential created, signing in...')
+
         const userCredential = await signInWithCredential(auth, credential)
 
         console.log('[NativeAuth] Firebase authentication successful')
@@ -131,8 +137,14 @@ export default function NativeAuthBridge() {
         }
 
         console.log('[NativeAuth] Kakao login successful')
-      } catch (error) {
+      } catch (error: any) {
         console.error('[NativeAuth] Kakao login failed:', error)
+        console.error('[NativeAuth] Error details:', {
+          message: error?.message,
+          code: error?.code,
+          stack: error?.stack
+        })
+        alert(`카카오 로그인 실패: ${error?.message || error}`)
         throw error
       }
     }
