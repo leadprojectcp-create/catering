@@ -7,7 +7,7 @@ import Image from 'next/image'
 import { signInWithEmailAndPassword } from 'firebase/auth'
 import { doc, getDoc } from 'firebase/firestore'
 import { auth, db } from '@/lib/firebase'
-import { handleRedirectResult, signInWithGoogle, signInWithKakao } from '@/lib/auth'
+import { handleRedirectResult, signInWithGoogle, signInWithKakao, updateFcmToken } from '@/lib/auth'
 import AuthGuard from './AuthGuard'
 import Loading from '@/components/Loading'
 import styles from './LoginPage.module.css'
@@ -74,6 +74,9 @@ export default function LoginPage() {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, formData.email, formData.password)
       const user = userCredential.user
+
+      // FCM 토큰 업데이트 (네이티브 앱인 경우)
+      await updateFcmToken(user.uid)
 
       // Firestore에서 사용자 타입 확인
       const userDoc = await getDoc(doc(db, 'users', user.uid))

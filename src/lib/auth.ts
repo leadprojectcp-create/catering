@@ -61,6 +61,34 @@ export async function checkExistingUser(email: string) {
   }
 }
 
+// 일반 로그인 시 FCM 토큰 업데이트
+export async function updateFcmToken(userId: string, fcmToken?: string | null) {
+  try {
+    if (!fcmToken) {
+      // 웹 환경에서 네이티브 FCM 토큰 확인
+      if (typeof window !== 'undefined' && (window as any).nativeFcmToken) {
+        fcmToken = (window as any).nativeFcmToken
+      }
+    }
+
+    if (!fcmToken) {
+      console.log('[updateFcmToken] No FCM token available')
+      return
+    }
+
+    const userRef = doc(db, 'users', userId)
+    await setDoc(userRef, {
+      fcmToken: fcmToken,
+      lastLoginAt: new Date(),
+      updatedAt: new Date()
+    }, { merge: true })
+
+    console.log('[updateFcmToken] FCM token updated for user:', userId)
+  } catch (error) {
+    console.error('[updateFcmToken] Failed to update FCM token:', error)
+  }
+}
+
 export async function signupUser(userData: SignupData) {
   try {
     console.log('Starting signup process for:', userData.email)

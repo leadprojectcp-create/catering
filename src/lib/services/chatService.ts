@@ -225,6 +225,24 @@ export const sendMessage = async (
         lastMessageTime: Date.now(),
         unreadCount
       })
+
+      // FCM 푸시 알림 전송 (비동기, 실패해도 메시지 전송은 성공)
+      try {
+        await fetch('/api/send-fcm', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            roomId,
+            senderId,
+            senderName,
+            message: text
+          })
+        })
+      } catch (fcmError) {
+        console.error('[sendMessage] FCM 전송 실패 (메시지는 전송됨):', fcmError)
+      }
     }
   } catch (error) {
     console.error('메시지 전송 실패:', error)
