@@ -46,7 +46,9 @@ export default function NativeAuthBridge() {
         console.log('[NativeAuth] Current FCM token:', fcmToken)
 
         // 네이티브 앱에 FCM 토큰 재요청
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         if ((window as any).ReactNativeWebView) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           (window as any).ReactNativeWebView.postMessage(JSON.stringify({ type: 'REQUEST_FCM_TOKEN' }))
 
           // 짧은 대기 후 다시 확인 (네이티브 응답 대기)
@@ -121,7 +123,9 @@ export default function NativeAuthBridge() {
         console.log('[NativeAuth] Current FCM token:', fcmToken)
 
         // 네이티브 앱에 FCM 토큰 재요청
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         if ((window as any).ReactNativeWebView) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           (window as any).ReactNativeWebView.postMessage(JSON.stringify({ type: 'REQUEST_FCM_TOKEN' }))
 
           // 짧은 대기 후 다시 확인 (네이티브 응답 대기)

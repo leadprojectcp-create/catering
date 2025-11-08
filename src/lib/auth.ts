@@ -66,7 +66,9 @@ export async function updateFcmToken(userId: string, fcmToken?: string | null) {
   try {
     if (!fcmToken) {
       // 웹 환경에서 네이티브 FCM 토큰 확인
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       if (typeof window !== 'undefined' && (window as any).nativeFcmToken) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         fcmToken = (window as any).nativeFcmToken
       }
     }
