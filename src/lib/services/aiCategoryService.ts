@@ -55,7 +55,7 @@ export async function uploadCategoryImage(
  * AI 추천 카테고리 생성
  */
 export async function createAICategory(
-  categoryData: Omit<AIRecommendedCategory, 'id' | 'createdAt'>,
+  categoryData: Omit<AIRecommendedCategory, 'id' | 'createdAt' | 'imageUrl'>,
   imageFile: File
 ): Promise<string> {
   try {
