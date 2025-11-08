@@ -7,6 +7,7 @@ import MainTitle from './home/MainTitle'
 import Banner from './home/Banner'
 import StoreList from './home/StoreList'
 import CategorySelector from './home/CategorySelector'
+import AIRecommendedSection from './home/AIRecommendedSection'
 import Loading from './Loading'
 import styles from './MainPage.module.css'
 
@@ -57,6 +58,9 @@ export default function MainPage() {
 
           {/* 배너 */}
           <Banner />
+
+          {/* AI 추천 특별 기획전 섹션 */}
+          <AIRecommendedSection />
 
           {/* 레스토랑 리스트 */}
           <StoreList selectedCategory="전체" />
