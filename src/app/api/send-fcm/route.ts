@@ -174,6 +174,27 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // 수신자의 활성 채팅방 확인 (해당 채팅방이 활성화되어 있으면 알림 전송 안 함)
+    try {
+      const activeRoomRef = realtimeDb.ref(`users/${recipientId}/activeRoomId`)
+      const activeRoomSnapshot = await activeRoomRef.once('value')
+
+      if (activeRoomSnapshot.exists()) {
+        const activeRoomId = activeRoomSnapshot.val()
+        console.log('[FCM API] 수신자의 활성 채팅방:', activeRoomId)
+
+        if (activeRoomId === roomId) {
+          console.log('[FCM API] 수신자가 해당 채팅방에 있음 - 알림 전송 안 함')
+          return NextResponse.json(
+            { success: true, message: 'Recipient is in the chat room' },
+            { status: 200 }
+          )
+        }
+      }
+    } catch (activeRoomError) {
+      console.log('[FCM API] 활성 채팅방 확인 실패 (알림은 전송):', activeRoomError)
+    }
+
     // 메시지 내용 가공 (이미지, 상품 메시지 처리)
     let notificationBody = message
     if (message.startsWith('[이미지]')) {

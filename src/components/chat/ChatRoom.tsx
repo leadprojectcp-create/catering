@@ -131,6 +131,39 @@ const ChatRoom = forwardRef<ChatRoomRef, ChatRoomProps>(({ roomId, onBack, isPar
     }
 
     loadRoomData()
+
+    // 채팅방 진입 시 활성 채팅방 ID 저장 (FCM 알림 제어용)
+    const setActiveRoom = async () => {
+      if (!user) return
+      try {
+        const { ref, set } = await import('firebase/database')
+        const { realtimeDb } = await import('@/lib/firebase')
+        const activeRoomRef = ref(realtimeDb, `users/${user.uid}/activeRoomId`)
+        await set(activeRoomRef, roomId)
+        console.log('[ChatRoom] 활성 채팅방 설정:', roomId)
+      } catch (error) {
+        console.error('[ChatRoom] 활성 채팅방 설정 실패:', error)
+      }
+    }
+
+    setActiveRoom()
+
+    // 채팅방 퇴장 시 활성 채팅방 ID 제거
+    return () => {
+      const clearActiveRoom = async () => {
+        if (!user) return
+        try {
+          const { ref, remove } = await import('firebase/database')
+          const { realtimeDb } = await import('@/lib/firebase')
+          const activeRoomRef = ref(realtimeDb, `users/${user.uid}/activeRoomId`)
+          await remove(activeRoomRef)
+          console.log('[ChatRoom] 활성 채팅방 해제')
+        } catch (error) {
+          console.error('[ChatRoom] 활성 채팅방 해제 실패:', error)
+        }
+      }
+      clearActiveRoom()
+    }
   }, [user, authLoading, roomId, router])
 
   // 초기 상품 및 메시지 확인 모달 표시 (한 번만 실행)
