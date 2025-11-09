@@ -3,11 +3,11 @@
     "users": {
       "$userId": {
         "activeRoom": {
-          ".read": "auth != null && auth.uid == $userId",
+          ".read": "auth != null",
           ".write": "auth != null && auth.uid == $userId"
         },
         "fcmToken": {
-          ".read": "auth != null && auth.uid == $userId",
+          ".read": "auth != null",
           ".write": "auth != null && auth.uid == $userId"
         }
       }
@@ -23,6 +23,7 @@
     "messages": {
       "$roomId": {
         ".read": "auth != null && (root.child('chatRooms').child($roomId).child('participants').child('0').val() == auth.uid || root.child('chatRooms').child($roomId).child('participants').child('1').val() == auth.uid || root.child('chatRooms').child($roomId).child('userId').val() == auth.uid || root.child('chatRooms').child($roomId).child('partnerId').val() == auth.uid)",
+        ".write": "auth != null && (root.child('chatRooms').child($roomId).child('participants').child('0').val() == auth.uid || root.child('chatRooms').child($roomId).child('participants').child('1').val() == auth.uid || root.child('chatRooms').child($roomId).child('userId').val() == auth.uid || root.child('chatRooms').child($roomId).child('partnerId').val() == auth.uid)",
         "$messageId": {
           ".write": "auth != null && (root.child('chatRooms').child($roomId).child('participants').child('0').val() == auth.uid || root.child('chatRooms').child($roomId).child('participants').child('1').val() == auth.uid || root.child('chatRooms').child($roomId).child('userId').val() == auth.uid || root.child('chatRooms').child($roomId).child('partnerId').val() == auth.uid)"
         }

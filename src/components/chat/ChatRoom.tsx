@@ -132,6 +132,20 @@ const ChatRoom = forwardRef<ChatRoomRef, ChatRoomProps>(({ roomId, onBack, isPar
 
     loadRoomData()
 
+    // 채팅방 진입 시 즉시 읽음 처리
+    const markAsReadOnEntry = async () => {
+      if (!user) return
+      try {
+        console.log('[ChatRoom] 채팅방 진입 - 읽음 처리 시작')
+        await markMessagesAsRead(roomId, user.uid)
+        console.log('[ChatRoom] 읽음 처리 완료')
+      } catch (error) {
+        console.error('[ChatRoom] 읽음 처리 실패:', error)
+      }
+    }
+
+    markAsReadOnEntry()
+
     // 채팅방 진입 시 활성 채팅방 ID 및 타임스탬프 저장 (FCM 알림 제어용)
     const setActiveRoom = async () => {
       if (!user) return
@@ -227,14 +241,7 @@ const ChatRoom = forwardRef<ChatRoomRef, ChatRoomProps>(({ roomId, onBack, isPar
     }
   }, [user, roomId])
 
-  // 입력창에 포커스될 때만 읽음 처리
-  const handleInputFocus = async () => {
-    if (!user || !roomId) return
-
-    console.log('[ChatRoom] 입력창 포커스 - 읽음 처리 시작')
-    await markMessagesAsRead(roomId, user.uid)
-    console.log('[ChatRoom] 읽음 처리 완료')
-  }
+  // 입력창 포커스 핸들러 (읽음 처리는 채팅방 진입 시 자동 처리됨)
 
   // 역순 렌더링 방식에서는 강제 스크롤이 필요 없음
 
@@ -687,7 +694,6 @@ const ChatRoom = forwardRef<ChatRoomRef, ChatRoomProps>(({ roomId, onBack, isPar
           placeholder={isUploading ? '업로드 중...' : '메시지를 입력하세요...'}
           value={inputText}
           onChange={(e) => setInputText(e.target.value)}
-          onFocus={handleInputFocus}
           disabled={isUploading}
         />
         <button
