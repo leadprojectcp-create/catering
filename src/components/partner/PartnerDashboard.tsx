@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
 import { collection, query, where, orderBy, limit, getDocs, Timestamp, onSnapshot } from 'firebase/firestore'
-import { db } from '@/lib/firebase'
+import { db, realtimeDb } from '@/lib/firebase'
+import { ref as rtdbRef, onValue as rtdbOnValue } from 'firebase/database'
 import { getPublishedNotices, Notice } from '@/lib/services/noticeService'
 import Loading from '@/components/Loading'
 import { ShoppingBag, Star, TrendingUp, Clock, AlertCircle, DollarSign, Package, MessageSquare, MessageCircle, HelpCircle, Bell } from 'lucide-react'
@@ -33,11 +34,20 @@ interface WeeklyChartProps {
   lastWeekData: number[]
   thisWeekData: number[]
   type: 'sales' | 'orders'
+  startDate?: Date // 이번 주 시작일 (옵션)
 }
 
 // 주간 차트 컴포넌트
-function WeeklyChart({ lastWeekData, thisWeekData, type }: WeeklyChartProps) {
-  const days = ['일', '월', '화', '수', '목', '금', '토']
+function WeeklyChart({ lastWeekData, thisWeekData, type, startDate }: WeeklyChartProps) {
+  // 동적 요일 라벨 생성 (startDate 기준으로 7일)
+  const days = startDate ?
+    Array.from({ length: 7 }, (_, i) => {
+      const date = new Date(startDate)
+      date.setDate(startDate.getDate() + i)
+      const dayNames = ['일', '월', '화', '수', '목', '금', '토']
+      return dayNames[date.getDay()]
+    })
+    : ['일', '월', '화', '수', '목', '금', '토'] // fallback
 
   // 최대값 계산
   const allData = [...lastWeekData, ...thisWeekData]
@@ -148,7 +158,8 @@ interface DashboardStats {
   todayOrders: number
   pendingOrders: number
   newOrders: number // 신규 주문 (orderStatus: pending)
-  newChats: number // 신규 채팅 문의
+  newChats: number // 신규 채팅 문의 (24시간 기준)
+  unansweredChats: number // 미답변 채팅 건수
   todaySales: number
   monthSales: number
   monthSettlement: number // 이번 달 정산예정 금액
@@ -168,13 +179,15 @@ interface DashboardStats {
   }
   // 주간 차트 데이터
   weeklySales: {
-    lastWeek: number[] // 일~토
-    thisWeek: number[] // 일~토
+    lastWeek: number[] // 7일간
+    thisWeek: number[] // 7일간
   }
   weeklyOrders: {
-    lastWeek: number[] // 일~토
-    thisWeek: number[] // 일~토
+    lastWeek: number[] // 7일간
+    thisWeek: number[] // 7일간
   }
+  // 주간 차트 시작일
+  weekStartDate?: Date
 }
 
 export default function PartnerDashboard() {
@@ -184,6 +197,7 @@ export default function PartnerDashboard() {
     pendingOrders: 0,
     newOrders: 0,
     newChats: 0,
+    unansweredChats: 0,
     todaySales: 0,
     monthSales: 0,
     monthSettlement: 0,
@@ -218,17 +232,22 @@ export default function PartnerDashboard() {
       fetchDashboardData()
       fetchNotices()
 
-      // 실시간 주문현황 구독
       const storeId = user.uid
+
+      // 24시간 전 타임스탬프
+      const now = new Date()
+      const last24Hours = new Date(now.getTime() - (24 * 60 * 60 * 1000))
+      const last24HoursTimestamp = Timestamp.fromDate(last24Hours)
+
+      // 1. 실시간 주문현황 구독 (paymentStatus: paid)
       const ordersQuery = query(
         collection(db, 'orders'),
         where('storeId', '==', storeId),
         where('paymentStatus', '==', 'paid')
       )
 
-      const unsubscribe = onSnapshot(ordersQuery, (snapshot) => {
+      const unsubscribeOrders = onSnapshot(ordersQuery, (snapshot) => {
         console.log('=== 실시간 주문 구독 트리거 ===')
-        console.log('전체 주문 수:', snapshot.docs.length)
 
         let newOrders = 0
         let cancelledOrders = 0
@@ -238,11 +257,6 @@ export default function PartnerDashboard() {
 
         snapshot.docs.forEach(doc => {
           const order = doc.data()
-          console.log('주문 데이터:', {
-            orderId: doc.id,
-            orderStatus: order.orderStatus,
-            paymentStatus: order.paymentStatus
-          })
 
           if (order.orderStatus === 'pending') newOrders++
           else if (order.orderStatus === 'cancelled') cancelledOrders++
@@ -261,6 +275,7 @@ export default function PartnerDashboard() {
 
         setStats(prev => ({
           ...prev,
+          newOrders,
           realtimeOrderStats: {
             newOrders,
             cancelledOrders,
@@ -271,7 +286,79 @@ export default function PartnerDashboard() {
         }))
       })
 
-      return () => unsubscribe()
+      // 2. 실시간 채팅 통계 구독 (Realtime Database 사용)
+      const chatRoomsRef = rtdbRef(realtimeDb, 'chatRooms')
+
+      const unsubscribeChats = rtdbOnValue(chatRoomsRef, (snapshot) => {
+        console.log('=== 실시간 채팅 구독 트리거 (Realtime DB) ===')
+
+        let newChats = 0
+        let unansweredChats = 0
+        const last24HoursTime = last24HoursTimestamp.toMillis()
+
+        console.log('[채팅 통계] 24시간 기준 시간:', last24HoursTime, new Date(last24HoursTime))
+
+        if (!snapshot.exists()) {
+          console.log('채팅방 데이터 없음')
+          setStats(prev => ({ ...prev, newChats: 0, unansweredChats: 0 }))
+          return
+        }
+
+        let totalRooms = 0
+        let myRooms = 0
+
+        snapshot.forEach((childSnapshot) => {
+          const chatRoom = childSnapshot.val()
+          const roomId = childSnapshot.key
+          const participants = chatRoom.participants || []
+          totalRooms++
+
+          // 파트너가 참여한 채팅방만 필터링
+          if (!participants.includes(storeId)) {
+            return
+          }
+          myRooms++
+
+          console.log(`[채팅방 ${roomId}]`, {
+            createdAt: chatRoom.createdAt,
+            createdAtDate: chatRoom.createdAt ? new Date(chatRoom.createdAt) : null,
+            isNew: chatRoom.createdAt && chatRoom.createdAt >= last24HoursTime,
+            unreadCount: chatRoom.unreadCount?.[storeId] || 0,
+            participants
+          })
+
+          // 24시간 이내 생성된 채팅방
+          const createdAt = chatRoom.createdAt
+          if (createdAt && createdAt >= last24HoursTime) {
+            newChats++
+          }
+
+          // 미답변 채팅 (unreadCount[partnerId] > 0)
+          const unreadCount = chatRoom.unreadCount || {}
+          if (unreadCount[storeId] > 0) {
+            unansweredChats++
+          }
+        })
+
+        console.log('실시간 채팅 통계 업데이트:', {
+          totalRooms,
+          myRooms,
+          newChats,
+          unansweredChats,
+          storeId
+        })
+
+        setStats(prev => ({
+          ...prev,
+          newChats,
+          unansweredChats
+        }))
+      })
+
+      return () => {
+        unsubscribeOrders()
+        unsubscribeChats()
+      }
     } else {
       setLoading(false)
     }
@@ -500,24 +587,30 @@ export default function PartnerDashboard() {
 
       // 실시간 주문현황은 onSnapshot에서 처리하므로 여기서는 제거
 
-      // 주간 차트 데이터 계산 (일~토)
+      // 주간 차트 데이터 계산 (오늘부터 과거 7일)
       const weeklySalesLastWeek = [0, 0, 0, 0, 0, 0, 0]
       const weeklySalesThisWeek = [0, 0, 0, 0, 0, 0, 0]
       const weeklyOrdersLastWeek = [0, 0, 0, 0, 0, 0, 0]
       const weeklyOrdersThisWeek = [0, 0, 0, 0, 0, 0, 0]
 
-      // 이번 주 시작일 (일요일)
-      const thisWeekStart = new Date(now)
-      thisWeekStart.setDate(now.getDate() - now.getDay())
-      thisWeekStart.setHours(0, 0, 0, 0)
+      // 오늘 (이번 주의 첫째 날)
+      const today = new Date(now)
+      today.setHours(0, 0, 0, 0)
 
-      // 저번 주 시작일
-      const lastWeekStart = new Date(thisWeekStart)
-      lastWeekStart.setDate(thisWeekStart.getDate() - 7)
+      // 이번 주 끝일 (오늘로부터 6일 후 = 오늘 + 6일)
+      const thisWeekEnd = new Date(today)
+      thisWeekEnd.setDate(today.getDate() + 6)
+      thisWeekEnd.setHours(23, 59, 59, 999)
 
-      // 저번 주 끝일
-      const lastWeekEnd = new Date(thisWeekStart)
-      lastWeekEnd.setSeconds(-1)
+      // 저번 주 시작일 (오늘로부터 7일 전)
+      const lastWeekStart = new Date(today)
+      lastWeekStart.setDate(today.getDate() - 7)
+      lastWeekStart.setHours(0, 0, 0, 0)
+
+      // 저번 주 끝일 (오늘로부터 1일 전)
+      const lastWeekEnd = new Date(today)
+      lastWeekEnd.setDate(today.getDate() - 1)
+      lastWeekEnd.setHours(23, 59, 59, 999)
 
       const allOrdersSnapshot = await getDocs(query(
         collection(db, 'orders'),
@@ -525,6 +618,11 @@ export default function PartnerDashboard() {
       ))
 
       console.log('=== 주간 차트 데이터 계산 시작 ===')
+      console.log('현재 시간:', now)
+      console.log('오늘 (이번 주 시작일):', today)
+      console.log('이번 주 끝일:', thisWeekEnd)
+      console.log('저번 주 시작일:', lastWeekStart)
+      console.log('저번 주 종료일:', lastWeekEnd)
       console.log('전체 주문 수:', allOrdersSnapshot.docs.length)
 
       allOrdersSnapshot.docs.forEach(doc => {
@@ -541,12 +639,38 @@ export default function PartnerDashboard() {
           orderStatus: order.orderStatus,
           totalProductPrice: order.totalProductPrice,
           deliveryDate: order.deliveryDate,
-          pickupDate: order.pickupDate
+          pickupDate: order.pickupDate,
+          deliveryInfoDate: order.deliveryInfo?.deliveryDate,
+          pickupInfoDate: order.deliveryInfo?.pickupDate
         })
 
-        // 픽업/배달 날짜 사용 (deliveryDate 또는 pickupDate)
+        // 픽업/배달 날짜 사용 (deliveryInfo.deliveryDate 또는 deliveryInfo.pickupDate 우선, 없으면 top-level)
         let deliveryDate = null
-        if (order.deliveryDate) {
+
+        // 1. deliveryInfo.deliveryDate 확인 (nested)
+        if (order.deliveryInfo?.deliveryDate) {
+          // Firestore Timestamp인 경우
+          if (order.deliveryInfo.deliveryDate.toDate) {
+            deliveryDate = order.deliveryInfo.deliveryDate.toDate()
+          }
+          // 문자열인 경우 (YYYY-MM-DD 형식)
+          else if (typeof order.deliveryInfo.deliveryDate === 'string') {
+            deliveryDate = new Date(order.deliveryInfo.deliveryDate)
+          }
+        }
+        // 2. deliveryInfo.pickupDate 확인 (nested)
+        else if (order.deliveryInfo?.pickupDate) {
+          // Firestore Timestamp인 경우
+          if (order.deliveryInfo.pickupDate.toDate) {
+            deliveryDate = order.deliveryInfo.pickupDate.toDate()
+          }
+          // 문자열인 경우 (YYYY-MM-DD 형식)
+          else if (typeof order.deliveryInfo.pickupDate === 'string') {
+            deliveryDate = new Date(order.deliveryInfo.pickupDate)
+          }
+        }
+        // 3. top-level deliveryDate 확인 (fallback)
+        else if (order.deliveryDate) {
           // Firestore Timestamp인 경우
           if (order.deliveryDate.toDate) {
             deliveryDate = order.deliveryDate.toDate()
@@ -555,7 +679,9 @@ export default function PartnerDashboard() {
           else if (typeof order.deliveryDate === 'string') {
             deliveryDate = new Date(order.deliveryDate)
           }
-        } else if (order.pickupDate) {
+        }
+        // 4. top-level pickupDate 확인 (fallback)
+        else if (order.pickupDate) {
           // Firestore Timestamp인 경우
           if (order.pickupDate.toDate) {
             deliveryDate = order.pickupDate.toDate()
@@ -572,27 +698,43 @@ export default function PartnerDashboard() {
         }
 
         const deliveryTime = deliveryDate.getTime()
-        const thisWeekStartTime = thisWeekStart.getTime()
+        const todayTime = today.getTime()
+        const thisWeekEndTime = thisWeekEnd.getTime()
         const lastWeekStartTime = lastWeekStart.getTime()
         const lastWeekEndTime = lastWeekEnd.getTime()
 
         const orderTotal = order.totalProductPrice || 0
 
-        console.log('주문 금액:', orderTotal, '배달 날짜:', deliveryDate)
+        console.log('주문 처리:', {
+          orderId: doc.id,
+          deliveryDate,
+          deliveryTime,
+          todayTime,
+          thisWeekEndTime,
+          lastWeekStartTime,
+          lastWeekEndTime,
+          isThisWeek: deliveryTime >= todayTime && deliveryTime <= thisWeekEndTime,
+          isLastWeek: deliveryTime >= lastWeekStartTime && deliveryTime <= lastWeekEndTime,
+          orderTotal
+        })
 
-        // 이번 주
-        if (deliveryTime >= thisWeekStartTime) {
-          const dayOfWeek = deliveryDate.getDay() // 0(일) ~ 6(토)
-          weeklySalesThisWeek[dayOfWeek] += orderTotal
-          weeklyOrdersThisWeek[dayOfWeek]++
-          console.log('이번 주 추가:', dayOfWeek, '요일', orderTotal)
+        // 이번 주 (오늘 ~ 오늘+6일)
+        if (deliveryTime >= todayTime && deliveryTime <= thisWeekEndTime) {
+          // 오늘로부터 며칠 후인지 계산
+          const diffDays = Math.floor((deliveryTime - todayTime) / (1000 * 60 * 60 * 24))
+          const arrayIndex = Math.min(diffDays, 6) // 0~6 범위로 제한
+          weeklySalesThisWeek[arrayIndex] += orderTotal
+          weeklyOrdersThisWeek[arrayIndex]++
+          console.log('이번 주 추가:', arrayIndex, '일째 (0=오늘, 6=+6일)', orderTotal)
         }
-        // 저번 주
+        // 저번 주 (오늘-7일 ~ 오늘-1일)
         else if (deliveryTime >= lastWeekStartTime && deliveryTime <= lastWeekEndTime) {
-          const dayOfWeek = deliveryDate.getDay()
-          weeklySalesLastWeek[dayOfWeek] += orderTotal
-          weeklyOrdersLastWeek[dayOfWeek]++
-          console.log('저번 주 추가:', dayOfWeek, '요일', orderTotal)
+          // 저번 주 시작일로부터 며칠째인지 계산
+          const diffDays = Math.floor((deliveryTime - lastWeekStartTime) / (1000 * 60 * 60 * 24))
+          const arrayIndex = Math.min(diffDays, 6) // 0~6 범위로 제한
+          weeklySalesLastWeek[arrayIndex] += orderTotal
+          weeklyOrdersLastWeek[arrayIndex]++
+          console.log('저번 주 추가:', arrayIndex, '일째 (0=-7일, 6=-1일)', orderTotal)
         }
       })
 
@@ -646,11 +788,14 @@ export default function PartnerDashboard() {
         monthSettlement = 0
       }
 
+      // 채팅 통계는 실시간 구독에서 처리하므로 여기서는 제외
+
       setStats(prev => ({
         todayOrders: todayOrdersSnapshot?.size || 0,
         pendingOrders: pendingOrdersSnapshot?.size || 0,
         newOrders: newOrdersSnapshot?.size || 0,
-        newChats: 0,
+        newChats: prev.newChats, // 실시간 구독 값 유지
+        unansweredChats: prev.unansweredChats, // 실시간 구독 값 유지
         todaySales,
         monthSales,
         monthSettlement,
@@ -674,7 +819,8 @@ export default function PartnerDashboard() {
         weeklyOrders: {
           lastWeek: weeklyOrdersLastWeek,
           thisWeek: weeklyOrdersThisWeek
-        }
+        },
+        weekStartDate: today // 이번 주 시작일 (오늘) 전달
       }))
     } catch (error) {
       console.error('대시보드 데이터 로드 실패:', error)
@@ -781,10 +927,10 @@ export default function PartnerDashboard() {
                 <Link href="/chat" className={styles.statCardLink}>
                   <h3 className={styles.statLabel}>신규 채팅문의</h3>
                   <span className={styles.statDescription}>
-                    미답변 {stats.newChats}건
+                    신규 채팅문의 {stats.newChats}건
                   </span>
                   <div className={styles.statCardBottom}>
-                    <p className={styles.statValue}>{stats.newChats}건</p>
+                    <p className={styles.statValue}>미답변 {stats.unansweredChats}건</p>
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
                       <path d="M9 6L15 12L9 18" stroke="#333" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
@@ -890,6 +1036,7 @@ export default function PartnerDashboard() {
                   lastWeekData={stats.weeklySales.lastWeek}
                   thisWeekData={stats.weeklySales.thisWeek}
                   type="sales"
+                  startDate={stats.weekStartDate}
                 />
               </div>
 
@@ -918,6 +1065,7 @@ export default function PartnerDashboard() {
                   lastWeekData={stats.weeklyOrders.lastWeek}
                   thisWeekData={stats.weeklyOrders.thisWeek}
                   type="orders"
+                  startDate={stats.weekStartDate}
                 />
               </div>
             </div>

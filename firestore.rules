@@ -224,6 +224,30 @@ service cloud.firestore {
         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reply']);
     }
 
+    // ChatRooms collection - 채팅방
+    match /chatRooms/{roomId} {
+      // 채팅방 참여자만 읽기 가능 (userId 또는 partnerId)
+      allow read: if isSignedIn() &&
+        (request.auth.uid == resource.data.userId ||
+         request.auth.uid == resource.data.partnerId);
+
+      // 쿼리 읽기: 로그인한 사용자가 참여한 채팅방 쿼리 가능
+      allow list: if isSignedIn();
+
+      // 로그인한 사용자만 채팅방 생성 가능
+      allow create: if isSignedIn() &&
+        (request.auth.uid == request.resource.data.userId ||
+         request.auth.uid == request.resource.data.partnerId);
+
+      // 채팅방 참여자만 업데이트 가능 (마지막 메시지, unreadCount 등)
+      allow update: if isSignedIn() &&
+        (request.auth.uid == resource.data.userId ||
+         request.auth.uid == resource.data.partnerId);
+
+      // 삭제 불가
+      allow delete: if false;
+    }
+
     // Chats collection - 채팅방
     match /chats/{chatId} {
       // 채팅방 참여자만 읽기 가능
