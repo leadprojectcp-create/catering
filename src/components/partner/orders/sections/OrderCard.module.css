@@ -10,11 +10,14 @@
 }
 
 .orderCardPending {
-  border: 2px solid #D90206;
+  border: 2px solid #025BD9;
 }
 
 .orderCardExpanded {
-  border: 2px solid #025BD9;
+  border-radius: 20px;
+  border: 2px solid #F4F4F4;
+  background: #FFF;
+  box-shadow: 0 4px 4px 5px rgba(0, 0, 0, 0.05);
 }
 
 .cardContentWrapper {
