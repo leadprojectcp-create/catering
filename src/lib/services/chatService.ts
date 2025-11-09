@@ -242,9 +242,13 @@ export const sendMessage = async (
           })
         })
         const fcmResult = await fcmResponse.json()
-        console.log('[sendMessage] FCM 푸시 알림 응답:', fcmResult)
+        console.log('[sendMessage] FCM 푸시 알림 응답 상태:', fcmResponse.status, fcmResponse.ok)
+        console.log('[sendMessage] FCM 푸시 알림 응답 본문:', JSON.stringify(fcmResult, null, 2))
         if (!fcmResponse.ok) {
-          console.error('[sendMessage] FCM 푸시 알림 전송 실패:', fcmResult)
+          console.error('[sendMessage] FCM 푸시 알림 전송 실패 [상태:', fcmResponse.status, ']')
+          console.error('[sendMessage] 에러 상세:', fcmResult)
+        } else {
+          console.log('[sendMessage] FCM 푸시 알림 전송 성공!')
         }
       } catch (fcmError) {
         console.error('[sendMessage] FCM 전송 실패 (메시지는 전송됨):', fcmError)

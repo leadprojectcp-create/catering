@@ -59,6 +59,10 @@ env:
       - RUNTIME
 
   # Firebase Admin SDK Configuration (Server-side only)
+  - variable: FIREBASE_FIRESTORE_DATABASE_ID
+    value: catering
+    availability:
+      - RUNTIME
   - variable: FIREBASE_PROJECT_ID
     value: catering-26952
     availability:
