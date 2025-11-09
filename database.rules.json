@@ -1,0 +1,32 @@
+{
+  "rules": {
+    "users": {
+      "$userId": {
+        "activeRoom": {
+          ".read": "auth != null && auth.uid == $userId",
+          ".write": "auth != null && auth.uid == $userId"
+        },
+        "fcmToken": {
+          ".read": "auth != null && auth.uid == $userId",
+          ".write": "auth != null && auth.uid == $userId"
+        }
+      }
+    },
+    "chatRooms": {
+      ".read": "auth != null",
+      ".write": false,
+      "$roomId": {
+        ".read": "auth != null && (data.child('participants').child('0').val() == auth.uid || data.child('participants').child('1').val() == auth.uid || data.child('userId').val() == auth.uid || data.child('partnerId').val() == auth.uid)",
+        ".write": "auth != null && (data.child('participants').child('0').val() == auth.uid || data.child('participants').child('1').val() == auth.uid || data.child('userId').val() == auth.uid || data.child('partnerId').val() == auth.uid || !data.exists())"
+      }
+    },
+    "messages": {
+      "$roomId": {
+        ".read": "auth != null && (root.child('chatRooms').child($roomId).child('participants').child('0').val() == auth.uid || root.child('chatRooms').child($roomId).child('participants').child('1').val() == auth.uid || root.child('chatRooms').child($roomId).child('userId').val() == auth.uid || root.child('chatRooms').child($roomId).child('partnerId').val() == auth.uid)",
+        "$messageId": {
+          ".write": "auth != null && (root.child('chatRooms').child($roomId).child('participants').child('0').val() == auth.uid || root.child('chatRooms').child($roomId).child('participants').child('1').val() == auth.uid || root.child('chatRooms').child($roomId).child('userId').val() == auth.uid || root.child('chatRooms').child($roomId).child('partnerId').val() == auth.uid)"
+        }
+      }
+    }
+  }
+}

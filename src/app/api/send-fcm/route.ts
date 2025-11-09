@@ -176,19 +176,30 @@ export async function POST(request: NextRequest) {
 
     // 수신자의 활성 채팅방 확인 (해당 채팅방이 활성화되어 있으면 알림 전송 안 함)
     try {
-      const activeRoomRef = realtimeDb.ref(`users/${recipientId}/activeRoomId`)
+      const activeRoomRef = realtimeDb.ref(`users/${recipientId}/activeRoom`)
       const activeRoomSnapshot = await activeRoomRef.once('value')
 
       if (activeRoomSnapshot.exists()) {
-        const activeRoomId = activeRoomSnapshot.val()
-        console.log('[FCM API] 수신자의 활성 채팅방:', activeRoomId)
+        const activeRoomData = activeRoomSnapshot.val()
+        console.log('[FCM API] 수신자의 활성 채팅방 데이터:', activeRoomData)
 
-        if (activeRoomId === roomId) {
-          console.log('[FCM API] 수신자가 해당 채팅방에 있음 - 알림 전송 안 함')
-          return NextResponse.json(
-            { success: true, message: 'Recipient is in the chat room' },
-            { status: 200 }
-          )
+        const activeRoomId = activeRoomData?.roomId
+        const lastActiveTimestamp = activeRoomData?.timestamp
+
+        if (activeRoomId === roomId && lastActiveTimestamp) {
+          // 타임스탬프 확인 (10초 이내면 활성 상태로 간주)
+          const now = Date.now()
+          const timeDiff = now - lastActiveTimestamp
+
+          if (timeDiff < 10000) {
+            console.log('[FCM API] 수신자가 해당 채팅방에 있음 - 알림 전송 안 함 (타임스탬프 차이:', timeDiff, 'ms)')
+            return NextResponse.json(
+              { success: true, message: 'Recipient is in the chat room' },
+              { status: 200 }
+            )
+          } else {
+            console.log('[FCM API] 타임스탬프가 오래됨 - 알림 전송 (타임스탬프 차이:', timeDiff, 'ms)')
+          }
         }
       }
     } catch (activeRoomError) {

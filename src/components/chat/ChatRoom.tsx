@@ -132,14 +132,17 @@ const ChatRoom = forwardRef<ChatRoomRef, ChatRoomProps>(({ roomId, onBack, isPar
 
     loadRoomData()
 
-    // 채팅방 진입 시 활성 채팅방 ID 저장 (FCM 알림 제어용)
+    // 채팅방 진입 시 활성 채팅방 ID 및 타임스탬프 저장 (FCM 알림 제어용)
     const setActiveRoom = async () => {
       if (!user) return
       try {
-        const { ref, set } = await import('firebase/database')
+        const { ref, set, serverTimestamp } = await import('firebase/database')
         const { realtimeDb } = await import('@/lib/firebase')
-        const activeRoomRef = ref(realtimeDb, `users/${user.uid}/activeRoomId`)
-        await set(activeRoomRef, roomId)
+        const activeRoomRef = ref(realtimeDb, `users/${user.uid}/activeRoom`)
+        await set(activeRoomRef, {
+          roomId: roomId,
+          timestamp: serverTimestamp()
+        })
         console.log('[ChatRoom] 활성 채팅방 설정:', roomId)
       } catch (error) {
         console.error('[ChatRoom] 활성 채팅방 설정 실패:', error)
@@ -148,14 +151,20 @@ const ChatRoom = forwardRef<ChatRoomRef, ChatRoomProps>(({ roomId, onBack, isPar
 
     setActiveRoom()
 
-    // 채팅방 퇴장 시 활성 채팅방 ID 제거
+    // 주기적으로 타임스탬프 업데이트 (5초마다)
+    const intervalId = setInterval(() => {
+      setActiveRoom()
+    }, 5000)
+
+    // 채팅방 퇴장 시 활성 채팅방 정보 제거
     return () => {
+      clearInterval(intervalId)
       const clearActiveRoom = async () => {
         if (!user) return
         try {
           const { ref, remove } = await import('firebase/database')
           const { realtimeDb } = await import('@/lib/firebase')
-          const activeRoomRef = ref(realtimeDb, `users/${user.uid}/activeRoomId`)
+          const activeRoomRef = ref(realtimeDb, `users/${user.uid}/activeRoom`)
           await remove(activeRoomRef)
           console.log('[ChatRoom] 활성 채팅방 해제')
         } catch (error) {
