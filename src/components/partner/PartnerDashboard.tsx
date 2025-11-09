@@ -778,7 +778,7 @@ export default function PartnerDashboard() {
           const order = doc.data()
           const orderNumber = index + 1
           const totalProductPrice = order.totalProductPrice || 0
-          const feeRate = orderNumber <= 5 ? 0.034 : 0.134
+          const feeRate = orderNumber <= 5 ? 0.034 : 0.13
           const fee = totalProductPrice * feeRate
           const settlementAmount = totalProductPrice - fee
           monthSettlement += settlementAmount
