@@ -62,6 +62,7 @@ const ChatRoom = forwardRef<ChatRoomRef, ChatRoomProps>(({ roomId, onBack, isPar
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const messagesContainerRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  const [inputContainerWidth, setInputContainerWidth] = useState<number>(0)
 
   // ref를 통해 부모 컴포넌트에서 호출할 수 있는 메서드 노출
   useImperativeHandle(ref, () => ({
@@ -146,6 +147,13 @@ const ChatRoom = forwardRef<ChatRoomRef, ChatRoomProps>(({ roomId, onBack, isPar
 
     markAsReadOnEntry()
 
+    // 모바일 화면 너비 동적 계산
+    const updateWidth = () => {
+      setInputContainerWidth(window.innerWidth)
+    }
+    updateWidth()
+    window.addEventListener('resize', updateWidth)
+
     // 채팅방 진입 시 활성 채팅방 ID 및 타임스탬프 저장 (FCM 알림 제어용)
     const setActiveRoom = async () => {
       if (!user) return
@@ -173,6 +181,7 @@ const ChatRoom = forwardRef<ChatRoomRef, ChatRoomProps>(({ roomId, onBack, isPar
     // 채팅방 퇴장 시 활성 채팅방 정보 제거
     return () => {
       clearInterval(intervalId)
+      window.removeEventListener('resize', updateWidth)
       const clearActiveRoom = async () => {
         if (!user) return
         try {
@@ -684,9 +693,7 @@ const ChatRoom = forwardRef<ChatRoomRef, ChatRoomProps>(({ roomId, onBack, isPar
           position: 'fixed',
           bottom: 0,
           left: 0,
-          right: 0,
-          width: '100%',
-          maxWidth: '100%',
+          width: inputContainerWidth > 0 ? `${inputContainerWidth}px` : '100%',
           boxSizing: 'border-box',
           margin: 0,
         }}
@@ -708,6 +715,10 @@ const ChatRoom = forwardRef<ChatRoomRef, ChatRoomProps>(({ roomId, onBack, isPar
           value={inputText}
           onChange={(e) => setInputText(e.target.value)}
           disabled={isUploading}
+          style={{
+            width: inputContainerWidth > 0 ? `${inputContainerWidth - 44 - 44 - 6 - 6 - 16}px` : 'auto',
+            maxWidth: inputContainerWidth > 0 ? `${inputContainerWidth - 44 - 44 - 6 - 6 - 16}px` : '100%',
+          }}
         />
         <button
           type="submit"
