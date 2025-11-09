@@ -6,15 +6,19 @@ function initializeFirebaseAdmin() {
   const { initializeApp, getApps, cert } = require('firebase-admin/app')
 
   if (!getApps().length) {
-    const serviceAccount = {
-      projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n')
+    const serviceAccount: {
+      projectId: string
+      clientEmail: string
+      privateKey: string
+    } = {
+      projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || '',
+      clientEmail: process.env.FIREBASE_CLIENT_EMAIL || '',
+      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n') || ''
     }
 
     initializeApp({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      credential: cert(serviceAccount as any)
+      credential: cert(serviceAccount),
+      databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL
     })
   }
 }
