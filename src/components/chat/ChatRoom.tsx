@@ -677,7 +677,20 @@ const ChatRoom = forwardRef<ChatRoomRef, ChatRoomProps>(({ roomId, onBack, isPar
         <div ref={messagesEndRef} />
       </div>
 
-      <form className={styles.inputContainer} onSubmit={handleSendMessage}>
+      <form
+        className={styles.inputContainer}
+        onSubmit={handleSendMessage}
+        style={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          width: '100%',
+          maxWidth: '100%',
+          boxSizing: 'border-box',
+          margin: 0,
+        }}
+      >
         <button
           type="button"
           className={styles.attachButton}
