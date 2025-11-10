@@ -4,7 +4,7 @@
 }
 
 .titleSection {
-  margin-bottom: 30px;
+  margin-bottom: 15px;
 }
 
 .title {
@@ -33,7 +33,7 @@
 }
 
 .reviewCard {
-  padding-bottom: 20px;
+  padding: 15px 0;
   border-bottom: 1px solid #F0F0F0;
 }
 
@@ -105,10 +105,62 @@
   overflow-x: auto;
 }
 
+.imageWrapper {
+  position: relative;
+  width: 140px;
+  height: 140px;
+  border-radius: 8px;
+  overflow: hidden;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.imageWrapper video {
+  pointer-events: none;
+}
+
+.videoPlayButton {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.videoPlayButton::before {
+  content: '';
+  width: 50px;
+  height: 50px;
+  background: rgba(0, 0, 0, 0.7);
+  border-radius: 50%;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.videoPlayButton::after {
+  content: '';
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 10px 0 10px 18px;
+  border-color: transparent transparent transparent white;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-35%, -50%);
+  z-index: 1;
+}
+
 .reviewImage {
   border-radius: 8px;
   object-fit: cover;
-  flex-shrink: 0;
 }
 
 .reviewContent {
@@ -182,8 +234,104 @@
   word-break: break-word;
 }
 
+/* 이미지 모달 */
+.imageModal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.modalContent {
+  position: relative;
+  max-width: 90vw;
+  max-height: 90vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modalImage {
+  max-width: 90vw;
+  max-height: 90vh;
+  width: auto !important;
+  height: auto !important;
+  object-fit: contain;
+}
+
+.closeButton {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: rgba(0, 0, 0, 0.5);
+  border: none;
+  color: white;
+  font-size: 32px;
+  cursor: pointer;
+  padding: 8px 12px;
+  z-index: 10001;
+  line-height: 1;
+  border-radius: 50%;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.closeButton:hover {
+  background: rgba(0, 0, 0, 0.8);
+}
+
+.prevButton,
+.nextButton {
+  position: fixed;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.3);
+  border: none;
+  color: white;
+  font-size: 60px;
+  cursor: pointer;
+  padding: 20px;
+  z-index: 10001;
+  line-height: 1;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.prevButton:hover,
+.nextButton:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.prevButton {
+  left: 20px;
+}
+
+.nextButton {
+  right: 20px;
+}
+
+.imageCounter {
+  position: absolute;
+  bottom: -40px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: white;
+  font-size: 16px;
+  font-weight: 500;
+}
+
 @media (max-width: 768px) {
- .title {
+  .title {
     font-size: 20px;
   }
 
@@ -201,5 +349,27 @@
 
   .reviewContent {
     font-size: 14px;
+  }
+
+  .prevButton,
+  .nextButton {
+    font-size: 40px;
+    padding: 10px;
+  }
+
+  .prevButton {
+    left: 10px;
+  }
+
+  .nextButton {
+    right: 10px;
+  }
+
+  .closeButton {
+    top: 10px;
+    right: 10px;
+    font-size: 24px;
+    width: 40px;
+    height: 40px;
   }
 }

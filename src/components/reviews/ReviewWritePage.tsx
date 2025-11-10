@@ -47,6 +47,7 @@ export default function ReviewWritePage() {
   const [images, setImages] = useState<File[]>([])
   const [imagePreviews, setImagePreviews] = useState<string[]>([])
   const [uploading, setUploading] = useState(false)
+  const [mediaTypes, setMediaTypes] = useState<('image' | 'video')[]>([])
 
   // 날짜 포맷팅 함수 (24시간 형식)
   const formatReservationDate = (dateStr?: string, timeStr?: string) => {
@@ -165,42 +166,60 @@ export default function ReviewWritePage() {
     const files = e.target.files
     if (!files) return
 
-    const newImages = Array.from(files)
+    const newFiles = Array.from(files)
 
     // 최대 5개까지만 허용
-    if (images.length + newImages.length > 5) {
-      alert('이미지는 최대 5개까지 업로드 가능합니다.')
+    if (images.length + newFiles.length > 5) {
+      alert('이미지/동영상은 최대 5개까지 업로드 가능합니다.')
       return
     }
 
-    // 각 파일 크기 체크 (10MB)
-    const maxSize = 10 * 1024 * 1024
-    for (const file of newImages) {
-      if (file.size > maxSize) {
-        alert('각 이미지는 10MB 이하여야 합니다.')
+    // 각 파일 타입 및 크기 체크
+    const imageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']
+    const videoTypes = ['video/mp4', 'video/quicktime', 'video/x-msvideo', 'video/webm', 'video/x-matroska', 'video/3gpp', 'video/3gpp2', 'video/x-m4v']
+    const newMediaTypes: ('image' | 'video')[] = []
+
+    for (const file of newFiles) {
+      const isImage = imageTypes.includes(file.type)
+      const isVideo = videoTypes.includes(file.type)
+
+      if (!isImage && !isVideo) {
+        alert('이미지(JPEG, PNG, GIF, WebP) 또는 동영상(MP4, MOV, AVI, WebM, MKV, 3GP) 파일만 업로드 가능합니다.')
         return
       }
+
+      // 이미지는 10MB, 동영상은 500MB 제한
+      const maxSize = isVideo ? 500 * 1024 * 1024 : 10 * 1024 * 1024
+      if (file.size > maxSize) {
+        const maxSizeMB = isVideo ? 500 : 10
+        alert(`${isVideo ? '동영상' : '이미지'}은 ${maxSizeMB}MB 이하여야 합니다.`)
+        return
+      }
+
+      newMediaTypes.push(isVideo ? 'video' : 'image')
     }
 
-    // 이미지 미리보기 생성
+    // 미리보기 생성
     const newPreviews: string[] = []
-    newImages.forEach(file => {
+    newFiles.forEach(file => {
       const reader = new FileReader()
       reader.onloadend = () => {
         newPreviews.push(reader.result as string)
-        if (newPreviews.length === newImages.length) {
+        if (newPreviews.length === newFiles.length) {
           setImagePreviews([...imagePreviews, ...newPreviews])
         }
       }
       reader.readAsDataURL(file)
     })
 
-    setImages([...images, ...newImages])
+    setImages([...images, ...newFiles])
+    setMediaTypes([...mediaTypes, ...newMediaTypes])
   }
 
   const removeImage = (index: number) => {
     setImages(images.filter((_, i) => i !== index))
     setImagePreviews(imagePreviews.filter((_, i) => i !== index))
+    setMediaTypes(mediaTypes.filter((_, i) => i !== index))
   }
 
   const uploadImagesToBunny = async (reviewId: string): Promise<string[]> => {
@@ -220,7 +239,9 @@ export default function ReviewWritePage() {
       })
 
       if (!response.ok) {
-        throw new Error('이미지 업로드 실패')
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
+        console.error('파일 업로드 실패:', errorData)
+        throw new Error(`파일 업로드 실패: ${errorData.error || response.statusText}`)
       }
 
       const data = await response.json()
@@ -272,8 +293,8 @@ export default function ReviewWritePage() {
           })
           hasImages = true
         } catch (uploadError) {
-          console.error('이미지 업로드 실패:', uploadError)
-          alert('리뷰는 등록되었으나 일부 이미지 업로드에 실패했습니다.')
+          console.error('파일 업로드 실패:', uploadError)
+          alert('리뷰는 등록되었으나 일부 파일 업로드에 실패했습니다.')
         } finally {
           setUploading(false)
         }
@@ -333,13 +354,14 @@ export default function ReviewWritePage() {
       <div className={styles.orderInfo}>
         <div className={styles.orderItem}>
           {order.items[0]?.productImage && (
-            <OptimizedImage
-              src={order.items[0].productImage}
-              alt={order.items[0].productName}
-              width={70}
-              height={70}
-              className={styles.productImage}
-            />
+            <div className={styles.productImageWrapper}>
+              <OptimizedImage
+                src={order.items[0].productImage}
+                alt={order.items[0].productName}
+                fill
+                className={styles.productImage}
+              />
+            </div>
           )}
           <div className={styles.itemInfo}>
             <h2 className={styles.storeName}>{order.storeName}</h2>
@@ -385,21 +407,30 @@ export default function ReviewWritePage() {
 
         <div className={styles.formGroup}>
           <div className={styles.imageUploadHeader}>
-            <div className={styles.imageUploadTitle}>상품이미지를 추가해주세요</div>
-            <div className={styles.imageUploadSubtitle}>구매하신 상품에 대한 이미지를 추가해주세요.</div>
+            <div className={styles.imageUploadTitle}>상품이미지/동영상을 추가해주세요</div>
+            <div className={styles.imageUploadSubtitle}>구매하신 상품에 대한 이미지 또는 동영상을 추가해주세요.</div>
           </div>
 
           {imagePreviews.length > 0 && (
             <div className={styles.imagePreviewContainer}>
               {imagePreviews.map((preview, index) => (
                 <div key={index} className={styles.imagePreviewItem}>
-                  <OptimizedImage
-                    src={preview}
-                    alt={`미리보기 ${index + 1}`}
-                    width={100}
-                    height={100}
-                    className={styles.previewImage}
-                  />
+                  {mediaTypes[index] === 'video' ? (
+                    <video
+                      src={preview}
+                      className={styles.previewImage}
+                      controls
+                      style={{ width: '100px', height: '100px', objectFit: 'cover' }}
+                    />
+                  ) : (
+                    <OptimizedImage
+                      src={preview}
+                      alt={`미리보기 ${index + 1}`}
+                      width={100}
+                      height={100}
+                      className={styles.previewImage}
+                    />
+                  )}
                   <button
                     type="button"
                     className={styles.removeImageButton}
@@ -416,7 +447,7 @@ export default function ReviewWritePage() {
             <input
               type="file"
               id="imageInput"
-              accept="image/*"
+              accept="image/*,video/*"
               multiple
               onChange={handleImageSelect}
               className={styles.imageInput}
@@ -426,7 +457,7 @@ export default function ReviewWritePage() {
               htmlFor="imageInput"
               className={`${styles.imageUploadButton} ${images.length >= 5 ? styles.disabled : ''}`}
             >
-              이미지 추가
+              이미지/동영상 추가
             </label>
           </div>
         </div>
@@ -462,7 +493,7 @@ export default function ReviewWritePage() {
             className={styles.submitButton}
             disabled={submitting || uploading || content.trim().length < 30}
           >
-            {uploading ? '이미지 업로드 중...' : submitting ? '등록 중...' : '리뷰 등록'}
+            {uploading ? '파일 업로드 중...' : submitting ? '등록 중...' : '리뷰 등록'}
           </button>
         </div>
       </form>

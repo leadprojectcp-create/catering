@@ -45,10 +45,18 @@
   align-items: flex-start;
 }
 
+.productImageWrapper {
+  position: relative;
+  width: 70px;
+  height: 70px;
+  border-radius: 8px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
 .productImage {
   border-radius: 8px;
   object-fit: cover;
-  flex-shrink: 0;
 }
 
 .itemInfo {

@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { doc, getDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { Review } from '../types'
+import OptimizedImage from '@/components/common/OptimizedImage'
 import styles from './ReviewSection.module.css'
 
 interface ReviewSectionProps {
@@ -213,21 +214,41 @@ export default function ReviewSection({ reviews, loadingReviews }: ReviewSection
               </div>
               {review.images && review.images.length > 0 && (
                 <div className={styles.reviewImages}>
-                  {review.images.map((imageUrl, index) => (
-                    <div
-                      key={index}
-                      className={styles.reviewImageItem}
-                      onClick={() => handleImageClick(review.images || [], index)}
-                    >
-                      <Image
-                        src={imageUrl}
-                        alt={`리뷰 이미지 ${index + 1}`}
-                        width={80}
-                        height={80}
-                        className={styles.reviewImage}
-                      />
-                    </div>
-                  ))}
+                  {review.images.map((imageUrl, index) => {
+                    // 동영상 파일 확장자 체크
+                    const isVideo = /\.(mp4|mov|avi|webm|mkv|3gp|3g2|m4v)$/i.test(imageUrl)
+
+                    if (isVideo) {
+                      return (
+                        <div
+                          key={index}
+                          className={styles.reviewImageItem}
+                          onClick={() => handleImageClick(review.images || [], index)}
+                        >
+                          <video
+                            src={imageUrl}
+                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                          />
+                          <div className={styles.videoPlayButton}></div>
+                        </div>
+                      )
+                    }
+
+                    return (
+                      <div
+                        key={index}
+                        className={styles.reviewImageItem}
+                        onClick={() => handleImageClick(review.images || [], index)}
+                      >
+                        <OptimizedImage
+                          src={imageUrl}
+                          alt={`리뷰 이미지 ${index + 1}`}
+                          fill
+                          className={styles.reviewImage}
+                        />
+                      </div>
+                    )
+                  })}
                 </div>
               )}
               <p className={styles.reviewContent}>{review.content}</p>
@@ -276,14 +297,23 @@ export default function ReviewSection({ reviews, loadingReviews }: ReviewSection
               onTouchEnd={handleTouchEnd}
               ref={modalRef}
             >
-              <Image
-                src={selectedImages[selectedImageIndex]}
-                alt={`리뷰 이미지 ${selectedImageIndex + 1}`}
-                width={800}
-                height={800}
-                className={styles.modalImage}
-                style={{ objectFit: 'contain' }}
-              />
+              {/\.(mp4|mov|avi|webm|mkv|3gp|3g2|m4v)$/i.test(selectedImages[selectedImageIndex]) ? (
+                <video
+                  src={selectedImages[selectedImageIndex]}
+                  controls
+                  className={styles.modalImage}
+                  style={{ maxWidth: '70vw', maxHeight: '70vh', width: 'auto', height: 'auto' }}
+                />
+              ) : (
+                <Image
+                  src={selectedImages[selectedImageIndex]}
+                  alt={`리뷰 이미지 ${selectedImageIndex + 1}`}
+                  width={800}
+                  height={800}
+                  className={styles.modalImage}
+                  style={{ objectFit: 'contain' }}
+                />
+              )}
             </div>
 
             {selectedImageIndex < selectedImages.length - 1 && (
