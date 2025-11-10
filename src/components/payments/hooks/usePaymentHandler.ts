@@ -118,8 +118,8 @@ export async function handlePaymentProcess(params: UsePaymentHandlerParams): Pro
       }
     }
 
-    // 모바일 redirect를 위해 주문 데이터를 sessionStorage에 저장
-    sessionStorage.setItem('pendingOrderData', JSON.stringify({
+    // 모바일 redirect를 위해 주문 데이터를 localStorage에 저장 (sessionStorage는 새 창에서 공유 안됨)
+    const pendingData = {
       orderInfo,
       recipient,
       addressName,
@@ -142,7 +142,11 @@ export async function handlePaymentProcess(params: UsePaymentHandlerParams): Pro
       partnerPhone: storeData?.phone,
       cartIdParam,
       additionalOrderIdParam,
-    }))
+    }
+
+    // localStorage와 sessionStorage 둘 다 저장 (호환성)
+    localStorage.setItem('pendingOrderData', JSON.stringify(pendingData))
+    sessionStorage.setItem('pendingOrderData', JSON.stringify(pendingData))
 
     // 포트원 V2 결제창 호출
     paymentResult = await requestPayment({
@@ -489,6 +493,9 @@ export async function handlePaymentProcess(params: UsePaymentHandlerParams): Pro
     console.error('알림톡 발송 실패:', alimtalkError)
   }
 
+  // PC 결제 완료 후 localStorage도 정리
+  localStorage.removeItem('pendingOrderData')
+  sessionStorage.removeItem('pendingOrderData')
   sessionStorage.removeItem('orderData')
   alert(`결제가 완료되었습니다!\n주문번호: ${orderNumber}`)
   onRouter('/orders')

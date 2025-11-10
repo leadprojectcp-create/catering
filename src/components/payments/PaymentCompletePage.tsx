@@ -58,9 +58,14 @@ export default function PaymentCompletePage() {
           return
         }
 
-        // 주문 데이터 가져오기
-        const pendingOrderDataStr = sessionStorage.getItem('pendingOrderData')
-        console.log('[Payment Complete] sessionStorage에서 가져온 데이터:', pendingOrderDataStr)
+        // 주문 데이터 가져오기 (localStorage 우선, sessionStorage fallback)
+        let pendingOrderDataStr = localStorage.getItem('pendingOrderData')
+        if (!pendingOrderDataStr) {
+          pendingOrderDataStr = sessionStorage.getItem('pendingOrderData')
+        }
+
+        console.log('[Payment Complete] localStorage에서 가져온 데이터:', localStorage.getItem('pendingOrderData') ? '있음' : '없음')
+        console.log('[Payment Complete] sessionStorage에서 가져온 데이터:', sessionStorage.getItem('pendingOrderData') ? '있음' : '없음')
 
         if (!pendingOrderDataStr) {
           console.error('[Payment Complete] pendingOrderData 없음')
@@ -94,7 +99,8 @@ export default function PaymentCompletePage() {
           return
         }
 
-        // 세션 스토리지 정리
+        // 스토리지 정리
+        localStorage.removeItem('pendingOrderData')
         sessionStorage.removeItem('pendingOrderData')
         sessionStorage.removeItem('cartIdForPayment')
         sessionStorage.removeItem('orderData')
