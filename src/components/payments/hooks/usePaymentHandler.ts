@@ -100,6 +100,11 @@ export async function handlePaymentProcess(params: UsePaymentHandlerParams): Pro
       ? process.env.NEXT_PUBLIC_PORTONE_EASY_CHANNEL_KEY!  // 간편결제
       : process.env.NEXT_PUBLIC_PORTONE_GENERAL_CHANNEL_KEY!  // 일반결제(카드/계좌이체/가상계좌)
 
+    // 장바구니 ID를 sessionStorage에 저장 (모바일 리다이렉트 시 사용)
+    if (cartIdParam) {
+      sessionStorage.setItem('cartIdForPayment', cartIdParam)
+    }
+
     // 포트원 결제창 호출 (실제 결제 금액으로)
     paymentResult = await requestPayment({
       orderName: `${orderData.productName} ${orderData.items.length > 1 ? `외 ${orderData.items.length - 1}건` : ''}`,
