@@ -70,24 +70,6 @@ export default function DateTimePicker({
     }
   }, [showTimePicker, selectedPeriod, selectedHour, selectedMinute])
 
-  // 모달 열릴 때 백그라운드 스크롤 방지
-  useEffect(() => {
-    if (showDatePicker || showTimePicker) {
-      // 스크롤 방지
-      document.body.style.overflow = 'hidden'
-      document.body.style.touchAction = 'none'
-    } else {
-      // 스크롤 방지 해제
-      document.body.style.overflow = ''
-      document.body.style.touchAction = ''
-    }
-
-    // 컴포넌트 언마운트 시 정리
-    return () => {
-      document.body.style.overflow = ''
-      document.body.style.touchAction = ''
-    }
-  }, [showDatePicker, showTimePicker])
 
   // quantityRanges를 기반으로 현재 수량에 맞는 daysBeforeOrder 계산
   const getMinDaysForQuantity = () => {
