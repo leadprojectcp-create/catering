@@ -58,7 +58,7 @@ export const requestPayment = async (
         email: request.customerEmail,
       },
       redirectUrl: `${window.location.origin}/payments/complete`,
-      noticeUrls: [`${window.location.origin}/api/payments/webhook`],
+      noticeUrls: [`${window.location.origin}/api/payments/webhook`]
     }
 
     // channelKey가 있으면 추가

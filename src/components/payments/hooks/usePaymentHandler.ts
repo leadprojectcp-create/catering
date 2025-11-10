@@ -118,7 +118,33 @@ export async function handlePaymentProcess(params: UsePaymentHandlerParams): Pro
       }
     }
 
-    // 포트원 V2 결제창 호출 (실제 결제 금액으로)
+    // 모바일 redirect를 위해 주문 데이터를 sessionStorage에 저장
+    sessionStorage.setItem('pendingOrderData', JSON.stringify({
+      orderInfo,
+      recipient,
+      addressName,
+      deliveryRequest,
+      detailedRequest,
+      entranceCode,
+      deliveryMethod,
+      parcelPaymentMethod,
+      usePoint,
+      totalPrice,
+      totalProductPrice,
+      deliveryFee,
+      orderId,
+      userEmail,
+      storeId: orderData.storeId,
+      storeName: orderData.storeName,
+      productName: orderData.productName,
+      items: orderData.items,
+      partnerId: storeData?.partnerId,
+      partnerPhone: storeData?.phone,
+      cartIdParam,
+      additionalOrderIdParam,
+    }))
+
+    // 포트원 V2 결제창 호출
     paymentResult = await requestPayment({
       orderName: `${orderData.productName} ${orderData.items.length > 1 ? `외 ${orderData.items.length - 1}건` : ''}`,
       amount: actualPaymentAmount,
@@ -132,12 +158,14 @@ export async function handlePaymentProcess(params: UsePaymentHandlerParams): Pro
       channelKey: channelKey,
     })
 
+    // PC는 여기서 callback으로 응답을 받습니다
+    // 모바일은 redirectUrl로 이동하므로 여기까지 도달하지 않습니다
     if (!paymentResult.success) {
       alert(`결제에 실패했습니다.\n${paymentResult.errorMessage || '알 수 없는 오류'}`)
       return false
     }
 
-    // 서버에서 결제 검증
+    // 서버에서 결제 검증 (PC만)
     console.log('결제 검증 시작:', paymentResult.paymentId)
     const verifyResponse = await fetch('/api/payments/verify', {
       method: 'POST',
