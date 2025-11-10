@@ -9,6 +9,7 @@ import { collection, query, where, getDocs } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import Loading from '@/components/Loading'
 import Image from 'next/image'
+import OptimizedImage from '@/components/common/OptimizedImage'
 import DateRangePicker from './DateRangePicker'
 import CustomDropdown from './CustomDropdown'
 import styles from './ReviewManagementPage.module.css'
@@ -31,8 +32,10 @@ export default function ReviewManagementPage() {
   const [filteredReviews, setFilteredReviews] = useState<Review[]>([])
   const [replyingTo, setReplyingTo] = useState<string | null>(null)
   const [replyText, setReplyText] = useState('')
+  const [replyIsPrivate, setReplyIsPrivate] = useState(false)
   const [editingReplyId, setEditingReplyId] = useState<string | null>(null)
   const [editReplyText, setEditReplyText] = useState('')
+  const [editReplyIsPrivate, setEditReplyIsPrivate] = useState(false)
   const [selectedImages, setSelectedImages] = useState<string[]>([])
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [touchStart, setTouchStart] = useState(0)
@@ -157,9 +160,11 @@ export default function ReviewManagementPage() {
     if (replyingTo === reviewId) {
       setReplyingTo(null)
       setReplyText('')
+      setReplyIsPrivate(false)
     } else {
       setReplyingTo(reviewId)
       setReplyText('')
+      setReplyIsPrivate(false)
     }
   }
 
@@ -172,7 +177,7 @@ export default function ReviewManagementPage() {
     if (!user) return
 
     try {
-      await addReplyToReview(reviewId, replyText.trim(), user.uid)
+      await addReplyToReview(reviewId, replyText.trim(), user.uid, replyIsPrivate)
       alert('답글이 저장되었습니다.')
 
       // 리뷰 목록 새로고침
@@ -180,15 +185,17 @@ export default function ReviewManagementPage() {
 
       setReplyingTo(null)
       setReplyText('')
+      setReplyIsPrivate(false)
     } catch (error) {
       console.error('답글 저장 실패:', error)
       alert('답글 저장에 실패했습니다.')
     }
   }
 
-  const handleReplyEdit = (reviewId: string, currentContent: string) => {
+  const handleReplyEdit = (reviewId: string, currentContent: string, isPrivate?: boolean) => {
     setEditingReplyId(reviewId)
     setEditReplyText(currentContent)
+    setEditReplyIsPrivate(isPrivate || false)
   }
 
   const handleReplyEditSubmit = async (reviewId: string) => {
@@ -198,7 +205,7 @@ export default function ReviewManagementPage() {
     }
 
     try {
-      await updateReplyInReview(reviewId, editReplyText.trim())
+      await updateReplyInReview(reviewId, editReplyText.trim(), editReplyIsPrivate)
       alert('답글이 수정되었습니다.')
 
       // 리뷰 목록 새로고침
@@ -206,6 +213,7 @@ export default function ReviewManagementPage() {
 
       setEditingReplyId(null)
       setEditReplyText('')
+      setEditReplyIsPrivate(false)
     } catch (error) {
       console.error('답글 수정 실패:', error)
       alert('답글 수정에 실패했습니다.')
@@ -378,22 +386,41 @@ export default function ReviewManagementPage() {
               <div className={styles.reviewBody}>
                 {review.images && review.images.length > 0 && (
                   <div className={styles.reviewImages}>
-                    {review.images.map((imageUrl, index) => (
-                      <div
-                        key={index}
-                        className={styles.imageWrapper}
-                        onClick={() => handleImageClick(review.images!, index)}
-                        style={{ cursor: 'pointer' }}
-                      >
-                        <Image
-                          src={imageUrl}
-                          alt={`리뷰 이미지 ${index + 1}`}
-                          width={100}
-                          height={100}
-                          className={styles.reviewImage}
-                        />
-                      </div>
-                    ))}
+                    {review.images.map((imageUrl, index) => {
+                      // 동영상 파일 확장자 체크
+                      const isVideo = /\.(mp4|mov|avi|webm|mkv|3gp|3g2|m4v)$/i.test(imageUrl)
+
+                      if (isVideo) {
+                        return (
+                          <div
+                            key={index}
+                            className={styles.imageWrapper}
+                            onClick={() => handleImageClick(review.images!, index)}
+                          >
+                            <video
+                              src={imageUrl}
+                              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                            />
+                            <div className={styles.videoPlayButton}></div>
+                          </div>
+                        )
+                      }
+
+                      return (
+                        <div
+                          key={index}
+                          className={styles.imageWrapper}
+                          onClick={() => handleImageClick(review.images!, index)}
+                        >
+                          <OptimizedImage
+                            src={imageUrl}
+                            alt={`리뷰 이미지 ${index + 1}`}
+                            fill
+                            className={styles.reviewImage}
+                          />
+                        </div>
+                      )
+                    })}
                   </div>
                 )}
                 <div className={styles.reviewContent}>{review.content}</div>
@@ -403,27 +430,43 @@ export default function ReviewManagementPage() {
                     <div className={styles.replySection}>
                       <textarea
                         className={styles.replyTextarea}
-                        placeholder="답글을 입력하세요..."
+                        placeholder="부적절한 단어가 포함될 경우 관리자에 의해 댓글이 삭제될 수도 있습니다."
                         value={editReplyText}
                         onChange={(e) => setEditReplyText(e.target.value)}
                         rows={4}
                       />
                       <div className={styles.replyActions}>
-                        <button
-                          className={styles.replyCancelButton}
-                          onClick={() => {
-                            setEditingReplyId(null)
-                            setEditReplyText('')
-                          }}
-                        >
-                          취소
-                        </button>
-                        <button
-                          className={styles.replySubmitButton}
-                          onClick={() => handleReplyEditSubmit(review.id!)}
-                        >
-                          수정
-                        </button>
+                        <label className={styles.privateCheckboxLabel}>
+                          <Image
+                            src={editReplyIsPrivate ? '/icons/check_active.png' : '/icons/check_empty.png'}
+                            alt="체크박스"
+                            width={20}
+                            height={20}
+                            className={styles.checkboxIcon}
+                            onClick={() => setEditReplyIsPrivate(!editReplyIsPrivate)}
+                          />
+                          <span onClick={() => setEditReplyIsPrivate(!editReplyIsPrivate)}>
+                            고객에게만 보이는 글입니다
+                          </span>
+                        </label>
+                        <div className={styles.replyButtonGroup}>
+                          <button
+                            className={styles.replyCancelButton}
+                            onClick={() => {
+                              setEditingReplyId(null)
+                              setEditReplyText('')
+                              setEditReplyIsPrivate(false)
+                            }}
+                          >
+                            취소
+                          </button>
+                          <button
+                            className={styles.replySubmitButton}
+                            onClick={() => handleReplyEditSubmit(review.id!)}
+                          >
+                            수정
+                          </button>
+                        </div>
                       </div>
                     </div>
                   ) : (
@@ -437,7 +480,7 @@ export default function ReviewManagementPage() {
                         <div className={styles.replyActions}>
                           <button
                             className={styles.replyEditButton}
-                            onClick={() => handleReplyEdit(review.id!, review.reply!.content)}
+                            onClick={() => handleReplyEdit(review.id!, review.reply!.content, review.reply!.isPrivate)}
                           >
                             <Image
                               src="/icons/edit.svg"
@@ -468,27 +511,43 @@ export default function ReviewManagementPage() {
                   <div className={styles.replySection}>
                     <textarea
                       className={styles.replyTextarea}
-                      placeholder="답글을 입력하세요..."
+                      placeholder="부적절한 단어가 포함될 경우 관리자에 의해 댓글이 삭제될 수도 있습니다."
                       value={replyText}
                       onChange={(e) => setReplyText(e.target.value)}
                       rows={4}
                     />
                     <div className={styles.replyActions}>
-                      <button
-                        className={styles.replyCancelButton}
-                        onClick={() => {
-                          setReplyingTo(null)
-                          setReplyText('')
-                        }}
-                      >
-                        취소
-                      </button>
-                      <button
-                        className={styles.replySubmitButton}
-                        onClick={() => handleReplySubmit(review.id!)}
-                      >
-                        등록
-                      </button>
+                      <label className={styles.privateCheckboxLabel}>
+                        <Image
+                          src={replyIsPrivate ? '/icons/check_active.png' : '/icons/check_empty.png'}
+                          alt="체크박스"
+                          width={20}
+                          height={20}
+                          className={styles.checkboxIcon}
+                          onClick={() => setReplyIsPrivate(!replyIsPrivate)}
+                        />
+                        <span onClick={() => setReplyIsPrivate(!replyIsPrivate)}>
+                          고객에게만 보이는 글입니다
+                        </span>
+                      </label>
+                      <div className={styles.replyButtonGroup}>
+                        <button
+                          className={styles.replyCancelButton}
+                          onClick={() => {
+                            setReplyingTo(null)
+                            setReplyText('')
+                            setReplyIsPrivate(false)
+                          }}
+                        >
+                          취소
+                        </button>
+                        <button
+                          className={styles.replySubmitButton}
+                          onClick={() => handleReplySubmit(review.id!)}
+                        >
+                          등록
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ) : (
@@ -536,15 +595,24 @@ export default function ReviewManagementPage() {
               </button>
             )}
 
-            {/* 이미지 */}
-            <Image
-              src={selectedImages[currentImageIndex]}
-              alt={`리뷰 이미지 ${currentImageIndex + 1}`}
-              width={800}
-              height={800}
-              className={styles.imageModalImage}
-              style={{ width: 'auto', height: 'auto', maxWidth: '100%', maxHeight: '80vh' }}
-            />
+            {/* 이미지 또는 동영상 */}
+            {/\.(mp4|mov|avi|webm|mkv|3gp|3g2|m4v)$/i.test(selectedImages[currentImageIndex]) ? (
+              <video
+                src={selectedImages[currentImageIndex]}
+                controls
+                className={styles.imageModalImage}
+                style={{ maxWidth: '70vw', maxHeight: '70vh', width: 'auto', height: 'auto' }}
+              />
+            ) : (
+              <Image
+                src={selectedImages[currentImageIndex]}
+                alt={`리뷰 이미지 ${currentImageIndex + 1}`}
+                width={800}
+                height={800}
+                className={styles.imageModalImage}
+                style={{ width: 'auto', height: 'auto', maxWidth: '100%', maxHeight: '80vh', objectFit: 'contain' }}
+              />
+            )}
 
             {/* 다음 버튼 */}
             {selectedImages.length > 1 && (

@@ -231,8 +231,8 @@
 .replyTextarea {
   width: 100%;
   padding: 12px;
-  border-radius: 5px;
-  border: 1px solid #F0F0F3;
+  border-radius: 20px;
+  border: 1px solid #F4F4F4;
   background: #FFF;
   color: #333;
   font-size: 14px;
@@ -249,7 +249,34 @@
 .replyActions {
   display: flex;
   gap: 8px;
-  justify-content: flex-end;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.privateCheckboxLabel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.privateCheckboxLabel span {
+  cursor: pointer;
+  color: #999;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
+}
+
+.checkboxIcon {
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.replyButtonGroup {
+  display: flex;
+  gap: 8px;
 }
 
 .replyCancelButton {
@@ -289,10 +316,56 @@
 }
 
 .imageWrapper {
+  position: relative;
   width: 100px;
   height: 100px;
   border-radius: 8px;
   overflow: hidden;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.imageWrapper video {
+  pointer-events: none;
+}
+
+.videoPlayButton {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.videoPlayButton::before {
+  content: '';
+  width: 40px;
+  height: 40px;
+  background: rgba(0, 0, 0, 0.7);
+  border-radius: 50%;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.videoPlayButton::after {
+  content: '';
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 8px 0 8px 14px;
+  border-color: transparent transparent transparent white;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-30%, -50%);
+  z-index: 1;
 }
 
 .reviewImage {
@@ -526,5 +599,24 @@
     bottom: 10px;
     padding: 6px 12px;
     font-size: 12px;
+  }
+
+  .replyActions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .privateCheckboxLabel {
+    font-size: 13px;
+  }
+
+  .replyButtonGroup {
+    width: 100%;
+  }
+
+  .replyCancelButton,
+  .replySubmitButton {
+    flex: 1;
   }
 }

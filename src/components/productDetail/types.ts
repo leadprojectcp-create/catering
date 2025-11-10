@@ -86,6 +86,7 @@ export interface Review {
     content: string
     createdAt: Date
     partnerId: string
+    isPrivate?: boolean
   }
 }
 

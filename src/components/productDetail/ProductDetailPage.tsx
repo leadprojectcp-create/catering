@@ -126,8 +126,11 @@ const fetchReviews = async (productId: string): Promise<Review[]> => {
         createdAt: data.createdAt?.toDate() || new Date(),
         reply: data.reply ? {
           content: data.reply.content,
-          createdAt: data.reply.createdAt?.toDate() || new Date(),
-          partnerId: data.reply.partnerId
+          createdAt: typeof data.reply.createdAt === 'string'
+            ? new Date(data.reply.createdAt)
+            : data.reply.createdAt?.toDate?.() || new Date(),
+          partnerId: data.reply.partnerId,
+          isPrivate: data.reply.isPrivate || false
         } : undefined
       })
     }

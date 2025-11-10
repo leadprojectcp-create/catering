@@ -6,6 +6,7 @@ import { doc, getDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { Review } from '../types'
 import OptimizedImage from '@/components/common/OptimizedImage'
+import { useAuth } from '@/contexts/AuthContext'
 import styles from './ReviewSection.module.css'
 
 interface ReviewSectionProps {
@@ -20,6 +21,7 @@ interface PartnerStore {
 type SortType = '베스트순' | '최신순' | '별점 높은 순' | '별점 낮은 순'
 
 export default function ReviewSection({ reviews, loadingReviews }: ReviewSectionProps) {
+  const { user } = useAuth()
   const [sortType, setSortType] = useState<SortType>('베스트순')
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null)
   const [selectedImages, setSelectedImages] = useState<string[]>([])
@@ -268,7 +270,13 @@ export default function ReviewSection({ reviews, loadingReviews }: ReviewSection
                       }).replace(/\. /g, '.').replace(/\.$/, '')} 작성
                     </span>
                   </div>
-                  <p className={styles.replyContent}>{review.reply.content}</p>
+                  {review.reply.isPrivate && user?.uid !== review.userId && user?.uid !== review.reply.partnerId ? (
+                    // 비공개 답글 - 권한 없는 사용자는 메시지만 표시
+                    <p className={styles.replyContent}>판매자와 소비자만 확인이 가능합니다.</p>
+                  ) : (
+                    // 공개 답글 또는 권한 있는 사용자는 실제 내용 표시
+                    <p className={styles.replyContent}>{review.reply.content}</p>
+                  )}
                 </div>
               )}
             </div>

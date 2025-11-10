@@ -15,8 +15,9 @@ import { db } from '@/lib/firebase'
 
 export interface ReviewReply {
   content: string
-  createdAt: Date | Timestamp | FieldValue
+  createdAt: Date | string
   partnerId: string
+  isPrivate?: boolean
 }
 
 export interface Review {
@@ -100,8 +101,11 @@ export const getPartnerReviews = async (partnerId: string): Promise<Review[]> =>
             reply: data.reply
               ? {
                   content: data.reply.content,
-                  createdAt: data.reply.createdAt?.toDate?.() || new Date(),
-                  partnerId: data.reply.partnerId
+                  createdAt: typeof data.reply.createdAt === 'string'
+                    ? new Date(data.reply.createdAt)
+                    : data.reply.createdAt?.toDate?.() || new Date(),
+                  partnerId: data.reply.partnerId,
+                  isPrivate: data.reply.isPrivate || false
                 }
               : undefined,
             createdAt: data.createdAt?.toDate?.() || new Date(),
@@ -189,15 +193,17 @@ export const getReview = async (id: string): Promise<Review | null> => {
 export const addReplyToReview = async (
   reviewId: string,
   replyContent: string,
-  partnerId: string
+  partnerId: string,
+  isPrivate?: boolean
 ): Promise<void> => {
   try {
     const reviewRef = doc(db, COLLECTION_NAME, reviewId)
     await updateDoc(reviewRef, {
       reply: {
         content: replyContent,
-        createdAt: serverTimestamp(),
-        partnerId: partnerId
+        createdAt: new Date().toISOString(),
+        partnerId: partnerId,
+        isPrivate: isPrivate || false
       }
     })
   } catch (error) {
@@ -222,16 +228,21 @@ export const deleteReplyFromReview = async (reviewId: string): Promise<void> => 
 // 리뷰 답글 수정
 export const updateReplyInReview = async (
   reviewId: string,
-  replyContent: string
+  replyContent: string,
+  isPrivate?: boolean
 ): Promise<void> => {
   try {
     const reviewRef = doc(db, COLLECTION_NAME, reviewId)
     const reviewDoc = await getDoc(reviewRef)
 
     if (reviewDoc.exists() && reviewDoc.data().reply) {
-      await updateDoc(reviewRef, {
+      const updateData: any = {
         'reply.content': replyContent
-      })
+      }
+      if (isPrivate !== undefined) {
+        updateData['reply.isPrivate'] = isPrivate
+      }
+      await updateDoc(reviewRef, updateData)
     }
   } catch (error) {
     console.error('답글 수정 중 오류:', error)

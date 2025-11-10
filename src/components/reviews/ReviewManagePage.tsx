@@ -25,6 +25,7 @@ interface Review {
     content: string
     createdAt: { toDate: () => Date } | string
     partnerId: string
+    isPrivate?: boolean
   }
 }
 
@@ -305,8 +306,8 @@ export default function ReviewManagePage() {
 
               <p className={styles.reviewContent}>{review.content}</p>
 
-              {/* 파트너 답글 */}
-              {review.reply && (
+              {/* 파트너 답글 - isPrivate가 true가 아닌 경우에만 표시 */}
+              {review.reply && !review.reply.isPrivate && (
                 <div className={styles.replySection}>
                   <div className={styles.replyHeader}>
                     <span className={styles.replyLabel}>{review.storeName} 사장님</span>
