@@ -2,95 +2,75 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/firebase'
 import { doc, getDoc } from 'firebase/firestore'
 import { requestQuickDelivery } from '@/lib/services/quickDeliveryService'
+import crypto from 'crypto'
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic'
 
-// PortOne V1/V2 웹훅 (호환)
+// PortOne V2 웹훅
 export async function POST(request: NextRequest) {
   try {
-    const webhookData = await request.json()
-
-    console.log('[Webhook] PortOne 웹훅 수신:', webhookData)
-
-    // V2 웹훅 형식 체크 (type 필드 존재)
-    if (webhookData.type) {
-      console.log('[Webhook] V2 형식 감지 - 무시함 (V1 API 사용 중)')
-      return NextResponse.json({ success: true, message: 'V2 webhook ignored' })
+    // 웹훅 시크릿으로 서명 검증
+    const webhookSecret = process.env.PORTONE_WEBHOOK_SECRET
+    if (!webhookSecret) {
+      console.error('[Webhook] PORTONE_WEBHOOK_SECRET is not set')
+      return NextResponse.json(
+        { error: 'Webhook secret not configured' },
+        { status: 500 }
+      )
     }
 
-    // V1 웹훅 처리
-    const { imp_uid, merchant_uid, status } = webhookData
+    // 요청 바디 읽기
+    const rawBody = await request.text()
+    const signature = request.headers.get('portone-signature')
 
-    // 필수 필드 확인
-    if (!imp_uid || !merchant_uid) {
-      console.log('[Webhook] V1 필수 필드 누락:', webhookData)
-      return NextResponse.json({ success: true, message: 'Missing required fields' })
+    if (!signature) {
+      console.error('[Webhook] Missing PortOne signature header')
+      return NextResponse.json(
+        { error: 'Missing signature' },
+        { status: 401 }
+      )
     }
 
-    // 결제 완료 상태 확인
-    if (status !== 'paid') {
-      console.log(`[Webhook] 결제 상태가 paid가 아님: ${status}`)
-      return NextResponse.json({ success: true, message: 'Not a paid status' })
+    // 서명 검증
+    const expectedSignature = crypto
+      .createHmac('sha256', webhookSecret)
+      .update(rawBody)
+      .digest('hex')
+
+    if (signature !== expectedSignature) {
+      console.error('[Webhook] Invalid webhook signature')
+      return NextResponse.json(
+        { error: 'Invalid signature' },
+        { status: 401 }
+      )
     }
 
-    console.log('[Webhook V1] 결제 완료 이벤트!')
-    console.log('[Webhook V1] imp_uid:', imp_uid)
-    console.log('[Webhook V1] merchant_uid:', merchant_uid)
-
-    // PortOne V1 액세스 토큰 발급
-    const tokenResponse = await fetch('https://api.iamport.kr/users/getToken', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        imp_key: process.env.PORTONE_API_KEY,
-        imp_secret: process.env.PORTONE_API_SECRET,
-      }),
+    // 웹훅 데이터 파싱
+    const webhookData = JSON.parse(rawBody)
+    console.log('[Webhook V2] PortOne 웹훅 수신:', {
+      type: webhookData.type,
+      paymentId: webhookData.data?.paymentId,
+      status: webhookData.data?.status,
     })
 
-    if (!tokenResponse.ok) {
-      console.error('[Webhook V1] 토큰 발급 실패')
-      return NextResponse.json({ error: 'Token generation failed' }, { status: 500 })
-    }
+    // 결제 완료 웹훅 처리
+    if (webhookData.type === 'Transaction.Paid') {
+      const paymentId = webhookData.data.paymentId
+      console.log('[Webhook V2] 결제 완료 이벤트!')
+      console.log('[Webhook V2] paymentId:', paymentId)
 
-    const tokenData = await tokenResponse.json()
-    const accessToken = tokenData.response.access_token
-
-    // 결제 정보 검증
-    const paymentResponse = await fetch(
-      `https://api.iamport.kr/payments/${encodeURIComponent(imp_uid)}`,
-      {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
+      // paymentId에서 orderId 추출 (format: payment-{orderId}-{timestamp})
+      const orderIdMatch = paymentId.match(/^payment-(.+)-\d+$/)
+      if (!orderIdMatch) {
+        console.error('[Webhook V2] Invalid paymentId format:', paymentId)
+        return NextResponse.json({ success: true, message: 'Invalid paymentId format' })
       }
-    )
 
-    if (!paymentResponse.ok) {
-      console.error('[Webhook V1] 결제 검증 실패')
-      return NextResponse.json({ error: 'Payment verification failed' }, { status: 400 })
-    }
+      const orderId = orderIdMatch[1]
+      console.log('[Webhook V2] Extracted orderId:', orderId)
 
-    const paymentData = await paymentResponse.json()
-    const payment = paymentData.response
-
-    console.log('[Webhook V1] 결제 검증 완료:', {
-      imp_uid: payment.imp_uid,
-      status: payment.status,
-      amount: payment.amount,
-    })
-
-    // merchant_uid에서 orderId 추출
-    // 형식: order-{orderId}-{timestamp}
-    const orderId = merchant_uid.replace(/^order-/, '').replace(/-\d+$/, '')
-
-    console.log('[Webhook V1] merchant_uid:', merchant_uid)
-    console.log('[Webhook V1] Extracted orderId:', orderId)
-
-    // Firestore에서 주문 정보 조회
-    if (orderId) {
+      // Firestore에서 주문 정보 조회
       const orderRef = doc(db, 'orders', orderId)
       const orderDoc = await getDoc(orderRef)
 
@@ -98,7 +78,7 @@ export async function POST(request: NextRequest) {
         const orderData = orderDoc.data()
         const storeId = orderData?.storeId
 
-        console.log(`[Webhook V1] 주문 데이터:`, {
+        console.log(`[Webhook V2] 주문 데이터:`, {
           orderId,
           storeId,
           storeName: orderData?.storeName,
@@ -114,7 +94,7 @@ export async function POST(request: NextRequest) {
             const storeData = storeDoc.data()
             const partnerPhone = storeData?.phone
 
-            console.log(`[Webhook V1] 가게 정보:`, {
+            console.log(`[Webhook V2] 가게 정보:`, {
               storeId,
               partnerPhone,
               storeName: storeData?.storeName,
@@ -123,7 +103,7 @@ export async function POST(request: NextRequest) {
             // 퀵배송 요청
             if (orderData.deliveryMethod === '퀵업체 배송' && !orderData.quickDeliveryOrderNo) {
               try {
-                console.log(`[Webhook V1] 퀵배송 요청 시작`)
+                console.log(`[Webhook V2] 퀵배송 요청 시작`)
                 const quickDeliveryData = {
                   startPhone: orderData.storePhone || '',
                   startAddress: orderData.storeAddress || '',
@@ -135,17 +115,27 @@ export async function POST(request: NextRequest) {
                 }
                 await requestQuickDelivery(quickDeliveryData)
               } catch (quickError) {
-                console.error('[Webhook V1] 퀵배송 요청 실패:', quickError)
+                console.error('[Webhook V2] 퀵배송 요청 실패:', quickError)
               }
             }
           }
         }
+      } else {
+        console.error('[Webhook V2] 주문 정보를 찾을 수 없음:', orderId)
       }
+
+      return NextResponse.json({ success: true })
     }
 
-    return NextResponse.json({ success: true })
+    // 다른 웹훅 타입 처리
+    console.log('[Webhook V2] Unhandled webhook type:', webhookData.type)
+
+    return NextResponse.json({
+      success: true,
+      message: 'Webhook received',
+    })
   } catch (error) {
-    console.error('[Webhook V1] 에러:', error)
+    console.error('[Webhook V2] 에러:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

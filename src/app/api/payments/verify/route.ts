@@ -1,75 +1,64 @@
 import { NextRequest, NextResponse } from 'next/server'
+import * as PortOne from '@portone/server-sdk'
 
-// PortOne V1 REST API로 결제 검증
+// PortOne V2 SDK로 결제 검증
 export async function POST(request: NextRequest) {
   try {
-    const { imp_uid } = await request.json()
+    const { payment_id } = await request.json()
 
-    if (!imp_uid) {
+    if (!payment_id) {
       return NextResponse.json(
-        { error: 'imp_uid is required' },
+        { error: 'payment_id is required' },
         { status: 400 }
       )
     }
 
-    // PortOne V1 액세스 토큰 발급
-    const tokenResponse = await fetch('https://api.iamport.kr/users/getToken', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        imp_key: process.env.PORTONE_API_KEY,
-        imp_secret: process.env.PORTONE_API_SECRET,
-      }),
-    })
-
-    if (!tokenResponse.ok) {
-      console.error('PortOne token error:', await tokenResponse.text())
+    const apiSecret = process.env.PORTONE_API_KEY
+    if (!apiSecret) {
+      console.error('PORTONE_API_KEY is not set')
       return NextResponse.json(
-        { verified: false, error: 'Failed to get access token' },
+        { verified: false, error: 'API key not configured' },
         { status: 500 }
       )
     }
 
-    const tokenData = await tokenResponse.json()
-    const accessToken = tokenData.response.access_token
+    // PortOne V2 클라이언트 생성
+    const client = PortOne.PortOneClient({
+      secret: apiSecret,
+    })
 
     // 결제 정보 조회
-    const paymentResponse = await fetch(
-      `https://api.iamport.kr/payments/${encodeURIComponent(imp_uid)}`,
-      {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      }
-    )
-
-    if (!paymentResponse.ok) {
-      console.error('PortOne API error:', await paymentResponse.text())
-      return NextResponse.json(
-        { verified: false, error: 'Failed to verify payment' },
-        { status: 500 }
-      )
-    }
-
-    const paymentData = await paymentResponse.json()
-
-    console.log('[Verify API] PortOne V1 결제 검증:', {
-      imp_uid: paymentData.response.imp_uid,
-      status: paymentData.response.status,
-      amount: paymentData.response.amount
+    const paymentResponse = await client.payment.getPayment({
+      paymentId: payment_id,
     })
 
-    // 결제 상태 확인 (paid = 결제 완료)
-    const isVerified = paymentData.response.status === 'paid'
+    console.log('[Verify API] PortOne V2 결제 검증:', {
+      paymentId: paymentResponse.id,
+      status: paymentResponse.status,
+      amount: paymentResponse.amount?.total
+    })
+
+    // 결제 상태 확인 (PAID = 결제 완료)
+    const isVerified = paymentResponse.status === 'PAID'
 
     return NextResponse.json({
       verified: isVerified,
-      payment: paymentData.response,
+      payment: paymentResponse,
     })
   } catch (error) {
     console.error('Payment verification error:', error)
+
+    // PortOne SDK 에러 처리
+    if (error instanceof PortOne.PortOneError) {
+      return NextResponse.json(
+        {
+          verified: false,
+          error: error.message || 'PortOne API error',
+        },
+        { status: 500 }
+      )
+    }
+
     return NextResponse.json(
       { verified: false, error: 'Internal server error' },
       { status: 500 }

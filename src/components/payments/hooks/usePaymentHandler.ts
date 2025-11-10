@@ -98,14 +98,27 @@ export async function handlePaymentProcess(params: UsePaymentHandlerParams): Pro
     // 결제 타입에 따라 채널키 결정
     const channelKey = paymentType === 'easy'
       ? process.env.NEXT_PUBLIC_PORTONE_EASY_CHANNEL_KEY!  // 간편결제
-      : process.env.NEXT_PUBLIC_PORTONE_GENERAL_CHANNEL_KEY!  // 일반결제(카드/계좌이체/가상계좌)
+      : process.env.NEXT_PUBLIC_PORTONE_GENERAL_CHANNEL_KEY!  // 일반결제(카드)
 
     // 장바구니 ID를 sessionStorage에 저장 (모바일 리다이렉트 시 사용)
     if (cartIdParam) {
       sessionStorage.setItem('cartIdForPayment', cartIdParam)
     }
 
-    // 포트원 결제창 호출 (실제 결제 금액으로)
+    // V2에서는 payMethod가 'CARD' 또는 'EASY_PAY'
+    const v2PayMethod: 'CARD' | 'EASY_PAY' = paymentMethod === 'card' ? 'CARD' : 'EASY_PAY'
+
+    // V2에서는 EASY_PAY일 때 provider 지정
+    let easyPayProvider: 'KAKAOPAY' | 'NAVERPAY' | 'TOSSPAY' | undefined
+    if (v2PayMethod === 'EASY_PAY') {
+      if (paymentMethod === 'kakaopay') {
+        easyPayProvider = 'KAKAOPAY'
+      } else if (paymentMethod === 'naverpay') {
+        easyPayProvider = 'NAVERPAY'
+      }
+    }
+
+    // 포트원 V2 결제창 호출 (실제 결제 금액으로)
     paymentResult = await requestPayment({
       orderName: `${orderData.productName} ${orderData.items.length > 1 ? `외 ${orderData.items.length - 1}건` : ''}`,
       amount: actualPaymentAmount,
@@ -114,7 +127,8 @@ export async function handlePaymentProcess(params: UsePaymentHandlerParams): Pro
       customerEmail: userEmail,
       customerPhoneNumber: orderInfo.phone,
       customerUid: user?.uid,
-      payMethod: paymentMethod,
+      payMethod: v2PayMethod,
+      easyPayProvider: easyPayProvider,
       channelKey: channelKey,
     })
 
@@ -130,7 +144,7 @@ export async function handlePaymentProcess(params: UsePaymentHandlerParams): Pro
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ imp_uid: paymentResult.paymentId }),
+      body: JSON.stringify({ payment_id: paymentResult.paymentId }),
     })
 
     verifyData = await verifyResponse.json()
