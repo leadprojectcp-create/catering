@@ -3,6 +3,13 @@ import { doc, getDoc, updateDoc, addDoc, collection, increment, serverTimestamp,
 import { db } from '@/lib/firebase'
 import { sendOrderAlimtalk } from '@/lib/services/smsService'
 
+interface OrderItem {
+  quantity: number
+  itemPrice?: number
+  isAddItem?: boolean
+  [key: string]: unknown
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
@@ -32,7 +39,6 @@ export async function POST(request: NextRequest) {
       totalProductPrice,
       deliveryFee,
       orderId,
-      userEmail,
       storeId,
       storeName,
       productName,
@@ -152,8 +158,8 @@ export async function POST(request: NextRequest) {
 
     // 주문 업데이트
     if (cartIdParam && !additionalOrderIdParam) {
-      const existingItems = existingOrderData?.items || []
-      const itemsWithPaymentId = existingItems.map((item: any) => ({
+      const existingItems = (existingOrderData?.items as OrderItem[]) || []
+      const itemsWithPaymentId = existingItems.map((item) => ({
         ...item,
         paymentId: paymentId,
         isAddItem: false
@@ -166,13 +172,13 @@ export async function POST(request: NextRequest) {
         verifiedAt: new Date().toISOString()
       })
     } else if (additionalOrderIdParam) {
-      const existingItems = existingOrderData?.items || []
-      const newItems = items || []
+      const existingItems = (existingOrderData?.items as OrderItem[]) || []
+      const newItems = (items as OrderItem[]) || []
       const currentTotalProductPrice = existingOrderData?.totalProductPrice || 0
       const currentTotalQuantity = existingOrderData?.totalQuantity || 0
       const currentTotalPrice = existingOrderData?.totalPrice || 0
 
-      const itemsWithPaymentId = newItems.map((item: any) => ({
+      const itemsWithPaymentId = newItems.map((item) => ({
         ...item,
         paymentId: paymentId,
         isAddItem: true
@@ -182,7 +188,7 @@ export async function POST(request: NextRequest) {
         paymentStatus: 'paid',
         items: [...existingItems, ...itemsWithPaymentId],
         totalProductPrice: currentTotalProductPrice + (totalProductPrice || 0),
-        totalQuantity: currentTotalQuantity + (newItems.reduce((sum: number, item: any) => sum + item.quantity, 0)),
+        totalQuantity: currentTotalQuantity + (newItems.reduce((sum: number, item) => sum + item.quantity, 0)),
         totalPrice: currentTotalPrice + totalPrice,
         paymentInfo: paymentInfoArray,
         paymentId: paymentIdArray,
@@ -192,8 +198,8 @@ export async function POST(request: NextRequest) {
         addTotalQuantity: deleteField()
       })
     } else {
-      const existingItems = existingOrderData?.items || []
-      const itemsWithPaymentId = existingItems.map((item: any) => ({
+      const existingItems = (existingOrderData?.items as OrderItem[]) || []
+      const itemsWithPaymentId = existingItems.map((item) => ({
         ...item,
         paymentId: paymentId,
         isAddItem: false
@@ -246,9 +252,9 @@ export async function POST(request: NextRequest) {
       let additionalProductPrice = 0
 
       if (isAdditionalOrder && finalOrderData?.items) {
-        const additionalItems = finalOrderData.items.filter((item: any) => item.isAddItem === true)
-        additionalQuantity = additionalItems.reduce((sum: number, item: any) => sum + item.quantity, 0)
-        additionalProductPrice = additionalItems.reduce((sum: number, item: any) => sum + (item.itemPrice || 0), 0)
+        const additionalItems = (finalOrderData.items as OrderItem[]).filter((item) => item.isAddItem === true)
+        additionalQuantity = additionalItems.reduce((sum: number, item) => sum + item.quantity, 0)
+        additionalProductPrice = additionalItems.reduce((sum: number, item) => sum + (item.itemPrice || 0), 0)
       }
 
       await sendOrderAlimtalk({

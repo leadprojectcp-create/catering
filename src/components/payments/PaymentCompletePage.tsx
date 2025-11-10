@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import Loading from '@/components/Loading'
@@ -9,7 +9,6 @@ export default function PaymentCompletePage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { user } = useAuth()
-  const [processing, setProcessing] = useState(true)
 
   useEffect(() => {
     const handlePaymentComplete = async () => {
@@ -101,8 +100,6 @@ export default function PaymentCompletePage() {
         console.error('[Payment Complete] 처리 중 오류:', error)
         alert('결제 처리 중 오류가 발생했습니다.')
         router.replace('/payments')
-      } finally {
-        setProcessing(false)
       }
     }
 
