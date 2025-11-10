@@ -60,13 +60,17 @@ export default function PaymentCompletePage() {
 
         // 주문 데이터 가져오기
         const pendingOrderDataStr = sessionStorage.getItem('pendingOrderData')
+        console.log('[Payment Complete] sessionStorage에서 가져온 데이터:', pendingOrderDataStr)
+
         if (!pendingOrderDataStr) {
           console.error('[Payment Complete] pendingOrderData 없음')
-          router.replace('/orders')
+          alert('주문 정보가 없습니다. 다시 시도해주세요.')
+          router.replace('/payments')
           return
         }
 
         const pendingOrderData = JSON.parse(pendingOrderDataStr)
+        console.log('[Payment Complete] 파싱된 주문 데이터:', pendingOrderData)
         console.log('[Payment Complete] 주문 처리 시작')
 
         // 주문 처리 API 호출
@@ -80,10 +84,12 @@ export default function PaymentCompletePage() {
         })
 
         const processData = await processResponse.json()
+        console.log('[Payment Complete] 주문 처리 응답 상태:', processResponse.status)
         console.log('[Payment Complete] 주문 처리 결과:', processData)
 
-        if (!processData.success) {
-          alert('주문 처리에 실패했습니다. 고객센터에 문의해주세요.')
+        if (!processResponse.ok || !processData.success) {
+          const errorMessage = processData.message || processData.error || '주문 처리에 실패했습니다.'
+          alert(`${errorMessage}\n고객센터에 문의해주세요.`)
           router.replace('/payments')
           return
         }

@@ -13,14 +13,20 @@ interface OrderItem {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
+    console.log('[Process Order API] 받은 body:', body)
+
     const {
       paymentId,
       pendingOrderData
     } = body
 
+    console.log('[Process Order API] paymentId:', paymentId)
+    console.log('[Process Order API] pendingOrderData:', pendingOrderData)
+
     if (!pendingOrderData) {
+      console.error('[Process Order API] pendingOrderData 없음')
       return NextResponse.json(
-        { error: 'No pending order data' },
+        { error: 'No pending order data', message: '주문 정보가 없습니다.' },
         { status: 400 }
       )
     }
