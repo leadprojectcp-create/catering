@@ -13,6 +13,8 @@ const adminMenuItems = [
   { label: '사용자 관리', path: '/admin/users', icon: '👥' },
   { label: '업체 관리', path: '/admin/stores', icon: '🏪' },
   { label: '상품 관리', path: '/admin/products', icon: '🛍️' },
+  { label: 'AI 카테고리', path: '/admin/ai-category', icon: '🤖' },
+  { label: 'AI 카테고리 관리', path: '/admin/ai-category-manage', icon: '⚡' },
   { label: '주문 관리', path: '/admin/orders', icon: '📦' },
   { label: '매거진 관리', path: '/admin/magazine', icon: '📝' },
   { label: '공지사항 관리', path: '/admin/notices', icon: '📢' },
