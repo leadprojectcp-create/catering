@@ -7,6 +7,7 @@ import Loading from '@/components/Loading'
 import { doc, getDoc, updateDoc, addDoc, collection, increment, deleteDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { sendOrderAlimtalk } from '@/lib/services/smsService'
+import styles from './PaymentCompletePage.module.css'
 
 export default function PaymentCompletePage() {
   const router = useRouter()
@@ -203,39 +204,21 @@ export default function PaymentCompletePage() {
   }
 
   return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      minHeight: '100vh',
-      padding: '20px',
-      textAlign: 'center'
-    }}>
+    <div className={styles.container}>
       {status === 'success' && (
         <>
-          <div style={{
-            width: '60px',
-            height: '60px',
-            borderRadius: '50%',
-            backgroundColor: '#4CAF50',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '30px',
-            color: 'white'
-          }}>
+          <div className={styles.successIcon}>
             ✓
           </div>
-          <h2 style={{ marginTop: '20px', fontSize: '20px', fontWeight: '600' }}>
+          <h2 className={styles.title}>
             결제가 완료되었습니다!
           </h2>
           {orderNumber && (
-            <p style={{ marginTop: '10px', color: '#333', fontSize: '16px', fontWeight: '600' }}>
+            <p className={styles.orderNumber}>
               주문번호: {orderNumber}
             </p>
           )}
-          <p style={{ marginTop: '10px', color: '#666', fontSize: '14px' }}>
+          <p className={styles.message}>
             주문 페이지로 이동합니다...
           </p>
         </>
@@ -243,38 +226,18 @@ export default function PaymentCompletePage() {
 
       {status === 'error' && (
         <>
-          <div style={{
-            width: '60px',
-            height: '60px',
-            borderRadius: '50%',
-            backgroundColor: '#f44336',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '30px',
-            color: 'white'
-          }}>
+          <div className={styles.errorIcon}>
             ✕
           </div>
-          <h2 style={{ marginTop: '20px', fontSize: '20px', fontWeight: '600' }}>
+          <h2 className={styles.title}>
             결제 처리 실패
           </h2>
-          <p style={{ marginTop: '10px', color: '#666', fontSize: '14px' }}>
+          <p className={styles.message}>
             {errorMessage}
           </p>
           <button
             onClick={() => router.push('/')}
-            style={{
-              marginTop: '20px',
-              padding: '12px 24px',
-              backgroundColor: '#025BD9',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              fontSize: '14px',
-              fontWeight: '600',
-              cursor: 'pointer'
-            }}
+            className={styles.homeButton}
           >
             홈으로 돌아가기
           </button>
