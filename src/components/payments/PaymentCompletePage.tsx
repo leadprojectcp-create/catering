@@ -12,9 +12,21 @@ export default function PaymentCompletePage() {
 
   useEffect(() => {
     const handlePaymentComplete = async () => {
+      // 전체 URL과 모든 파라미터 확인
+      const fullUrl = window.location.href
+      const allParams = Array.from(searchParams.entries())
+
+      console.log('[Payment Complete] 전체 URL:', fullUrl)
+      console.log('[Payment Complete] searchParams 전체:', allParams)
+
+      // 디버깅을 위해 모바일에서 URL 표시
+      if (allParams.length === 0) {
+        alert(`URL 파라미터가 없습니다!\n\n전체 URL:\n${fullUrl}`)
+      }
+
       // PortOne V2 redirect 방식: payment_id, tx_id를 쿼리 스트링으로 전달
-      const paymentId = searchParams.get('payment_id')
-      const txId = searchParams.get('tx_id')
+      const paymentId = searchParams.get('payment_id') || searchParams.get('paymentId')
+      const txId = searchParams.get('tx_id') || searchParams.get('txId')
       const code = searchParams.get('code')
       const message = searchParams.get('message')
 
@@ -36,6 +48,7 @@ export default function PaymentCompletePage() {
       // 결제 성공 (payment_id가 있고 code가 없으면 성공)
       if (!paymentId) {
         console.error('[Payment Complete] 잘못된 접근 - payment_id 없음')
+        alert(`payment_id를 찾을 수 없습니다.\n\nURL: ${fullUrl}\n\n파라미터: ${JSON.stringify(Object.fromEntries(allParams))}`)
         router.replace('/payments')
         return
       }
