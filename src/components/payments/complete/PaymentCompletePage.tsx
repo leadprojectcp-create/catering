@@ -75,6 +75,7 @@ export default function PaymentCompletePage() {
         const storeData = storeDoc.exists() ? storeDoc.data() : null
 
         // 결제 정보 배열 처리
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         let paymentInfoArray: any[] = []
         let paymentIdArray: string[] = []
 
@@ -104,6 +105,7 @@ export default function PaymentCompletePage() {
         // items 배열에 paymentId 추가
         const currentPaymentId = paymentIdArray[paymentIdArray.length - 1]
         const existingItems = orderData.items || []
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const itemsWithPaymentId = existingItems.map((item: any) => ({
           ...item,
           ...(currentPaymentId && { paymentId: currentPaymentId }),
