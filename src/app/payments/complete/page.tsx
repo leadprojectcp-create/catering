@@ -2,15 +2,14 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { verifyPayment } from '@/lib/services/paymentService'
-import { doc, updateDoc } from 'firebase/firestore'
-import { db } from '@/lib/firebase'
+import Loading from '@/components/Loading'
 
 export default function PaymentCompletePage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [status, setStatus] = useState<'verifying' | 'success' | 'error'>('verifying')
   const [errorMessage, setErrorMessage] = useState('')
+  const [orderNumber, setOrderNumber] = useState<string>('')
 
   useEffect(() => {
     const handlePaymentComplete = async () => {
@@ -37,24 +36,28 @@ export default function PaymentCompletePage() {
           throw new Error('결제가 취소되었습니다.')
         }
 
-        // 결제 검증
-        const verified = await verifyPayment(impUid)
-
-        if (!verified) {
-          throw new Error('결제 검증에 실패했습니다.')
-        }
-
-        // Firestore 주문 상태 업데이트
-        const orderRef = doc(db, 'orders', orderId)
-        await updateDoc(orderRef, {
-          paymentStatus: 'paid',
-          paymentId: impUid,
-          merchantUid: merchantUid,
-          paidAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
+        // 백엔드 API로 주문 처리 요청
+        const response = await fetch('/api/payments/complete', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            imp_uid: impUid,
+            merchant_uid: merchantUid,
+            orderId: orderId,
+          }),
         })
 
-        console.log('결제 완료 및 주문 업데이트 성공')
+        if (!response.ok) {
+          const errorData = await response.json()
+          throw new Error(errorData.error || '주문 처리에 실패했습니다.')
+        }
+
+        const result = await response.json()
+        console.log('주문 처리 완료:', result)
+
+        setOrderNumber(result.orderNumber)
         setStatus('success')
 
         // 2초 후 주문 페이지로 이동
@@ -72,6 +75,10 @@ export default function PaymentCompletePage() {
     handlePaymentComplete()
   }, [searchParams, router])
 
+  if (status === 'verifying') {
+    return <Loading />
+  }
+
   return (
     <div style={{
       display: 'flex',
@@ -82,31 +89,6 @@ export default function PaymentCompletePage() {
       padding: '20px',
       textAlign: 'center'
     }}>
-      {status === 'verifying' && (
-        <>
-          <div style={{
-            width: '50px',
-            height: '50px',
-            border: '4px solid #f3f3f3',
-            borderTop: '4px solid #025BD9',
-            borderRadius: '50%',
-            animation: 'spin 1s linear infinite'
-          }} />
-          <style jsx>{`
-            @keyframes spin {
-              0% { transform: rotate(0deg); }
-              100% { transform: rotate(360deg); }
-            }
-          `}</style>
-          <h2 style={{ marginTop: '20px', fontSize: '20px', fontWeight: '600' }}>
-            결제 확인 중...
-          </h2>
-          <p style={{ marginTop: '10px', color: '#666', fontSize: '14px' }}>
-            잠시만 기다려주세요.
-          </p>
-        </>
-      )}
-
       {status === 'success' && (
         <>
           <div style={{
@@ -125,6 +107,11 @@ export default function PaymentCompletePage() {
           <h2 style={{ marginTop: '20px', fontSize: '20px', fontWeight: '600' }}>
             결제가 완료되었습니다!
           </h2>
+          {orderNumber && (
+            <p style={{ marginTop: '10px', color: '#333', fontSize: '16px', fontWeight: '600' }}>
+              주문번호: {orderNumber}
+            </p>
+          )}
           <p style={{ marginTop: '10px', color: '#666', fontSize: '14px' }}>
             주문 페이지로 이동합니다...
           </p>
