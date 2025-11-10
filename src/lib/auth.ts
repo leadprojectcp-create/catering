@@ -4,7 +4,8 @@ import {
   signInWithRedirect,
   getRedirectResult,
   GoogleAuthProvider,
-  OAuthProvider
+  OAuthProvider,
+  deleteUser
 } from 'firebase/auth'
 import { doc, setDoc, query, where, getDocs, collection, getDoc } from 'firebase/firestore'
 import { auth, db } from './firebase'
@@ -244,6 +245,17 @@ export async function handleSocialUser(
       // 3. 이메일로 기존 사용자 중복 체크
       const existingUser = await checkExistingUser(userEmail)
       if (existingUser.exists) {
+        // 중복된 이메일 발견 - Authentication 계정 삭제
+        try {
+          const currentUser = auth.currentUser
+          if (currentUser) {
+            await deleteUser(currentUser)
+            console.log('[handleSocialUser] Deleted duplicate auth account:', currentUser.uid)
+          }
+        } catch (deleteError) {
+          console.error('[handleSocialUser] Failed to delete duplicate auth account:', deleteError)
+        }
+
         const userType = existingUser.type === 'partner' ? '파트너 회원' : '일반 회원'
         return {
           success: false,
