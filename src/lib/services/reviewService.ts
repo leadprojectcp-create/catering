@@ -236,7 +236,7 @@ export const updateReplyInReview = async (
     const reviewDoc = await getDoc(reviewRef)
 
     if (reviewDoc.exists() && reviewDoc.data().reply) {
-      const updateData: any = {
+      const updateData: Record<string, string | boolean> = {
         'reply.content': replyContent
       }
       if (isPrivate !== undefined) {
