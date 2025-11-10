@@ -32,14 +32,14 @@ export async function POST(request: NextRequest) {
       paymentId: payment_id,
     })
 
-    console.log('[Verify API] PortOne V2 결제 검증:', {
-      paymentId: paymentResponse.id,
-      status: paymentResponse.status,
-      amount: paymentResponse.amount?.total
-    })
-
     // 결제 상태 확인 (PAID = 결제 완료)
     const isVerified = paymentResponse.status === 'PAID'
+
+    console.log('[Verify API] PortOne V2 결제 검증:', {
+      paymentId: isVerified && 'id' in paymentResponse ? paymentResponse.id : payment_id,
+      status: paymentResponse.status,
+      amount: isVerified && 'amount' in paymentResponse ? paymentResponse.amount?.total : undefined
+    })
 
     return NextResponse.json({
       verified: isVerified,
