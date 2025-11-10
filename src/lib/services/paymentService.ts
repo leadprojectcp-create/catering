@@ -107,6 +107,7 @@ export const requestPayment = async (
           buyer_email: request.customerEmail,
           buyer_name: request.customerName,
           buyer_tel: request.customerPhoneNumber,
+          m_redirect_url: `${window.location.origin}/payments/complete?orderId=${request.orderId}`,
         },
         (response) => {
           console.log('=== 결제창 응답 (V1) ===')
