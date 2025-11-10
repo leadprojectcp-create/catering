@@ -182,11 +182,12 @@ service cloud.firestore {
          resource.data.storeId == request.auth.uid ||
          resource.data.partnerId == request.auth.uid);
 
-      // 웹훅이 결제 및 퀵 배송 관련 필드만 업데이트 가능 (인증 불필요)
+      // 웹훅 및 결제 완료 API가 결제 및 퀵 배송 관련 필드 업데이트 가능 (인증 불필요)
       allow update: if request.resource.data.diff(resource.data).affectedKeys()
-        .hasOnly(['paymentStatus', 'paymentId', 'transactionId', 'paidAt', 'paymentInfo',
+        .hasOnly(['paymentStatus', 'paymentId', 'transactionId', 'paidAt', 'paymentInfo', 'items', 'verifiedAt',
                   'quickDeliveryOrderNo', 'quickDeliveryStatus', 'quickDeliveryError', 'quickDeliveryInfo',
-                  'partnerNotified', 'partnerNotifiedAt']);
+                  'partnerNotified', 'partnerNotifiedAt', 'totalPrice', 'totalProductPrice', 'totalQuantity',
+                  'updatedAt', 'addTotalProductPrice', 'addTotalQuantity']);
 
       // 웹훅이 주문 정보를 읽을 수 있도록 허용
       allow read: if true;

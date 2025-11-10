@@ -3,7 +3,17 @@
 import { useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
+import { doc, getDoc, updateDoc, addDoc, collection, increment, serverTimestamp, deleteDoc, deleteField } from 'firebase/firestore'
+import { db } from '@/lib/firebase'
+import { sendOrderAlimtalk } from '@/lib/services/smsService'
 import Loading from '@/components/Loading'
+
+interface OrderItem {
+  quantity: number
+  itemPrice?: number
+  isAddItem?: boolean
+  [key: string]: unknown
+}
 
 export default function PaymentCompletePage() {
   const router = useRouter()
@@ -77,9 +87,6 @@ export default function PaymentCompletePage() {
           pendingOrderDataStr = sessionStorage.getItem('pendingOrderData')
         }
 
-        console.log('[Payment Complete] localStorage에서 가져온 데이터:', localStorage.getItem('pendingOrderData') ? '있음' : '없음')
-        console.log('[Payment Complete] sessionStorage에서 가져온 데이터:', sessionStorage.getItem('pendingOrderData') ? '있음' : '없음')
-
         if (!pendingOrderDataStr) {
           console.error('[Payment Complete] pendingOrderData 없음')
           alert('주문 정보가 없습니다. 다시 시도해주세요.')
@@ -88,28 +95,228 @@ export default function PaymentCompletePage() {
         }
 
         const pendingOrderData = JSON.parse(pendingOrderDataStr)
-        console.log('[Payment Complete] 파싱된 주문 데이터:', pendingOrderData)
-        console.log('[Payment Complete] 주문 처리 시작')
+        const {
+          orderInfo, recipient, addressName, deliveryRequest, detailedRequest,
+          entranceCode, deliveryMethod, parcelPaymentMethod, usePoint,
+          totalPrice, totalProductPrice, deliveryFee, orderId,
+          storeId, storeName, productName, items,
+          partnerId, partnerPhone, cartIdParam, additionalOrderIdParam,
+        } = pendingOrderData
 
-        // 주문 처리 API 호출
-        const processResponse = await fetch('/api/payments/process-order', {
+        // 주문번호 생성 (PC와 동일)
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+        let orderNumber = ''
+        for (let i = 0; i < 8; i++) {
+          orderNumber += chars.charAt(Math.floor(Math.random() * chars.length))
+        }
+
+        let finalOrderId = orderId
+
+        // 장바구니에서 주문하는 경우 (PC와 동일)
+        if (cartIdParam && !additionalOrderIdParam) {
+          const cartDocRef = doc(db, 'shoppingCart', cartIdParam)
+          const cartDocSnap = await getDoc(cartDocRef)
+
+          if (cartDocSnap.exists()) {
+            const cartData = cartDocSnap.data()
+            const newOrderData: Record<string, unknown> = {
+              uid: cartData.uid,
+              productId: cartData.productId,
+              storeId: storeId,
+              storeName: storeName,
+              partnerId: partnerId,
+              partnerPhone: partnerPhone,
+              items: items,
+              totalPrice: totalPrice,
+              totalProductPrice: totalProductPrice,
+              totalQuantity: cartData.totalQuantity,
+              deliveryFee: deliveryFee,
+              deliveryMethod: deliveryMethod,
+              usedPoint: usePoint,
+              deliveryInfo: {
+                addressName: addressName,
+                deliveryDate: orderInfo.deliveryDate,
+                deliveryTime: orderInfo.deliveryTime,
+                address: orderInfo.address,
+                detailAddress: orderInfo.detailAddress,
+                zipCode: orderInfo.zipCode || '',
+                entrancePassword: entranceCode || '',
+                recipient: recipient,
+                recipientPhone: orderInfo.phone,
+                deliveryRequest: deliveryRequest,
+                detailedRequest: detailedRequest,
+              },
+              orderer: orderInfo.orderer,
+              phone: orderInfo.phone,
+              orderNumber: orderNumber,
+              orderStatus: 'pending',
+              paymentStatus: 'paid',
+              request: cartData.request,
+              createdAt: cartData.createdAt || new Date(),
+              updatedAt: new Date()
+            }
+
+            if (deliveryMethod === '택배 배송') {
+              newOrderData.parcelPaymentMethod = parcelPaymentMethod
+            }
+
+            const newOrderRef = await addDoc(collection(db, 'orders'), newOrderData)
+            finalOrderId = newOrderRef.id
+          }
+        }
+
+        // 결제 정보 저장 (PC와 동일)
+        const orderRef = doc(db, 'orders', finalOrderId!)
+        const orderSnapshot = await getDoc(orderRef)
+        const existingOrderData = orderSnapshot.data()
+
+        // 결제 정보 조회
+        const verifyResponse2 = await fetch('/api/payments/verify', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            paymentId,
-            pendingOrderData
-          }),
+          body: JSON.stringify({ payment_id: paymentId }),
         })
+        const verifyData2 = await verifyResponse2.json()
 
-        const processData = await processResponse.json()
-        console.log('[Payment Complete] 주문 처리 응답 상태:', processResponse.status)
-        console.log('[Payment Complete] 주문 처리 결과:', processData)
+        let paymentInfoArray: unknown[] = []
+        let paymentIdArray: string[] = []
 
-        if (!processResponse.ok || !processData.success) {
-          const errorMessage = processData.message || processData.error || '주문 처리에 실패했습니다.'
-          alert(`${errorMessage}\n고객센터에 문의해주세요.`)
-          router.replace('/payments')
-          return
+        if (existingOrderData?.paymentInfo) {
+          paymentInfoArray = Array.isArray(existingOrderData.paymentInfo)
+            ? [...existingOrderData.paymentInfo]
+            : [existingOrderData.paymentInfo]
+        }
+
+        if (existingOrderData?.paymentId) {
+          paymentIdArray = Array.isArray(existingOrderData.paymentId)
+            ? [...existingOrderData.paymentId]
+            : [existingOrderData.paymentId]
+        }
+
+        if (verifyData2.payment) {
+          const payment = verifyData2.payment as { status?: string; [key: string]: unknown }
+          const normalizedPayment = {
+            ...payment,
+            status: payment.status?.toLowerCase()
+          }
+          paymentInfoArray.push(normalizedPayment)
+          paymentIdArray.push(paymentId)
+        }
+
+        // 주문 업데이트 (PC와 동일)
+        if (cartIdParam && !additionalOrderIdParam) {
+          const existingItems = (existingOrderData?.items as OrderItem[]) || []
+          const itemsWithPaymentId = existingItems.map((item) => ({
+            ...item,
+            paymentId: paymentId,
+            isAddItem: false
+          }))
+
+          await updateDoc(orderRef, {
+            items: itemsWithPaymentId,
+            paymentInfo: paymentInfoArray,
+            paymentId: paymentIdArray,
+            verifiedAt: new Date().toISOString()
+          })
+        } else if (additionalOrderIdParam) {
+          const existingItems = (existingOrderData?.items as OrderItem[]) || []
+          const newItems = (items as OrderItem[]) || []
+          const currentTotalProductPrice = existingOrderData?.totalProductPrice || 0
+          const currentTotalQuantity = existingOrderData?.totalQuantity || 0
+          const currentTotalPrice = existingOrderData?.totalPrice || 0
+
+          const itemsWithPaymentId = newItems.map((item) => ({
+            ...item,
+            paymentId: paymentId,
+            isAddItem: true
+          }))
+
+          await updateDoc(orderRef, {
+            paymentStatus: 'paid',
+            items: [...existingItems, ...itemsWithPaymentId],
+            totalProductPrice: currentTotalProductPrice + (totalProductPrice || 0),
+            totalQuantity: currentTotalQuantity + (newItems.reduce((sum: number, item) => sum + item.quantity, 0)),
+            totalPrice: currentTotalPrice + totalPrice,
+            paymentInfo: paymentInfoArray,
+            paymentId: paymentIdArray,
+            verifiedAt: new Date().toISOString(),
+            updatedAt: new Date(),
+            addTotalProductPrice: deleteField(),
+            addTotalQuantity: deleteField()
+          })
+        } else {
+          const existingItems = (existingOrderData?.items as OrderItem[]) || []
+          const itemsWithPaymentId = existingItems.map((item) => ({
+            ...item,
+            paymentId: paymentId,
+            isAddItem: false
+          }))
+
+          await updateDoc(orderRef, {
+            paymentStatus: 'paid',
+            items: itemsWithPaymentId,
+            paymentInfo: paymentInfoArray,
+            paymentId: paymentIdArray,
+            verifiedAt: new Date().toISOString()
+          })
+        }
+
+        // 포인트 사용 처리 (PC와 동일)
+        if (usePoint > 0 && existingOrderData?.uid) {
+          const userRef = doc(db, 'users', existingOrderData.uid)
+          await updateDoc(userRef, {
+            point: increment(-usePoint)
+          })
+
+          await addDoc(collection(db, 'points'), {
+            uid: existingOrderData.uid,
+            amount: -usePoint,
+            type: 'used',
+            reason: '주문 결제 시 포인트 사용',
+            orderId: finalOrderId,
+            productId: existingOrderData.productId || '',
+            productName: productName || '',
+            createdAt: serverTimestamp()
+          })
+        }
+
+        // 장바구니 삭제 (PC와 동일)
+        if (cartIdParam) {
+          const cartDocRef = doc(db, 'shoppingCart', cartIdParam)
+          await deleteDoc(cartDocRef)
+        }
+
+        // 알림톡 발송 (PC와 동일)
+        try {
+          const isAdditionalOrder = !!additionalOrderIdParam
+          const finalOrderSnapshot = await getDoc(orderRef)
+          const finalOrderData = finalOrderSnapshot.data()
+
+          const totalQuantity = finalOrderData?.totalQuantity || 0
+          const finalTotalProductPrice = finalOrderData?.totalProductPrice || 0
+
+          let additionalQuantity = 0
+          let additionalProductPrice = 0
+
+          if (isAdditionalOrder && finalOrderData?.items) {
+            const additionalItems = (finalOrderData.items as OrderItem[]).filter((item) => item.isAddItem === true)
+            additionalQuantity = additionalItems.reduce((sum: number, item) => sum + item.quantity, 0)
+            additionalProductPrice = additionalItems.reduce((sum: number, item) => sum + (item.itemPrice || 0), 0)
+          }
+
+          await sendOrderAlimtalk({
+            partnerPhone: partnerPhone,
+            customerPhone: orderInfo.phone,
+            isAdditionalOrder,
+            storeName: storeName || '',
+            orderNumber,
+            totalQuantity,
+            totalProductPrice: finalTotalProductPrice,
+            additionalQuantity,
+            additionalProductPrice,
+          })
+        } catch (alimtalkError) {
+          console.error('알림톡 발송 실패:', alimtalkError)
         }
 
         // 스토리지 정리
@@ -119,7 +326,7 @@ export default function PaymentCompletePage() {
         sessionStorage.removeItem('orderData')
 
         // 결제 완료
-        alert(`결제가 완료되었습니다!\n주문번호: ${processData.orderNumber}`)
+        alert(`결제가 완료되었습니다!\n주문번호: ${orderNumber}`)
         router.replace('/orders')
       } catch (error) {
         console.error('[Payment Complete] 처리 중 오류:', error)
