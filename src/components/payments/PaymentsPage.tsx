@@ -34,6 +34,7 @@ export default function PaymentsPage() {
   const [isProcessing, setIsProcessing] = useState(false)
   const [paymentType, setPaymentType] = useState<'card' | 'vbank' | 'trans' | 'easy'>('card')
 
+
   // PortOne 결제창에서 결제 수단을 선택하므로 고정값 사용
   const paymentMethod = 'card'
 
