@@ -409,6 +409,18 @@ export default function OrderManagementPage() {
     }
 
     return true
+  }).sort((a, b) => {
+    // 전체 탭에서만 pending 주문을 맨 위로 정렬
+    if (filter === 'all') {
+      if (a.orderStatus === 'pending' && b.orderStatus !== 'pending') {
+        return -1 // a가 pending이면 a를 위로
+      }
+      if (a.orderStatus !== 'pending' && b.orderStatus === 'pending') {
+        return 1 // b가 pending이면 b를 위로
+      }
+    }
+    // pending 상태가 같거나 전체 탭이 아닌 경우 기존 순서 유지
+    return 0
   })
 
 
