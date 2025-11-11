@@ -118,7 +118,8 @@ export default function CategoryProductList({ categoryName }: CategoryProductLis
         // 사용자 위치 가져오기
         const userLocation = getUserLocation()
         console.log('사용자 위치:', userLocation)
-        console.log('window.nativeLocation:', (window as any).nativeLocation)
+        const windowWithLocation = window as Window & { nativeLocation?: { latitude: number; longitude: number } }
+        console.log('window.nativeLocation:', windowWithLocation.nativeLocation)
         console.log('localStorage.userLocation:', localStorage.getItem('userLocation'))
 
         // 각 상품의 storeId로 storeName, 위치 정보, 리뷰 정보 가져오기

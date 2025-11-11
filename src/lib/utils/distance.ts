@@ -53,8 +53,9 @@ export function getUserLocation(): { latitude: number; longitude: number } | nul
 
   try {
     // 먼저 window.nativeLocation 확인 (앱에서 주입한 위치)
-    if ((window as any).nativeLocation) {
-      return (window as any).nativeLocation;
+    const windowWithLocation = window as Window & { nativeLocation?: { latitude: number; longitude: number } };
+    if (windowWithLocation.nativeLocation) {
+      return windowWithLocation.nativeLocation;
     }
 
     // 로컬 스토리지에서 가져오기
