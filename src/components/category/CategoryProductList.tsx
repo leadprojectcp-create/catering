@@ -7,6 +7,7 @@ import { db } from '@/lib/firebase'
 import Image from 'next/image'
 import Loading from '@/components/Loading'
 import styles from './CategoryProductList.module.css'
+import { calculateDistance, getUserLocation, formatDistance } from '@/lib/utils/distance'
 
 // 카테고리 아이콘 매핑
 const categoryIcons: { [key: string]: string } = {
@@ -36,6 +37,9 @@ interface Product {
   images?: string[]
   storeId: string
   storeName?: string
+  storeLatitude?: number
+  storeLongitude?: number
+  distance?: number
   category?: string
   status?: string
   minOrderQuantity?: number
@@ -111,17 +115,41 @@ export default function CategoryProductList({ categoryName }: CategoryProductLis
 
         console.log('active 상품 수:', productData.length)
 
-        // 각 상품의 storeId로 storeName과 리뷰 정보 가져오기
+        // 사용자 위치 가져오기
+        const userLocation = getUserLocation()
+        console.log('사용자 위치:', userLocation)
+        console.log('window.nativeLocation:', (window as any).nativeLocation)
+        console.log('localStorage.userLocation:', localStorage.getItem('userLocation'))
+
+        // 각 상품의 storeId로 storeName, 위치 정보, 리뷰 정보 가져오기
         const productsWithStoreNameAndReviews = await Promise.all(
           productData.map(async (product) => {
             const updatedProduct = { ...product }
 
-            // storeName 가져오기
+            // storeName 및 위치 정보 가져오기
             if (product.storeId && !product.storeName) {
               try {
                 const storeDoc = await getDoc(doc(db, 'stores', product.storeId))
                 if (storeDoc.exists()) {
-                  updatedProduct.storeName = storeDoc.data().storeName || storeDoc.data().name
+                  const storeData = storeDoc.data()
+                  updatedProduct.storeName = storeData.storeName || storeData.name
+
+                  // 위치 정보가 있으면 저장 (address 객체 내부에 있음)
+                  if (storeData.address?.latitude && storeData.address?.longitude) {
+                    updatedProduct.storeLatitude = storeData.address.latitude
+                    updatedProduct.storeLongitude = storeData.address.longitude
+
+                    // 사용자 위치가 있으면 거리 계산
+                    if (userLocation) {
+                      updatedProduct.distance = calculateDistance(
+                        userLocation.latitude,
+                        userLocation.longitude,
+                        storeData.address.latitude,
+                        storeData.address.longitude
+                      )
+                      console.log(`${updatedProduct.storeName} 거리:`, updatedProduct.distance?.toFixed(2), 'km')
+                    }
+                  }
                 }
               } catch (error) {
                 console.error('가게 정보 가져오기 실패:', error)
@@ -155,7 +183,22 @@ export default function CategoryProductList({ categoryName }: CategoryProductLis
           })
         )
 
-        setProducts(productsWithStoreNameAndReviews)
+        // 거리순으로 정렬 (거리 정보가 있는 경우)
+        const sortedProducts = productsWithStoreNameAndReviews.sort((a, b) => {
+          // 거리 정보가 있는 상품을 우선
+          if (a.distance !== undefined && b.distance === undefined) return -1
+          if (a.distance === undefined && b.distance !== undefined) return 1
+
+          // 둘 다 거리 정보가 있으면 가까운 순으로
+          if (a.distance !== undefined && b.distance !== undefined) {
+            return a.distance - b.distance
+          }
+
+          // 둘 다 거리 정보가 없으면 원래 순서 유지
+          return 0
+        })
+
+        setProducts(sortedProducts)
       } catch (error) {
         console.error('상품 데이터 가져오기 실패:', error)
         setProducts([])
@@ -294,6 +337,11 @@ export default function CategoryProductList({ categoryName }: CategoryProductLis
                   {product.storeName && (
                     <div className={styles.storeName}>
                       {product.storeName}
+                      {product.distance !== undefined && (
+                        <span style={{ marginLeft: '6px', color: '#0066FF', fontSize: '12px', fontWeight: '500' }}>
+                          ({formatDistance(product.distance)})
+                        </span>
+                      )}
                       <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M4.5 2L8.5 6L4.5 10" stroke="#999" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                       </svg>

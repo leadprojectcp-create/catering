@@ -213,6 +213,30 @@ export default function PartnerSignupStep2() {
         return
       }
 
+      // Google Geocoding API로 위도/경도 가져오기
+      let latitude: number | undefined = undefined
+      let longitude: number | undefined = undefined
+
+      try {
+        const geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(formData.address)}&key=${process.env.NEXT_PUBLIC_FIREBASE_API_KEY}`
+        const geocodeResponse = await fetch(geocodeUrl)
+
+        if (geocodeResponse.ok) {
+          const geocodeData = await geocodeResponse.json()
+
+          if (geocodeData.status === 'OK' && geocodeData.results && geocodeData.results.length > 0) {
+            latitude = geocodeData.results[0].geometry.location.lat
+            longitude = geocodeData.results[0].geometry.location.lng
+            console.log('Geocoding 성공:', { latitude, longitude })
+          } else {
+            console.warn('Geocoding 실패:', geocodeData.status)
+          }
+        }
+      } catch (geocodeError) {
+        console.error('Geocoding API 호출 오류:', geocodeError)
+        // Geocoding 실패해도 회원가입은 진행 (위치 정보 없이)
+      }
+
       // stores 컬렉션에 가게 정보 저장
       const { doc, setDoc } = await import('firebase/firestore')
       const { db } = await import('@/lib/firebase')
@@ -229,7 +253,8 @@ export default function PartnerSignupStep2() {
           district: formData.address.split(' ')[1] || '',
           dong: formData.address.split(' ')[2] || '',
           detail: formData.detailAddress,
-          fullAddress: formData.address
+          fullAddress: formData.address,
+          ...(latitude !== undefined && longitude !== undefined && { latitude, longitude })
         },
         phone: step1Data.phone,
         description: '',
