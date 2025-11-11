@@ -117,10 +117,16 @@ export default function CategoryProductList({ categoryName }: CategoryProductLis
 
         // 사용자 위치 가져오기
         const userLocation = getUserLocation()
+        console.log('=== 사용자 위치 정보 ===')
         console.log('사용자 위치:', userLocation)
+        if (userLocation) {
+          console.log('사용자 위도 (latitude):', userLocation.latitude)
+          console.log('사용자 경도 (longitude):', userLocation.longitude)
+        }
         const windowWithLocation = window as Window & { nativeLocation?: { latitude: number; longitude: number } }
         console.log('window.nativeLocation:', windowWithLocation.nativeLocation)
         console.log('localStorage.userLocation:', localStorage.getItem('userLocation'))
+        console.log('========================\n')
 
         // 각 상품의 storeId로 storeName, 위치 정보, 리뷰 정보 가져오기
         const productsWithStoreNameAndReviews = await Promise.all(
@@ -140,6 +146,10 @@ export default function CategoryProductList({ categoryName }: CategoryProductLis
                     updatedProduct.storeLatitude = storeData.address.latitude
                     updatedProduct.storeLongitude = storeData.address.longitude
 
+                    console.log(`\n=== ${updatedProduct.storeName} 위치 정보 ===`)
+                    console.log('가게 위도 (latitude):', storeData.address.latitude)
+                    console.log('가게 경도 (longitude):', storeData.address.longitude)
+
                     // 사용자 위치가 있으면 거리 계산
                     if (userLocation) {
                       updatedProduct.distance = calculateDistance(
@@ -148,7 +158,7 @@ export default function CategoryProductList({ categoryName }: CategoryProductLis
                         storeData.address.latitude,
                         storeData.address.longitude
                       )
-                      console.log(`${updatedProduct.storeName} 거리:`, updatedProduct.distance?.toFixed(2), 'km')
+                      console.log(`${updatedProduct.storeName} 최종 거리:`, updatedProduct.distance?.toFixed(2), 'km', `(${Math.round(updatedProduct.distance * 1000)}m)`)
                     }
                   }
                 }

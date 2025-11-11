@@ -12,9 +12,17 @@ export function calculateDistance(
   lat2: number,
   lon2: number
 ): number {
+  console.log('=== 거리 계산 시작 ===');
+  console.log('사용자 위치 (lat1, lon1):', lat1, lon1);
+  console.log('가게 위치 (lat2, lon2):', lat2, lon2);
+
   const R = 6371; // 지구의 반지름 (km)
   const dLat = toRad(lat2 - lat1);
   const dLon = toRad(lon2 - lon1);
+
+  console.log('위도 차이 (dLat):', dLat);
+  console.log('경도 차이 (dLon):', dLon);
+
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
     Math.cos(toRad(lat1)) *
@@ -23,6 +31,11 @@ export function calculateDistance(
       Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   const distance = R * c;
+
+  console.log('계산된 거리 (km):', distance);
+  console.log('계산된 거리 (m):', Math.round(distance * 1000));
+  console.log('=== 거리 계산 완료 ===\n');
+
   return distance;
 }
 
