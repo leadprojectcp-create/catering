@@ -96,8 +96,8 @@ export default function RootLayout({
           }}
         />
         {/* Bunny CDN preconnect for faster image loading */}
-        <link rel="preconnect" href="https://picktoeat.b-cdn.net" />
-        <link rel="dns-prefetch" href="https://picktoeat.b-cdn.net" />
+        <link rel="preconnect" href="https://danmo.b-cdn.net" />
+        <link rel="dns-prefetch" href="https://danmo.b-cdn.net" />
 
         <link
           rel="preload"

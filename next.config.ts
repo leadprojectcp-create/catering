@@ -9,7 +9,7 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'picktoeat.b-cdn.net',
+        hostname: 'danmo.b-cdn.net',
       },
     ],
     formats: ['image/webp', 'image/avif'],

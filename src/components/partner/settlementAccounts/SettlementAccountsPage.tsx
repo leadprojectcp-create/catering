@@ -11,7 +11,8 @@ interface SettlementAccount {
   bankName: string
   accountNumber: string
   holderName: string
-  createdAt: Date
+  bankbookImage?: string
+  createdAt: string
 }
 
 const BANK_LIST = [
@@ -52,15 +53,18 @@ const BANK_LIST = [
 ]
 
 export default function SettlementAccountsPage() {
-  const { user } = useAuth()
+  const { user, userData } = useAuth()
   const [account, setAccount] = useState<SettlementAccount | null>(null)
   const [loading, setLoading] = useState(true)
   const [isBankModalOpen, setIsBankModalOpen] = useState(false)
+  const [uploading, setUploading] = useState(false)
 
   // 입력 필드
   const [bankCode, setBankCode] = useState('')
   const [accountNumber, setAccountNumber] = useState('')
   const [holderName, setHolderName] = useState('')
+  const [bankbookFile, setBankbookFile] = useState<File | null>(null)
+  const [bankbookPreview, setBankbookPreview] = useState<string>('')
 
   useEffect(() => {
     if (user) {
@@ -83,7 +87,9 @@ export default function SettlementAccountsPage() {
         if (settlementAccount) {
           setAccount({
             ...settlementAccount,
-            createdAt: settlementAccount.createdAt?.toDate?.() || new Date()
+            createdAt: typeof settlementAccount.createdAt === 'string'
+              ? settlementAccount.createdAt
+              : settlementAccount.createdAt?.toDate?.()?.toISOString() || new Date().toISOString()
           })
         }
       }
@@ -98,7 +104,38 @@ export default function SettlementAccountsPage() {
     setBankCode('')
     setAccountNumber('')
     setHolderName('')
+    setBankbookFile(null)
+    setBankbookPreview('')
     setIsBankModalOpen(false)
+  }
+
+  const handleBankbookImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return
+
+    const file = e.target.files[0]
+
+    // 파일 크기 체크 (10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      alert('파일 크기는 10MB 이하여야 합니다.')
+      return
+    }
+
+    // 이미지 파일 타입 체크
+    if (!file.type.startsWith('image/')) {
+      alert('이미지 파일만 업로드 가능합니다.')
+      return
+    }
+
+    setBankbookFile(file)
+    setBankbookPreview(URL.createObjectURL(file))
+  }
+
+  const handleRemoveBankbookImage = () => {
+    if (bankbookPreview) {
+      URL.revokeObjectURL(bankbookPreview)
+    }
+    setBankbookFile(null)
+    setBankbookPreview('')
   }
 
   const handleBankSelect = (code: string) => {
@@ -118,6 +155,12 @@ export default function SettlementAccountsPage() {
       return
     }
 
+    // 통장 사본 이미지 검증 (신규 등록 시 필수)
+    if (!account && !bankbookFile) {
+      alert('통장 사본 이미지를 업로드해주세요.')
+      return
+    }
+
     // 계좌가 이미 등록되어 있는 경우 확인
     if (account) {
       if (!confirm('등록된 계좌 정보를 변경하시겠습니까?')) {
@@ -127,15 +170,40 @@ export default function SettlementAccountsPage() {
 
     if (!user) return
 
+    setUploading(true)
+
     try {
       const userRef = doc(db, 'users', user.uid)
+      let bankbookImageUrl = account?.bankbookImage || ''
+
+      // 통장 사본 이미지 업로드
+      if (bankbookFile) {
+        const formData = new FormData()
+        formData.append('file', bankbookFile)
+        formData.append('type', 'business-registration')
+        formData.append('userId', user.uid)
+
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData
+        })
+
+        if (!response.ok) {
+          const error = await response.json()
+          throw new Error(error.error || '통장 사본 업로드 실패')
+        }
+
+        const data = await response.json()
+        bankbookImageUrl = data.url
+      }
 
       const newAccount = {
         bankCode,
         bankName: getBankName(bankCode),
         accountNumber,
         holderName,
-        createdAt: new Date()
+        bankbookImage: bankbookImageUrl,
+        createdAt: account?.createdAt || new Date().toISOString()
       }
 
       // Firestore에 저장
@@ -147,10 +215,14 @@ export default function SettlementAccountsPage() {
       setBankCode('')
       setAccountNumber('')
       setHolderName('')
+      setBankbookFile(null)
+      setBankbookPreview('')
       fetchAccount()
     } catch (error) {
       console.error('계좌 저장 오류:', error)
       alert('계좌 저장 중 오류가 발생했습니다.')
+    } finally {
+      setUploading(false)
     }
   }
 
@@ -203,16 +275,59 @@ export default function SettlementAccountsPage() {
         {/* 계좌 등록/수정 폼 */}
         <div className={styles.accountForm}>
 
-          {/* 예금주명 */}
-          <div className={styles.formGroup}>
-            <label className={styles.label}>예금주명</label>
-            <input
-              type="text"
-              className={styles.input}
-              value={holderName}
-              onChange={(e) => setHolderName(e.target.value)}
-              placeholder="예금주명을 입력하세요"
-            />
+          {/* 통장 사본과 예금주명 */}
+          <div className={styles.formRow}>
+            {/* 통장 사본 */}
+            <div className={styles.formGroup}>
+              <label className={styles.label}>
+                통장 사본
+                <span className={`${styles.submissionBadge} ${(account?.bankbookImage || bankbookFile) ? styles.submitted : styles.notSubmitted}`}>
+                  {(account?.bankbookImage || bankbookFile) ? '제출완료' : '미제출'}
+                </span>
+              </label>
+              <div className={styles.fileInputWrapper}>
+                {account?.bankbookImage && !bankbookFile ? (
+                  <input
+                    type="text"
+                    value={account.bankbookImage.split('/').pop() || '통장 사본'}
+                    className={styles.readOnlyInput}
+                    readOnly
+                  />
+                ) : (
+                  <div className={styles.fileUploadInputWrapper}>
+                    <input
+                      type="text"
+                      value={bankbookFile ? bankbookFile.name : ''}
+                      className={styles.readOnlyInput}
+                      placeholder="통장 사본이 등록되지 않았습니다"
+                      readOnly
+                    />
+                    <label htmlFor="bankbookFile" className={styles.fileAttachButton}>
+                      파일 첨부
+                    </label>
+                    <input
+                      type="file"
+                      id="bankbookFile"
+                      accept="image/*"
+                      onChange={handleBankbookImageSelect}
+                      className={styles.hiddenFileInput}
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* 예금주명 */}
+            <div className={styles.formGroup}>
+              <label className={styles.label}>예금주명</label>
+              <input
+                type="text"
+                className={styles.input}
+                value={holderName}
+                onChange={(e) => setHolderName(e.target.value)}
+                placeholder="예금주명을 입력하세요"
+              />
+            </div>
           </div>
 
           {/* 은행과 계좌번호 */}
@@ -259,14 +374,16 @@ export default function SettlementAccountsPage() {
             <button
               className={styles.cancelButton}
               onClick={cancelEdit}
+              disabled={uploading}
             >
               취소
             </button>
             <button
               className={styles.saveButton}
               onClick={handleSave}
+              disabled={uploading}
             >
-              저장
+              {uploading ? '저장 중...' : '저장'}
             </button>
           </div>
         </div>

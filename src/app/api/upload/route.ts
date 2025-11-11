@@ -22,18 +22,36 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '파일이 없습니다.' }, { status: 400 })
     }
 
-    // 파일 타입 검증
-    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']
+    // 파일 타입 검증 (이미지 + 동영상)
+    const imageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']
+    const videoTypes = [
+      'video/mp4',           // MP4 (가장 범용적)
+      'video/quicktime',     // MOV (iPhone/iOS)
+      'video/x-msvideo',     // AVI
+      'video/webm',          // WebM (웹 표준)
+      'video/x-matroska',    // MKV
+      'video/3gpp',          // 3GP (Android 구형)
+      'video/3gpp2',         // 3G2
+      'video/x-m4v'          // M4V (iOS)
+    ]
+    const validTypes = [...imageTypes, ...videoTypes]
+
     if (!validTypes.includes(file.type)) {
       console.log('Invalid file type:', file.type)
-      return NextResponse.json({ error: '지원하지 않는 파일 형식입니다. (JPEG, PNG, GIF, WebP만 지원)' }, { status: 400 })
+      return NextResponse.json({
+        error: '지원하지 않는 파일 형식입니다. (이미지: JPEG, PNG, GIF, WebP / 동영상: MP4, MOV, AVI, WebM, MKV, 3GP)'
+      }, { status: 400 })
     }
 
-    // 파일 크기 검증 (10MB 제한)
-    const maxSize = 10 * 1024 * 1024 // 10MB
+    // 파일 크기 검증 (이미지: 10MB, 동영상: 500MB)
+    const isVideo = videoTypes.includes(file.type)
+    const maxSize = isVideo ? 500 * 1024 * 1024 : 10 * 1024 * 1024 // 동영상 500MB, 이미지 10MB
     if (file.size > maxSize) {
       console.log('File too large:', file.size)
-      return NextResponse.json({ error: '파일 크기가 너무 큽니다. (최대 10MB)' }, { status: 400 })
+      const maxSizeMB = isVideo ? 500 : 10
+      return NextResponse.json({
+        error: `파일 크기가 너무 큽니다. (${isVideo ? '동영상' : '이미지'} 최대 ${maxSizeMB}MB)`
+      }, { status: 400 })
     }
 
     // 업로드 타입에 따라 폴더 구분
@@ -63,25 +81,25 @@ export async function POST(request: NextRequest) {
     // 채팅 관련 이미지는 날짜별로 저장
     if (uploadType === 'chat') {
       const date = new Date().toISOString().split('T')[0] // YYYY-MM-DD
-      fileName = `picktoeat/${folder}/${date}/${timestamp}_${randomId}.${extension}`
+      fileName = `danmo/${folder}/${date}/${timestamp}_${randomId}.${extension}`
     }
     // 리뷰 관련 이미지는 reviewId 구조로 저장
     else if (uploadType === 'review' && reviewId) {
-      fileName = `picktoeat/${folder}/${reviewId}/${timestamp}_${randomId}.${extension}`
+      fileName = `danmo/${folder}/${reviewId}/${timestamp}_${randomId}.${extension}`
     }
     // 상품 관련 이미지는 storeId/productId 구조로 저장
     else if (uploadType === 'product' && storeId && productId) {
-      fileName = `picktoeat/${folder}/${storeId}/${productId}/${timestamp}_${randomId}.${extension}`
+      fileName = `danmo/${folder}/${storeId}/${productId}/${timestamp}_${randomId}.${extension}`
     }
     // userId가 있으면 사용자별 폴더에 저장
     else if (userId && uploadType === 'business-registration') {
-      fileName = `picktoeat/${folder}/${userId}/${timestamp}_${randomId}.${extension}`
+      fileName = `danmo/${folder}/${userId}/${timestamp}_${randomId}.${extension}`
     } else if (userId) {
-      fileName = `picktoeat/${folder}/${userId}/${timestamp}_${randomId}.${extension}`
+      fileName = `danmo/${folder}/${userId}/${timestamp}_${randomId}.${extension}`
     }
     // 기본 경로
     else {
-      fileName = `picktoeat/${folder}/${timestamp}_${randomId}.${extension}`
+      fileName = `danmo/${folder}/${timestamp}_${randomId}.${extension}`
     }
 
     console.log('Generated filename:', fileName)

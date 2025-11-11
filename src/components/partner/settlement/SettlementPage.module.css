@@ -7,7 +7,56 @@
   font-size: 24px;
   font-weight: 700;
   color: #333;
-  margin: 0 0 32px 0;
+  margin: 0;
+}
+
+.settlementNotice {
+  border-radius: 10px;
+  background: #F5F7F9;
+  padding: 16px 20px;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.infoIcon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.noticeContent {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.noticeLabel {
+  color: #4E5968;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.noticeText {
+  color: #4E5968;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.warningText {
+  color: #DC2626;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.settlementSummaryTitle {
+  font-size: 20px;
+  font-weight: 700;
+  color: #333;
+  margin: 0 0 16px 0;
 }
 
 .loading {
@@ -22,45 +71,52 @@
 /* 요약 섹션 */
 .summarySection {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 16px;
   margin-bottom: 40px;
 }
 
 .summaryCard {
-  padding: 20px;
+  padding: 16px;
   border-radius: 12px;
   background: #F5F7FA;
-  border: 1px solid #E5E7EB;
 }
 
 .summaryCard.highlight {
-  background: #237AF2;
-  border-color: #237AF2;
+  background: transparent;
+  border-radius: 10px;
+  border: 1px solid #EBEBEB;
 }
 
 .summaryLabel {
-  font-size: 14px;
+  color: #333;
+  font-size: 16px;
   font-weight: 500;
-  color: #666;
   margin-bottom: 8px;
 }
 
 .summaryCard.highlight .summaryLabel {
-  color: rgba(255, 255, 255, 0.9);
-}
-
-.summaryValue {
-  font-size: 24px;
-  font-weight: 700;
   color: #333;
 }
 
+.summaryValue {
+  color: #333;
+  font-size: 20px;
+  font-weight: 700;
+}
+
 .summaryCard.highlight .summaryValue {
-  color: white;
+  color: #025BD9;
 }
 
 /* 계좌 정보 섹션 */
+.accountInfoTitle {
+  color: #333;
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0 0 16px 0;
+}
+
 .accountInfoSection {
   border-radius: 10px;
   border: 1px solid #EBEBEB;
@@ -73,20 +129,25 @@
 
 .accountInfoLeft {
   display: flex;
-  gap: 24px;
+  gap: 32px;
   align-items: center;
 }
 
 .accountInfoItem {
   display: flex;
-  flex-direction: column;
-  gap: 6px;
+  flex-direction: row;
+  align-items: center;
+  gap: 4px;
 }
 
 .accountInfoLabel {
-  font-size: 13px;
   color: #999;
+  font-size: 16px;
   font-weight: 500;
+}
+
+.accountInfoLabel::after {
+  content: ':';
 }
 
 .accountInfoValue {
@@ -442,8 +503,8 @@
 }
 
 .settlementAmount {
-  color: #237AF2;
-  font-size: 18px;
+  color: #333;
+  font-size: 16px;
   font-weight: 700;
 }
 

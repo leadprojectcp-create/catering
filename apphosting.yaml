@@ -79,11 +79,11 @@ env:
 
   # Bunny CDN Configuration
   - variable: BUNNY_STORAGE_ZONE_NAME
-    value: picktoeat
+    value: danmo
     availability:
       - RUNTIME
   - variable: BUNNY_STORAGE_PASSWORD
-    value: c16ddfa2-fc66-47af-b9a089b6db2a-17b8-4b77
+    value: 0d706721-8092-42be-be99d7fc3136-cf47-4105
     availability:
       - RUNTIME
   - variable: BUNNY_CDN_HOSTNAME

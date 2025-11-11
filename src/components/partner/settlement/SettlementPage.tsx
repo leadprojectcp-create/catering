@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { db } from '@/lib/firebase'
 import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore'
@@ -14,7 +14,8 @@ interface OrderItem {
   productName: string
   totalProductPrice: number
   orderDate: Date
-  orderNumber: number // 몇 번째 주문인지
+  orderNumber: string // Firestore의 orderNumber (문자열)
+  orderIndex: number // 몇 번째 주문인지 (수수료 계산용)
   settlementStatus?: 'pending' | 'completed' // 정산 상태
   settlementDate?: Date // 정산 완료 날짜
   settlementId?: string // 정산 ID
@@ -152,8 +153,9 @@ export default function SettlementPage() {
           productName: productName,
           totalProductPrice: data.totalProductPrice || 0,
           orderDate: data.createdAt?.toDate() || new Date(),
-          orderNumber: index + 1,
-          settlementStatus: data.settlementStatus || 'pending',
+          orderNumber: data.orderNumber || doc.id, // Firestore의 orderNumber 사용
+          orderIndex: index + 1, // 수수료 계산용 인덱스
+          settlementStatus: data.settlementStatus, // 값이 없으면 undefined
           settlementDate: data.settlementDate?.toDate(),
           settlementId: data.settlementId
         })
@@ -163,9 +165,9 @@ export default function SettlementPage() {
 
       // 클라이언트에서 날짜순 정렬
       ordersList.sort((a, b) => a.orderDate.getTime() - b.orderDate.getTime())
-      // orderNumber 재할당
+      // orderIndex 재할당 (수수료 계산용)
       ordersList.forEach((order, index) => {
-        order.orderNumber = index + 1
+        order.orderIndex = index + 1
       })
 
       console.log('[SettlementPage] ordersList 총 개수:', ordersList.length)
@@ -192,7 +194,7 @@ export default function SettlementPage() {
 
     ordersList.forEach((order, index) => {
       const orderNumber = index + 1
-      const feeRate = orderNumber <= 5 ? 0.034 : 0.134 // 1-5건: 3.4%, 6건 이상: 13.4%
+      const feeRate = orderNumber <= 5 ? 0.03 : 0.13 // 1-5건: 3%, 6건 이상: 13%
       const fee = order.totalProductPrice * feeRate
       const settlementAmount = order.totalProductPrice - fee
 
@@ -217,14 +219,14 @@ export default function SettlementPage() {
   }
 
   const calculateOrderSettlement = (order: OrderItem) => {
-    const feeRate = order.orderNumber <= 5 ? 0.034 : 0.134
+    const feeRate = order.orderIndex <= 5 ? 0.03 : 0.13 // orderIndex 사용
     const fee = order.totalProductPrice * feeRate
     const settlementAmount = order.totalProductPrice - fee
 
     return {
       fee,
       settlementAmount,
-      feeRate: Math.round(feeRate * 1000) / 10 // 3.4 또는 13.4로 정확히 표시
+      feeRate: Math.round(feeRate * 100) // 3 또는 13으로 정확히 표시
     }
   }
 
@@ -233,11 +235,11 @@ export default function SettlementPage() {
   }
 
   const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat('ko-KR', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit'
-    }).format(date)
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    const dayOfWeek = ['일', '월', '화', '수', '목', '금', '토'][date.getDay()]
+    return `${year}.${month}.${day}(${dayOfWeek})`
   }
 
   // 기간 필터 핸들러
@@ -277,6 +279,22 @@ export default function SettlementPage() {
     const start = dateRange.start.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' })
     const end = dateRange.end.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' })
     return `${start} - ${end}`
+  }
+
+  // 정산 내역 제목 생성
+  const getSettlementTitle = () => {
+    if (periodFilter === 'all') {
+      return '총 정산 내역'
+    } else if (periodFilter === 'daily' && dateRange.start) {
+      return `총 일별 정산 내역 (${formatDate(dateRange.start)})`
+    } else if (periodFilter === 'weekly' && dateRange.start && dateRange.end) {
+      return `총 주별 정산 내역 (${formatDate(dateRange.start)} ~ ${formatDate(dateRange.end)})`
+    } else if (periodFilter === 'monthly' && dateRange.start && dateRange.end) {
+      return `총 월별 정산 내역 (${formatDate(dateRange.start)} ~ ${formatDate(dateRange.end)})`
+    } else if (periodFilter === 'custom' && dateRange.start && dateRange.end) {
+      return `총 정산 내역 (${formatDate(dateRange.start)} ~ ${formatDate(dateRange.end)})`
+    }
+    return '총 정산 내역'
   }
 
   // 달력 날짜 클릭
@@ -365,8 +383,11 @@ export default function SettlementPage() {
     return days
   }
 
-  // 날짜 필터링된 주문
+  // 날짜 필터링된 주문 (settlementStatus가 있는 주문만)
   const filteredOrders = orders.filter(order => {
+    // settlementStatus가 없는 주문은 제외
+    if (!order.settlementStatus) return false
+
     if (!dateRange.start || !dateRange.end) return true
 
     const orderDate = new Date(order.orderDate)
@@ -381,6 +402,32 @@ export default function SettlementPage() {
     return orderDate >= startDate && orderDate <= endDate
   })
 
+  // 필터링된 주문의 정산 금액 계산
+  const filteredSettlementData = useMemo(() => {
+    let totalSales = 0
+    let totalFee = 0
+    let totalSettlement = 0
+    let pendingSettlement = 0 // 정산 예정 금액
+    let completedSettlement = 0 // 정산 완료 금액
+
+    filteredOrders.forEach((order) => {
+      const { fee, settlementAmount } = calculateOrderSettlement(order)
+      totalSales += order.totalProductPrice
+      totalFee += fee
+      totalSettlement += settlementAmount
+
+      // 정산 상태에 따라 분리
+      if (order.settlementStatus === 'completed') {
+        completedSettlement += settlementAmount
+      } else if (order.settlementStatus === 'pending') {
+        pendingSettlement += settlementAmount
+      }
+      // settlementStatus가 undefined인 경우는 어디에도 포함시키지 않음
+    })
+
+    return { totalSales, totalFee, totalSettlement, pendingSettlement, completedSettlement }
+  }, [filteredOrders])
+
   if (loading) {
     return (
       <div className={styles.container}>
@@ -393,65 +440,90 @@ export default function SettlementPage() {
     <div className={styles.container}>
       <h1 className={styles.title}>정산 내역</h1>
 
+      {/* 정산 안내 박스 */}
+      <div className={styles.settlementNotice}>
+        <img src="/icons/info.svg" alt="정보" className={styles.infoIcon} />
+        <div className={styles.noticeContent}>
+          <div>
+            <span className={styles.noticeLabel}>[정산안내]</span>
+            <span className={styles.noticeText}> 정산은 주정산으로 진행되며, 매주 월요일 부터 일요일까지 완료된 정산에 대해서 익주 화요일에 정산됩니다.</span>
+          </div>
+          <div className={styles.warningText}>
+            정산계좌정보 등록 누락시 정산은 익주로 지연 됩니다.
+          </div>
+        </div>
+      </div>
+
+      <h2 className={styles.settlementSummaryTitle}>{getSettlementTitle()}</h2>
+
       <div className={styles.summarySection}>
         <div className={styles.summaryCard}>
           <div className={styles.summaryLabel}>총 판매 금액</div>
           <div className={styles.summaryValue}>
-            {formatNumber(orders.reduce((sum, order) => sum + order.totalProductPrice, 0))}원
+            {formatNumber(filteredSettlementData.totalSales)}원
           </div>
         </div>
         <div className={styles.summaryCard}>
           <div className={styles.summaryLabel}>총 수수료</div>
           <div className={styles.summaryValue}>
-            -{formatNumber(totalFee)}원
+            -{formatNumber(filteredSettlementData.totalFee)}원
           </div>
         </div>
         <div className={styles.summaryCard + ' ' + styles.highlight}>
-          <div className={styles.summaryLabel}>정산 받을 금액</div>
+          <div className={styles.summaryLabel}>정산 예정 금액</div>
           <div className={styles.summaryValue}>
-            {formatNumber(totalSettlement)}원
+            {formatNumber(filteredSettlementData.pendingSettlement)}원
+          </div>
+        </div>
+        <div className={styles.summaryCard + ' ' + styles.highlight}>
+          <div className={styles.summaryLabel}>정산 완료 금액</div>
+          <div className={styles.summaryValue}>
+            {formatNumber(filteredSettlementData.completedSettlement)}원
           </div>
         </div>
       </div>
 
       {/* 계좌 정보 섹션 */}
-      <div className={styles.accountInfoSection}>
-        <div className={styles.accountInfoLeft}>
-          <div className={styles.accountInfoItem}>
-            <div className={styles.accountInfoLabel}>은행명</div>
-            <div className={styles.accountInfoValue}>
-              {account ? (
-                <>
-                  <img
-                    src={`/bank/${account.bankCode}.png`}
-                    alt={account.bankName}
-                    className={styles.bankLogo}
-                    onError={(e) => {
-                      e.currentTarget.style.display = 'none'
-                    }}
-                  />
-                  {account.bankName}
-                </>
-              ) : (
-                '-'
-              )}
+      <div>
+        <h2 className={styles.accountInfoTitle}>계좌정보</h2>
+        <div className={styles.accountInfoSection}>
+          <div className={styles.accountInfoLeft}>
+            <div className={styles.accountInfoItem}>
+              <div className={styles.accountInfoLabel}>은행명</div>
+              <div className={styles.accountInfoValue}>
+                {account ? (
+                  <>
+                    <img
+                      src={`/bank/${account.bankCode}.png`}
+                      alt={account.bankName}
+                      className={styles.bankLogo}
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none'
+                      }}
+                    />
+                    {account.bankName}
+                  </>
+                ) : (
+                  '-'
+                )}
+              </div>
+            </div>
+            <div className={styles.accountInfoItem}>
+              <div className={styles.accountInfoLabel}>예금주</div>
+              <div className={styles.accountInfoValue}>{account?.holderName || '-'}</div>
+            </div>
+            <div className={styles.accountInfoItem}>
+              <div className={styles.accountInfoLabel}>계좌번호</div>
+              <div className={styles.accountInfoValue}>{account?.accountNumber || '-'}</div>
             </div>
           </div>
-          <div className={styles.accountInfoItem}>
-            <div className={styles.accountInfoLabel}>예금주</div>
-            <div className={styles.accountInfoValue}>{account?.holderName || '-'}</div>
-          </div>
-          <div className={styles.accountInfoItem}>
-            <div className={styles.accountInfoLabel}>계좌번호</div>
-            <div className={styles.accountInfoValue}>{account?.accountNumber || '-'}</div>
-          </div>
+          <button
+            className={styles.registerAccountButton}
+            onClick={() => router.push('/partner/settlement-accounts')}
+          >
+            정산계좌 등록하기
+          </button>
         </div>
-        <button
-          className={styles.registerAccountButton}
-          onClick={() => router.push('/partner/settlement-accounts')}
-        >
-          정산계좌 등록하기
-        </button>
       </div>
 
       <div className={styles.ordersSection}>
@@ -544,15 +616,15 @@ export default function SettlementPage() {
                 <div key={order.id} className={styles.orderItem}>
                   <div className={styles.orderHeader}>
                     <div className={styles.orderNumber}>
-                      주문 #{order.orderNumber}
-                      {order.orderNumber <= 5 && (
+                      주문번호 {order.orderNumber}
+                      {order.orderIndex <= 5 && (
                         <span className={styles.specialBadge}>프로모션 수수료</span>
                       )}
                       {order.settlementStatus === 'completed' ? (
                         <span className={styles.completedBadge}>정산완료</span>
-                      ) : (
+                      ) : order.settlementStatus === 'pending' ? (
                         <span className={styles.pendingBadge}>정산대기</span>
-                      )}
+                      ) : null}
                     </div>
                     <div className={styles.orderDate}>
                       {formatDate(order.orderDate)}

@@ -50,6 +50,7 @@ export default function StoreManagement() {
   const [modalImageIndex, setModalImageIndex] = useState(0)
   const [showStoreNameInfoModal, setShowStoreNameInfoModal] = useState(false)
   const [mainImageIndex, setMainImageIndex] = useState(0)
+  const [businessRegistrationFile, setBusinessRegistrationFile] = useState<File | null>(null)
 
   const loadStoreInfo = useCallback(async () => {
     if (!user) return
@@ -172,6 +173,28 @@ export default function StoreManagement() {
     setHasChanges(true)
   }
 
+  // 사업자 등록증 파일 선택 핸들러
+  const handleBusinessRegistrationFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // 파일 타입 검증 (이미지 또는 PDF)
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'application/pdf']
+    if (!allowedTypes.includes(file.type)) {
+      alert('이미지(JPEG, PNG, GIF, WebP) 또는 PDF 파일만 업로드 가능합니다.')
+      return
+    }
+
+    // 파일 크기 검증 (10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      alert('파일 크기는 10MB 이하여야 합니다.')
+      return
+    }
+
+    setBusinessRegistrationFile(file)
+    setHasChanges(true)
+  }
+
   // 전체 적용 버튼 - 모든 변경사항 한 번에 저장
   const handleApplyAllChanges = async () => {
     if (!user || !storeInfo) return
@@ -199,6 +222,35 @@ export default function StoreManagement() {
 
     try {
       let finalImages = [...(storeInfo.storeImages || [])]
+      let businessRegistrationImageUrl = storeInfo.businessRegistrationImage
+
+      // 사업자 등록증 파일 업로드
+      if (businessRegistrationFile) {
+        const formData = new FormData()
+        formData.append('file', businessRegistrationFile)
+        formData.append('type', 'business-registration')
+
+        // 이메일에서 @ 와 . 을 언더스코어로 변경하여 폴더명으로 사용
+        if (user.email) {
+          const sanitizedEmail = user.email.replace(/[@.]/g, '_')
+          formData.append('userId', sanitizedEmail)
+        } else {
+          formData.append('userId', user.uid)
+        }
+
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData
+        })
+
+        if (!response.ok) {
+          const error = await response.json()
+          throw new Error(error.error || '사업자 등록증 업로드 실패')
+        }
+
+        const data = await response.json()
+        businessRegistrationImageUrl = data.url
+      }
 
       // 새로운 이미지가 있으면 업로드
       if (tempImages.length > 0) {
@@ -236,16 +288,24 @@ export default function StoreManagement() {
 
       // Firestore에 모든 변경사항 저장
       const storeRef = doc(db, 'stores', user.uid)
-      await setDoc(storeRef, {
+      const updateData: any = {
         ...storeInfo,
         storeImages: finalImages,
         updatedAt: new Date()
-      }, { merge: true })
+      }
+
+      // businessRegistrationImage가 있을 때만 추가
+      if (businessRegistrationImageUrl) {
+        updateData.businessRegistrationImage = businessRegistrationImageUrl
+      }
+
+      await setDoc(storeRef, updateData, { merge: true })
 
       // 상태 업데이트
       const updatedInfo = {
         ...storeInfo,
-        storeImages: finalImages
+        storeImages: finalImages,
+        ...(businessRegistrationImageUrl && { businessRegistrationImage: businessRegistrationImageUrl })
       }
       setStoreInfo(updatedInfo)
       setOriginalStoreInfo(updatedInfo)
@@ -254,6 +314,7 @@ export default function StoreManagement() {
       previewUrls.forEach(url => URL.revokeObjectURL(url))
       setTempImages([])
       setPreviewUrls([])
+      setBusinessRegistrationFile(null)
       setHasChanges(false)
       setMainImageIndex(0) // 대표 이미지 인덱스 초기화
 
@@ -272,6 +333,7 @@ export default function StoreManagement() {
     previewUrls.forEach(url => URL.revokeObjectURL(url))
 
     setTempImages([])
+    setBusinessRegistrationFile(null)
     setPreviewUrls([])
     setHasChanges(false)
     setMainImageIndex(0) // 대표 이미지 인덱스 초기화
@@ -490,6 +552,69 @@ export default function StoreManagement() {
                 onChange={(e) => handleFieldChange('businessPhone', e.target.value)}
                 className={styles.editInput}
                 placeholder="고객이 볼 가게 전화번호"
+              />
+            </div>
+          </div>
+
+          {/* 사업자 등록증 */}
+          <div className={styles.infoSection}>
+            <h2 className={styles.sectionTitle}>
+              사업자 등록증
+              <span className={`${styles.submissionBadge} ${storeInfo.businessRegistrationImage ? styles.submitted : styles.notSubmitted}`}>
+                {storeInfo.businessRegistrationImage ? '제출완료' : '미제출'}
+              </span>
+            </h2>
+            <div className={styles.fileInputWrapper}>
+              {storeInfo.businessRegistrationImage ? (
+                <input
+                  type="text"
+                  value={storeInfo.businessRegistrationImage.split('/').pop() || '사업자 등록증'}
+                  className={styles.readOnlyInput}
+                  readOnly
+                />
+              ) : (
+                <div className={styles.fileUploadInputWrapper}>
+                  <input
+                    type="text"
+                    value={businessRegistrationFile ? businessRegistrationFile.name : ''}
+                    className={styles.readOnlyInput}
+                    placeholder="사업자 등록증이 등록되지 않았습니다"
+                    readOnly
+                  />
+                  <label htmlFor="businessRegistrationFile" className={styles.fileAttachButton}>
+                    파일 첨부
+                  </label>
+                  <input
+                    type="file"
+                    id="businessRegistrationFile"
+                    accept="image/*,.pdf"
+                    onChange={handleBusinessRegistrationFileSelect}
+                    className={styles.hiddenFileInput}
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* 사업자 정보 */}
+          <div className={styles.infoRow}>
+            <div className={styles.infoSection}>
+              <h2 className={styles.sectionTitle}>사업자 등록번호</h2>
+              <input
+                type="text"
+                value={storeInfo.businessRegistration}
+                className={styles.readOnlyInput}
+                readOnly
+              />
+            </div>
+
+            <div className={styles.infoSection}>
+              <h2 className={styles.sectionTitle}>대표자</h2>
+              <input
+                type="text"
+                value={storeInfo.businessOwner}
+                className={styles.readOnlyInput}
+                readOnly
               />
             </div>
           </div>

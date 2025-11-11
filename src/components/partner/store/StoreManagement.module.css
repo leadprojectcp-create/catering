@@ -241,6 +241,96 @@
   cursor: not-allowed;
 }
 
+.submissionBadge {
+  padding: 4px 12px;
+  border-radius: 5px;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  margin-left: 8px;
+}
+
+.notSubmitted {
+  background: #F0F0F3;
+  color: #4E5968;
+}
+
+.submitted {
+  color: #025BD9;
+  background: transparent;
+}
+
+.fileInputWrapper {
+  position: relative;
+  width: 100%;
+}
+
+.fileUploadInputWrapper {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.fileUploadInputWrapper .readOnlyInput {
+  flex: 1;
+  padding-right: 100px;
+}
+
+.fileAttachButton {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  padding: 5px 15px;
+  justify-content: center;
+  align-items: center;
+  border-radius: 5px;
+  border: 1px solid #C3C3C3;
+  background: #FAFAFA;
+  color: #999;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+
+.fileAttachButton:hover {
+  background: #F0F0F0;
+}
+
+.hiddenFileInput {
+  display: none;
+}
+
+.businessImageWrapper {
+  width: 100%;
+  max-width: 400px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #FAFAFA;
+  padding: 12px;
+}
+
+.businessImage {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 8px;
+}
+
+.noBusinessImage {
+  width: 100%;
+  padding: 40px 20px;
+  border-radius: 10px;
+  background: #FAFAFA;
+  color: #999;
+  font-size: 14px;
+  text-align: center;
+}
+
 .editTextarea {
   padding: 8px 12px;
   border: 1px solid #d1d5db;

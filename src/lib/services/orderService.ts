@@ -92,6 +92,9 @@ export interface Order {
   partnerNotifiedAt?: Date | Timestamp | FieldValue
   allowAdditionalOrder?: boolean
   partnerMemo?: string
+  settlementStatus?: 'pending' | 'completed'
+  settlementDate?: Date | Timestamp | FieldValue
+  settlementId?: string
   createdAt?: Date | Timestamp | FieldValue
   updatedAt?: Date | Timestamp | FieldValue
 }
@@ -157,6 +160,11 @@ export const updateOrderStatus = async (
     // 택배 정보가 있으면 네스티드 객체로 추가
     if (trackingInfo) {
       updateData.trackingInfo = trackingInfo
+    }
+
+    // 주문 상태가 completed로 변경되면 정산 상태를 pending으로 설정
+    if (status === 'completed') {
+      updateData.settlementStatus = 'pending'
     }
 
     await updateDoc(orderRef, updateData)
