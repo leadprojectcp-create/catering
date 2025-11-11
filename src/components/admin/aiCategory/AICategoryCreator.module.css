@@ -252,12 +252,14 @@
   margin-top: 1rem;
   border-radius: 8px;
   overflow: hidden;
-  max-width: 600px;
+  max-width: 290px;
+  aspect-ratio: 290 / 340;
 }
 
 .imagePreview img {
   width: 100%;
-  height: auto;
+  height: 100%;
+  object-fit: cover;
   display: block;
 }
 

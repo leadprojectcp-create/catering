@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { getActiveAICategories } from '@/lib/services/aiCategoryService'
 import type { AIRecommendedCategory } from '@/lib/services/aiCategoryService'
@@ -11,6 +11,9 @@ export default function AIRecommendedSection() {
   const router = useRouter()
   const [categories, setCategories] = useState<AIRecommendedCategory[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [currentIndex, setCurrentIndex] = useState(0)
+  const [isMobile, setIsMobile] = useState(false)
+  const sliderRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -27,6 +30,16 @@ export default function AIRecommendedSection() {
     fetchCategories()
   }, [])
 
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768)
+    }
+
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+
   // 카테고리가 없으면 렌더링하지 않음
   if (isLoading || categories.length === 0) {
     return null
@@ -36,35 +49,74 @@ export default function AIRecommendedSection() {
     router.push(`/ai-category/${categoryId}`)
   }
 
+  const handlePrev = () => {
+    setCurrentIndex((prev) => Math.max(0, prev - 1))
+  }
+
+  const handleNext = () => {
+    setCurrentIndex((prev) => Math.min(categories.length - 1, prev + 1))
+  }
+
+  const canGoPrev = currentIndex > 0
+  const canGoNext = currentIndex < categories.length - 1
+
+  // 슬라이드 이동 거리 계산 (카드 너비 + gap)
+  const slideDistance = isMobile ? 180 + 8 : 290 + 16
+
   return (
     <section className={styles.section}>
       <div className={styles.header}>
-        <h2>🎯 지금 HOT한 특별 기획전</h2>
-        <p>AI가 엄선한 특별한 상품들을 만나보세요</p>
+        <h2>🎯 단모 pick</h2>
       </div>
 
-      <div className={styles.categoryGrid}>
-        {categories.map((category) => (
-          <div
-            key={category.id}
-            className={styles.categoryCard}
-            onClick={() => handleCategoryClick(category.id!)}
+      <div className={styles.sliderContainer}>
+        {canGoPrev && (
+          <button
+            className={`${styles.arrowButton} ${styles.arrowLeft}`}
+            onClick={handlePrev}
+            aria-label="이전"
           >
-            <div className={styles.imageWrapper}>
-              <OptimizedImage
-                src={category.imageUrl}
-                alt={category.name}
-                width={600}
-                height={200}
-                className={styles.image}
-              />
-              <div className={styles.overlay}>
-                <h3>{category.name}</h3>
-                <p>{category.description}</p>
+            ←
+          </button>
+        )}
+
+        <div className={styles.sliderWrapper}>
+          <div
+            ref={sliderRef}
+            className={styles.slider}
+            style={{
+              transform: `translateX(-${currentIndex * slideDistance}px)`,
+            }}
+          >
+            {categories.map((category) => (
+              <div
+                key={category.id}
+                className={styles.categoryCard}
+                onClick={() => handleCategoryClick(category.id!)}
+              >
+                <div className={styles.imageWrapper}>
+                  <OptimizedImage
+                    src={category.imageUrl}
+                    alt={category.name}
+                    width={290}
+                    height={340}
+                    className={styles.image}
+                  />
+                </div>
               </div>
-            </div>
+            ))}
           </div>
-        ))}
+        </div>
+
+        {canGoNext && (
+          <button
+            className={`${styles.arrowButton} ${styles.arrowRight}`}
+            onClick={handleNext}
+            aria-label="다음"
+          >
+            →
+          </button>
+        )}
       </div>
     </section>
   )

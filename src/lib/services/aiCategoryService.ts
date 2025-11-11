@@ -11,8 +11,7 @@ import {
   orderBy,
   Timestamp,
 } from 'firebase/firestore'
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
-import { db, storage } from '@/lib/firebase'
+import { db } from '@/lib/firebase'
 
 export interface AIRecommendedCategory {
   id?: string
@@ -28,23 +27,29 @@ export interface AIRecommendedCategory {
 }
 
 /**
- * 이미지를 Firebase Storage에 업로드
+ * 이미지를 BunnyCDN에 업로드
  */
 export async function uploadCategoryImage(
   file: File,
   categoryId: string
 ): Promise<string> {
   try {
-    const timestamp = Date.now()
-    const fileName = `ai-categories/${categoryId}_${timestamp}_${file.name}`
-    const storageRef = ref(storage, fileName)
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('type', 'aicategory')
 
-    // 이미지 업로드
-    await uploadBytes(storageRef, file)
+    const response = await fetch('/api/upload', {
+      method: 'POST',
+      body: formData,
+    })
 
-    // 다운로드 URL 가져오기
-    const downloadURL = await getDownloadURL(storageRef)
-    return downloadURL
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || '이미지 업로드 실패')
+    }
+
+    const data = await response.json()
+    return data.url
   } catch (error) {
     console.error('이미지 업로드 에러:', error)
     throw new Error('이미지 업로드에 실패했습니다.')
