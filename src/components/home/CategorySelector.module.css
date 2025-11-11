@@ -88,13 +88,11 @@
   .categoryIcon {
     width: 56px;
     height: 56px;
-    border-radius: 8px;
-    margin-bottom: 6px;
   }
 
   .categoryIcon img {
-    width: 42px;
-    height: 42px;
+    width: 52px;
+    height: 52px;
   }
 }
 
