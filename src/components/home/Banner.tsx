@@ -5,6 +5,7 @@ import { Swiper, SwiperSlide } from 'swiper/react'
 import { Autoplay } from 'swiper/modules'
 import type { Swiper as SwiperType } from 'swiper'
 import { getActiveBanners, type Banner } from '@/lib/services/bannerService'
+import OptimizedImage from '@/components/common/OptimizedImage'
 import 'swiper/css'
 import 'swiper/css/pagination'
 import styles from './Banner.module.css'
@@ -77,10 +78,13 @@ export default function Banner() {
                 onClick={() => handleBannerClick(banner.linkUrl)}
               >
                 {banner.imageUrl && (
-                  <img
+                  <OptimizedImage
                     src={banner.imageUrl}
                     alt={banner.title}
                     className={styles.bannerImage}
+                    fill
+                    style={{ objectFit: 'cover' }}
+                    priority
                   />
                 )}
               </div>
