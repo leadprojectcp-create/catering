@@ -36,13 +36,24 @@ function toRad(deg: number): number {
 /**
  * 거리를 읽기 좋은 형식으로 변환
  * @param distance 거리 (km)
- * @returns 형식화된 거리 문자열
+ * @returns 형식화된 거리 문자열 (1m 단위)
  */
 export function formatDistance(distance: number): string {
-  if (distance < 1) {
-    return `${Math.round(distance * 1000)}m`;
+  const meters = Math.round(distance * 1000);
+
+  if (meters < 1000) {
+    return `${meters}m`;
   }
-  return `${distance.toFixed(1)}km`;
+
+  // 1km 이상일 때도 정확한 m 단위로 표시
+  const km = Math.floor(meters / 1000);
+  const remainingMeters = meters % 1000;
+
+  if (remainingMeters === 0) {
+    return `${km}km`;
+  }
+
+  return `${km}km ${remainingMeters}m`;
 }
 
 /**
