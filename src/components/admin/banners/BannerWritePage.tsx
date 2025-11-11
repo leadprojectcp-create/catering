@@ -157,7 +157,7 @@ export default function BannerWritePage() {
               <>
                 <div className={styles.uploadIcon}>🖼️</div>
                 <div className={styles.uploadText}>클릭하여 이미지 업로드</div>
-                <div className={styles.uploadSubtext}>권장 크기: 290 x 340px, 최대 10MB</div>
+                <div className={styles.uploadSubtext}>권장 크기: 1280 x 200px, 최대 10MB</div>
               </>
             )}
           </div>

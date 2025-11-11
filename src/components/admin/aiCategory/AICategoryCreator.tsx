@@ -267,7 +267,7 @@ export default function AICategoryCreator() {
           </div>
 
           <div className={styles.formGroup}>
-            <label>배너 이미지 업로드 * (권장: 1200x400px)</label>
+            <label>배너 이미지 업로드 * (권장: 290x340px)</label>
             <input
               type="file"
               accept="image/*"
