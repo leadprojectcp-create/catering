@@ -19,6 +19,8 @@ const adminMenuItems = [
   { label: '매거진 관리', path: '/admin/magazine', icon: '📝' },
   { label: '공지사항 관리', path: '/admin/notices', icon: '📢' },
   { label: 'FAQ 관리', path: '/admin/faqs', icon: '❓' },
+  { label: '팝업 관리', path: '/admin/popups', icon: '🎨' },
+  { label: '배너 관리', path: '/admin/banners', icon: '🖼️' },
   { label: '통계', path: '/admin/analytics', icon: '📈' },
   { label: '로그', path: '/admin/logs', icon: '📋' },
   { label: '설정', path: '/admin/settings', icon: '⚙️' },

@@ -8,6 +8,7 @@ import { db, realtimeDb } from '@/lib/firebase'
 import { ref as rtdbRef, onValue as rtdbOnValue } from 'firebase/database'
 import { getPublishedNotices, Notice } from '@/lib/services/noticeService'
 import Loading from '@/components/Loading'
+import PopupModal from '@/components/common/PopupModal'
 import { ShoppingBag, Star, TrendingUp, Clock, AlertCircle, DollarSign, Package, MessageSquare, MessageCircle, HelpCircle, Bell } from 'lucide-react'
 import styles from './PartnerDashboard.module.css'
 
@@ -856,6 +857,9 @@ export default function PartnerDashboard() {
 
   return (
     <div className={styles.container}>
+        {/* 팝업 모달 */}
+        <PopupModal targetType="partner" />
+
         <div className={styles.header}>
           {user && (
             <>

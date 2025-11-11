@@ -8,6 +8,7 @@ import Banner from './home/Banner'
 import StoreList from './home/StoreList'
 import CategorySelector from './home/CategorySelector'
 import AIRecommendedSection from './home/AIRecommendedSection'
+import PopupModal from './common/PopupModal'
 import Loading from './Loading'
 import styles from './MainPage.module.css'
 
@@ -43,6 +44,8 @@ export default function MainPage() {
 
   return (
     <div className={styles.container}>
+      {/* 팝업 모달 */}
+      <PopupModal targetType="user" />
 
       {/* 메인 컨텐츠 영역 */}
       <main className={styles.main}>

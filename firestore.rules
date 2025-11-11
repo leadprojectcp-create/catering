@@ -361,5 +361,23 @@ service cloud.firestore {
       // 관리자(level 10)만 생성/수정/삭제 가능
       allow create, update, delete: if isAdmin();
     }
+
+    // Popups collection - 팝업 관리
+    match /popups/{popupId} {
+      // 모든 사용자 읽기 가능 (활성 팝업은 공개)
+      allow read: if true;
+
+      // 관리자(level 10)만 생성/수정/삭제 가능
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Banners collection - 배너 관리
+    match /banners/{bannerId} {
+      // 모든 사용자 읽기 가능 (활성 배너는 공개)
+      allow read: if true;
+
+      // 관리자(level 10)만 생성/수정/삭제 가능
+      allow create, update, delete: if isAdmin();
+    }
   }
 }

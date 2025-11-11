@@ -1,51 +1,47 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Swiper, SwiperSlide } from 'swiper/react'
 import { Autoplay } from 'swiper/modules'
 import type { Swiper as SwiperType } from 'swiper'
+import { getActiveBanners, type Banner } from '@/lib/services/bannerService'
 import 'swiper/css'
 import 'swiper/css/pagination'
 import styles from './Banner.module.css'
 
-const banners = [
-  {
-    id: 1,
-    title: '특별 할인 이벤트',
-    description: '신규 가입 시 최대 30% 할인 혜택',
-    backgroundColor: '#FF6B6B'
-  },
-  {
-    id: 2,
-    title: '당일 배송 서비스',
-    description: '오늘 주문하면 오늘 받는 빠른 배송',
-    backgroundColor: '#4ECDC4'
-  },
-  {
-    id: 3,
-    title: '단체 주문 할인',
-    description: '100인분 이상 주문 시 특별 가격 제공',
-    backgroundColor: '#45B7D1'
-  },
-  {
-    id: 4,
-    title: '신메뉴 출시',
-    description: '프리미엄 디저트 박스 새롭게 출시',
-    backgroundColor: '#96CEB4'
-  },
-  {
-    id: 5,
-    title: 'AI 맞춤 추천',
-    description: '우리 모임에 딱 맞는 메뉴 찾기',
-    backgroundColor: '#FFEAA7'
-  }
-]
-
 export default function Banner() {
+  const [banners, setBanners] = useState<Banner[]>([])
   const [currentIndex, setCurrentIndex] = useState(1)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetchBanners()
+  }, [])
+
+  const fetchBanners = async () => {
+    try {
+      setLoading(true)
+      const data = await getActiveBanners()
+      setBanners(data)
+    } catch (error) {
+      console.error('배너 로드 실패:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const handleSlideChange = (swiper: SwiperType) => {
     setCurrentIndex(swiper.realIndex + 1)
+  }
+
+  const handleBannerClick = (linkUrl?: string) => {
+    if (linkUrl) {
+      window.open(linkUrl, '_blank', 'noopener,noreferrer')
+    }
+  }
+
+  if (loading || banners.length === 0) {
+    return null
   }
 
   return (
@@ -78,10 +74,15 @@ export default function Banner() {
             <SwiperSlide key={banner.id}>
               <div
                 className={styles.bannerCard}
-                style={{ backgroundColor: banner.backgroundColor }}
+                onClick={() => handleBannerClick(banner.linkUrl)}
               >
-                <h3 className={styles.bannerTitle}>{banner.title}</h3>
-                <p className={styles.bannerDescription}>{banner.description}</p>
+                {banner.imageUrl && (
+                  <img
+                    src={banner.imageUrl}
+                    alt={banner.title}
+                    className={styles.bannerImage}
+                  />
+                )}
               </div>
             </SwiperSlide>
           ))}

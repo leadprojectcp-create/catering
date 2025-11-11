@@ -288,7 +288,7 @@ export default function StoreManagement() {
 
       // Firestore에 모든 변경사항 저장
       const storeRef = doc(db, 'stores', user.uid)
-      const updateData: any = {
+      const updateData: Record<string, unknown> = {
         ...storeInfo,
         storeImages: finalImages,
         updatedAt: new Date()
