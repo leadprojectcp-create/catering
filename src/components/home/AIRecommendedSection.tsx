@@ -84,9 +84,9 @@ export default function AIRecommendedSection() {
           <div
             ref={sliderRef}
             className={styles.slider}
-            style={{
+            style={!isMobile ? {
               transform: `translateX(-${currentIndex * slideDistance}px)`,
-            }}
+            } : undefined}
           >
             {categories.map((category) => (
               <div
@@ -102,6 +102,12 @@ export default function AIRecommendedSection() {
                     height={340}
                     className={styles.image}
                   />
+                  <div className={styles.overlay}>
+                    <div className={styles.textContent}>
+                      <p className={styles.description}>{category.description}</p>
+                      <h3 className={styles.name}>{category.name}</h3>
+                    </div>
+                  </div>
                 </div>
               </div>
             ))}

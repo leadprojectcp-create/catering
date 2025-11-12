@@ -9,6 +9,7 @@ import type { AIRecommendedCategory } from '@/lib/services/aiCategoryService'
 import Image from 'next/image'
 import Loading from '@/components/Loading'
 import LocationSettingModal from '@/components/home/LocationSettingModal'
+import OptimizedImage from '@/components/common/OptimizedImage'
 import { useAuth } from '@/contexts/AuthContext'
 import styles from './AICategoryProductList.module.css'
 import { calculateDistance, getUserLocation, formatDistance } from '@/lib/utils/distance'
@@ -498,63 +499,110 @@ export default function AICategoryProductList({ categoryId }: Props) {
             return (
               <div
                 key={product.id}
-                className={styles.card}
+                className={styles.cardWrapper}
                 onClick={() => handleProductClick(product)}
               >
-                <div className={styles.imageWrapper}>
-                  {imageUrl ? (
-                    <Image
-                      src={imageUrl}
-                      alt={product.name}
-                      fill
-                      className={styles.image}
-                      style={{ objectFit: 'cover' }}
-                      priority
-                      sizes="(max-width: 768px) 50vw, 300px"
-                      quality={85}
-                    />
-                  ) : (
-                    <div className={styles.placeholderImage}>
-                      <span>이미지 없음</span>
+                <div className={styles.card}>
+                  <div className={styles.imageWrapper}>
+                    {imageUrl ? (
+                      <OptimizedImage
+                        src={imageUrl}
+                        alt={product.name}
+                        fill
+                        className={styles.image}
+                        sizes="(max-width: 768px) 120px, 195px"
+                      />
+                    ) : (
+                      <div className={styles.placeholderImage}>
+                        <span>이미지 없음</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className={styles.info}>
+                    {product.storeName && (
+                      <div className={styles.storeName}>
+                        {product.storeName}
+                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M4.5 2L8.5 6L4.5 10" stroke="#999" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </div>
+                    )}
+
+                    {/* 거리 표시 */}
+                    {product.distance !== undefined && (
+                      <div className={styles.distanceWrapper}>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
+                          <path d="M8.00065 1.3335C5.42065 1.3335 3.33398 3.42016 3.33398 6.00016C3.33398 9.50016 8.00065 14.6668 8.00065 14.6668C8.00065 14.6668 12.6673 9.50016 12.6673 6.00016C12.6673 3.42016 10.5807 1.3335 8.00065 1.3335ZM8.00065 7.66683C7.55862 7.66683 7.1347 7.49123 6.82214 7.17867C6.50958 6.86611 6.33398 6.44219 6.33398 6.00016C6.33398 5.55814 6.50958 5.13421 6.82214 4.82165C7.1347 4.50909 7.55862 4.3335 8.00065 4.3335C8.44268 4.3335 8.8666 4.50909 9.17916 4.82165C9.49172 5.13421 9.66732 5.55814 9.66732 6.00016C9.66732 6.44219 9.49172 6.86611 9.17916 7.17867C8.8666 7.49123 8.44268 7.66683 8.00065 7.66683Z" fill="#4E5968"/>
+                        </svg>
+                        <span className={styles.storeDistance}>
+                          내 위치에서 {formatDistance(product.distance)}
+                        </span>
+                      </div>
+                    )}
+
+                    <h3 className={styles.productName}>{product.name}</h3>
+
+                    {/* 가격 정보 - 모바일/데스크톱 모두 표시 */}
+                    {validDiscount && product.discountedPrice ? (
+                      <div className={styles.priceSection}>
+                        <span className={styles.originalPrice}>{product.price.toLocaleString()}원</span>
+                        <span className={styles.discountedPrice}>{product.discountedPrice?.toLocaleString()}원</span>
+                        <span className={styles.discountPercent}>{product.discount!.discountPercent}%</span>
+                      </div>
+                    ) : (
+                      <span className={styles.regularPrice}>{product.price.toLocaleString()}원</span>
+                    )}
+
+                    {/* 데스크톱 전용 정보 */}
+                    <div className={styles.desktopOnly}>
+                      {/* 주문 가능 수량 */}
+                      {product.quantityRanges && product.quantityRanges.length > 0 && (
+                        <div className={styles.orderQuantity}>
+                          최소 {product.quantityRanges[0].minQuantity}개 ~ 최대 {product.quantityRanges[product.quantityRanges.length - 1].maxQuantity}개 주문가능
+                        </div>
+                      )}
+
+                      {/* 주문일 정보 */}
+                      {product.quantityRanges && product.quantityRanges.length > 0 && !(product.quantityRanges[0].daysBeforeOrder === 0 && product.quantityRanges[product.quantityRanges.length - 1].daysBeforeOrder === 0) && (
+                        <div className={styles.minOrderDays}>
+                          {product.quantityRanges[0].daysBeforeOrder === product.quantityRanges[product.quantityRanges.length - 1].daysBeforeOrder
+                            ? `${product.quantityRanges[0].daysBeforeOrder}일 전 주문 가능`
+                            : `${product.quantityRanges[0].daysBeforeOrder}일 ~ ${product.quantityRanges[product.quantityRanges.length - 1].daysBeforeOrder}일 전 주문 가능`}
+                        </div>
+                      )}
+
+                      {/* 별점 정보 */}
+                      {product.reviewCount !== undefined && (
+                        <div className={styles.rating}>
+                          <Image
+                            src="/icons/star.png"
+                            alt="별점"
+                            width={16}
+                            height={16}
+                            className={styles.starIcon}
+                          />
+                          <span className={styles.ratingScore}>
+                            {product.averageRating?.toFixed(1) || '0.0'}
+                          </span>
+                          <span className={styles.reviewCount}>
+                            ({product.reviewCount?.toLocaleString() || '0'})
+                          </span>
+                        </div>
+                      )}
+
+                      {/* 추가 설정 - PC용 */}
+                      <div className={styles.badgeContainerDesktop}>
+                        {product.additionalSettings?.map((setting, idx) => (
+                          <span key={idx} className={styles.settingBadge}>{setting}</span>
+                        ))}
+                      </div>
                     </div>
-                  )}
+                  </div>
                 </div>
 
-                <div className={styles.info}>
-                  {product.storeName && (
-                    <div className={styles.storeName}>
-                      {product.storeName}
-                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M4.5 2L8.5 6L4.5 10" stroke="#999" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                    </div>
-                  )}
-
-                  {/* 거리 표시 */}
-                  {product.distance !== undefined && (
-                    <div className={styles.distanceWrapper}>
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
-                        <path d="M8.00065 1.3335C5.42065 1.3335 3.33398 3.42016 3.33398 6.00016C3.33398 9.50016 8.00065 14.6668 8.00065 14.6668C8.00065 14.6668 12.6673 9.50016 12.6673 6.00016C12.6673 3.42016 10.5807 1.3335 8.00065 1.3335ZM8.00065 7.66683C7.55862 7.66683 7.1347 7.49123 6.82214 7.17867C6.50958 6.86611 6.33398 6.44219 6.33398 6.00016C6.33398 5.55814 6.50958 5.13421 6.82214 4.82165C7.1347 4.50909 7.55862 4.3335 8.00065 4.3335C8.44268 4.3335 8.8666 4.50909 9.17916 4.82165C9.49172 5.13421 9.66732 5.55814 9.66732 6.00016C9.66732 6.44219 9.49172 6.86611 9.17916 7.17867C8.8666 7.49123 8.44268 7.66683 8.00065 7.66683Z" fill="#4E5968"/>
-                      </svg>
-                      <span className={styles.storeDistance}>
-                        내 위치에서 {formatDistance(product.distance)}
-                      </span>
-                    </div>
-                  )}
-
-                  <h3 className={styles.productName}>{product.name}</h3>
-
-                  {/* 가격 정보 */}
-                  {validDiscount && product.discountedPrice ? (
-                    <div className={styles.priceSection}>
-                      <span className={styles.originalPrice}>{product.price.toLocaleString()}원</span>
-                      <span className={styles.discountedPrice}>{product.discountedPrice?.toLocaleString()}원</span>
-                      <span className={styles.discountPercent}>{product.discount!.discountPercent}%</span>
-                    </div>
-                  ) : (
-                    <span className={styles.regularPrice}>{product.price.toLocaleString()}원</span>
-                  )}
-
+                {/* 모바일에서는 카드 밖으로 정보 표시 */}
+                <div className={styles.mobileInfo}>
                   {/* 주문 가능 수량 */}
                   {product.quantityRanges && product.quantityRanges.length > 0 && (
                     <div className={styles.orderQuantity}>
@@ -571,37 +619,33 @@ export default function AICategoryProductList({ categoryId }: Props) {
                     </div>
                   )}
 
-                  {/* 별점 정보 */}
-                  {product.reviewCount !== undefined && (
-                    <div className={styles.rating}>
-                      <Image
-                        src="/icons/star.png"
-                        alt="별점"
-                        width={16}
-                        height={16}
-                        className={styles.starIcon}
-                      />
-                      <span className={styles.ratingScore}>
-                        {product.averageRating?.toFixed(1) || '0.0'}
-                      </span>
-                      <span className={styles.reviewCount}>
-                        ({product.reviewCount?.toLocaleString() || '0'})
-                      </span>
+                  {/* 별점과 배지를 한 줄로 */}
+                  <div className={styles.ratingBadgeRow}>
+                    {/* 별점 정보 - 왼쪽 정렬 */}
+                    {product.reviewCount !== undefined && (
+                      <div className={styles.rating}>
+                        <Image
+                          src="/icons/star.png"
+                          alt="별점"
+                          width={16}
+                          height={16}
+                          className={styles.starIcon}
+                        />
+                        <span className={styles.ratingScore}>
+                          {product.averageRating?.toFixed(1) || '0.0'}
+                        </span>
+                        <span className={styles.reviewCount}>
+                          ({product.reviewCount?.toLocaleString() || '0'})
+                        </span>
+                      </div>
+                    )}
+
+                    {/* 추가 설정 - 오른쪽 정렬 */}
+                    <div className={styles.badgeContainerMobile}>
+                      {product.additionalSettings?.map((setting, idx) => (
+                        <span key={idx} className={styles.settingBadge}>{setting}</span>
+                      ))}
                     </div>
-                  )}
-
-                  {/* 추가 설정 - PC용 */}
-                  <div className={styles.badgeContainerDesktop}>
-                    {product.additionalSettings?.map((setting, idx) => (
-                      <span key={idx} className={styles.settingBadge}>{setting}</span>
-                    ))}
-                  </div>
-
-                  {/* 추가 설정 - 모바일용 */}
-                  <div className={styles.badgeContainerMobile}>
-                    {product.additionalSettings?.map((setting, idx) => (
-                      <span key={idx} className={styles.settingBadge}>{setting}</span>
-                    ))}
                   </div>
                 </div>
               </div>

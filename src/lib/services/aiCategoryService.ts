@@ -19,6 +19,7 @@ export interface AIRecommendedCategory {
   description: string
   imageUrl: string
   productIds: string[]
+  productReasons?: { [productId: string]: string } // 각 상품별 추천 이유
   createdBy: string
   createdAt: Timestamp
   prompt: string

@@ -25,6 +25,7 @@ export default function AICategoryCreator() {
   )
   const [summary, setSummary] = useState('')
   const [selectedProductIds, setSelectedProductIds] = useState<string[]>([])
+  const [productReasons, setProductReasons] = useState<{ [key: string]: string }>({})
 
   // 카테고리 정보
   const [categoryName, setCategoryName] = useState('')
@@ -66,6 +67,13 @@ export default function AICategoryCreator() {
       setRecommendations(data.products)
       setSummary(data.summary)
       setCategoryDescription(data.summary) // 자동으로 설명 채우기
+
+      // productReasons 매핑 생성
+      const reasons: { [key: string]: string } = {}
+      data.products.forEach((product: RecommendedProduct) => {
+        reasons[product.id] = product.recommendationReason
+      })
+      setProductReasons(reasons)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'AI 추천 중 오류 발생')
     } finally {
@@ -122,11 +130,20 @@ export default function AICategoryCreator() {
     setSuccess('')
 
     try {
+      // 선택된 상품들의 추천 이유만 포함
+      const selectedReasons: { [key: string]: string } = {}
+      selectedProductIds.forEach(id => {
+        if (productReasons[id]) {
+          selectedReasons[id] = productReasons[id]
+        }
+      })
+
       await createAICategory(
         {
           name: categoryName,
           description: categoryDescription,
           productIds: selectedProductIds,
+          productReasons: selectedReasons,
           createdBy: user.uid,
           prompt: prompt,
           isActive: true,
@@ -142,6 +159,7 @@ export default function AICategoryCreator() {
       setRecommendations([])
       setSummary('')
       setSelectedProductIds([])
+      setProductReasons({})
       setCategoryName('')
       setCategoryDescription('')
       setImageFile(null)
@@ -216,8 +234,8 @@ export default function AICategoryCreator() {
                     <OptimizedImage
                       src={product.imageUrl}
                       alt={product.name}
-                      width={100}
-                      height={100}
+                      fill
+                      sizes="100px"
                     />
                   ) : (
                     <div className={styles.noImage}>이미지 없음</div>

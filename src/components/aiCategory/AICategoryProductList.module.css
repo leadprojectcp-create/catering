@@ -206,15 +206,27 @@
   gap: 16px;
 }
 
+.cardWrapper {
+  width: 100%;
+  cursor: pointer;
+}
+
 .card {
   display: flex;
   flex-direction: row;
   width: 100%;
   background: white;
-  cursor: pointer;
   border: none;
   padding: 0;
   gap: 16px;
+}
+
+.desktopOnly {
+  display: contents;
+}
+
+.mobileInfo {
+  display: none;
 }
 
 .imageWrapper {
@@ -438,20 +450,51 @@
   .productGrid {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 24px;
+  }
+
+  .cardWrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
   }
 
   .card {
     display: flex;
     flex-direction: row;
     width: 100%;
-    gap: 12px;
+    gap: 8px;
   }
 
   .imageWrapper {
-    width: 195px;
-    height: 195px;
+    width: 120px;
+    height: 120px;
     flex-shrink: 0;
+  }
+
+  .info {
+    height: 120px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 0;
+  }
+
+  .desktopOnly {
+    display: none;
+  }
+
+  .mobileInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .ratingBadgeRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
   }
 
   .badgeContainerDesktop {
@@ -460,8 +503,8 @@
 
   .badgeContainerMobile {
     display: flex;
-    width: 100%;
     gap: 6px;
     flex-wrap: wrap;
+    justify-content: flex-end;
   }
 }
