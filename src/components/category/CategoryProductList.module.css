@@ -52,12 +52,88 @@
 }
 
 
+.countRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
 .count {
   color: #333;
   font-size: 16px;
   font-weight: 700;
-  margin: 0 0 24px 0;
+  margin: 0;
   white-space: nowrap;
+}
+
+.sortDropdown {
+  position: relative;
+}
+
+.sortButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: white;
+  border: 1px solid #DDD;
+  border-radius: 8px;
+  color: #333;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.sortButton:hover {
+  border-color: #025BD9;
+  background: #F8FAFB;
+}
+
+.sortButton svg {
+  transition: transform 0.2s;
+}
+
+.sortButton.open svg {
+  transform: rotate(180deg);
+}
+
+.sortMenu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 160px;
+  background: white;
+  border: 1px solid #DDD;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  z-index: 100;
+}
+
+.sortMenuItem {
+  display: block;
+  width: 100%;
+  padding: 12px 16px;
+  background: white;
+  border: none;
+  text-align: left;
+  color: #333;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.sortMenuItem:hover {
+  background: #F8FAFB;
+}
+
+.sortMenuItem.active {
+  color: #025BD9;
+  font-weight: 600;
+  background: #F0F6FF;
 }
 
 .searchWrapper {

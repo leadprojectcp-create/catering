@@ -16,6 +16,7 @@ const getPageTitle = (path: string): string => {
     const categoryName = decodeURIComponent(path.split('/category/')[1])
     return categoryName
   }
+  if (path.startsWith('/ai-category/')) return '단모 pick'
   if (path === '/cart') return '장바구니'
   if (path === '/wishlist') return '찜'
   if (path === '/chat') return '채팅'

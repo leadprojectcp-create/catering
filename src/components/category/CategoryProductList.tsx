@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useMemo } from 'react'
+import React, { useState, useEffect, useMemo, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { collection, getDocs, query, where, doc, getDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
@@ -10,6 +10,7 @@ import LocationSettingModal from '@/components/home/LocationSettingModal'
 import { useAuth } from '@/contexts/AuthContext'
 import styles from './CategoryProductList.module.css'
 import { calculateDistance, getUserLocation, formatDistance } from '@/lib/utils/distance'
+import { useProductSort, SORT_OPTIONS, SORT_LABELS, type SortOption } from './useCategoryProductSort'
 
 // 카테고리 아이콘 매핑
 const categoryIcons: { [key: string]: string } = {
@@ -71,6 +72,9 @@ export default function CategoryProductList({ categoryName }: CategoryProductLis
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false)
   const [userLocation, setUserLocation] = useState<string | null>(null)
   const [userCoordinates, setUserCoordinates] = useState<{ latitude: number; longitude: number } | null>(null)
+  const [sortOption, setSortOption] = useState<SortOption>('recommended')
+  const [isSortMenuOpen, setIsSortMenuOpen] = useState(false)
+  const sortDropdownRef = useRef<HTMLDivElement>(null)
 
   // 사용자 위치 정보 로드
   useEffect(() => {
@@ -354,6 +358,31 @@ export default function CategoryProductList({ categoryName }: CategoryProductLis
     )
   }, [products, searchQuery])
 
+  // 정렬 적용
+  const sortedProducts = useProductSort(filteredProducts, sortOption)
+
+  // 드롭다운 외부 클릭 감지
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (sortDropdownRef.current && !sortDropdownRef.current.contains(event.target as Node)) {
+        setIsSortMenuOpen(false)
+      }
+    }
+
+    if (isSortMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [isSortMenuOpen])
+
+  // 정렬 옵션 변경 핸들러
+  const handleSortChange = (option: SortOption) => {
+    setSortOption(option)
+    setIsSortMenuOpen(false)
+  }
+
   if (isLoading) {
     return <Loading />
   }
@@ -449,15 +478,46 @@ export default function CategoryProductList({ categoryName }: CategoryProductLis
         </div>
       </div>
 
-      <p className={styles.count}>총 {filteredProducts.length}개의 상품</p>
+      <div className={styles.countRow}>
+        <p className={styles.count}>총 {filteredProducts.length}개의 상품</p>
 
-      {filteredProducts.length === 0 ? (
+        {/* 정렬 드롭다운 */}
+        <div className={styles.sortDropdown} ref={sortDropdownRef}>
+          <button
+            className={`${styles.sortButton} ${isSortMenuOpen ? styles.open : ''}`}
+            onClick={() => setIsSortMenuOpen(!isSortMenuOpen)}
+            type="button"
+          >
+            <span>{SORT_LABELS[sortOption]}</span>
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M3 4.5L6 7.5L9 4.5" stroke="#333" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
+
+          {isSortMenuOpen && (
+            <div className={styles.sortMenu}>
+              {SORT_OPTIONS.map((option) => (
+                <button
+                  key={option}
+                  className={`${styles.sortMenuItem} ${sortOption === option ? styles.active : ''}`}
+                  onClick={() => handleSortChange(option)}
+                  type="button"
+                >
+                  {SORT_LABELS[option]}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {sortedProducts.length === 0 ? (
         <div className={styles.emptyState}>
           {searchQuery ? '검색 결과가 없습니다.' : `${categoryName} 카테고리에 등록된 상품이 없습니다.`}
         </div>
       ) : (
         <div className={styles.productGrid}>
-          {filteredProducts.map((product) => {
+          {sortedProducts.map((product) => {
             const imageUrl = product.images && product.images.length > 0 ? product.images[0] : ''
 
             return (

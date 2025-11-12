@@ -123,7 +123,9 @@ const fetchReviews = async (productId: string): Promise<Review[]> => {
         rating: data.rating,
         content: data.content,
         images: data.images || [],
-        createdAt: data.createdAt?.toDate() || new Date(),
+        createdAt: typeof data.createdAt === 'string'
+          ? new Date(data.createdAt)
+          : data.createdAt?.toDate?.() || new Date(),
         reply: data.reply ? {
           content: data.reply.content,
           createdAt: typeof data.reply.createdAt === 'string'
