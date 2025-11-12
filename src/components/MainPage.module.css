@@ -5,3 +5,53 @@
   max-width: 1280px;
   margin: 0 auto;
 }
+
+/* 위치 설정 바 */
+.locationBar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.locationButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-size: 15px;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.2s;
+  width: 100%;
+  max-width: 400px;
+}
+
+.locationButton:hover {
+  background: #f8f9fa;
+  border-color: #4E7FFF;
+}
+
+.locationButton span {
+  flex: 1;
+  text-align: left;
+  font-weight: 500;
+}
+
+.locationButton svg:first-child {
+  color: #4E7FFF;
+}
+
+.locationButton svg:last-child {
+  color: #999;
+}
+
+@media (max-width: 768px) {
+  .locationButton {
+    font-size: 14px;
+    padding: 8px 12px;
+    max-width: 100%;
+  }
+}

@@ -9,11 +9,14 @@ import StoreList from './home/StoreList'
 import CategorySelector from './home/CategorySelector'
 import AIRecommendedSection from './home/AIRecommendedSection'
 import PopupModal from './common/PopupModal'
+import LocationSettingModal from './home/LocationSettingModal'
 import Loading from './Loading'
 import styles from './MainPage.module.css'
 
 export default function MainPage() {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([])
+  const [isLocationModalOpen, setIsLocationModalOpen] = useState(false)
+  const [userLocation, setUserLocation] = useState<string | null>(null)
   const { user, userData, loading } = useAuth()
   const router = useRouter()
 
@@ -22,6 +25,11 @@ export default function MainPage() {
     if (!loading && user && userData && !userData.registrationComplete) {
       console.log('[MainPage] 가입 미완료 사용자 - /signup/choose-type으로 리다이렉트')
       router.push('/signup/choose-type')
+    }
+
+    // 사용자 위치 정보 로드
+    if (userData?.location) {
+      setUserLocation(userData.location.roadAddress || userData.location.address)
     }
   }, [user, userData, loading, router])
 
@@ -46,6 +54,20 @@ export default function MainPage() {
     <div className={styles.container}>
       {/* 팝업 모달 */}
       <PopupModal targetType="user" />
+
+      {/* 위치 설정 모달 (버튼 포함) */}
+      {user && (
+        <LocationSettingModal
+          isOpen={isLocationModalOpen}
+          onClose={() => setIsLocationModalOpen(false)}
+          onLocationSet={(location) => {
+            setUserLocation(location.address)
+            setIsLocationModalOpen(false)
+          }}
+          onOpenModal={() => setIsLocationModalOpen(true)}
+          currentLocation={userLocation}
+        />
+      )}
 
       {/* 메인 컨텐츠 영역 */}
       <main className={styles.main}>

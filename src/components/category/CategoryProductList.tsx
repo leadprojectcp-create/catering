@@ -6,6 +6,8 @@ import { collection, getDocs, query, where, doc, getDoc } from 'firebase/firesto
 import { db } from '@/lib/firebase'
 import Image from 'next/image'
 import Loading from '@/components/Loading'
+import LocationSettingModal from '@/components/home/LocationSettingModal'
+import { useAuth } from '@/contexts/AuthContext'
 import styles from './CategoryProductList.module.css'
 import { calculateDistance, getUserLocation, formatDistance } from '@/lib/utils/distance'
 
@@ -61,10 +63,57 @@ interface CategoryProductListProps {
 
 export default function CategoryProductList({ categoryName }: CategoryProductListProps) {
   const router = useRouter()
+  const { user, userData } = useAuth()
   const [products, setProducts] = useState<Product[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [searchInput, setSearchInput] = useState('')
+  const [isLocationModalOpen, setIsLocationModalOpen] = useState(false)
+  const [userLocation, setUserLocation] = useState<string | null>(null)
+  const [userCoordinates, setUserCoordinates] = useState<{ latitude: number; longitude: number } | null>(null)
+
+  // 사용자 위치 정보 로드
+  useEffect(() => {
+    if (userData?.location) {
+      setUserLocation(userData.location.roadAddress || userData.location.address)
+      if (userData.location.latitude && userData.location.longitude) {
+        setUserCoordinates({
+          latitude: userData.location.latitude,
+          longitude: userData.location.longitude
+        })
+      }
+    }
+  }, [userData])
+
+  // 사용자 위치가 변경되면 상품 거리 재계산
+  useEffect(() => {
+    if (userCoordinates && products.length > 0) {
+      const updatedProducts = products.map(product => {
+        if (product.storeLatitude && product.storeLongitude) {
+          const distance = calculateDistance(
+            userCoordinates.latitude,
+            userCoordinates.longitude,
+            product.storeLatitude,
+            product.storeLongitude
+          )
+          return { ...product, distance }
+        }
+        return product
+      })
+
+      // 거리순으로 재정렬
+      const sortedProducts = updatedProducts.sort((a, b) => {
+        if (a.distance !== undefined && b.distance === undefined) return -1
+        if (a.distance === undefined && b.distance !== undefined) return 1
+        if (a.distance !== undefined && b.distance !== undefined) {
+          return a.distance - b.distance
+        }
+        return 0
+      })
+
+      setProducts(sortedProducts)
+    }
+  }, [userCoordinates])
 
   // 할인 기간이 유효한지 체크하는 함수
   const isDiscountValid = (product: Product) => {
@@ -115,10 +164,64 @@ export default function CategoryProductList({ categoryName }: CategoryProductLis
 
         console.log('active 상품 수:', productData.length)
 
-        // 사용자 위치 가져오기
-        const userLocation = getUserLocation()
+        // 사용자 위치 가져오기 - DB 우선
+        let userLocation: { latitude: number; longitude: number } | null = null
+
+        // 1순위: DB에 저장된 위치 (userData)
+        if (userData?.location?.latitude && userData?.location?.longitude) {
+          userLocation = {
+            latitude: userData.location.latitude,
+            longitude: userData.location.longitude,
+          }
+          console.log('[DB] DB에서 위치 정보 가져오기 성공:', userLocation)
+        }
+        // 2순위: 로컬/앱에 저장된 위치
+        else {
+          userLocation = getUserLocation()
+        }
+
         console.log('=== 사용자 위치 정보 ===')
         console.log('사용자 위치:', userLocation)
+
+        // 모바일 기기인지 확인
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
+        console.log('[Device] 모바일 기기:', isMobile)
+
+        // DB나 앱에서 위치를 못 가져왔고, 모바일 기기이고, 브라우저 Geolocation API가 지원되는 경우 (모바일 웹만)
+        if (!userLocation && isMobile && typeof window !== 'undefined' && navigator.geolocation) {
+          console.log('[Browser] 모바일 웹 - 브라우저 위치 정보 요청 중...')
+          try {
+            const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+              navigator.geolocation.getCurrentPosition(
+                resolve,
+                reject,
+                {
+                  enableHighAccuracy: true, // GPS 우선
+                  timeout: 15000,
+                  maximumAge: 300000, // 5분 캐시
+                }
+              )
+            })
+
+            userLocation = {
+              latitude: position.coords.latitude,
+              longitude: position.coords.longitude,
+            }
+            console.log('[Browser] 위치 정보 가져오기 성공:', userLocation)
+
+            // 로컬 스토리지에 저장
+            try {
+              localStorage.setItem('userLocation', JSON.stringify(userLocation))
+            } catch (e) {
+              console.error('[Browser] localStorage 저장 실패:', e)
+            }
+          } catch (error) {
+            console.error('[Browser] 위치 정보 가져오기 실패:', error)
+          }
+        } else if (!userLocation && !isMobile) {
+          console.log('[Browser] PC 웹 - 위치 기반 사용 안 함 (랜덤 정렬)')
+        }
+
         if (userLocation) {
           console.log('사용자 위도 (latitude):', userLocation.latitude)
           console.log('사용자 경도 (longitude):', userLocation.longitude)
@@ -219,7 +322,7 @@ export default function CategoryProductList({ categoryName }: CategoryProductLis
     }
 
     fetchProducts()
-  }, [categoryName])
+  }, [categoryName, userData])
 
   // 카테고리 아이콘 가져오기 (❤️, ⚡ 제거한 이름으로)
   const cleanCategoryName = categoryName.replace(/[❤️⚡]/g, '')
@@ -257,23 +360,58 @@ export default function CategoryProductList({ categoryName }: CategoryProductLis
 
   return (
     <div className={styles.container}>
-      <div className={styles.titleWrapper}>
-        {categoryIcon && (
-          <Image
-            src={categoryIcon}
-            alt={categoryName}
-            width={35}
-            height={35}
-            className={styles.titleIcon}
-          />
-        )}
-        <h2 className={styles.title}>{categoryName}</h2>
-      </div>
+      <div className={styles.headerSection}>
+        <div className={styles.titleWrapper}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            {categoryIcon && (
+              <Image
+                src={categoryIcon}
+                alt={categoryName}
+                width={35}
+                height={35}
+                className={styles.titleIcon}
+              />
+            )}
+            <h2 className={styles.title}>{categoryName}</h2>
+          </div>
 
-      <div className={styles.filterSection}>
-        <p className={styles.count}>총 {filteredProducts.length}개의 상품</p>
+          {/* 위치 설정 버튼 - 모바일에서는 titleWrapper 내부에 */}
+          {user && (
+            <div className={styles.locationButtonWrapper}>
+              <LocationSettingModal
+                isOpen={isLocationModalOpen}
+                onClose={() => setIsLocationModalOpen(false)}
+                onLocationSet={(location) => {
+                  setUserLocation(location.address)
+                  setIsLocationModalOpen(false)
+                }}
+                onOpenModal={() => setIsLocationModalOpen(true)}
+                currentLocation={userLocation}
+                inline={true}
+              />
+            </div>
+          )}
+        </div>
 
-        <div className={styles.searchWrapper}>
+        <div className={styles.filterSection}>
+          {/* 위치 설정 버튼 - 데스크톱에서는 filterSection 내부에 */}
+          {user && (
+            <div className={styles.locationButtonWrapperDesktop}>
+              <LocationSettingModal
+                isOpen={isLocationModalOpen}
+                onClose={() => setIsLocationModalOpen(false)}
+                onLocationSet={(location) => {
+                  setUserLocation(location.address)
+                  setIsLocationModalOpen(false)
+                }}
+                onOpenModal={() => setIsLocationModalOpen(true)}
+                currentLocation={userLocation}
+                inline={true}
+              />
+            </div>
+          )}
+
+          <div className={styles.searchWrapper}>
           <input
             type="text"
             placeholder="원하는 상품을 검색해보세요"
@@ -307,8 +445,11 @@ export default function CategoryProductList({ categoryName }: CategoryProductLis
               className={styles.searchIcon}
             />
           </button>
+          </div>
         </div>
       </div>
+
+      <p className={styles.count}>총 {filteredProducts.length}개의 상품</p>
 
       {filteredProducts.length === 0 ? (
         <div className={styles.emptyState}>
@@ -348,16 +489,24 @@ export default function CategoryProductList({ categoryName }: CategoryProductLis
                   {product.storeName && (
                     <div className={styles.storeName}>
                       {product.storeName}
-                      {product.distance !== undefined && (
-                        <span style={{ marginLeft: '6px', color: '#0066FF', fontSize: '12px', fontWeight: '500' }}>
-                          ({formatDistance(product.distance)})
-                        </span>
-                      )}
                       <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M4.5 2L8.5 6L4.5 10" stroke="#999" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                       </svg>
                     </div>
                   )}
+
+                  {/* 거리 표시 */}
+                  {product.distance !== undefined && (
+                    <div className={styles.distanceWrapper}>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M8.00065 1.3335C5.42065 1.3335 3.33398 3.42016 3.33398 6.00016C3.33398 9.50016 8.00065 14.6668 8.00065 14.6668C8.00065 14.6668 12.6673 9.50016 12.6673 6.00016C12.6673 3.42016 10.5807 1.3335 8.00065 1.3335ZM8.00065 7.66683C7.55862 7.66683 7.1347 7.49123 6.82214 7.17867C6.50958 6.86611 6.33398 6.44219 6.33398 6.00016C6.33398 5.55814 6.50958 5.13421 6.82214 4.82165C7.1347 4.50909 7.55862 4.3335 8.00065 4.3335C8.44268 4.3335 8.8666 4.50909 9.17916 4.82165C9.49172 5.13421 9.66732 5.55814 9.66732 6.00016C9.66732 6.44219 9.49172 6.86611 9.17916 7.17867C8.8666 7.49123 8.44268 7.66683 8.00065 7.66683Z" fill="#4E5968"/>
+                      </svg>
+                      <span className={styles.storeDistance}>
+                        내 위치에서 {formatDistance(product.distance)}
+                      </span>
+                    </div>
+                  )}
+
                   <h3 className={styles.productName}>{product.name}</h3>
 
                   {/* 가격 정보 */}

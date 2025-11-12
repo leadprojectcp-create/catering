@@ -123,6 +123,11 @@ env:
     availability:
       - BUILD
       - RUNTIME
+  - variable: NEXT_PUBLIC_KAKAO_REST_API_KEY
+    value: 37cf41ba90f15f5f8bbab2a88fa6ea49
+    availability:
+      - BUILD
+      - RUNTIME
 
   # Aligo SMS Configuration
   - variable: ALIGO_API_KEY

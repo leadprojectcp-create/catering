@@ -3,10 +3,26 @@
   margin: 0 auto;
 }
 
+.headerSection {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  gap: 20px;
+}
+
 .titleWrapper {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.locationButtonWrapper {
+  display: none;
+}
+
+.locationButtonWrapperDesktop {
+  display: block;
 }
 
 .titleIcon {
@@ -32,16 +48,15 @@
 .filterSection {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin: 20px 0 24px 0;
-  gap: 20px;
+  gap: 12px;
 }
+
 
 .count {
   color: #333;
   font-size: 16px;
   font-weight: 700;
-  margin: 0;
+  margin: 0 0 24px 0;
   white-space: nowrap;
 }
 
@@ -168,6 +183,19 @@
   margin: 0;
 }
 
+.distanceWrapper {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0;
+}
+
+.storeDistance {
+  color: #4E5968;
+  font-size: 13px;
+  font-weight: 600;
+}
+
 .productName {
   color: #333;
   font-size: 14px;
@@ -285,9 +313,32 @@
 }
 
 @media (max-width: 768px) {
-  .filterSection {
+  .headerSection {
     flex-direction: column;
     align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .titleWrapper {
+    width: 100%;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .locationButtonWrapper {
+    display: block;
+    width: 100%;
+  }
+
+  .locationButtonWrapperDesktop {
+    display: none;
+  }
+
+  .filterSection {
+    width: 100%;
+    flex-direction: column;
     gap: 12px;
   }
 
@@ -320,9 +371,5 @@
     width: 100%;
     gap: 6px;
     flex-wrap: wrap;
-  }
-
-  .title {
-    font-size: 24px;
   }
 }

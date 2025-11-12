@@ -7,6 +7,7 @@ import { collection, query, where, orderBy, limit, getDocs, Timestamp, onSnapsho
 import { db, realtimeDb } from '@/lib/firebase'
 import { ref as rtdbRef, onValue as rtdbOnValue } from 'firebase/database'
 import { getPublishedNotices, Notice } from '@/lib/services/noticeService'
+import { getCommissionConfig, calculateFeeRate, CommissionConfig } from '@/lib/commission'
 import Loading from '@/components/Loading'
 import PopupModal from '@/components/common/PopupModal'
 import { ShoppingBag, Star, TrendingUp, Clock, AlertCircle, DollarSign, Package, MessageSquare, MessageCircle, HelpCircle, Bell } from 'lucide-react'
@@ -774,12 +775,15 @@ export default function PartnerDashboard() {
           return createdTime >= monthStartTime
         })
 
+        // 수수료 설정 가져오기
+        const commissionConfig = await getCommissionConfig()
+
         // 정산 금액 계산
         monthCompletedOrders.forEach((doc, index) => {
           const order = doc.data()
           const orderNumber = index + 1
           const totalProductPrice = order.totalProductPrice || 0
-          const feeRate = orderNumber <= 5 ? 0.034 : 0.13
+          const feeRate = calculateFeeRate(orderNumber, commissionConfig)
           const fee = totalProductPrice * feeRate
           const settlementAmount = totalProductPrice - fee
           monthSettlement += settlementAmount

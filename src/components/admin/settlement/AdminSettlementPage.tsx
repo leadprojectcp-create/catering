@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { db } from '@/lib/firebase'
 import { collection, query, where, getDocs, doc, writeBatch, serverTimestamp } from 'firebase/firestore'
+import { getCommissionConfig, calculateFeeRate, CommissionConfig } from '@/lib/commission'
 import styles from './AdminSettlementPage.module.css'
 
 interface PartnerSettlement {
@@ -36,15 +37,24 @@ export default function AdminSettlementPage() {
   const [loading, setLoading] = useState(true)
   const [selectedPartner, setSelectedPartner] = useState<PartnerSettlement | null>(null)
   const [processing, setProcessing] = useState(false)
+  const [commissionConfig, setCommissionConfig] = useState<CommissionConfig | null>(null)
 
   useEffect(() => {
-    fetchSettlements()
+    const init = async () => {
+      const config = await getCommissionConfig()
+      setCommissionConfig(config)
+      await fetchSettlements(config)
+    }
+    init()
   }, [])
 
-  const fetchSettlements = async () => {
+  const fetchSettlements = async (config?: CommissionConfig) => {
     try {
       setLoading(true)
       console.log('[AdminSettlement] 정산 데이터 조회 시작')
+
+      // config가 없으면 가져오기
+      const commConfig = config || await getCommissionConfig()
 
       // 1. 모든 완료된 주문 가져오기
       const ordersRef = collection(db, 'orders')
@@ -108,13 +118,13 @@ export default function AdminSettlementPage() {
 
         orders.forEach((order, index) => {
           order.orderIndex = index + 1
-          const feeRate = order.orderIndex <= 5 ? 0.034 : 0.134
+          const feeRate = calculateFeeRate(order.orderIndex, commConfig)
           const fee = order.totalProductPrice * feeRate
           const settlementAmount = order.totalProductPrice - fee
 
           order.fee = fee
           order.settlementAmount = settlementAmount
-          order.feeRate = Math.round(feeRate * 1000) / 10
+          order.feeRate = Math.round(feeRate * 100) // 퍼센트로 표시
 
           totalSales += order.totalProductPrice
           totalFee += fee

@@ -6,6 +6,7 @@ import { db } from '@/lib/firebase'
 import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore'
 import { useRouter } from 'next/navigation'
 import { Calendar } from 'lucide-react'
+import { getCommissionConfig, calculateFeeRate, CommissionConfig } from '@/lib/commission'
 import styles from './SettlementPage.module.css'
 
 interface OrderItem {
@@ -45,16 +46,24 @@ export default function SettlementPage() {
   const [showDatePicker, setShowDatePicker] = useState(false)
   const [currentMonth, setCurrentMonth] = useState(new Date())
   const [selectingStart, setSelectingStart] = useState(true)
+  const [commissionConfig, setCommissionConfig] = useState<CommissionConfig | null>(null)
 
   useEffect(() => {
     console.log('[SettlementPage] useEffect 실행, user:', user)
-    if (user) {
-      fetchOrders()
-      fetchAccount()
-    } else {
-      console.log('[SettlementPage] user가 없습니다')
-      setLoading(false)
+    const init = async () => {
+      // 수수료 설정 로드
+      const config = await getCommissionConfig()
+      setCommissionConfig(config)
+
+      if (user) {
+        fetchOrders()
+        fetchAccount()
+      } else {
+        console.log('[SettlementPage] user가 없습니다')
+        setLoading(false)
+      }
     }
+    init()
   }, [user])
 
   // 초기 날짜 필터 설정 (전체)
@@ -189,12 +198,18 @@ export default function SettlementPage() {
 
   const calculateSettlement = (ordersList: OrderItem[]) => {
     console.log('[SettlementPage] calculateSettlement 시작, ordersList.length:', ordersList.length)
+
+    if (!commissionConfig) {
+      console.log('[SettlementPage] commissionConfig가 아직 로드되지 않음')
+      return
+    }
+
     let totalSettlementAmount = 0
     let totalFeeAmount = 0
 
     ordersList.forEach((order, index) => {
       const orderNumber = index + 1
-      const feeRate = orderNumber <= 5 ? 0.03 : 0.13 // 1-5건: 3%, 6건 이상: 13%
+      const feeRate = calculateFeeRate(orderNumber, commissionConfig)
       const fee = order.totalProductPrice * feeRate
       const settlementAmount = order.totalProductPrice - fee
 
@@ -219,14 +234,26 @@ export default function SettlementPage() {
   }
 
   const calculateOrderSettlement = (order: OrderItem) => {
-    const feeRate = order.orderIndex <= 5 ? 0.03 : 0.13 // orderIndex 사용
+    if (!commissionConfig) {
+      // 기본값 사용
+      const feeRate = order.orderIndex <= 5 ? 0.03 : 0.13
+      const fee = order.totalProductPrice * feeRate
+      const settlementAmount = order.totalProductPrice - fee
+      return {
+        fee,
+        settlementAmount,
+        feeRate: Math.round(feeRate * 100)
+      }
+    }
+
+    const feeRate = calculateFeeRate(order.orderIndex, commissionConfig)
     const fee = order.totalProductPrice * feeRate
     const settlementAmount = order.totalProductPrice - fee
 
     return {
       fee,
       settlementAmount,
-      feeRate: Math.round(feeRate * 100) // 3 또는 13으로 정확히 표시
+      feeRate: Math.round(feeRate * 100) // 퍼센트로 표시
     }
   }
 
