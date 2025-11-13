@@ -220,10 +220,13 @@ export async function POST(request: NextRequest) {
     // FCM 메시지 전송
     const messaging = getAdminMessaging()
 
-    // Data-only 메시지로 전송 (앱에서 알림을 직접 생성)
-    // notification 필드를 제거하고 data만 전송하면 더 확실하게 작동
+    // notification + data 함께 전송 (가장 호환성 좋음)
     const fcmMessage = {
       token: fcmToken,
+      notification: {
+        title: senderName || '새 메시지',
+        body: notificationBody
+      },
       data: {
         roomId: roomId,
         senderId: senderId,
@@ -236,18 +239,28 @@ export async function POST(request: NextRequest) {
       // Android 설정
       android: {
         priority: 'high' as const,
+        notification: {
+          channelId: 'chat_messages',
+          sound: 'default',
+          priority: 'high' as const,
+        }
       },
-      // iOS 설정 (APNS) - content-available: true로 백그라운드에서도 작동
+      // iOS 설정 (APNS) - alert를 포함해야 알림이 표시됨
       apns: {
         payload: {
           aps: {
-            contentAvailable: true,
-            sound: 'default'
+            alert: {
+              title: senderName || '새 메시지',
+              body: notificationBody
+            },
+            sound: 'default',
+            badge: 1,
+            contentAvailable: true
           }
         },
         headers: {
           'apns-priority': '10',
-          'apns-push-type': 'background'
+          'apns-push-type': 'alert'
         }
       }
     }
