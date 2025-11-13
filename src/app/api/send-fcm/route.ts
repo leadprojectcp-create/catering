@@ -220,66 +220,34 @@ export async function POST(request: NextRequest) {
     // FCM 메시지 전송
     const messaging = getAdminMessaging()
 
-    // notification과 data를 함께 보내되, Android/iOS 설정 추가
+    // Data-only 메시지로 전송 (앱에서 알림을 직접 생성)
+    // notification 필드를 제거하고 data만 전송하면 더 확실하게 작동
     const fcmMessage = {
       token: fcmToken,
-      notification: {
-        title: senderName || '새 메시지',
-        body: notificationBody
-      },
       data: {
         roomId: roomId,
         senderId: senderId,
         senderName: senderName || '',
         message: notificationBody,
         type: 'chat',
-        // 알림 제목과 내용을 data에도 포함 (포그라운드 처리용)
-        notificationTitle: senderName || '새 메시지',
-        notificationBody: notificationBody
+        title: senderName || '새 메시지',
+        body: notificationBody
       },
       // Android 설정
       android: {
         priority: 'high' as const,
-        notification: {
-          channelId: 'chat_messages',
-          priority: 'high' as const,
-          defaultSound: true,
-          defaultVibrateTimings: true,
-          sound: 'default',
-          clickAction: 'FLUTTER_NOTIFICATION_CLICK'
-        }
       },
-      // iOS 설정 (APNS)
+      // iOS 설정 (APNS) - content-available: true로 백그라운드에서도 작동
       apns: {
         payload: {
           aps: {
-            alert: {
-              title: senderName || '새 메시지',
-              body: notificationBody
-            },
-            sound: 'default',
-            badge: 1,
             contentAvailable: true,
-            mutableContent: true
+            sound: 'default'
           }
         },
         headers: {
           'apns-priority': '10',
-          'apns-push-type': 'alert'
-        }
-      },
-      // 웹 푸시 설정
-      webpush: {
-        notification: {
-          title: senderName || '새 메시지',
-          body: notificationBody,
-          icon: '/icons/danmo-pick.png',
-          badge: '/icons/danmo-pick.png',
-          tag: roomId,
-          requireInteraction: false
-        },
-        fcmOptions: {
-          link: `/chat?roomId=${roomId}`
+          'apns-push-type': 'background'
         }
       }
     }
