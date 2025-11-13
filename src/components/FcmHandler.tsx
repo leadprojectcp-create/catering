@@ -98,7 +98,7 @@ export default function FcmHandler() {
           console.log('[FCM Handler] Native FCM token received from app:', nativeToken.substring(0, 30) + '...')
 
           try {
-            // Firestore와 Realtime Database에 네이티브 앱 토큰 저장
+            // Firestore에 네이티브 앱 토큰 저장
             const response = await fetch('/api/update-fcm-token', {
               method: 'POST',
               headers: {
@@ -110,13 +110,26 @@ export default function FcmHandler() {
               }),
             })
 
+            console.log('[FCM Handler] API response status:', response.status)
+
             if (response.ok) {
-              console.log('[FCM Handler] Native FCM token saved to Firestore')
+              console.log('[FCM Handler] ==========================================')
+              console.log('[FCM Handler] Native FCM token saved to Firestore successfully!')
+              console.log('[FCM Handler] User ID:', user.uid)
+              console.log('[FCM Handler] Token:', nativeToken.substring(0, 30) + '...')
+              console.log('[FCM Handler] ==========================================')
             } else {
+              const errorText = await response.text()
+              console.error('[FCM Handler] ==========================================')
               console.error('[FCM Handler] Failed to save native FCM token')
+              console.error('[FCM Handler] Status:', response.status)
+              console.error('[FCM Handler] Error:', errorText)
+              console.error('[FCM Handler] ==========================================')
             }
           } catch (error) {
+            console.error('[FCM Handler] ==========================================')
             console.error('[FCM Handler] Error saving native FCM token:', error)
+            console.error('[FCM Handler] ==========================================')
           }
 
           clearInterval(checkInterval)
