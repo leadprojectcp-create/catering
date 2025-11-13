@@ -1,0 +1,213 @@
+.container {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.banner {
+  width: 600px;
+  height: 150px;
+  flex-shrink: 0;
+  background: #F5F7F9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 24px;
+}
+
+.bannerText {
+  color: #215EA3;
+  font-size: 20px;
+  font-weight: 700;
+  text-align: center;
+  white-space: pre-line;
+}
+
+.content {
+  margin: 0;
+}
+
+.question {
+  background-color: white;
+  margin-bottom: 16px;
+}
+
+.questionTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.checkboxGroup,
+.radioGroup {
+  display: flex;
+  flex-direction: column;
+}
+
+.checkboxLabel,
+.radioLabel {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  padding: 12px;
+  border-radius: 8px;
+}
+
+.checkboxLabel input[type="checkbox"],
+.radioLabel input[type="radio"] {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: #025BD9;
+}
+
+.checkboxLabel span,
+.radioLabel span {
+  font-size: 15px;
+  color: #333;
+  line-height: 1.4;
+}
+
+.textarea {
+  width: 100%;
+  min-height: 100px;
+  padding: 12px;
+  border: 1px solid #EBEBEB;
+  border-radius: 8px;
+  font-size: 15px;
+  font-family: inherit;
+  resize: vertical;
+  margin-top: 12px;
+  transition: border-color 0.2s;
+}
+
+.textarea:focus {
+  outline: none;
+  border-color: #025BD9;
+}
+
+.textarea::placeholder {
+  color: #999;
+}
+
+.instagramLink {
+  color: #237AF2;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 150%;
+  text-decoration: underline;
+  cursor: pointer;
+  margin-bottom: 12px;
+  display: inline-block;
+}
+
+.fileInputWrapper {
+  position: relative;
+  width: 100%;
+}
+
+.fileUploadInputWrapper {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.fileUploadInputWrapper .readOnlyInput {
+  flex: 1;
+  padding-right: 100px;
+  width: 100%;
+  padding: 12px 16px;
+  padding-right: 100px;
+  border: none;
+  border-radius: 10px;
+  background: #FAFAFA;
+  font-size: 14px;
+  color: #999;
+  cursor: not-allowed;
+}
+
+.fileAttachButton {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  padding: 5px 15px;
+  justify-content: center;
+  align-items: center;
+  border-radius: 5px;
+  border: 1px solid #C3C3C3;
+  background: #FAFAFA;
+  color: #999;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.hiddenFileInput {
+  display: none;
+}
+
+.buttons {
+  display: flex;
+  gap: 12px;
+  padding: 16px 0;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.cancelButton,
+.submitButton {
+  flex: 1;
+  padding: 14px;
+  border: none;
+  border-radius: 5px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.cancelButton {
+  background-color: #f8f9fa;
+  color: #666;
+}
+
+.submitButton {
+  background: #025BD9;
+  color: white;
+}
+
+/* 모바일 반응형 */
+@media (max-width: 768px) {
+  .question {
+    padding: 20px;
+    margin-bottom: 12px;
+  }
+
+  .questionTitle {
+    font-size: 15px;
+  }
+
+  .checkboxLabel span,
+  .radioLabel span {
+    font-size: 14px;
+  }
+
+  .textarea {
+    font-size: 14px;
+  }
+
+  .buttons {
+    padding: 12px 16px;
+  }
+
+  .cancelButton,
+  .submitButton {
+    padding: 12px;
+    font-size: 15px;
+  }
+}

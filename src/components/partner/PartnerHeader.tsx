@@ -37,6 +37,7 @@ const getPageTitle = (path: string): string => {
   if (path === '/partner/orders') return '주문관리'
   if (path === '/partner/order/settlements') return '정산내역'
   if (path === '/partner/settlement') return '정산 내역'
+  if (path === '/partner/survey') return '파트너 설문조사'
   if (path === '/chat') return '채팅'
   if (path.startsWith('/chat/')) return '채팅'
   return ''

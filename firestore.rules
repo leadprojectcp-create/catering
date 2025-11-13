@@ -379,5 +379,25 @@ service cloud.firestore {
       // 관리자(level 10)만 생성/수정/삭제 가능
       allow create, update, delete: if isAdmin();
     }
+
+    // Surveys collection - 설문조사
+    match /surveys/{surveyId} {
+      // 관리자만 모든 설문조사 읽기 가능
+      allow read: if isAdmin();
+
+      // 본인이 작성한 설문조사만 읽기 가능
+      allow read: if isSignedIn() &&
+        resource.data.userId == request.auth.uid;
+
+      // 로그인한 사용자만 설문조사 생성 가능 (본인의 userId로만 생성)
+      allow create: if isSignedIn() &&
+        request.resource.data.userId == request.auth.uid;
+
+      // 수정/삭제 불가 (설문조사는 변경 불가)
+      allow update, delete: if false;
+
+      // 관리자는 모든 설문조사 수정 가능
+      allow update: if isAdmin();
+    }
   }
 }
