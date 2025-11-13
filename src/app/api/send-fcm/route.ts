@@ -247,10 +247,19 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    console.log('[FCM] ========== FCM 전송 시작 ==========')
+    console.log('[FCM] 수신자 ID:', recipientId)
+    console.log('[FCM] 수신자 FCM 토큰 (전체):', fcmToken)
+    console.log('[FCM] 메시지 제목:', senderName || '새 메시지')
+    console.log('[FCM] 메시지 내용:', notificationBody)
     console.log('[FCM] 전송할 메시지 구조:', JSON.stringify(fcmMessage, null, 2))
+
     const response = await messaging.send(fcmMessage)
-    console.log('[FCM] Message sent successfully:', response)
-    console.log('[FCM] 수신자 정보:', { recipientId, fcmToken: fcmToken?.substring(0, 20) + '...' })
+
+    console.log('[FCM] ========== FCM 전송 성공 ==========')
+    console.log('[FCM] Message ID:', response)
+    console.log('[FCM] 이제 수신자의 앱/웹에서 알림을 받아야 합니다!')
+    console.log('[FCM] =======================================')
 
     return NextResponse.json(
       { success: true, messageId: response },
