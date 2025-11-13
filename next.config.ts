@@ -11,18 +11,10 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'tripjoy.b-cdn.net',
-      },
-      {
-        protocol: 'https',
         hostname: 'danmo.b-cdn.net',
       },
     ],
-    formats: ['image/webp'],
-    deviceSizes: [640, 750, 1080, 1920],
-    imageSizes: [120, 195, 256],
-    minimumCacheTTL: 3600,
-    unoptimized: false,
+    unoptimized: true, // Bunny CDN이 이미 최적화를 처리함
   },
 };
 

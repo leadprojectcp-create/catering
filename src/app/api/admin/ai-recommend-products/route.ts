@@ -37,25 +37,28 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 상품 데이터 변환
-    const products = productsSnapshot.docs.map((doc) => {
-      const data = doc.data()
-      const categoryArray = Array.isArray(data.category)
-        ? data.category
-        : data.category
-        ? [data.category]
-        : []
+    // 상품 데이터 변환 (pending 상태 제외)
+    const products = productsSnapshot.docs
+      .map((doc) => {
+        const data = doc.data()
+        const categoryArray = Array.isArray(data.category)
+          ? data.category
+          : data.category
+          ? [data.category]
+          : []
 
-      return {
-        id: doc.id,
-        name: data.name || '',
-        price: data.price || 0,
-        category: categoryArray,
-        description: data.description || '',
-        productTypes: data.productTypes || [],
-        imageUrl: data.images?.[0] || '',
-      }
-    })
+        return {
+          id: doc.id,
+          name: data.name || '',
+          price: data.price || 0,
+          category: categoryArray,
+          description: data.description || '',
+          productTypes: data.productTypes || [],
+          imageUrl: data.images?.[0] || '',
+          status: data.status || '',
+        }
+      })
+      .filter((product) => product.status !== 'pending')
 
     // 2. OpenAI API에 상품 데이터와 프롬프트 전달
     const productListText = products

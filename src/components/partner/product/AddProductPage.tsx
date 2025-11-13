@@ -19,7 +19,7 @@ import OptionSection from './sections/OptionSection'
 import AdditionalOptionSection from './sections/AdditionalOptionSection'
 import DescriptionSection from './sections/DescriptionSection'
 import OriginSection from './sections/OriginSection'
-import DeliveryMethodSection, { DeliveryFeeSettings } from './sections/DeliveryMethodSection'
+import DeliveryMethodSection, { DeliveryFeeSettings, QuickDeliveryFeeSettings } from './sections/DeliveryMethodSection'
 import AdditionalSettingsSection from './sections/AdditionalSettingsSection'
 import { ProductFormData, ProductOption, categories } from './common/types/types'
 import styles from './AddProductPage.module.css'
@@ -49,6 +49,7 @@ export default function AddProductPage() {
     maxOrderQuantity: 11,
     quantityRanges: [{ minQuantity: 10, maxQuantity: 20, daysBeforeOrder: 1 }],
     deliveryMethods: [],
+    quickDeliveryFeeSettings: { type: '무료' },
     deliveryFeeSettings: { type: '무료' },
     additionalSettings: [],
     origin: [],
@@ -281,6 +282,26 @@ export default function AddProductPage() {
       return
     }
 
+    // 퀵업체 배송 선택 시 배송비 설정 필수 검사
+    if (formData.deliveryMethods.includes('퀵업체 배송')) {
+      if (!formData.quickDeliveryFeeSettings?.type) {
+        alert('퀵업체 배송 시 배송비 타입(무료/조건부 무료/유료)을 선택해주세요.')
+        return
+      }
+
+      // 조건부 무료인 경우
+      if (formData.quickDeliveryFeeSettings.type === '조건부 무료') {
+        if (!formData.quickDeliveryFeeSettings.freeCondition || formData.quickDeliveryFeeSettings.freeCondition <= 0) {
+          alert('조건부 무료 배송 시 최소 구매 금액을 입력해주세요.')
+          return
+        }
+        if (formData.quickDeliveryFeeSettings.maxSupport === undefined || formData.quickDeliveryFeeSettings.maxSupport < 0) {
+          alert('조건부 무료 배송 시 퀵 비용 지원액을 입력해주세요.')
+          return
+        }
+      }
+    }
+
     // 택배 배송 선택 시 배송비 설정 필수 검사
     if (formData.deliveryMethods.includes('택배 배송')) {
       if (!formData.deliveryFeeSettings?.type) {
@@ -383,6 +404,7 @@ export default function AddProductPage() {
         additionalOptionsEnabled, // 추가상품 설정 여부 저장
         additionalOptions: filteredAdditionalOptions.length > 0 ? filteredAdditionalOptions : undefined, // 비어있으면 undefined
         orderType: 'single', // 항상 단건주문으로 설정
+        quickDeliveryFeeSettings: formData.deliveryMethods.includes('퀵업체 배송') ? formData.quickDeliveryFeeSettings : undefined, // 퀵업체 배송일 때만 배송비 설정 저장
         deliveryFeeSettings: formData.deliveryMethods.includes('택배 배송') ? formData.deliveryFeeSettings : undefined, // 택배 배송일 때만 배송비 설정 저장
         createdAt: new Date().toISOString()
       }
@@ -514,8 +536,10 @@ export default function AddProductPage() {
         {/* 상품 배송 설정 */}
         <DeliveryMethodSection
           deliveryMethods={formData.deliveryMethods}
+          quickDeliveryFeeSettings={formData.quickDeliveryFeeSettings}
           deliveryFeeSettings={formData.deliveryFeeSettings}
           onChange={(deliveryMethods) => setFormData(prev => ({ ...prev, deliveryMethods }))}
+          onQuickDeliveryFeeChange={(settings) => setFormData(prev => ({ ...prev, quickDeliveryFeeSettings: settings }))}
           onDeliveryFeeChange={(settings) => setFormData(prev => ({ ...prev, deliveryFeeSettings: settings }))}
         />
 

@@ -62,6 +62,8 @@ const ProductInfoSection = memo(function ProductInfoSection({
                 src={product.images[currentImageIndex]}
                 alt={product.name}
                 fill
+                sizes="(max-width: 768px) 100vw, 600px"
+                priority
                 className={styles.productImage}
                 style={{ objectFit: 'cover' }}
               />

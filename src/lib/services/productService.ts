@@ -61,6 +61,11 @@ export interface ProductData {
     isAlwaysActive: boolean
   }
   discountedPrice?: number
+  quickDeliveryFeeSettings?: {
+    type: '무료' | '조건부 무료' | '유료'
+    freeCondition?: number
+    maxSupport?: number
+  }
   deliveryFeeSettings?: {
     type: '무료' | '조건부 무료' | '유료' | '수량별'
     baseFee?: number

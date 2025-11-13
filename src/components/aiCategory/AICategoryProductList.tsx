@@ -648,6 +648,25 @@ export default function AICategoryProductList({ categoryId }: Props) {
                     </div>
                   </div>
                 </div>
+
+                {/* 단모 PICK - productReasons 표시 */}
+                {category.productReasons && category.productReasons[product.id] && (
+                  <div className={styles.danmoPickBox}>
+                    <div className={styles.danmoPickHeader}>
+                      <Image
+                        src="/icons/danmo-pick.png"
+                        alt="단모 PICK"
+                        width={24}
+                        height={24}
+                        className={styles.danmoPickIcon}
+                      />
+                      <p className={styles.danmoPickTitle}>단모 PICK</p>
+                    </div>
+                    <p className={styles.danmoPickReason}>
+                      {category.productReasons[product.id]}
+                    </p>
+                  </div>
+                )}
               </div>
             )
           })}
