@@ -111,7 +111,7 @@ export default function FcmHandler() {
             })
 
             if (response.ok) {
-              console.log('[FCM Handler] Native FCM token saved to Firestore and Realtime Database')
+              console.log('[FCM Handler] Native FCM token saved to Firestore')
             } else {
               console.error('[FCM Handler] Failed to save native FCM token')
             }

@@ -14,16 +14,8 @@ function getAdminDb(): ReturnType<typeof import('firebase-admin/firestore').getF
   return db
 }
 
-function getAdminDatabase() {
-  const { getApps } = require('firebase-admin/app')
-  const { getDatabase } = require('firebase-admin/database')
-
-  const app = getApps()[0]
-  return getDatabase(app)
-}
-
 /**
- * FCM 토큰을 Firestore와 Realtime Database에 업데이트하는 API
+ * FCM 토큰을 Firestore에 업데이트하는 API
  * 토큰 갱신 시 또는 네이티브 앱에서 자동으로 호출됩니다.
  */
 export async function POST(request: NextRequest) {
@@ -41,30 +33,14 @@ export async function POST(request: NextRequest) {
     console.log('[Update FCM Token] Token:', fcmToken.substring(0, 30) + '...')
 
     const db = getAdminDb()
-    const realtimeDb = getAdminDatabase()
 
-    // Firestore 업데이트
-    try {
-      await db.collection('users').doc(userId).update({
-        fcmToken: fcmToken,
-        fcmTokenUpdatedAt: new Date(),
-      })
-      console.log('[Update FCM Token] Firestore updated successfully')
-    } catch (firestoreError) {
-      console.error('[Update FCM Token] Firestore update failed:', firestoreError)
-      // Firestore 업데이트 실패해도 계속 진행
-    }
+    // Firestore 업데이트만 수행 (사용자 정보는 Firestore에만 저장)
+    await db.collection('users').doc(userId).update({
+      fcmToken: fcmToken,
+      fcmTokenUpdatedAt: new Date(),
+    })
 
-    // Realtime Database 업데이트
-    try {
-      await realtimeDb.ref(`users/${userId}/fcmToken`).set(fcmToken)
-      console.log('[Update FCM Token] Realtime Database updated successfully')
-    } catch (rtdbError) {
-      console.error('[Update FCM Token] Realtime Database update failed:', rtdbError)
-      // Realtime Database 업데이트 실패해도 계속 진행
-    }
-
-    console.log('[Update FCM Token] Token updated successfully in both databases')
+    console.log('[Update FCM Token] Token updated successfully')
 
     return NextResponse.json({ success: true })
   } catch (error) {

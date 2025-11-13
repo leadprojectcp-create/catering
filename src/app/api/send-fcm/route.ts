@@ -133,40 +133,22 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Firestore 또는 Realtime Database에서 상대방의 FCM 토큰 가져오기
-    console.log('[FCM API] 사용자 FCM 토큰 조회 시작:', recipientId)
+    // Firestore에서 상대방의 FCM 토큰 가져오기 (사용자 정보는 Firestore에만 저장됨)
+    console.log('[FCM API] Firestore에서 사용자 FCM 토큰 조회 시작:', recipientId)
 
     let fcmToken = null
 
-    // 먼저 Realtime Database에서 시도
     try {
-      const userRef = realtimeDb.ref(`users/${recipientId}`)
-      const userSnapshot = await userRef.once('value')
+      const recipientDoc = await adminDb.collection('users').doc(recipientId).get()
+      console.log('[FCM API] Firestore 사용자 문서 조회 완료, exists:', recipientDoc.exists)
 
-      if (userSnapshot.exists()) {
-        const userData = userSnapshot.val()
-        fcmToken = userData?.fcmToken
-        console.log('[FCM API] Realtime Database에서 FCM 토큰 조회:', fcmToken ? '있음' : '없음')
+      if (recipientDoc.exists) {
+        const recipientData = recipientDoc.data()
+        fcmToken = recipientData?.fcmToken
+        console.log('[FCM API] Firestore에서 FCM 토큰 조회:', fcmToken ? '있음' : '없음')
       }
-    } catch (rtdbError) {
-      console.log('[FCM API] Realtime Database 조회 실패, Firestore 시도:', rtdbError)
-    }
-
-    // Realtime Database에 없으면 Firestore 시도
-    if (!fcmToken) {
-      try {
-        console.log('[FCM API] Firestore에서 사용자 조회 시작:', recipientId)
-        const recipientDoc = await adminDb.collection('users').doc(recipientId).get()
-        console.log('[FCM API] Firestore 사용자 문서 조회 완료, exists:', recipientDoc.exists)
-
-        if (recipientDoc.exists) {
-          const recipientData = recipientDoc.data()
-          fcmToken = recipientData?.fcmToken
-          console.log('[FCM API] Firestore에서 FCM 토큰 조회:', fcmToken ? '있음' : '없음')
-        }
-      } catch (firestoreError) {
-        console.log('[FCM API] Firestore 조회 실패:', firestoreError)
-      }
+    } catch (firestoreError) {
+      console.log('[FCM API] Firestore 조회 실패:', firestoreError)
     }
 
     if (!fcmToken) {
@@ -293,7 +275,7 @@ export async function POST(request: NextRequest) {
 
       // recipientId와 adminDb가 존재하는 경우에만 토큰 삭제
       if (recipientId && adminDb) {
-        // Firestore와 Realtime Database에서 만료된 토큰 삭제
+        // Firestore에서 만료된 토큰 삭제 (사용자 정보는 Firestore에만 저장됨)
         try {
           await adminDb.collection('users').doc(recipientId).update({
             fcmToken: null
@@ -301,14 +283,6 @@ export async function POST(request: NextRequest) {
           console.log('[FCM] Firestore에서 토큰 삭제 완료')
         } catch (fsError) {
           console.error('[FCM] Firestore 토큰 삭제 실패:', fsError)
-        }
-
-        try {
-          const realtimeDb = getAdminDatabase()
-          await realtimeDb.ref(`users/${recipientId}/fcmToken`).remove()
-          console.log('[FCM] Realtime Database에서 토큰 삭제 완료')
-        } catch (rtdbError) {
-          console.error('[FCM] Realtime Database 토큰 삭제 실패:', rtdbError)
         }
       }
 
