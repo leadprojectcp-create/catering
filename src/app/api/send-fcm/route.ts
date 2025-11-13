@@ -219,6 +219,8 @@ export async function POST(request: NextRequest) {
 
     // FCM 메시지 전송
     const messaging = getAdminMessaging()
+
+    // notification과 data를 함께 보내되, Android/iOS 설정 추가
     const fcmMessage = {
       token: fcmToken,
       notification: {
@@ -229,19 +231,25 @@ export async function POST(request: NextRequest) {
         roomId: roomId,
         senderId: senderId,
         senderName: senderName || '',
-        type: 'chat'
+        message: notificationBody,
+        type: 'chat',
+        // 알림 제목과 내용을 data에도 포함 (포그라운드 처리용)
+        notificationTitle: senderName || '새 메시지',
+        notificationBody: notificationBody
       },
-      // Android 설정 (포그라운드, 백그라운드, 종료 상태 모두 처리)
+      // Android 설정
       android: {
         priority: 'high' as const,
         notification: {
           channelId: 'chat_messages',
           priority: 'high' as const,
           defaultSound: true,
-          defaultVibrateTimings: true
+          defaultVibrateTimings: true,
+          sound: 'default',
+          clickAction: 'FLUTTER_NOTIFICATION_CLICK'
         }
       },
-      // iOS 설정 (포그라운드, 백그라운드, 종료 상태 모두 처리)
+      // iOS 설정 (APNS)
       apns: {
         payload: {
           aps: {
@@ -251,17 +259,35 @@ export async function POST(request: NextRequest) {
             },
             sound: 'default',
             badge: 1,
-            contentAvailable: true
+            contentAvailable: true,
+            mutableContent: true
           }
         },
         headers: {
-          'apns-priority': '10'
+          'apns-priority': '10',
+          'apns-push-type': 'alert'
+        }
+      },
+      // 웹 푸시 설정
+      webpush: {
+        notification: {
+          title: senderName || '새 메시지',
+          body: notificationBody,
+          icon: '/icons/danmo-pick.png',
+          badge: '/icons/danmo-pick.png',
+          tag: roomId,
+          requireInteraction: false
+        },
+        fcmOptions: {
+          link: `/chat?roomId=${roomId}`
         }
       }
     }
 
+    console.log('[FCM] 전송할 메시지 구조:', JSON.stringify(fcmMessage, null, 2))
     const response = await messaging.send(fcmMessage)
     console.log('[FCM] Message sent successfully:', response)
+    console.log('[FCM] 수신자 정보:', { recipientId, fcmToken: fcmToken?.substring(0, 20) + '...' })
 
     return NextResponse.json(
       { success: true, messageId: response },
