@@ -132,9 +132,16 @@ export default function FcmHandler() {
     checkNativeToken()
   }, [user])
 
-  // FCM 토큰 자동 갱신 리스너 설정
+  // FCM 토큰 자동 갱신 리스너 설정 (네이티브 앱에서는 비활성화)
   useEffect(() => {
     if (!user) return
+
+    // 네이티브 앱에서는 웹 FCM 토큰을 생성하지 않음
+    // @ts-expect-error - nativeFcmToken은 React Native 앱에서 주입됨
+    if (window.nativeFcmToken !== undefined) {
+      console.log('[FCM Handler] Native app detected, skipping web FCM token setup')
+      return
+    }
 
     const setupTokenRefresh = async () => {
       try {

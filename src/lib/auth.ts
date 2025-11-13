@@ -67,6 +67,13 @@ export async function checkExistingUser(email: string) {
 export async function updateFcmToken(userId: string, fcmToken?: string | null) {
   try {
     if (!fcmToken) {
+      // 네이티브 앱 환경에서는 웹 FCM 토큰을 생성하지 않음
+      // @ts-expect-error - nativeFcmToken은 React Native 앱에서 주입됨
+      if (typeof window !== 'undefined' && window.nativeFcmToken !== undefined) {
+        console.log('[updateFcmToken] Native app detected, skipping web FCM token generation')
+        return
+      }
+
       // 웹 브라우저에서 FCM 토큰 발급 시도
       console.log('[updateFcmToken] No FCM token provided, requesting web FCM token...')
       fcmToken = await requestWebFcmToken()
@@ -199,14 +206,20 @@ export async function handleSocialUser(
   } = {}
 ) {
   try {
-    // FCM 토큰이 없으면 웹에서 발급 시도
+    // FCM 토큰이 없으면 웹에서 발급 시도 (네이티브 앱 제외)
     if (!additionalInfo.fcmToken) {
-      console.log('[handleSocialUser] No FCM token provided, requesting web FCM token...')
-      const webFcmToken = await requestWebFcmToken()
-      if (webFcmToken) {
-        additionalInfo.fcmToken = webFcmToken
-        saveFcmToken(webFcmToken)
-        console.log('[handleSocialUser] Web FCM token generated and saved')
+      // 네이티브 앱 환경에서는 웹 FCM 토큰을 생성하지 않음
+      // @ts-expect-error - nativeFcmToken은 React Native 앱에서 주입됨
+      if (typeof window !== 'undefined' && window.nativeFcmToken !== undefined) {
+        console.log('[handleSocialUser] Native app detected, skipping web FCM token generation')
+      } else {
+        console.log('[handleSocialUser] No FCM token provided, requesting web FCM token...')
+        const webFcmToken = await requestWebFcmToken()
+        if (webFcmToken) {
+          additionalInfo.fcmToken = webFcmToken
+          saveFcmToken(webFcmToken)
+          console.log('[handleSocialUser] Web FCM token generated and saved')
+        }
       }
     }
 
