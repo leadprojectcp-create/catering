@@ -117,6 +117,27 @@ export default function SurveyPage() {
     }
 
     try {
+      // 이미지 업로드
+      let instagramScreenshotUrl = null
+      if (formData.instagramScreenshot) {
+        const uploadFormData = new FormData()
+        uploadFormData.append('file', formData.instagramScreenshot)
+        uploadFormData.append('type', 'survey')
+        uploadFormData.append('userId', user.uid)
+
+        const uploadResponse = await fetch('/api/upload', {
+          method: 'POST',
+          body: uploadFormData
+        })
+
+        if (!uploadResponse.ok) {
+          throw new Error('이미지 업로드에 실패했습니다')
+        }
+
+        const uploadResult = await uploadResponse.json()
+        instagramScreenshotUrl = uploadResult.url
+      }
+
       // 설문조사 데이터 저장
       const surveyData = {
         userId: user.uid,
@@ -132,7 +153,7 @@ export default function SurveyPage() {
         importantSupport: formData.importantSupport,
         importantSupportOther: formData.importantSupportOther,
         suggestions: formData.suggestions,
-        instagramScreenshotName: formData.instagramScreenshot?.name || null,
+        instagramScreenshotUrl: instagramScreenshotUrl,
         createdAt: new Date(),
         updatedAt: new Date()
       }

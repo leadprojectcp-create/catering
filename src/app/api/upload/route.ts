@@ -68,7 +68,8 @@ export async function POST(request: NextRequest) {
       'partnernotice': 'partner-notices',
       'popup': 'popups',
       'banner': 'banners',
-      'aicategory': 'aicategories'
+      'aicategory': 'aicategories',
+      'survey': 'surveys'
     }
 
     const folder = folderMap[uploadType] || 'others'
