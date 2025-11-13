@@ -84,6 +84,54 @@ export default function FcmHandler() {
     setupForegroundMessaging()
   }, [])
 
+  // 네이티브 앱에서 전달된 FCM 토큰 처리
+  useEffect(() => {
+    if (!user) return
+
+    const checkNativeToken = async () => {
+      // window.nativeFcmToken이 설정되었는지 확인
+      const checkInterval = setInterval(async () => {
+        // @ts-expect-error - nativeFcmToken은 React Native 앱에서 주입됨
+        if (window.nativeFcmToken) {
+          // @ts-expect-error
+          const nativeToken = window.nativeFcmToken as string
+          console.log('[FCM Handler] Native FCM token received from app:', nativeToken.substring(0, 30) + '...')
+
+          try {
+            // Firestore와 Realtime Database에 네이티브 앱 토큰 저장
+            const response = await fetch('/api/update-fcm-token', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                userId: user.uid,
+                fcmToken: nativeToken,
+              }),
+            })
+
+            if (response.ok) {
+              console.log('[FCM Handler] Native FCM token saved to Firestore and Realtime Database')
+            } else {
+              console.error('[FCM Handler] Failed to save native FCM token')
+            }
+          } catch (error) {
+            console.error('[FCM Handler] Error saving native FCM token:', error)
+          }
+
+          clearInterval(checkInterval)
+        }
+      }, 500) // 500ms마다 체크
+
+      // 10초 후에는 체크 중단
+      setTimeout(() => {
+        clearInterval(checkInterval)
+      }, 10000)
+    }
+
+    checkNativeToken()
+  }, [user])
+
   // FCM 토큰 자동 갱신 리스너 설정
   useEffect(() => {
     if (!user) return
