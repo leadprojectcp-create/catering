@@ -154,3 +154,72 @@ export function clearFcmToken(): void {
     console.error('[Web FCM] Error clearing token:', error)
   }
 }
+
+/**
+ * 주기적으로 FCM 토큰을 확인하고 변경되었으면 갱신합니다.
+ * Firebase v9+에서는 Service Worker가 자동으로 토큰을 갱신하므로,
+ * 주기적으로 저장된 토큰과 현재 토큰을 비교하여 변경을 감지합니다.
+ *
+ * @param onTokenRefreshed - 토큰이 갱신되었을 때 호출될 콜백 함수
+ * @param intervalMs - 확인 주기 (밀리초, 기본값: 1시간)
+ * @returns cleanup 함수
+ */
+export async function setupTokenRefreshListener(
+  onTokenRefreshed?: (newToken: string) => Promise<void>,
+  intervalMs: number = 60 * 60 * 1000 // 1시간
+): Promise<(() => void) | null> {
+  try {
+    if (typeof window === 'undefined') {
+      return null
+    }
+
+    const supported = await isSupported()
+    if (!supported) {
+      return null
+    }
+
+    // 토큰 확인 함수
+    const checkTokenRefresh = async () => {
+      try {
+        const savedToken = getSavedFcmToken()
+        if (!savedToken) {
+          return
+        }
+
+        // 현재 토큰 가져오기 (갱신되었을 수 있음)
+        const currentToken = await requestWebFcmToken()
+
+        if (currentToken && currentToken !== savedToken) {
+          console.log('[Web FCM] Token has changed, updating...')
+          console.log('[Web FCM] Old token:', savedToken.substring(0, 20) + '...')
+          console.log('[Web FCM] New token:', currentToken.substring(0, 20) + '...')
+
+          saveFcmToken(currentToken)
+
+          // 콜백 함수 호출 (Firestore 업데이트 등)
+          if (onTokenRefreshed) {
+            await onTokenRefreshed(currentToken)
+          }
+        }
+      } catch (error) {
+        console.error('[Web FCM] Error checking token refresh:', error)
+      }
+    }
+
+    // 주기적으로 토큰 확인
+    const intervalId = setInterval(checkTokenRefresh, intervalMs)
+    console.log(`[Web FCM] Token refresh check scheduled every ${intervalMs / 1000 / 60} minutes`)
+
+    // 즉시 한 번 실행
+    checkTokenRefresh()
+
+    // cleanup 함수 반환
+    return () => {
+      clearInterval(intervalId)
+      console.log('[Web FCM] Token refresh check stopped')
+    }
+  } catch (error) {
+    console.error('[Web FCM] Error setting up token refresh listener:', error)
+    return null
+  }
+}

@@ -5,6 +5,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import LayoutWrapper from "@/components/LayoutWrapper";
 import PageWrapper from "@/components/PageWrapper";
 import NativeAuthBridge from "@/components/NativeAuthBridge";
+import FcmHandler from "@/components/FcmHandler";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -117,6 +118,7 @@ export default function RootLayout({
       >
         <AuthProvider>
           <NativeAuthBridge />
+          <FcmHandler />
           <PageWrapper>
             {children}
           </PageWrapper>
