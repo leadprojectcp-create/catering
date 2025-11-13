@@ -26,7 +26,7 @@ function initializeFirebaseAdmin() {
   }
 }
 
-function getAdminDb() {
+function getAdminDb(): ReturnType<typeof import('firebase-admin/firestore').getFirestore> {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { getApps } = require('firebase-admin/app')
   // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -65,6 +65,9 @@ function getAdminDatabase() {
 }
 
 export async function POST(request: NextRequest) {
+  let recipientId: string | undefined
+  let adminDb: ReturnType<typeof getAdminDb> | undefined
+
   try {
     console.log('[FCM API] 요청 시작')
 
@@ -72,7 +75,7 @@ export async function POST(request: NextRequest) {
     initializeFirebaseAdmin()
     console.log('[FCM API] Firebase Admin 초기화 완료')
 
-    const adminDb = getAdminDb()
+    adminDb = getAdminDb()
 
     const { roomId, senderId, senderName, message } = await request.json()
     console.log('[FCM API] 요청 데이터:', { roomId, senderId, senderName, message })
@@ -120,7 +123,7 @@ export async function POST(request: NextRequest) {
     console.log('[FCM API] 채팅방 참가자:', participants)
 
     // 상대방 ID 찾기
-    const recipientId = participants.find((id: string) => id !== senderId)
+    recipientId = participants.find((id: string) => id !== senderId)
     console.log('[FCM API] 수신자 ID:', recipientId)
 
     if (!recipientId) {
@@ -266,8 +269,56 @@ export async function POST(request: NextRequest) {
     )
   } catch (error) {
     console.error('[FCM] Error sending message:', error)
+    console.error('[FCM] Error type:', typeof error)
+    console.error('[FCM] Error name:', (error as Error)?.name)
+    console.error('[FCM] Error message:', (error as Error)?.message)
+    console.error('[FCM] Error stack:', (error as Error)?.stack)
+
+    const errorMessage = (error as Error)?.message || ''
+
+    // FCM 토큰이 유효하지 않은 경우 (만료, 삭제 등)
+    if (
+      errorMessage.includes('Requested entity was not found') ||
+      errorMessage.includes('not a valid FCM registration token') ||
+      errorMessage.includes('registration-token-not-registered')
+    ) {
+      console.log('[FCM] 유효하지 않은 FCM 토큰 - Firestore에서 토큰 삭제:', recipientId)
+
+      // recipientId와 adminDb가 존재하는 경우에만 토큰 삭제
+      if (recipientId && adminDb) {
+        // Firestore와 Realtime Database에서 만료된 토큰 삭제
+        try {
+          await adminDb.collection('users').doc(recipientId).update({
+            fcmToken: null
+          })
+          console.log('[FCM] Firestore에서 토큰 삭제 완료')
+        } catch (fsError) {
+          console.error('[FCM] Firestore 토큰 삭제 실패:', fsError)
+        }
+
+        try {
+          const realtimeDb = getAdminDatabase()
+          await realtimeDb.ref(`users/${recipientId}/fcmToken`).remove()
+          console.log('[FCM] Realtime Database에서 토큰 삭제 완료')
+        } catch (rtdbError) {
+          console.error('[FCM] Realtime Database 토큰 삭제 실패:', rtdbError)
+        }
+      }
+
+      // 클라이언트에는 성공으로 반환 (메시지는 전송되었으므로)
+      return NextResponse.json(
+        { success: true, message: 'Invalid FCM token removed' },
+        { status: 200 }
+      )
+    }
+
     return NextResponse.json(
-      { error: 'Failed to send FCM notification', details: String(error) },
+      {
+        error: 'Failed to send FCM notification',
+        details: String(error),
+        errorMessage: errorMessage,
+        errorName: (error as Error)?.name || 'Unknown'
+      },
       { status: 500 }
     )
   }

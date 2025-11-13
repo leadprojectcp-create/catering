@@ -9,6 +9,7 @@ import {
 } from 'firebase/auth'
 import { doc, setDoc, query, where, getDocs, collection, getDoc } from 'firebase/firestore'
 import { auth, db } from './firebase'
+import { requestWebFcmToken, saveFcmToken } from './fcmToken'
 
 interface SignupData {
   email: string
@@ -66,11 +67,14 @@ export async function checkExistingUser(email: string) {
 export async function updateFcmToken(userId: string, fcmToken?: string | null) {
   try {
     if (!fcmToken) {
-      // 웹 환경에서 네이티브 FCM 토큰 확인
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      if (typeof window !== 'undefined' && (window as any).nativeFcmToken) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        fcmToken = (window as any).nativeFcmToken
+      // 웹 브라우저에서 FCM 토큰 발급 시도
+      console.log('[updateFcmToken] No FCM token provided, requesting web FCM token...')
+      fcmToken = await requestWebFcmToken()
+
+      if (fcmToken) {
+        // localStorage에 저장
+        saveFcmToken(fcmToken)
+        console.log('[updateFcmToken] Web FCM token generated and saved')
       }
     }
 
@@ -195,6 +199,17 @@ export async function handleSocialUser(
   } = {}
 ) {
   try {
+    // FCM 토큰이 없으면 웹에서 발급 시도
+    if (!additionalInfo.fcmToken) {
+      console.log('[handleSocialUser] No FCM token provided, requesting web FCM token...')
+      const webFcmToken = await requestWebFcmToken()
+      if (webFcmToken) {
+        additionalInfo.fcmToken = webFcmToken
+        saveFcmToken(webFcmToken)
+        console.log('[handleSocialUser] Web FCM token generated and saved')
+      }
+    }
+
     // 1. Firebase UID로 기존 사용자 확인
     const userRef = doc(db, 'users', firebaseUser.uid)
     const userDoc = await getDoc(userRef)

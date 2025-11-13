@@ -57,6 +57,11 @@ env:
     availability:
       - BUILD
       - RUNTIME
+  - variable: NEXT_PUBLIC_FIREBASE_VAPID_KEY
+    value: BMGPwrL_03WiaQ5-rhRDt4VhNxwkGNvVfW3yr4eV-rjcUzs3YqSUK6ph935MUqizht2gdC9qmb_36duPGP0zJ88
+    availability:
+      - BUILD
+      - RUNTIME
 
   # Firebase Admin SDK Configuration (Server-side only)
   - variable: FIREBASE_FIRESTORE_DATABASE_ID

@@ -22,7 +22,6 @@ declare global {
   interface Window {
     handleNativeGoogleLogin?: (result: GoogleLoginResult) => Promise<void>
     handleNativeKakaoLogin?: (result: KakaoLoginResult) => Promise<void>
-    nativeFcmToken?: string
   }
 }
 
@@ -41,30 +40,14 @@ export default function NativeAuthBridge() {
 
         console.log('[NativeAuth] Firebase authentication successful')
 
-        // FCM 토큰 요청 (네이티브 앱에서 최신 토큰 받기)
-        let fcmToken = window.nativeFcmToken || null
-        console.log('[NativeAuth] Current FCM token:', fcmToken)
-
-        // 네이티브 앱에 FCM 토큰 재요청
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        if ((window as any).ReactNativeWebView) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (window as any).ReactNativeWebView.postMessage(JSON.stringify({ type: 'REQUEST_FCM_TOKEN' }))
-
-          // 짧은 대기 후 다시 확인 (네이티브 응답 대기)
-          await new Promise(resolve => setTimeout(resolve, 500))
-          fcmToken = window.nativeFcmToken || fcmToken
-          console.log('[NativeAuth] Updated FCM token:', fcmToken)
-        }
-
         // 웹과 동일한 handleSocialUser 함수 사용
+        // FCM 토큰은 handleSocialUser 내부에서 웹으로 자동 발급
         const socialResult = await handleSocialUser(
           userCredential.user,
           'google',
           {
             name: result.displayName,
-            email: result.email,
-            fcmToken: fcmToken
+            email: result.email
           }
         )
 
@@ -118,30 +101,14 @@ export default function NativeAuthBridge() {
 
         console.log('[NativeAuth] Firebase authentication successful')
 
-        // FCM 토큰 요청 (네이티브 앱에서 최신 토큰 받기)
-        let fcmToken = window.nativeFcmToken || null
-        console.log('[NativeAuth] Current FCM token:', fcmToken)
-
-        // 네이티브 앱에 FCM 토큰 재요청
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        if ((window as any).ReactNativeWebView) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (window as any).ReactNativeWebView.postMessage(JSON.stringify({ type: 'REQUEST_FCM_TOKEN' }))
-
-          // 짧은 대기 후 다시 확인 (네이티브 응답 대기)
-          await new Promise(resolve => setTimeout(resolve, 500))
-          fcmToken = window.nativeFcmToken || fcmToken
-          console.log('[NativeAuth] Updated FCM token:', fcmToken)
-        }
-
         // 웹과 동일한 handleSocialUser 함수 사용
+        // FCM 토큰은 handleSocialUser 내부에서 웹으로 자동 발급
         const socialResult = await handleSocialUser(
           userCredential.user,
           'kakao',
           {
             name: result.displayName,
-            email: result.email,
-            fcmToken: fcmToken
+            email: result.email
           }
         )
 
