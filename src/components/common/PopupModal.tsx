@@ -1,11 +1,26 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Image from 'next/image'
 import { getActivePopups, type Popup } from '@/lib/services/popupService'
 import styles from './PopupModal.module.css'
 
 interface PopupModalProps {
   targetType: 'all' | 'partner' | 'user'
+}
+
+// BunnyCDN 이미지 최적화 파라미터 추가
+const optimizePopupImage = (url: string) => {
+  if (!url.includes('danmo.b-cdn.net')) return url
+
+  // 팝업 이미지는 큰 사이즈이므로 width=1200, quality=85
+  const params = new URLSearchParams({
+    width: '1200',
+    quality: '85',
+    format: 'webp'
+  })
+
+  return `${url}?${params.toString()}`
 }
 
 export default function PopupModal({ targetType }: PopupModalProps) {
@@ -96,12 +111,17 @@ export default function PopupModal({ targetType }: PopupModalProps) {
           </>
         )}
 
-        <img
-          src={currentPopup.imageUrl}
+        <Image
+          src={optimizePopupImage(currentPopup.imageUrl)}
           alt={currentPopup.title}
           className={styles.popupImage}
           onClick={handlePopupClick}
           style={{ cursor: currentPopup.linkUrl ? 'pointer' : 'default' }}
+          width={1200}
+          height={1600}
+          quality={85}
+          priority
+          unoptimized={!currentPopup.imageUrl.includes('danmo.b-cdn.net')}
         />
 
         <div className={styles.controls}>

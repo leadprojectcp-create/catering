@@ -34,11 +34,11 @@ export async function POST(request: NextRequest) {
 
     const db = getAdminDb()
 
-    // Firestore 업데이트만 수행 (사용자 정보는 Firestore에만 저장)
-    await db.collection('users').doc(userId).update({
+    // Firestore에 FCM 토큰 저장 (문서가 없으면 생성, 있으면 병합)
+    await db.collection('users').doc(userId).set({
       fcmToken: fcmToken,
       fcmTokenUpdatedAt: new Date(),
-    })
+    }, { merge: true })
 
     console.log('[Update FCM Token] Token updated successfully')
 

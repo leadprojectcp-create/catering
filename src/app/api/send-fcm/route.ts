@@ -202,13 +202,10 @@ export async function POST(request: NextRequest) {
     // FCM 메시지 전송
     const messaging = getAdminMessaging()
 
-    // notification + data 함께 전송 (가장 호환성 좋음)
+    // data만 전송 (Notifee가 알림 표시 처리)
+    // notification 필드를 포함하면 Android에서 시스템 알림 + Notifee 알림으로 중복 발생
     const fcmMessage = {
       token: fcmToken,
-      notification: {
-        title: senderName || '새 메시지',
-        body: notificationBody
-      },
       data: {
         roomId: roomId,
         senderId: senderId,
@@ -221,28 +218,19 @@ export async function POST(request: NextRequest) {
       // Android 설정
       android: {
         priority: 'high' as const,
-        notification: {
-          channelId: 'chat_messages',
-          sound: 'default',
-          priority: 'high' as const,
-        }
       },
-      // iOS 설정 (APNS) - alert를 포함해야 알림이 표시됨
+      // iOS 설정 - contentAvailable로 백그라운드 처리 가능하게
       apns: {
         payload: {
           aps: {
-            alert: {
-              title: senderName || '새 메시지',
-              body: notificationBody
-            },
+            contentAvailable: true,
             sound: 'default',
-            badge: 1,
-            contentAvailable: true
+            badge: 1
           }
         },
         headers: {
           'apns-priority': '10',
-          'apns-push-type': 'alert'
+          'apns-push-type': 'background'
         }
       }
     }

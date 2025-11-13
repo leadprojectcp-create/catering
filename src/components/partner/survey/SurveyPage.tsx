@@ -169,7 +169,7 @@ export default function SurveyPage() {
       })
 
       alert('설문조사가 완료되었습니다. 소중한 의견 감사합니다!')
-      router.back()
+      router.push('/partner')
     } catch (error) {
       console.error('Survey submission error:', error)
       alert('설문조사 제출 중 오류가 발생했습니다. 다시 시도해주세요.')

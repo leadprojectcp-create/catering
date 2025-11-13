@@ -15,6 +15,7 @@ const nextConfig: NextConfig = {
       },
     ],
     unoptimized: true, // Bunny CDN이 이미 최적화를 처리함
+    minimumCacheTTL: 60 * 60 * 24 * 30, // 30일 캐싱
   },
 };
 
