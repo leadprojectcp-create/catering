@@ -489,7 +489,7 @@ export default function OrdersPage() {
           return conditionMet ? 0 : (settings.baseFee || 0)
         case '수량별':
           const totalQuantity = order.totalQuantity || order.items.reduce((sum, item) => sum + item.quantity, 0)
-          return Math.ceil(totalQuantity / 10) * (settings.perQuantity || 0)
+          return Math.ceil(totalQuantity / (settings.perQuantity || 10)) * (settings.baseFee || 0)
         default:
           return order.deliveryFee || 0
       }

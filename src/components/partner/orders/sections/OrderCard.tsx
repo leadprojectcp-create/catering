@@ -103,7 +103,7 @@ export default function OrderCard({
             : `조건부 무료 미적용 (고객부담 ${formatCurrency(settings.baseFee || 0)})`
         case '수량별':
           const totalQuantity = order.totalQuantity || order.items.reduce((sum, item) => sum + item.quantity, 0)
-          const quantityFee = Math.ceil(totalQuantity / 10) * (settings.perQuantity || 0)
+          const quantityFee = Math.ceil(totalQuantity / (settings.perQuantity || 10)) * (settings.baseFee || 0)
           return `수량별 배송비 적용 (고객부담 ${formatCurrency(quantityFee)})`
         default:
           return '-'
