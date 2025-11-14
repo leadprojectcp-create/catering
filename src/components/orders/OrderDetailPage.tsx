@@ -246,7 +246,7 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
           partnerId: partnerId,
           partnerPhone: storePhone,
           items: itemsWithImages,
-          createdAt: orderData.createdAt?.toDate(),
+          createdAt: orderData.createdAt?,
         } as Order)
       } catch (error) {
         console.error('주문 조회 실패:', error)

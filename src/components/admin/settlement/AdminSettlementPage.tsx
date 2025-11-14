@@ -92,9 +92,9 @@ export default function AdminSettlementPage() {
           orderNumber: data.orderNumber || doc.id,
           productName,
           totalProductPrice: data.totalProductPrice || 0,
-          orderDate: data.createdAt?.toDate() || new Date(),
+          orderDate: data.createdAt? || new Date(),
           settlementStatus: data.settlementStatus || 'pending',
-          settlementDate: data.settlementDate?.toDate(),
+          settlementDate: data.settlementDate?,
           fee: 0, // 나중에 계산
           settlementAmount: 0, // 나중에 계산
           feeRate: 0, // 나중에 계산

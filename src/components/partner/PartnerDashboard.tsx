@@ -653,7 +653,7 @@ export default function PartnerDashboard() {
         if (order.deliveryInfo?.deliveryDate) {
           // Firestore Timestamp인 경우
           if (order.deliveryInfo.deliveryDate.toDate) {
-            deliveryDate = order.deliveryInfo.deliveryDate.toDate()
+            deliveryDate = order.deliveryInfo.deliveryDate
           }
           // 문자열인 경우 (YYYY-MM-DD 형식)
           else if (typeof order.deliveryInfo.deliveryDate === 'string') {
@@ -664,7 +664,7 @@ export default function PartnerDashboard() {
         else if (order.deliveryInfo?.pickupDate) {
           // Firestore Timestamp인 경우
           if (order.deliveryInfo.pickupDate.toDate) {
-            deliveryDate = order.deliveryInfo.pickupDate.toDate()
+            deliveryDate = order.deliveryInfo.pickupDate
           }
           // 문자열인 경우 (YYYY-MM-DD 형식)
           else if (typeof order.deliveryInfo.pickupDate === 'string') {
@@ -675,7 +675,7 @@ export default function PartnerDashboard() {
         else if (order.deliveryDate) {
           // Firestore Timestamp인 경우
           if (order.deliveryDate.toDate) {
-            deliveryDate = order.deliveryDate.toDate()
+            deliveryDate = order.deliveryDate
           }
           // 문자열인 경우 (YYYY-MM-DD 형식)
           else if (typeof order.deliveryDate === 'string') {
@@ -686,7 +686,7 @@ export default function PartnerDashboard() {
         else if (order.pickupDate) {
           // Firestore Timestamp인 경우
           if (order.pickupDate.toDate) {
-            deliveryDate = order.pickupDate.toDate()
+            deliveryDate = order.pickupDate
           }
           // 문자열인 경우 (YYYY-MM-DD 형식)
           else if (typeof order.pickupDate === 'string') {
@@ -840,7 +840,7 @@ export default function PartnerDashboard() {
 
   const formatDate = (date: unknown) => {
     if (!date) return ''
-    const d = (date as { toDate?: () => Date })?.toDate ? (date as { toDate: () => Date }).toDate() : new Date(date as string | number | Date)
+    const d = (date as { toDate?: () => Date })?.toDate ? (date as { toDate: () => Date }) : new Date(date as string | number | Date)
     return d.toLocaleDateString('ko-KR', {
       month: '2-digit',
       day: '2-digit',
@@ -851,7 +851,7 @@ export default function PartnerDashboard() {
 
   const formatNoticeDate = (date: unknown) => {
     if (!date) return ''
-    const d = (date as { toDate?: () => Date })?.toDate ? (date as { toDate: () => Date }).toDate() : new Date(date as string | number | Date)
+    const d = (date as { toDate?: () => Date })?.toDate ? (date as { toDate: () => Date }) : new Date(date as string | number | Date)
     return d.toLocaleDateString('ko-KR', {
       year: 'numeric',
       month: '2-digit',

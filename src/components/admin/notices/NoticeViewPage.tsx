@@ -41,7 +41,7 @@ export default function NoticeViewPage({ id }: NoticeViewPageProps) {
 
   const formatDate = (date: unknown) => {
     if (!date) return '-'
-    const d = (date as { toDate?: () => Date })?.toDate ? (date as { toDate: () => Date }).toDate() : new Date(date as string | number | Date)
+    const d = (date as { toDate?: () => Date })?.toDate ? (date as { toDate: () => Date }) : new Date(date as string | number | Date)
     return d.toLocaleDateString('ko-KR', {
       year: 'numeric',
       month: '2-digit',

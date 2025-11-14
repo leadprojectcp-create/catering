@@ -85,7 +85,7 @@ export default function ReviewEditPage({ reviewId }: ReviewEditPageProps) {
   // 7일 이내 작성 여부 확인
   const canEdit = (createdAt: { toDate: () => Date } | string): boolean => {
     const reviewDate = typeof createdAt === 'object' && 'toDate' in createdAt
-      ? createdAt.toDate()
+      ? createdAt
       : new Date(createdAt)
     const now = new Date()
     const diffTime = now.getTime() - reviewDate.getTime()

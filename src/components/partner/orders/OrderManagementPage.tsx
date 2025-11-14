@@ -306,7 +306,7 @@ export default function OrderManagementPage() {
     try {
       // 주문 생성일을 기준으로 조회 범위 설정 (생성일 ±1일)
       const createdAt = order.createdAt && typeof order.createdAt === 'object' && 'toDate' in order.createdAt
-        ? (order.createdAt as Timestamp).toDate()
+        ? (order.createdAt as Timestamp)
         : new Date(order.createdAt as string | number | Date)
 
       const rangeStart = new Date(createdAt)
@@ -385,7 +385,7 @@ export default function OrderManagementPage() {
       // createdAt이 Firestore Timestamp인 경우와 Date인 경우 모두 처리
       let orderDate: Date
       if (typeof order.createdAt === 'object' && order.createdAt && 'toDate' in order.createdAt) {
-        orderDate = (order.createdAt as Timestamp).toDate()
+        orderDate = (order.createdAt as Timestamp)
       } else {
         orderDate = new Date(order.createdAt as string | number | Date)
       }

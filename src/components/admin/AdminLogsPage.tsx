@@ -62,7 +62,7 @@ export default function AdminLogsPage() {
     if (!timestamp) return '-'
     let date: Date
     if (typeof timestamp === 'object' && 'toDate' in timestamp && timestamp.toDate) {
-      date = timestamp.toDate()
+      date = timestamp
     } else if (timestamp instanceof Date) {
       date = timestamp
     } else if (typeof timestamp === 'string') {

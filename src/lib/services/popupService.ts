@@ -8,8 +8,7 @@ import {
   deleteDoc,
   query,
   where,
-  orderBy,
-  Timestamp
+  orderBy
 } from 'firebase/firestore'
 
 export interface Popup {
@@ -19,11 +18,11 @@ export interface Popup {
   linkUrl?: string
   targetType: 'all' | 'partner' | 'user' // 대상: 전체, 파트너, 일반 유저
   status: 'active' | 'inactive' // 활성화 상태
-  startDate: Date
-  endDate: Date
+  startDate: string
+  endDate: string
   displayOrder: number // 표시 순서 (낮을수록 먼저 표시)
-  createdAt: Date
-  updatedAt: Date
+  createdAt: string
+  updatedAt: string
 }
 
 const POPUPS_COLLECTION = 'popups'
@@ -47,11 +46,11 @@ export async function getPopups(
         linkUrl: data.linkUrl || '',
         targetType: data.targetType || 'all',
         status: data.status || 'inactive',
-        startDate: data.startDate?.toDate() || new Date(),
-        endDate: data.endDate?.toDate() || new Date(),
+        startDate: data.startDate || new Date().toISOString(),
+        endDate: data.endDate || new Date().toISOString(),
         displayOrder: data.displayOrder || 0,
-        createdAt: data.createdAt?.toDate() || new Date(),
-        updatedAt: data.updatedAt?.toDate() || new Date()
+        createdAt: data.createdAt || new Date().toISOString(),
+        updatedAt: data.updatedAt || new Date().toISOString()
       } as Popup
     })
 
@@ -94,16 +93,18 @@ export async function getActivePopups(targetType: 'all' | 'partner' | 'user'): P
           linkUrl: data.linkUrl || '',
           targetType: data.targetType || 'all',
           status: data.status || 'inactive',
-          startDate: data.startDate?.toDate() || new Date(),
-          endDate: data.endDate?.toDate() || new Date(),
+          startDate: data.startDate || new Date().toISOString(),
+          endDate: data.endDate || new Date().toISOString(),
           displayOrder: data.displayOrder || 0,
-          createdAt: data.createdAt?.toDate() || new Date(),
-          updatedAt: data.updatedAt?.toDate() || new Date()
+          createdAt: data.createdAt || new Date().toISOString(),
+          updatedAt: data.updatedAt || new Date().toISOString()
         } as Popup
       })
       .filter((popup) => {
-        // 날짜 범위 체크
-        const isInDateRange = popup.startDate <= now && popup.endDate >= now
+        // 날짜 범위 체크 (ISO 8601 문자열 비교)
+        const popupStart = new Date(popup.startDate)
+        const popupEnd = new Date(popup.endDate)
+        const isInDateRange = popupStart <= now && popupEnd >= now
         // 대상 타입 체크 (all이거나 지정된 타입과 일치)
         const isTargetMatch = popup.targetType === 'all' || popup.targetType === targetType
         return isInDateRange && isTargetMatch
@@ -134,11 +135,11 @@ export async function getPopup(id: string): Promise<Popup | null> {
       linkUrl: data.linkUrl || '',
       targetType: data.targetType || 'all',
       status: data.status || 'inactive',
-      startDate: data.startDate?.toDate() || new Date(),
-      endDate: data.endDate?.toDate() || new Date(),
+      startDate: data.startDate || new Date().toISOString(),
+      endDate: data.endDate || new Date().toISOString(),
       displayOrder: data.displayOrder || 0,
-      createdAt: data.createdAt?.toDate() || new Date(),
-      updatedAt: data.updatedAt?.toDate() || new Date()
+      createdAt: data.createdAt || new Date().toISOString(),
+      updatedAt: data.updatedAt || new Date().toISOString()
     } as Popup
   } catch (error) {
     console.error('팝업 조회 실패:', error)
@@ -154,11 +155,9 @@ export async function createPopup(
     const popupsRef = collection(db, POPUPS_COLLECTION)
     const newPopupRef = doc(popupsRef)
 
-    const now = Timestamp.now()
+    const now = new Date().toISOString()
     await setDoc(newPopupRef, {
       ...popupData,
-      startDate: Timestamp.fromDate(popupData.startDate),
-      endDate: Timestamp.fromDate(popupData.endDate),
       createdAt: now,
       updatedAt: now
     })
@@ -180,14 +179,7 @@ export async function updatePopup(
 
     const updateData: Record<string, unknown> = {
       ...popupData,
-      updatedAt: Timestamp.now()
-    }
-
-    if (popupData.startDate) {
-      updateData.startDate = Timestamp.fromDate(popupData.startDate)
-    }
-    if (popupData.endDate) {
-      updateData.endDate = Timestamp.fromDate(popupData.endDate)
+      updatedAt: new Date().toISOString()
     }
 
     await setDoc(popupRef, updateData, { merge: true })

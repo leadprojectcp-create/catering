@@ -8,8 +8,7 @@ import {
   deleteDoc,
   query,
   where,
-  orderBy,
-  Timestamp
+  orderBy
 } from 'firebase/firestore'
 
 export interface Banner {
@@ -21,8 +20,8 @@ export interface Banner {
   linkUrl?: string
   status: 'active' | 'inactive'
   displayOrder: number
-  createdAt: Date
-  updatedAt: Date
+  createdAt: string
+  updatedAt: string
 }
 
 const BANNERS_COLLECTION = 'banners'
@@ -45,8 +44,8 @@ export async function getBanners(statusFilter: string = 'all'): Promise<Banner[]
         linkUrl: data.linkUrl || '',
         status: data.status || 'inactive',
         displayOrder: data.displayOrder || 0,
-        createdAt: data.createdAt?.toDate() || new Date(),
-        updatedAt: data.updatedAt?.toDate() || new Date()
+        createdAt: data.createdAt || new Date().toISOString(),
+        updatedAt: data.updatedAt || new Date().toISOString()
       } as Banner
     })
 
@@ -84,8 +83,8 @@ export async function getActiveBanners(): Promise<Banner[]> {
         linkUrl: data.linkUrl || '',
         status: data.status || 'inactive',
         displayOrder: data.displayOrder || 0,
-        createdAt: data.createdAt?.toDate() || new Date(),
-        updatedAt: data.updatedAt?.toDate() || new Date()
+        createdAt: data.createdAt || new Date().toISOString(),
+        updatedAt: data.updatedAt || new Date().toISOString()
       } as Banner
     })
 
@@ -116,8 +115,8 @@ export async function getBanner(id: string): Promise<Banner | null> {
       linkUrl: data.linkUrl || '',
       status: data.status || 'inactive',
       displayOrder: data.displayOrder || 0,
-      createdAt: data.createdAt?.toDate() || new Date(),
-      updatedAt: data.updatedAt?.toDate() || new Date()
+      createdAt: data.createdAt || new Date().toISOString(),
+      updatedAt: data.updatedAt || new Date().toISOString()
     } as Banner
   } catch (error) {
     console.error('배너 조회 실패:', error)
@@ -133,7 +132,7 @@ export async function createBanner(
     const bannersRef = collection(db, BANNERS_COLLECTION)
     const newBannerRef = doc(bannersRef)
 
-    const now = Timestamp.now()
+    const now = new Date().toISOString()
     await setDoc(newBannerRef, {
       ...bannerData,
       createdAt: now,
@@ -157,7 +156,7 @@ export async function updateBanner(
 
     const updateData: Record<string, unknown> = {
       ...bannerData,
-      updatedAt: Timestamp.now()
+      updatedAt: new Date().toISOString()
     }
 
     await setDoc(bannerRef, updateData, { merge: true })

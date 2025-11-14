@@ -110,7 +110,7 @@ export default function ReviewManagePage() {
   const formatDate = (timestamp: { toDate: () => Date } | string) => {
     if (!timestamp) return ''
     const date = typeof timestamp === 'object' && 'toDate' in timestamp
-      ? timestamp.toDate()
+      ? timestamp
       : new Date(timestamp)
     const year = date.getFullYear()
     const month = String(date.getMonth() + 1).padStart(2, '0')
@@ -121,7 +121,7 @@ export default function ReviewManagePage() {
   // 7일 이내 작성 여부 확인
   const canEdit = (createdAt: { toDate: () => Date } | string): boolean => {
     const reviewDate = typeof createdAt === 'object' && 'toDate' in createdAt
-      ? createdAt.toDate()
+      ? createdAt
       : new Date(createdAt)
     const now = new Date()
     const diffTime = now.getTime() - reviewDate.getTime()
