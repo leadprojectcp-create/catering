@@ -158,7 +158,7 @@ export default function ProductManagement() {
     try {
       await updateDoc(doc(db, 'products', item.id), {
         status: item.status === 'active' ? 'inactive' : 'active',
-        updatedAt: new Date()
+        updatedAt: new Date().toISOString()
       })
       fetchMenuItems()
     } catch (error) {

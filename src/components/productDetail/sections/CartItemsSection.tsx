@@ -267,7 +267,7 @@ export default function CartItemsSection({
           totalProductPrice: totalPrice,
           totalQuantity: totalQuantity,
           request: storeRequest || existingData?.request || '',
-          updatedAt: new Date()
+          updatedAt: new Date().toISOString()
         }
 
         await updateDoc(docRef, updateData)
@@ -298,8 +298,8 @@ export default function CartItemsSection({
           totalProductPrice: totalPrice,
           totalQuantity: totalQuantity,
           request: storeRequest || '',
-          createdAt: new Date(),
-          updatedAt: new Date()
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
         }
 
         await addDoc(collection(db, 'shoppingCart'), cartData)
@@ -428,8 +428,8 @@ export default function CartItemsSection({
         totalProductPrice: totalPrice,
         totalQuantity: totalQuantity,
         request: storeRequest,
-        createdAt: new Date(),
-        updatedAt: new Date()
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       }
 
       let cartId: string
@@ -443,7 +443,7 @@ export default function CartItemsSection({
         await updateDoc(cartRef, {
           ...orderData,
           createdAt: existingData?.createdAt || new Date(),
-          updatedAt: new Date()
+          updatedAt: new Date().toISOString()
         })
         cartId = editingCartItemId
       } else {

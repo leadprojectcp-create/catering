@@ -75,7 +75,7 @@ export default function SurveyPage() {
           // users 컬렉션에도 survey 필드 업데이트
           await updateDoc(userRef, {
             survey: true,
-            surveyCompletedAt: new Date()
+            surveyCompletedAt: new Date().toISOString()
           })
         }
       } catch (error) {
@@ -200,8 +200,8 @@ export default function SurveyPage() {
         importantSupportOther: formData.importantSupportOther,
         suggestions: formData.suggestions,
         instagramScreenshotUrl: instagramScreenshotUrl,
-        createdAt: new Date(),
-        updatedAt: new Date()
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       }
 
       // surveys 컬렉션에 저장
@@ -211,7 +211,7 @@ export default function SurveyPage() {
       const userRef = doc(db, 'users', user.uid)
       await updateDoc(userRef, {
         survey: true,
-        surveyCompletedAt: new Date()
+        surveyCompletedAt: new Date().toISOString()
       })
 
       alert('설문조사가 완료되었습니다. 소중한 의견 감사합니다!')

@@ -260,8 +260,8 @@ export default function PartnerSignupStep2() {
         description: '',
         closedDays: [],
         status: 'pending', // 'pending' | 'active' | 'inactive' - 검수 대기 중
-        createdAt: new Date(),
-        updatedAt: new Date()
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       }
 
       await setDoc(doc(db, 'stores', uid), storeData)
@@ -270,7 +270,7 @@ export default function PartnerSignupStep2() {
       const userRef = doc(db, 'users', uid)
       await setDoc(userRef, {
         registrationComplete: true, // Step2 완료 시점에 회원가입 완료 처리
-        updatedAt: new Date()
+        updatedAt: new Date().toISOString()
       }, { merge: true })
 
       // Step3 표시용 데이터 저장

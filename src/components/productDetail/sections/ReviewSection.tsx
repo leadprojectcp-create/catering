@@ -211,7 +211,7 @@ export default function ReviewSection({ reviews, loadingReviews }: ReviewSection
                   </div>
                 </div>
                 <span className={styles.reviewDate}>
-                  {review.createdAt.toLocaleDateString('ko-KR')}
+                  {new Date(review.createdAt as unknown as string).toLocaleDateString('ko-KR')}
                 </span>
               </div>
               {review.images && review.images.length > 0 && (
@@ -263,7 +263,7 @@ export default function ReviewSection({ reviews, loadingReviews }: ReviewSection
                       {partnerStores[review.reply.partnerId] || '사장님'}
                     </span>
                     <span className={styles.replyDate}>
-                      {review.reply.createdAt.toLocaleDateString('ko-KR', {
+                      {new Date(review.reply.createdAt as unknown as string).toLocaleDateString('ko-KR', {
                         year: 'numeric',
                         month: '2-digit',
                         day: '2-digit'

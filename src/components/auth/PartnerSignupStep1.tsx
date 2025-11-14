@@ -245,8 +245,8 @@ export default function PartnerSignupStep1() {
           type: 'partner',
           terms: createTermsAgreements(),
           registrationComplete: false, // Step2 완료 후 true로 변경
-          createdAt: new Date(),
-          updatedAt: new Date()
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
         }, { merge: true })
       } else {
         // 일반 회원가입 - Firebase Auth 계정 생성
@@ -268,8 +268,8 @@ export default function PartnerSignupStep1() {
             type: 'partner',
             terms: createTermsAgreements(),
             registrationComplete: false, // Step2 완료 후 true로 변경
-            createdAt: new Date(),
-            updatedAt: new Date()
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
           })
         } catch (authError: unknown) {
           // 이미 계정이 존재하는 경우 로그인 시도
@@ -296,7 +296,7 @@ export default function PartnerSignupStep1() {
             await setDoc(userRef, {
               name: formData.name,
               phone: formData.phone.replace(/-/g, ''),
-              updatedAt: new Date()
+              updatedAt: new Date().toISOString()
             }, { merge: true })
           } else {
             throw authError

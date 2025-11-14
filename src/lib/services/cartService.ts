@@ -119,8 +119,8 @@ export const addCartItem = async (cartData: Omit<CartItem, 'id'>): Promise<strin
   try {
     const docRef = await addDoc(collection(db, COLLECTION_NAME), {
       ...cartData,
-      createdAt: new Date(),
-      updatedAt: new Date()
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     })
     return docRef.id
   } catch (error) {

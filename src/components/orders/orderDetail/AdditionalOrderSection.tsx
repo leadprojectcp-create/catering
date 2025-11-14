@@ -32,13 +32,14 @@ const isDiscountValid = (item: OrderItem) => {
 }
 
 const formatOrderDate = (date: Date) => {
-  const datePart = date.toLocaleDateString('ko-KR', {
+  const d = new Date(date as unknown as string)
+  const datePart = d.toLocaleDateString('ko-KR', {
     year: 'numeric',
     month: 'long',
     day: 'numeric'
   })
-  const weekday = date.toLocaleDateString('ko-KR', { weekday: 'short' })
-  const timePart = date.toLocaleTimeString('ko-KR', {
+  const weekday = d.toLocaleDateString('ko-KR', { weekday: 'short' })
+  const timePart = d.toLocaleTimeString('ko-KR', {
     hour: 'numeric',
     minute: '2-digit',
     second: '2-digit',

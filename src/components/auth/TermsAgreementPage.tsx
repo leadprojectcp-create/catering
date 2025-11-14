@@ -125,7 +125,7 @@ export default function TermsAgreementPage() {
           type: selectedType,
           terms: termsArray,
           registrationComplete: false, // 회원가입 진행 중
-          updatedAt: new Date()
+          updatedAt: new Date().toISOString()
         })
       } catch (error) {
         console.error('약관 동의 저장 오류:', error)
