@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
-import { collection, query, where, orderBy, limit, getDocs, Timestamp, onSnapshot } from 'firebase/firestore'
+import { collection, query, where, orderBy, limit, getDocs, onSnapshot } from 'firebase/firestore'
 import { db, realtimeDb } from '@/lib/firebase'
 import { ref as rtdbRef, onValue as rtdbOnValue } from 'firebase/database'
 import { getPublishedNotices, Notice } from '@/lib/services/noticeService'
@@ -236,10 +236,10 @@ export default function PartnerDashboard() {
 
       const storeId = user.uid
 
-      // 24시간 전 타임스탬프
+      // 24시간 전 ISO 문자열
       const now = new Date()
       const last24Hours = new Date(now.getTime() - (24 * 60 * 60 * 1000))
-      const last24HoursTimestamp = Timestamp.fromDate(last24Hours)
+      const last24HoursISO = last24Hours.toISOString()
 
       // 1. 실시간 주문현황 구독 (paymentStatus: paid)
       const ordersQuery = query(
@@ -296,9 +296,8 @@ export default function PartnerDashboard() {
 
         let newChats = 0
         let unansweredChats = 0
-        const last24HoursTime = last24HoursTimestamp.toMillis()
 
-        console.log('[채팅 통계] 24시간 기준 시간:', last24HoursTime, new Date(last24HoursTime))
+        console.log('[채팅 통계] 24시간 기준 시간:', last24HoursISO, new Date(last24HoursISO))
 
         if (!snapshot.exists()) {
           console.log('채팅방 데이터 없음')
@@ -404,13 +403,13 @@ export default function PartnerDashboard() {
       // 현재 시간
       const now = new Date()
 
-      // 24시간 전
+      // 24시간 전 ISO 문자열
       const last24Hours = new Date(now.getTime() - (24 * 60 * 60 * 1000))
-      const last24HoursTimestamp = Timestamp.fromDate(last24Hours)
+      const last24HoursISO2 = last24Hours.toISOString()
 
-      // 이번 달 시작일
+      // 이번 달 시작일 ISO 문자열
       const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
-      const monthStartTimestamp = Timestamp.fromDate(monthStart)
+      const monthStartISO = monthStart.toISOString()
 
       // 각 데이터를 개별적으로 가져오기 (오류 방지)
       let todayOrdersSnapshot, pendingOrdersSnapshot, newOrdersSnapshot, monthOrdersSnapshot,
@@ -424,7 +423,6 @@ export default function PartnerDashboard() {
         ))
 
         // 24시간 이내 주문 필터링 (paymentStatus가 paid인 것만)
-        const last24HoursTime = last24HoursTimestamp.toMillis()
         todayOrdersSnapshot = {
           size: allOrdersSnapshot.docs.filter(doc => {
             const data = doc.data()

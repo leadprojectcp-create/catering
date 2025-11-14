@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
-import { collection, getDocs, query, where, orderBy, limit, Timestamp } from 'firebase/firestore'
+import { collection, getDocs, query, where, orderBy, limit } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import Loading from '@/components/Loading'
 import { ShoppingBag, Users, Store, TrendingUp, Activity, DollarSign, Package, AlertCircle } from 'lucide-react'
@@ -69,17 +69,16 @@ export default function AdminDashboard() {
 
       const now = new Date()
       const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-      const todayStartTimestamp = Timestamp.fromDate(todayStart)
+      const todayStartISO = todayStart.toISOString()
 
       // 전체 주문 조회
       const ordersSnapshot = await getDocs(collection(db, 'orders'))
       const allOrders = ordersSnapshot.docs
 
-      // 오늘 주문 필터링
+      // 오늘 주문 필터링 (ISO 8601 문자열 비교)
       const todayOrders = allOrders.filter(doc => {
         const createdAt = doc.data().createdAt
-        const createdTime = createdAt?.toMillis ? createdAt.toMillis() : 0
-        return createdTime >= todayStartTimestamp.toMillis()
+        return createdAt && createdAt >= todayStartISO
       })
 
       // 대기 중 주문
@@ -105,12 +104,12 @@ export default function AdminDashboard() {
         }
       })
 
-      // 최근 주문 5개
+      // 최근 주문 5개 (ISO 8601 문자열 비교)
       const sortedOrders = allOrders
         .sort((a, b) => {
-          const aTime = a.data().createdAt?.toMillis ? a.data().createdAt.toMillis() : 0
-          const bTime = b.data().createdAt?.toMillis ? b.data().createdAt.toMillis() : 0
-          return bTime - aTime
+          const aTime = a.data().createdAt || ''
+          const bTime = b.data().createdAt || ''
+          return bTime.localeCompare(aTime)
         })
         .slice(0, 5)
 
@@ -171,9 +170,7 @@ export default function AdminDashboard() {
 
   const formatDate = (date: unknown) => {
     if (!date) return ''
-    const d = (date as { toDate?: () => Date })?.toDate
-      ? (date as { toDate: () => Date }).toDate()
-      : new Date(date as string | number | Date)
+    const d = new Date(date as string)
     return d.toLocaleDateString('ko-KR', {
       month: '2-digit',
       day: '2-digit',
