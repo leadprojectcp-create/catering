@@ -62,7 +62,7 @@ const calculateItemPrice = (
     optionNames.forEach(optionName => {
       product.options?.forEach(group => {
         if (group.groupName === groupName) {
-          const selected = group.values.find(v => v.name === optionName)
+          const selected = group.values.find(v => v.name.trim() === optionName.trim())
           if (selected) {
             optionPrice += selected.price
           }
@@ -77,7 +77,7 @@ const calculateItemPrice = (
       optionNames.forEach(optionName => {
         product.additionalOptions?.forEach(group => {
           if (group.groupName === groupName) {
-            const selected = group.values.find(v => v.name === optionName)
+            const selected = group.values.find(v => v.name.trim() === optionName.trim())
             if (selected) {
               optionPrice += selected.price
             }
@@ -103,7 +103,7 @@ const createOptionsWithPrices = (
     optionNames.forEach(optionName => {
       product.options?.forEach(group => {
         if (group.groupName === groupName) {
-          const selected = group.values.find(v => v.name === optionName)
+          const selected = group.values.find(v => v.name.trim() === optionName.trim())
           if (selected) {
             totalPrice += selected.price
           }
@@ -138,7 +138,7 @@ const createAdditionalOptionsWithPrices = (
     optionNames.forEach(optionName => {
       product.additionalOptions?.forEach(group => {
         if (group.groupName === groupName) {
-          const selected = group.values.find(v => v.name === optionName)
+          const selected = group.values.find(v => v.name.trim() === optionName.trim())
           if (selected) {
             totalPrice += selected.price
           }
