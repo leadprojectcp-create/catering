@@ -58,32 +58,44 @@
 }
 
 .toggleButtonGroup {
-  display: flex;
-  gap: 8px;
+  display: inline-flex;
+  border-radius: 5px;
+  background: #F4F4F4;
+  padding: 2px;
+  gap: 0;
 }
 
 .toggleButton {
-  padding: 8px 20px;
-  background-color: white;
-  border: 1px solid #E5E7EB;
-  border-radius: 8px;
+  display: inline-flex;
+  padding: 5px 10px;
+  justify-content: center;
+  align-items: center;
+  border-radius: 5px;
+  background: #FFF;
+  color: #999;
   font-size: 14px;
-  font-weight: 500;
-  color: #6B7280;
+  font-weight: 600;
+  line-height: normal;
   cursor: pointer;
-  min-width: 80px;
+  border: none;
+  min-width: 60px;
+  transition: all 0.2s;
 }
 
 .toggleButtonActive {
-  padding: 8px 20px;
-  background-color: #237AF2;
-  border: 1px solid #237AF2;
-  border-radius: 8px;
+  display: inline-flex;
+  padding: 5px 22px;
+  justify-content: center;
+  align-items: center;
+  border-radius: 5px;
+  background: #025BD9;
+  color: #FFF;
   font-size: 14px;
   font-weight: 600;
-  color: white;
+  line-height: normal;
   cursor: pointer;
-  min-width: 80px;
+  border: none;
+  min-width: 60px;
 }
 
 .checkboxGroup {
