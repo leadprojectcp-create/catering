@@ -156,8 +156,8 @@ export default function PaymentSummarySection({
           <span className={styles.paymentValue}>{totalProductPrice.toLocaleString()}원</span>
         </div>
 
-        {/* 퀵업체 배송 - 배송비 조회 버튼 */}
-        {!isAdditionalOrder && deliveryMethod === '퀵업체 배송' && !deliveryFeeFromAPI && (
+        {/* 퀵업체 배송 - 배송비 조회 버튼 (무료 타입 제외) */}
+        {!isAdditionalOrder && deliveryMethod === '퀵업체 배송' && !deliveryFeeFromAPI && quickDeliveryFeeSettings?.type !== '무료' && (
           <div className={styles.paymentRow}>
             <div>
               <div className={styles.paymentLabel}>배송비</div>
@@ -176,8 +176,16 @@ export default function PaymentSummarySection({
           </div>
         )}
 
-        {/* 퀵업체 배송 - 배송비 표시 */}
-        {!isAdditionalOrder && deliveryMethod === '퀵업체 배송' && deliveryFeeFromAPI && (
+        {/* 퀵업체 배송 - 무료 타입일 때 배송비 표시 */}
+        {!isAdditionalOrder && deliveryMethod === '퀵업체 배송' && quickDeliveryFeeSettings?.type === '무료' && (
+          <div className={styles.paymentRow}>
+            <span className={styles.paymentLabel}>배송비</span>
+            <span className={styles.paymentValue}>+0원</span>
+          </div>
+        )}
+
+        {/* 퀵업체 배송 - 배송비 표시 (조회 후) */}
+        {!isAdditionalOrder && deliveryMethod === '퀵업체 배송' && deliveryFeeFromAPI && quickDeliveryFeeSettings?.type !== '무료' && (
           <>
             <div className={styles.paymentRow}>
               <span className={styles.paymentLabel}>배송비</span>
@@ -254,9 +262,9 @@ export default function PaymentSummarySection({
               {parcelPaymentMethod === '착불'
                 ? `착불(${calculateParcelDeliveryFee.toLocaleString()}원)`
                 : deliveryFeeSettings?.type === '무료'
-                ? '무료'
+                ? '+0원'
                 : deliveryFeeSettings?.type === '조건부 무료'
-                ? (calculateParcelDeliveryFee === 0 ? '조건부 무료' : `+${calculateParcelDeliveryFee.toLocaleString()}원`)
+                ? (calculateParcelDeliveryFee === 0 ? '+0원' : `+${calculateParcelDeliveryFee.toLocaleString()}원`)
                 : `+${calculateParcelDeliveryFee.toLocaleString()}원`}
             </span>
           </div>

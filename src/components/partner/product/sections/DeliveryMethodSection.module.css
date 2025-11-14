@@ -61,8 +61,8 @@
   display: inline-flex;
   border-radius: 5px;
   background: #F4F4F4;
-  padding: 2px;
-  gap: 0;
+  padding: 5px;
+  gap: 10px;
 }
 
 .toggleButton {
@@ -78,7 +78,7 @@
   line-height: normal;
   cursor: pointer;
   border: none;
-  min-width: 60px;
+  width: 100px;
   transition: all 0.2s;
 }
 
@@ -95,7 +95,7 @@
   line-height: normal;
   cursor: pointer;
   border: none;
-  min-width: 60px;
+  width: 100px;
 }
 
 .checkboxGroup {

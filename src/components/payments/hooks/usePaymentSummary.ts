@@ -141,8 +141,8 @@ export function usePaymentSummary(params: UsePaymentSummaryParams) {
       return
     }
 
-    // 퀵업체 배송 시 배송비 조회 필수 검증 (추가 주문 제외)
-    if (!isAdditionalOrder && deliveryMethod === '퀵업체 배송' && !deliveryFeeFromAPI) {
+    // 퀵업체 배송 시 배송비 조회 필수 검증 (추가 주문 제외, 무료 타입 제외)
+    if (!isAdditionalOrder && deliveryMethod === '퀵업체 배송' && !deliveryFeeFromAPI && quickDeliveryFeeSettings?.type !== '무료') {
       alert('퀵업체 배송을 선택하셨습니다.\n반드시 "배송비 조회" 버튼을 눌러 배송비를 확인해주세요.')
       return
     }

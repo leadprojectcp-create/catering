@@ -91,7 +91,7 @@ export default function RegularOrderSection({ order }: Props) {
                 {formatOrderDate(order.createdAt)}
               </div>
               <div className={styles.paymentStatusText}>
-                {paymentStatusText} {productGroupTotal.toLocaleString()}원
+                {paymentStatusText} {(order.totalPrice || 0).toLocaleString()}원
               </div>
             </div>
 
