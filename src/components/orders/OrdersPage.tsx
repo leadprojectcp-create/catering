@@ -33,6 +33,7 @@ interface Order {
   items: OrderItem[]
   totalPrice: number
   totalProductPrice: number
+  totalQuantity?: number
   deliveryFee: number
   orderStatus: string
   paymentStatus: string
@@ -63,6 +64,18 @@ interface Order {
     recipientPhone?: string
     deliveryRequest?: string
     detailedRequest?: string
+  }
+  deliveryFeeSettings?: {
+    type: '무료' | '조건부 무료' | '유료' | '수량별'
+    baseFee?: number
+    freeCondition?: number
+    perQuantity?: number
+  }
+  quickDeliveryFeeSettings?: {
+    type: '무료' | '조건부 지원' | '유료'
+    baseFee?: number
+    freeCondition?: number
+    maxSupport?: number
   }
 }
 
@@ -460,6 +473,51 @@ export default function OrdersPage() {
     }
   }
 
+  // 배송비 계산 함수 (소비자가 부담하는 금액)
+  const getDeliveryFeeAmount = (order: Order): number => {
+    if (order.deliveryMethod === '택배 배송' && order.deliveryFeeSettings) {
+      const settings = order.deliveryFeeSettings
+      const totalProductPrice = order.totalProductPrice || 0
+
+      switch (settings.type) {
+        case '무료':
+          return 0
+        case '유료':
+          return settings.baseFee || 0
+        case '조건부 무료':
+          const conditionMet = totalProductPrice >= (settings.freeCondition || 0)
+          return conditionMet ? 0 : (settings.baseFee || 0)
+        case '수량별':
+          const totalQuantity = order.totalQuantity || order.items.reduce((sum, item) => sum + item.quantity, 0)
+          return Math.ceil(totalQuantity / 10) * (settings.perQuantity || 0)
+        default:
+          return order.deliveryFee || 0
+      }
+    } else if (order.deliveryMethod === '퀵업체 배송' && order.quickDeliveryFeeSettings) {
+      const settings = order.quickDeliveryFeeSettings
+      const totalProductPrice = order.totalProductPrice || 0
+      const actualQuickFee = order.deliveryFee || 0
+
+      switch (settings.type) {
+        case '무료':
+          return 0
+        case '유료':
+          return actualQuickFee
+        case '조건부 지원':
+          const conditionMet = totalProductPrice >= (settings.freeCondition || 0)
+          if (conditionMet) {
+            const supportAmount = Math.min(actualQuickFee, settings.maxSupport || 0)
+            return actualQuickFee - supportAmount
+          } else {
+            return actualQuickFee
+          }
+        default:
+          return actualQuickFee
+      }
+    }
+    return order.deliveryFee || 0
+  }
+
   const handleChatClick = async (order: Order, e: React.MouseEvent) => {
     e.stopPropagation()
 
@@ -836,6 +894,11 @@ export default function OrdersPage() {
                         }`}>
                           {order.deliveryMethod}
                         </div>
+                        {order.deliveryMethod !== '매장 픽업' && (
+                          <div className={styles.deliveryFee}>
+                            배송비 {getDeliveryFeeAmount(order).toLocaleString()}원
+                          </div>
+                        )}
                         <div className={`${styles.orderTotal} ${order.paymentStatus === 'failed' ? styles.orderTotalFailed : ''}`}>
                           {(!order.paymentStatus || order.paymentStatus === 'unpaid') && `결제 미완료 ${(order.totalPrice || order.totalProductPrice || 0).toLocaleString()}원`}
                           {order.paymentStatus === 'paid' && `결제 완료 ${(order.totalPrice || order.totalProductPrice || 0).toLocaleString()}원`}
