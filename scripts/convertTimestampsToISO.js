@@ -57,7 +57,9 @@ const TIMESTAMP_FIELDS = [
   'publishedAt',
   'lastMessageAt',
   'readAt',
-  'sentAt'
+  'sentAt',
+  'startDate',
+  'endDate'
 ];
 
 /**

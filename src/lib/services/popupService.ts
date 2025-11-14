@@ -103,7 +103,12 @@ export async function getActivePopups(targetType: 'all' | 'partner' | 'user'): P
         } as Popup
       })
       .filter((popup) => {
-        // 날짜 범위 체크 (Timestamp 비교)
+        // Timestamp 타입 확인 및 날짜 범위 체크
+        if (!(popup.startDate instanceof Timestamp) || !(popup.endDate instanceof Timestamp)) {
+          console.warn('Popup has invalid date format:', popup.id)
+          return false
+        }
+
         const isInDateRange = popup.startDate.toMillis() <= now.toMillis() && popup.endDate.toMillis() >= now.toMillis()
         // 대상 타입 체크 (all이거나 지정된 타입과 일치)
         const isTargetMatch = popup.targetType === 'all' || popup.targetType === targetType
