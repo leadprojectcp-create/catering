@@ -85,6 +85,55 @@ export default function OrderCard({
     return new Intl.NumberFormat('ko-KR').format(amount) + '원'
   }
 
+  // 배송비 표시 텍스트 생성 함수
+  const getDeliveryFeeText = () => {
+    if (order.deliveryMethod === '택배 배송' && order.deliveryFeeSettings) {
+      const settings = order.deliveryFeeSettings
+      const totalProductPrice = order.totalProductPrice || 0
+
+      switch (settings.type) {
+        case '무료':
+          return '무료 배송 (가게 부담)'
+        case '유료':
+          return `유료 배송 (고객 부담 ${formatCurrency(settings.baseFee || 0)})`
+        case '조건부 무료':
+          const conditionMet = totalProductPrice >= (settings.freeCondition || 0)
+          return conditionMet
+            ? '조건부 무료 적용 (가게부담)'
+            : `조건부 무료 미적용 (고객부담 ${formatCurrency(settings.baseFee || 0)})`
+        case '수량별':
+          const totalQuantity = order.totalQuantity || order.items.reduce((sum, item) => sum + item.quantity, 0)
+          const quantityFee = totalQuantity * (settings.perQuantity || 0)
+          return `수량별 배송비 적용 (가게부담 ${formatCurrency(quantityFee)})`
+        default:
+          return '-'
+      }
+    } else if (order.deliveryMethod === '퀵업체 배송' && order.quickDeliveryFeeSettings) {
+      const settings = order.quickDeliveryFeeSettings
+      const totalProductPrice = order.totalProductPrice || 0
+      const actualQuickFee = order.deliveryFee || 0
+
+      switch (settings.type) {
+        case '무료':
+          return `퀵 배송 무료 (가게 부담 ${formatCurrency(actualQuickFee)})`
+        case '유료':
+          return '퀵 유료 (고객 부담)'
+        case '조건부 지원':
+          const conditionMet = totalProductPrice >= (settings.freeCondition || 0)
+          const supportAmount = Math.min(actualQuickFee, settings.maxSupport || 0)
+
+          if (conditionMet) {
+            return `퀵비 지원 적용 (가게부담 ${formatCurrency(supportAmount)})`
+          } else {
+            return '퀵비 지원 미적용 (고객 부담)'
+          }
+        default:
+          return '-'
+      }
+    }
+    return '-'
+  }
+
   const handlePhoneClick = (order: Order) => {
     if (!order.phone) {
       alert('전화번호가 없습니다.')
@@ -599,6 +648,10 @@ export default function OrderCard({
                     <span className={styles.detailValue}>퀵 업체 배송</span>
                   </div>
                   <div className={styles.detailRow}>
+                    <span className={styles.detailLabel}>배송비</span>
+                    <span className={styles.detailValue}>{getDeliveryFeeText()}</span>
+                  </div>
+                  <div className={styles.detailRow}>
                     <span className={styles.detailLabel}>배송주소</span>
                     <span className={styles.detailValue}>
                       {order.deliveryInfo?.address || order.address}
@@ -723,6 +776,10 @@ export default function OrderCard({
                   <div className={styles.detailRow}>
                     <span className={styles.detailLabel}>배송방법</span>
                     <span className={styles.detailValue}>택배 배송</span>
+                  </div>
+                  <div className={styles.detailRow}>
+                    <span className={styles.detailLabel}>배송비</span>
+                    <span className={styles.detailValue}>{getDeliveryFeeText()}</span>
                   </div>
                   <div className={styles.detailRow}>
                     <span className={styles.detailLabel}>결제방식</span>

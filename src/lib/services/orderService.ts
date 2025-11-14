@@ -95,6 +95,18 @@ export interface Order {
   settlementStatus?: 'pending' | 'completed'
   settlementDate?: Date | Timestamp | FieldValue
   settlementId?: string
+  deliveryFeeSettings?: {
+    type: '무료' | '조건부 무료' | '유료' | '수량별'
+    baseFee?: number
+    freeCondition?: number
+    perQuantity?: number
+  }
+  quickDeliveryFeeSettings?: {
+    type: '무료' | '조건부 지원' | '유료'
+    baseFee?: number
+    freeCondition?: number
+    maxSupport?: number
+  }
   createdAt?: Date | Timestamp | FieldValue
   updatedAt?: Date | Timestamp | FieldValue
 }
