@@ -60,16 +60,7 @@ export default function AdminLogsPage() {
 
   const formatTimestamp = (timestamp: { toDate?: () => Date } | Date | string) => {
     if (!timestamp) return '-'
-    let date: Date
-    if (typeof timestamp === 'object' && 'toDate' in timestamp && timestamp.toDate) {
-      date = timestamp.toDate()
-    } else if (timestamp instanceof Date) {
-      date = timestamp
-    } else if (typeof timestamp === 'string') {
-      date = new Date(timestamp)
-    } else {
-      date = new Date()
-    }
+    const date = new Date(timestamp as string)
     return date.toLocaleString('ko-KR')
   }
 

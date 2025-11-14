@@ -773,13 +773,14 @@ export default function OrdersPage() {
 
                 <div className={styles.orderDate}>
                   {(() => {
-                    const year = order.createdAt.getFullYear()
-                    const month = order.createdAt.getMonth() + 1
-                    const day = order.createdAt.getDate()
+                    const date = new Date(order.createdAt as string)
+                    const year = date.getFullYear()
+                    const month = date.getMonth() + 1
+                    const day = date.getDate()
                     const weekdays = ['일', '월', '화', '수', '목', '금', '토']
-                    const weekday = weekdays[order.createdAt.getDay()]
-                    const hours = order.createdAt.getHours()
-                    const minutes = order.createdAt.getMinutes()
+                    const weekday = weekdays[date.getDay()]
+                    const hours = date.getHours()
+                    const minutes = date.getMinutes()
                     const period = hours >= 12 ? '오후' : '오전'
                     const displayHours = hours > 12 ? hours - 12 : hours === 0 ? 12 : hours
                     return `주문날짜 ${year}년 ${month}월 ${day}일 (${weekday}) ${period} ${displayHours}시 ${minutes}분`
