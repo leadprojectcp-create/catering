@@ -152,8 +152,8 @@ export default function PopupEditPage({ popupId }: PopupEditPageProps) {
         targetType,
         status,
         displayOrder,
-        startDate: new Date(startDate),
-        endDate: new Date(endDate)
+        startDate: startDate,
+        endDate: endDate
       })
 
       alert('팝업이 수정되었습니다.')

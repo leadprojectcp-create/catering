@@ -323,14 +323,14 @@ export default function PartnerDashboard() {
           console.log(`[채팅방 ${roomId}]`, {
             createdAt: chatRoom.createdAt,
             createdAtDate: chatRoom.createdAt ? new Date(chatRoom.createdAt) : null,
-            isNew: chatRoom.createdAt && chatRoom.createdAt >= last24HoursTime,
+            isNew: chatRoom.createdAt && chatRoom.createdAt >= last24HoursISO,
             unreadCount: chatRoom.unreadCount?.[storeId] || 0,
             participants
           })
 
-          // 24시간 이내 생성된 채팅방
+          // 24시간 이내 생성된 채팅방 (ISO 8601 문자열 비교)
           const createdAt = chatRoom.createdAt
-          if (createdAt && createdAt >= last24HoursTime) {
+          if (createdAt && createdAt >= last24HoursISO) {
             newChats++
           }
 
@@ -422,19 +422,17 @@ export default function PartnerDashboard() {
           where('storeId', '==', storeId)
         ))
 
-        // 24시간 이내 주문 필터링 (paymentStatus가 paid인 것만)
+        // 24시간 이내 주문 필터링 (paymentStatus가 paid인 것만, ISO 8601 문자열 비교)
         todayOrdersSnapshot = {
           size: allOrdersSnapshot.docs.filter(doc => {
             const data = doc.data()
             const createdAt = data.createdAt
-            const createdTime = createdAt?.toMillis ? createdAt.toMillis() : 0
-            return createdTime >= last24HoursTime && data.paymentStatus === 'paid'
+            return createdAt && createdAt >= last24HoursISO2 && data.paymentStatus === 'paid'
           }).length,
           docs: allOrdersSnapshot.docs.filter(doc => {
             const data = doc.data()
             const createdAt = data.createdAt
-            const createdTime = createdAt?.toMillis ? createdAt.toMillis() : 0
-            return createdTime >= last24HoursTime && data.paymentStatus === 'paid'
+            return createdAt && createdAt >= last24HoursISO2 && data.paymentStatus === 'paid'
           })
         }
         console.log('24시간 이내 주문:', todayOrdersSnapshot.size)
@@ -486,17 +484,14 @@ export default function PartnerDashboard() {
           where('storeId', '==', storeId)
         ))
 
-        const monthStartTime = monthStartTimestamp.toMillis()
         monthOrdersSnapshot = {
           size: allOrdersSnapshot.docs.filter(doc => {
             const createdAt = doc.data().createdAt
-            const createdTime = createdAt?.toMillis ? createdAt.toMillis() : 0
-            return createdTime >= monthStartTime
+            return createdAt && createdAt >= monthStartISO
           }).length,
           docs: allOrdersSnapshot.docs.filter(doc => {
             const createdAt = doc.data().createdAt
-            const createdTime = createdAt?.toMillis ? createdAt.toMillis() : 0
-            return createdTime >= monthStartTime
+            return createdAt && createdAt >= monthStartISO
           })
         }
       } catch (error) {
@@ -514,9 +509,9 @@ export default function PartnerDashboard() {
         const sortedDocs = allOrdersSnapshot.docs
           .filter(doc => doc.data().paymentStatus === 'paid')
           .sort((a, b) => {
-            const aTime = a.data().createdAt?.toMillis ? a.data().createdAt.toMillis() : 0
-            const bTime = b.data().createdAt?.toMillis ? b.data().createdAt.toMillis() : 0
-            return bTime - aTime // 내림차순
+            const aTime = a.data().createdAt || ''
+            const bTime = b.data().createdAt || ''
+            return bTime.localeCompare(aTime) // 내림차순
           }).slice(0, 5)
 
         recentOrdersSnapshot = { docs: sortedDocs }
@@ -760,17 +755,15 @@ export default function PartnerDashboard() {
 
         // createdAt 기준으로 정렬
         const sortedOrders = settlementSnapshot.docs.sort((a, b) => {
-          const aTime = a.data().createdAt?.toMillis ? a.data().createdAt.toMillis() : 0
-          const bTime = b.data().createdAt?.toMillis ? b.data().createdAt.toMillis() : 0
-          return aTime - bTime // 오래된 순서 (오름차순)
+          const aTime = a.data().createdAt || ''
+          const bTime = b.data().createdAt || ''
+          return aTime.localeCompare(bTime) // 오래된 순서 (오름차순)
         })
 
         // 이번 달 주문만 필터링
-        const monthStartTime = monthStartTimestamp.toMillis()
         const monthCompletedOrders = sortedOrders.filter(doc => {
           const createdAt = doc.data().createdAt
-          const createdTime = createdAt?.toMillis ? createdAt.toMillis() : 0
-          return createdTime >= monthStartTime
+          return createdAt && createdAt >= monthStartISO
         })
 
         // 수수료 설정 가져오기
@@ -838,7 +831,7 @@ export default function PartnerDashboard() {
 
   const formatDate = (date: unknown) => {
     if (!date) return ''
-    const d = (date as { toDate?: () => Date })?.toDate ? (date as { toDate: () => Date }) : new Date(date as string | number | Date)
+    const d = new Date(date as string)
     return d.toLocaleDateString('ko-KR', {
       month: '2-digit',
       day: '2-digit',
@@ -849,7 +842,7 @@ export default function PartnerDashboard() {
 
   const formatNoticeDate = (date: unknown) => {
     if (!date) return ''
-    const d = (date as { toDate?: () => Date })?.toDate ? (date as { toDate: () => Date }) : new Date(date as string | number | Date)
+    const d = new Date(date as string)
     return d.toLocaleDateString('ko-KR', {
       year: 'numeric',
       month: '2-digit',

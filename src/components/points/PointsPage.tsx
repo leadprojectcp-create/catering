@@ -88,12 +88,12 @@ export default function PointsPage() {
   }, [router])
 
   const formatDate = (timestamp: Timestamp) => {
-    const date = timestamp
+    const date = new Date(timestamp as unknown as string)
     return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')}`
   }
 
   const formatTime = (timestamp: Timestamp) => {
-    const date = timestamp
+    const date = new Date(timestamp as unknown as string)
     return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
   }
 
@@ -165,7 +165,7 @@ export default function PointsPage() {
     let periodMatch = true
     if (period !== 'all') {
       const now = new Date()
-      const itemDate = item.createdAt
+      const itemDate = new Date(item.createdAt as unknown as string)
       const monthsAgo = period === '1month' ? 1 : period === '2months' ? 2 : 3
       const startDate = new Date(now.getFullYear(), now.getMonth() - monthsAgo, now.getDate())
       periodMatch = itemDate >= startDate

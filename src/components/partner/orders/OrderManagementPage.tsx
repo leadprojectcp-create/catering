@@ -305,9 +305,7 @@ export default function OrderManagementPage() {
   const fetchDriverInfo = async (orderId: string, order: Order) => {
     try {
       // 주문 생성일을 기준으로 조회 범위 설정 (생성일 ±1일)
-      const createdAt = order.createdAt && typeof order.createdAt === 'object' && 'toDate' in order.createdAt
-        ? (order.createdAt as Timestamp)
-        : new Date(order.createdAt as string | number | Date)
+      const createdAt = new Date(order.createdAt as unknown as string)
 
       const rangeStart = new Date(createdAt)
       rangeStart.setDate(rangeStart.getDate() - 1)
@@ -382,13 +380,8 @@ export default function OrderManagementPage() {
         return true // createdAt이 없으면 필터링하지 않음
       }
 
-      // createdAt이 Firestore Timestamp인 경우와 Date인 경우 모두 처리
-      let orderDate: Date
-      if (typeof order.createdAt === 'object' && order.createdAt && 'toDate' in order.createdAt) {
-        orderDate = (order.createdAt as Timestamp)
-      } else {
-        orderDate = new Date(order.createdAt as string | number | Date)
-      }
+      // createdAt을 Date로 변환
+      const orderDate = new Date(order.createdAt as unknown as string)
 
       // 날짜만 비교 (시간 제외)
       const orderDateOnly = new Date(orderDate.getFullYear(), orderDate.getMonth(), orderDate.getDate())

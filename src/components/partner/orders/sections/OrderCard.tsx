@@ -71,7 +71,7 @@ export default function OrderCard({
 
   const formatDate = (date: Date | Timestamp | FieldValue | undefined) => {
     if (!date) return '-'
-    const d = typeof date === 'object' && 'toDate' in date ? (date as Timestamp) : new Date(date as string | number | Date)
+    const d = new Date(date as unknown as string)
     return d.toLocaleDateString('ko-KR', {
       year: 'numeric',
       month: '2-digit',
