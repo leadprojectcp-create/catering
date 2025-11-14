@@ -181,8 +181,8 @@ export default function SettlementPage() {
         index++
       })
 
-      // 클라이언트에서 날짜순 정렬
-      ordersList.sort((a, b) => a.orderDate.getTime() - b.orderDate.getTime())
+      // 클라이언트에서 날짜순 정렬 (ISO 8601 문자열 비교)
+      ordersList.sort((a, b) => new Date(a.orderDate).getTime() - new Date(b.orderDate).getTime())
       // orderIndex 재할당 (수수료 계산용)
       ordersList.forEach((order, index) => {
         order.orderIndex = index + 1
@@ -286,11 +286,12 @@ export default function SettlementPage() {
     return new Intl.NumberFormat('ko-KR').format(Math.floor(num))
   }
 
-  const formatDate = (date: Date) => {
-    const year = date.getFullYear()
-    const month = String(date.getMonth() + 1).padStart(2, '0')
-    const day = String(date.getDate()).padStart(2, '0')
-    const dayOfWeek = ['일', '월', '화', '수', '목', '금', '토'][date.getDay()]
+  const formatDate = (date: Date | string) => {
+    const dateObj = typeof date === 'string' ? new Date(date) : date
+    const year = dateObj.getFullYear()
+    const month = String(dateObj.getMonth() + 1).padStart(2, '0')
+    const day = String(dateObj.getDate()).padStart(2, '0')
+    const dayOfWeek = ['일', '월', '화', '수', '목', '금', '토'][dateObj.getDay()]
     return `${year}.${month}.${day}(${dayOfWeek})`
   }
 

@@ -106,8 +106,8 @@ export default function AdminSettlementPage() {
       const partnerSettlements: PartnerSettlement[] = []
 
       partnerMap.forEach((orders, partnerId) => {
-        // 날짜순 정렬
-        orders.sort((a, b) => a.orderDate.getTime() - b.orderDate.getTime())
+        // 날짜순 정렬 (ISO 8601 문자열 비교)
+        orders.sort((a, b) => new Date(a.orderDate).getTime() - new Date(b.orderDate).getTime())
 
         // orderIndex 설정 및 정산 계산
         let totalSales = 0

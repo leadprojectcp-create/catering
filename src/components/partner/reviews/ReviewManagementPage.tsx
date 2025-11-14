@@ -110,8 +110,8 @@ export default function ReviewManagementPage() {
 
     // 정렬
     filtered.sort((a, b) => {
-      const dateA = a.createdAt instanceof Date ? a.createdAt.getTime() : 0
-      const dateB = b.createdAt instanceof Date ? b.createdAt.getTime() : 0
+      const dateA = typeof a.createdAt === 'string' ? new Date(a.createdAt).getTime() : 0
+      const dateB = typeof b.createdAt === 'string' ? new Date(b.createdAt).getTime() : 0
 
       switch (sortOrder) {
         case 'latest':

@@ -74,22 +74,22 @@ export default function ReviewSection({ reviews, loadingReviews }: ReviewSection
           if (a.rating !== b.rating) return b.rating - a.rating
 
           // 3. 최신순
-          return b.createdAt.getTime() - a.createdAt.getTime()
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         })
 
       case '최신순':
-        return reviewsCopy.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+        return reviewsCopy.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
 
       case '별점 높은 순':
         return reviewsCopy.sort((a, b) => {
           if (a.rating !== b.rating) return b.rating - a.rating
-          return b.createdAt.getTime() - a.createdAt.getTime()
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         })
 
       case '별점 낮은 순':
         return reviewsCopy.sort((a, b) => {
           if (a.rating !== b.rating) return a.rating - b.rating
-          return b.createdAt.getTime() - a.createdAt.getTime()
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         })
 
       default:
