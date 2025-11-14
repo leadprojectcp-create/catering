@@ -51,11 +51,14 @@ export default function DeliveryMethodSection({
     }
   }
 
+  // 중복 제거
+  const uniqueDeliveryMethods = Array.from(new Set(deliveryMethods))
+
   return (
     <div className={styles.deliverySection}>
       <h3 className={styles.deliveryTitle}>배송방법</h3>
       <div className={styles.deliveryMethodContainer}>
-        {deliveryMethods.map((method, index) => {
+        {uniqueDeliveryMethods.map((method, index) => {
           const description = getDeliveryDescription(method)
           const icon = getDeliveryIcon(method)
 
