@@ -1,4 +1,5 @@
 // 공통 타입 정의
+import { Timestamp } from 'firebase/firestore'
 
 export interface Store {
   id: string
@@ -9,6 +10,8 @@ export interface Store {
     dong?: string
     fullAddress?: string
     detail?: string
+    latitude?: number
+    longitude?: number
   }
   phone?: string
   description?: string
@@ -27,8 +30,8 @@ export interface Product {
     value?: number
     discountAmount: number
     discountPercent: number
-    startDate?: string | null
-    endDate?: string | null
+    startDate?: Timestamp | null
+    endDate?: Timestamp | null
     isAlwaysActive?: boolean
   }
   images?: string[]
@@ -63,8 +66,13 @@ export interface Product {
     type: '무료' | '조건부 무료' | '유료' | '수량별'
     baseFee?: number
     freeCondition?: number
-    paymentMethods?: ('선결제' | '착불')[]
     perQuantity?: number
+  }
+  quickDeliveryFeeSettings?: {
+    type: '무료' | '조건부 지원' | '유료'
+    baseFee?: number
+    freeCondition?: number
+    maxSupport?: number
   }
 }
 
@@ -81,10 +89,10 @@ export interface Review {
   rating: number
   content: string
   images?: string[]
-  createdAt: Date
+  createdAt: Timestamp
   reply?: {
     content: string
-    createdAt: Date
+    createdAt: Timestamp
     partnerId: string
     isPrivate?: boolean
   }

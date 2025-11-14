@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { Timestamp } from 'firebase/firestore'
 import { getPopups, deletePopup, togglePopupStatus, type Popup } from '@/lib/services/popupService'
 import Loading from '@/components/Loading'
 import styles from './PopupListPage.module.css'
@@ -54,12 +55,23 @@ export default function PopupListPage() {
     }
   }
 
-  const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString('ko-KR', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit'
-    })
+  const formatDate = (date: unknown) => {
+    if (!date) return '-'
+    if (date instanceof Timestamp) {
+      return date.toDate().toLocaleDateString('ko-KR', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      })
+    }
+    if (typeof date === 'string') {
+      return new Date(date).toLocaleDateString('ko-KR', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      })
+    }
+    return '-'
   }
 
   const getStatusBadge = (status: string) => {

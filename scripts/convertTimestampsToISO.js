@@ -1,5 +1,5 @@
 /**
- * Firestore Timestamp를 ISO 8601 형식으로 변환하는 스크립트
+ * ISO 8601 형식을 Firestore Timestamp로 변환하는 스크립트
  *
  * 사용법:
  * node scripts/convertTimestampsToISO.js
@@ -61,7 +61,12 @@ const TIMESTAMP_FIELDS = [
 ];
 
 /**
- * 객체 내의 Timestamp를 ISO 형식으로 변환
+ * ISO 8601 형식을 체크하는 정규식
+ */
+const ISO_8601_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
+
+/**
+ * 객체 내의 ISO 문자열을 Firestore Timestamp로 변환
  */
 function convertTimestampsInObject(obj) {
   if (!obj || typeof obj !== 'object') return obj;
@@ -69,24 +74,14 @@ function convertTimestampsInObject(obj) {
   const converted = { ...obj };
 
   for (const [key, value] of Object.entries(converted)) {
-    // Timestamp 객체 감지 (_seconds, _nanoseconds)
-    if (value && typeof value === 'object' && '_seconds' in value && '_nanoseconds' in value) {
-      const timestamp = new admin.firestore.Timestamp(value._seconds, value._nanoseconds);
-      converted[key] = timestamp.toDate().toISOString();
-      console.log(`  ✓ ${key}: ${value._seconds}.${value._nanoseconds} → ${converted[key]}`);
-    }
-    // Firestore Timestamp 객체
-    else if (value instanceof admin.firestore.Timestamp) {
-      converted[key] = value.toDate().toISOString();
-      console.log(`  ✓ ${key}: Timestamp → ${converted[key]}`);
-    }
-    // Date 객체
-    else if (value instanceof Date) {
-      converted[key] = value.toISOString();
-      console.log(`  ✓ ${key}: Date → ${converted[key]}`);
+    // ISO 8601 문자열을 Firestore Timestamp로 변환
+    if (typeof value === 'string' && ISO_8601_PATTERN.test(value) && TIMESTAMP_FIELDS.includes(key)) {
+      const date = new Date(value);
+      converted[key] = admin.firestore.Timestamp.fromDate(date);
+      console.log(`  ✓ ${key}: ${value} → Firestore Timestamp`);
     }
     // 중첩된 객체 재귀 처리
-    else if (value && typeof value === 'object' && !Array.isArray(value)) {
+    else if (value && typeof value === 'object' && !Array.isArray(value) && !(value instanceof admin.firestore.Timestamp)) {
       converted[key] = convertTimestampsInObject(value);
     }
     // 배열 처리
@@ -176,7 +171,7 @@ async function convertCollection(collectionName) {
  * 메인 실행 함수
  */
 async function main() {
-  console.log('🚀 Firestore Timestamp → ISO 8601 변환 시작');
+  console.log('🚀 ISO 8601 → Firestore Timestamp 변환 시작');
   console.log(`📍 데이터베이스: catering (asia-northeast3)`);
   console.log(`📋 처리할 컬렉션: ${COLLECTIONS.length}개\n`);
 

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { doc, getDoc, query, where, getDocs, orderBy, collection } from 'firebase/firestore'
+import { doc, getDoc, query, where, getDocs, orderBy, collection, Timestamp } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { useAuth } from '@/contexts/AuthContext'
 import { useProductLike } from '@/hooks/useProductLike'
@@ -123,14 +123,10 @@ const fetchReviews = async (productId: string): Promise<Review[]> => {
         rating: data.rating,
         content: data.content,
         images: data.images || [],
-        createdAt: typeof data.createdAt === 'string'
-          ? new Date(data.createdAt)
-          : data.createdAt?.toDate?.() || new Date(),
+        createdAt: data.createdAt instanceof Timestamp ? data.createdAt : Timestamp.now(),
         reply: data.reply ? {
           content: data.reply.content,
-          createdAt: typeof data.reply.createdAt === 'string'
-            ? new Date(data.reply.createdAt)
-            : data.reply.createdAt?.toDate?.() || new Date(),
+          createdAt: data.reply.createdAt instanceof Timestamp ? data.reply.createdAt : Timestamp.now(),
           partnerId: data.reply.partnerId,
           isPrivate: data.reply.isPrivate || false
         } : undefined

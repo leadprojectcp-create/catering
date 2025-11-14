@@ -2,6 +2,7 @@
 
 import { memo, useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { Timestamp } from 'firebase/firestore'
 import { Product, Store } from '../types'
 import OptimizedImage from '@/components/common/OptimizedImage'
 import { calculateDistance, getUserLocation, formatDistance } from '@/lib/utils/distance'
@@ -64,12 +65,16 @@ const ProductInfoSection = memo(function ProductInfoSection({
       return true
     }
 
-    const now = new Date()
-    const startDate = new Date(product.discount.startDate)
-    const endDate = new Date(product.discount.endDate)
+    const now = Timestamp.now()
+    const startDate = typeof product.discount.startDate === 'string'
+      ? Timestamp.fromDate(new Date(product.discount.startDate))
+      : product.discount.startDate as unknown as Timestamp
+    const endDate = typeof product.discount.endDate === 'string'
+      ? Timestamp.fromDate(new Date(product.discount.endDate))
+      : product.discount.endDate as unknown as Timestamp
 
     // 현재 시간이 시작일과 종료일 사이에 있는지 체크
-    return now >= startDate && now <= endDate
+    return now.toMillis() >= startDate.toMillis() && now.toMillis() <= endDate.toMillis()
   }
 
   return (
@@ -221,7 +226,7 @@ const ProductInfoSection = memo(function ProductInfoSection({
                   {product.quickDeliveryFeeSettings.type === '무료' && '배송비 무료'}
                   {product.quickDeliveryFeeSettings.type === '조건부 지원' &&
                     `${product.quickDeliveryFeeSettings.freeCondition?.toLocaleString()}원 이상 구매 시, ${product.quickDeliveryFeeSettings.maxSupport?.toLocaleString()}원 기본 배송비 지원`}
-                  {product.quickDeliveryFeeSettings.type === '유료' && '배송비 별도'}
+                  {product.quickDeliveryFeeSettings.type === '유료' && `배송비 ${product.quickDeliveryFeeSettings.baseFee?.toLocaleString()}원`}
                 </span>
               </div>
             )}

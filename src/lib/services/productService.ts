@@ -1,5 +1,5 @@
 import { db } from '@/lib/firebase'
-import { collection, addDoc, doc, getDoc, getDocs, query, where, updateDoc, deleteDoc, orderBy, limit, increment, serverTimestamp } from 'firebase/firestore'
+import { collection, addDoc, doc, getDoc, getDocs, query, where, updateDoc, deleteDoc, orderBy, limit, increment, serverTimestamp, Timestamp, FieldValue } from 'firebase/firestore'
 import { auth } from '@/lib/firebase'
 
 export interface ProductData {
@@ -51,8 +51,8 @@ export interface ProductData {
   status?: string
   viewCount?: number
   orderCount?: number
-  createdAt?: string
-  updatedAt?: string
+  createdAt?: Timestamp | FieldValue
+  updatedAt?: Timestamp | FieldValue
   discount?: {
     type: 'amount' | 'percent'
     value: number
@@ -109,8 +109,8 @@ export async function createProduct(productData: Omit<ProductData, 'partnerId' |
     status: 'pending',
     viewCount: 0,
     orderCount: 0,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp()
   }
 
   // undefined 값 제거
@@ -152,7 +152,7 @@ export async function updateProduct(productId: string, productData: Partial<Prod
   const updateData = Object.fromEntries(
     Object.entries({
       ...productData,
-      updatedAt: new Date().toISOString()
+      updatedAt: serverTimestamp()
     }).filter(([_, v]) => v !== undefined)
   )
 
@@ -320,7 +320,7 @@ export async function updateProductStatus(productId: string, status: 'active' | 
 
   await updateDoc(productRef, {
     status,
-    updatedAt: new Date().toISOString()
+    updatedAt: serverTimestamp()
   })
 }
 
@@ -358,7 +358,7 @@ export async function addProductLike(
       productId,
       productName,
       productImage: productImage || null,
-      likedAt: new Date().toISOString()
+      likedAt: serverTimestamp()
     })
 
     // products의 likeCount 증가

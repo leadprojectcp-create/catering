@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { db } from '@/lib/firebase'
-import { collection, addDoc, doc, updateDoc, getDoc, query, where, getDocs } from 'firebase/firestore'
+import { collection, addDoc, doc, updateDoc, getDoc, query, where, getDocs, serverTimestamp } from 'firebase/firestore'
 import styles from './SurveyPage.module.css'
 
 interface SurveyFormData {
@@ -75,7 +75,7 @@ export default function SurveyPage() {
           // users 컬렉션에도 survey 필드 업데이트
           await updateDoc(userRef, {
             survey: true,
-            surveyCompletedAt: new Date().toISOString()
+            surveyCompletedAt: serverTimestamp()
           })
         }
       } catch (error) {
@@ -200,8 +200,8 @@ export default function SurveyPage() {
         importantSupportOther: formData.importantSupportOther,
         suggestions: formData.suggestions,
         instagramScreenshotUrl: instagramScreenshotUrl,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
       }
 
       // surveys 컬렉션에 저장
@@ -211,7 +211,7 @@ export default function SurveyPage() {
       const userRef = doc(db, 'users', user.uid)
       await updateDoc(userRef, {
         survey: true,
-        surveyCompletedAt: new Date().toISOString()
+        surveyCompletedAt: serverTimestamp()
       })
 
       alert('설문조사가 완료되었습니다. 소중한 의견 감사합니다!')

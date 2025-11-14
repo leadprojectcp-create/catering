@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useRef, useEffect } from 'react'
 import Image from 'next/image'
-import { doc, getDoc } from 'firebase/firestore'
+import { doc, getDoc, Timestamp } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { Review } from '../types'
 import OptimizedImage from '@/components/common/OptimizedImage'
@@ -74,22 +74,22 @@ export default function ReviewSection({ reviews, loadingReviews }: ReviewSection
           if (a.rating !== b.rating) return b.rating - a.rating
 
           // 3. 최신순
-          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          return b.createdAt.toMillis() - a.createdAt.toMillis()
         })
 
       case '최신순':
-        return reviewsCopy.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+        return reviewsCopy.sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis())
 
       case '별점 높은 순':
         return reviewsCopy.sort((a, b) => {
           if (a.rating !== b.rating) return b.rating - a.rating
-          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          return b.createdAt.toMillis() - a.createdAt.toMillis()
         })
 
       case '별점 낮은 순':
         return reviewsCopy.sort((a, b) => {
           if (a.rating !== b.rating) return a.rating - b.rating
-          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          return b.createdAt.toMillis() - a.createdAt.toMillis()
         })
 
       default:
@@ -211,7 +211,9 @@ export default function ReviewSection({ reviews, loadingReviews }: ReviewSection
                   </div>
                 </div>
                 <span className={styles.reviewDate}>
-                  {new Date(review.createdAt as unknown as string).toLocaleDateString('ko-KR')}
+                  {review.createdAt instanceof Timestamp
+                    ? review.createdAt.toDate().toLocaleDateString('ko-KR')
+                    : ''}
                 </span>
               </div>
               {review.images && review.images.length > 0 && (
@@ -263,11 +265,13 @@ export default function ReviewSection({ reviews, loadingReviews }: ReviewSection
                       {partnerStores[review.reply.partnerId] || '사장님'}
                     </span>
                     <span className={styles.replyDate}>
-                      {new Date(review.reply.createdAt as unknown as string).toLocaleDateString('ko-KR', {
-                        year: 'numeric',
-                        month: '2-digit',
-                        day: '2-digit'
-                      }).replace(/\. /g, '.').replace(/\.$/, '')} 작성
+                      {review.reply.createdAt instanceof Timestamp
+                        ? review.reply.createdAt.toDate().toLocaleDateString('ko-KR', {
+                            year: 'numeric',
+                            month: '2-digit',
+                            day: '2-digit'
+                          }).replace(/\. /g, '.').replace(/\.$/, '')
+                        : ''} 작성
                     </span>
                   </div>
                   {review.reply.isPrivate && user?.uid !== review.userId && user?.uid !== review.reply.partnerId ? (

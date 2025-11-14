@@ -7,7 +7,7 @@ import {
   OAuthProvider,
   deleteUser
 } from 'firebase/auth'
-import { doc, setDoc, query, where, getDocs, collection, getDoc } from 'firebase/firestore'
+import { doc, setDoc, query, where, getDocs, collection, getDoc, serverTimestamp } from 'firebase/firestore'
 import { auth, db } from './firebase'
 import { requestWebFcmToken, saveFcmToken } from './fcmToken'
 
@@ -93,8 +93,8 @@ export async function updateFcmToken(userId: string, fcmToken?: string | null) {
     const userRef = doc(db, 'users', userId)
     await setDoc(userRef, {
       fcmToken: fcmToken,
-      lastLoginAt: new Date(),
-      updatedAt: new Date()
+      lastLoginAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
     }, { merge: true })
 
     console.log('[updateFcmToken] FCM token updated for user:', userId)
@@ -156,8 +156,8 @@ export async function signupUser(userData: SignupData) {
       level: 1, // 기본 레벨 1 (일반 사용자)
       terms: termsArray,
       registrationComplete: true,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
       // 파트너 추가 정보 (파트너인 경우에만)
       ...(userData.type === 'partner' && {
         businessCategory: userData.businessCategory,
@@ -234,14 +234,14 @@ export async function handleSocialUser(
 
       const updateData: {
         email: string;
-        lastLoginAt: Date;
-        updatedAt: Date;
+        lastLoginAt: ReturnType<typeof serverTimestamp>;
+        updatedAt: ReturnType<typeof serverTimestamp>;
         fcmToken?: string;
       } = {
         ...userData,
         email: userEmail, // 이메일 확실히 저장
-        lastLoginAt: new Date(),
-        updatedAt: new Date()
+        lastLoginAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
       }
 
       // FCM 토큰이 있으면 저장
@@ -304,8 +304,8 @@ export async function handleSocialUser(
         level: number;
         type: string;
         registrationComplete: boolean;
-        createdAt: Date;
-        updatedAt: Date;
+        createdAt: ReturnType<typeof serverTimestamp>;
+        updatedAt: ReturnType<typeof serverTimestamp>;
         fcmToken?: string;
       } = {
         email: additionalInfo.email || firebaseUser.email || userEmail,
@@ -315,8 +315,8 @@ export async function handleSocialUser(
         level: 1, // 기본 레벨 1
         type: '', // 약관 동의 후 선택할 예정
         registrationComplete: false,
-        createdAt: new Date(),
-        updatedAt: new Date()
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
       }
 
       // FCM 토큰이 있으면 저장

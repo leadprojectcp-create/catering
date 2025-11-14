@@ -3,7 +3,7 @@
 import { useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
-import { doc, getDoc, updateDoc, addDoc, collection, increment, serverTimestamp, deleteDoc, deleteField } from 'firebase/firestore'
+import { doc, getDoc, updateDoc, addDoc, collection, increment, serverTimestamp, deleteDoc, deleteField, Timestamp } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { sendOrderAlimtalk } from '@/lib/services/smsService'
 import Loading from '@/components/Loading'
@@ -131,8 +131,8 @@ export default function PaymentCompletePage() {
               orderStatus: 'pending',
               paymentStatus: 'paid',
               request: cartData.request,
-              createdAt: cartData.createdAt || new Date(),
-              updatedAt: new Date()
+              createdAt: cartData.createdAt instanceof Timestamp ? cartData.createdAt : serverTimestamp(),
+              updatedAt: serverTimestamp()
             }
 
             if (deliveryMethod === '택배 배송') {
@@ -195,7 +195,7 @@ export default function PaymentCompletePage() {
             items: itemsWithPaymentId,
             paymentInfo: paymentInfoArray,
             paymentId: paymentIdArray,
-            verifiedAt: new Date().toISOString()
+            verifiedAt: serverTimestamp()
           })
         } else if (additionalOrderIdParam) {
           const existingItems = (existingOrderData?.items as OrderItem[]) || []
@@ -218,8 +218,8 @@ export default function PaymentCompletePage() {
             totalPrice: currentTotalPrice + totalPrice,
             paymentInfo: paymentInfoArray,
             paymentId: paymentIdArray,
-            verifiedAt: new Date().toISOString(),
-            updatedAt: new Date(),
+            verifiedAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
             addTotalProductPrice: deleteField(),
             addTotalQuantity: deleteField()
           })
@@ -236,7 +236,7 @@ export default function PaymentCompletePage() {
             items: itemsWithPaymentId,
             paymentInfo: paymentInfoArray,
             paymentId: paymentIdArray,
-            verifiedAt: new Date().toISOString()
+            verifiedAt: serverTimestamp()
           })
         }
 
@@ -255,7 +255,7 @@ export default function PaymentCompletePage() {
             orderId: finalOrderId,
             productId: existingOrderData.productId || '',
             productName: productName || '',
-            createdAt: new Date().toISOString()
+            createdAt: serverTimestamp()
           })
         }
 

@@ -3,7 +3,7 @@
 import { use, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { doc, getDoc } from 'firebase/firestore'
+import { doc, getDoc, Timestamp, serverTimestamp } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { useAuth } from '@/contexts/AuthContext'
 import { createOrGetChatRoom } from '@/lib/services/chatService'
@@ -407,8 +407,8 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
         totalQuantity: order.items.reduce((sum, item) => sum + item.quantity, 0),
         deliveryMethod: order.deliveryMethod,
         request: order.request,
-        createdAt: new Date(),
-        updatedAt: new Date()
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
       }
 
       await addCartItem(cartData)

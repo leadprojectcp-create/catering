@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { db } from '@/lib/firebase'
-import { collection, query, where, getDocs, doc, writeBatch, serverTimestamp } from 'firebase/firestore'
+import { collection, query, where, getDocs, doc, writeBatch, serverTimestamp, Timestamp } from 'firebase/firestore'
 import { getCommissionConfig, calculateFeeRate, CommissionConfig } from '@/lib/commission'
 import styles from './AdminSettlementPage.module.css'
 
@@ -23,9 +23,9 @@ interface OrderItem {
   orderNumber: string
   productName: string
   totalProductPrice: number
-  orderDate: Date
+  orderDate: unknown
   settlementStatus: 'pending' | 'completed'
-  settlementDate?: Date
+  settlementDate?: unknown
   fee: number
   settlementAmount: number
   feeRate: number
@@ -92,7 +92,7 @@ export default function AdminSettlementPage() {
           orderNumber: data.orderNumber || doc.id,
           productName,
           totalProductPrice: data.totalProductPrice || 0,
-          orderDate: data.createdAt || new Date().toISOString(),
+          orderDate: data.createdAt,
           settlementStatus: data.settlementStatus || 'pending',
           settlementDate: data.settlementDate,
           fee: 0, // 나중에 계산
@@ -106,8 +106,12 @@ export default function AdminSettlementPage() {
       const partnerSettlements: PartnerSettlement[] = []
 
       partnerMap.forEach((orders, partnerId) => {
-        // 날짜순 정렬 (ISO 8601 문자열 비교)
-        orders.sort((a, b) => new Date(a.orderDate).getTime() - new Date(b.orderDate).getTime())
+        // 날짜순 정렬
+        orders.sort((a, b) => {
+          const aTime = a.orderDate instanceof Timestamp ? a.orderDate.toMillis() : 0
+          const bTime = b.orderDate instanceof Timestamp ? b.orderDate.toMillis() : 0
+          return aTime - bTime
+        })
 
         // orderIndex 설정 및 정산 계산
         let totalSales = 0
@@ -211,12 +215,16 @@ export default function AdminSettlementPage() {
     return new Intl.NumberFormat('ko-KR').format(Math.floor(num))
   }
 
-  const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat('ko-KR', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit'
-    }).format(date)
+  const formatDate = (date: unknown) => {
+    if (!date) return '-'
+    if (date instanceof Timestamp) {
+      return new Intl.DateTimeFormat('ko-KR', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      }).format(date.toDate())
+    }
+    return '-'
   }
 
   if (loading) {

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { Timestamp } from 'firebase/firestore'
 import { getNotice, incrementNoticeViewCount, getPublishedNotices, type Notice } from '@/lib/services/noticeService'
 import styles from './NoticeDetail.module.css'
 
@@ -62,7 +63,7 @@ export default function NoticeDetail({ noticeId }: NoticeDetailProps) {
 
   const formatDate = (timestamp: unknown) => {
     if (!timestamp) return ''
-    const date = new Date(timestamp as string)
+    const date = timestamp instanceof Timestamp ? timestamp.toDate() : new Date(timestamp as string)
     return date.toLocaleDateString('ko-KR', {
       year: 'numeric',
       month: '2-digit',

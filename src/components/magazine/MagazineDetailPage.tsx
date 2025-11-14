@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
+import { Timestamp } from 'firebase/firestore'
 import { getMagazine, incrementViewCount, toggleLike } from '@/lib/services/magazineService'
 import type { Magazine } from '@/lib/services/magazineService'
 import Loading from '@/components/Loading'
@@ -73,6 +74,13 @@ export default function MagazineDetailPage({ magazineId }: MagazineDetailPagePro
 
   const formatDate = (date: unknown) => {
     if (!date) return ''
+    if (date instanceof Timestamp) {
+      return date.toDate().toLocaleDateString('ko-KR', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      })
+    }
     const d = new Date(date as string)
     return d.toLocaleDateString('ko-KR', {
       year: 'numeric',

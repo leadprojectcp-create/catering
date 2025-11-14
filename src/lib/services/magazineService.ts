@@ -10,7 +10,8 @@ import {
   orderBy,
   where,
   Timestamp,
-  FieldValue
+  FieldValue,
+  serverTimestamp
 } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 
@@ -28,9 +29,9 @@ export interface Magazine {
   status: 'draft' | 'published' | 'archived'
   viewCount?: number
   likeCount?: number
-  publishedAt?: Date | Timestamp | FieldValue | null
-  createdAt?: Date | Timestamp | FieldValue
-  updatedAt?: Date | Timestamp | FieldValue
+  publishedAt?: Timestamp | null
+  createdAt?: Timestamp
+  updatedAt?: Timestamp
 }
 
 const COLLECTION_NAME = 'magazines'
@@ -38,14 +39,13 @@ const COLLECTION_NAME = 'magazines'
 // 매거진 생성
 export const createMagazine = async (magazineData: Omit<Magazine, 'id'>): Promise<string> => {
   try {
-    const now = new Date().toISOString()
     const docRef = await addDoc(collection(db, COLLECTION_NAME), {
       ...magazineData,
       viewCount: 0,
       likeCount: 0,
-      createdAt: now,
-      updatedAt: now,
-      publishedAt: magazineData.status === 'published' ? now : null
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+      publishedAt: magazineData.status === 'published' ? serverTimestamp() : null
     })
     return docRef.id
   } catch (error) {
@@ -58,15 +58,14 @@ export const createMagazine = async (magazineData: Omit<Magazine, 'id'>): Promis
 export const updateMagazine = async (id: string, magazineData: Partial<Magazine>): Promise<void> => {
   try {
     const docRef = doc(db, COLLECTION_NAME, id)
-    const now = new Date().toISOString()
     const updateData: Record<string, unknown> = {
       ...magazineData,
-      updatedAt: now
+      updatedAt: serverTimestamp()
     }
 
     // 상태가 published로 변경되고 publishedAt이 없으면 설정
     if (magazineData.status === 'published' && !magazineData.publishedAt) {
-      updateData.publishedAt = now
+      updateData.publishedAt = serverTimestamp()
     }
 
     await updateDoc(docRef, updateData)

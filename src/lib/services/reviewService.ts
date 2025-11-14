@@ -15,7 +15,7 @@ import { db } from '@/lib/firebase'
 
 export interface ReviewReply {
   content: string
-  createdAt: Date | string
+  createdAt: Timestamp
   partnerId: string
   isPrivate?: boolean
 }
@@ -32,8 +32,8 @@ export interface Review {
   content: string
   images?: string[]
   reply?: ReviewReply
-  createdAt: Date | Timestamp | FieldValue
-  updatedAt?: Date | Timestamp | FieldValue
+  createdAt: Timestamp
+  updatedAt?: Timestamp
 }
 
 const COLLECTION_NAME = 'reviews'
@@ -201,7 +201,7 @@ export const addReplyToReview = async (
     await updateDoc(reviewRef, {
       reply: {
         content: replyContent,
-        createdAt: new Date().toISOString(),
+        createdAt: serverTimestamp(),
         partnerId: partnerId,
         isPrivate: isPrivate || false
       }

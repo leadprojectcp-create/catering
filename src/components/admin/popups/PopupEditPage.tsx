@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { Timestamp } from 'firebase/firestore'
 import { getPopup, updatePopup } from '@/lib/services/popupService'
 import Loading from '@/components/Loading'
 import styles from './PopupWritePage.module.css'
@@ -49,8 +50,17 @@ export default function PopupEditPage({ popupId }: PopupEditPageProps) {
       setTargetType(popup.targetType)
       setStatus(popup.status)
       setDisplayOrder(popup.displayOrder)
-      setStartDate(new Date(popup.startDate).toISOString().split('T')[0])
-      setEndDate(new Date(popup.endDate).toISOString().split('T')[0])
+
+      // Timestamp를 처리하여 날짜 문자열로 변환
+      const startDateStr = popup.startDate instanceof Timestamp
+        ? popup.startDate.toDate().toISOString().split('T')[0]
+        : new Date(popup.startDate).toISOString().split('T')[0]
+      const endDateStr = popup.endDate instanceof Timestamp
+        ? popup.endDate.toDate().toISOString().split('T')[0]
+        : new Date(popup.endDate).toISOString().split('T')[0]
+
+      setStartDate(startDateStr)
+      setEndDate(endDateStr)
     } catch (error) {
       console.error('팝업 로드 실패:', error)
       alert('팝업을 불러오는데 실패했습니다.')
@@ -152,8 +162,8 @@ export default function PopupEditPage({ popupId }: PopupEditPageProps) {
         targetType,
         status,
         displayOrder,
-        startDate: startDate,
-        endDate: endDate
+        startDate: Timestamp.fromDate(new Date(startDate)),
+        endDate: Timestamp.fromDate(new Date(endDate))
       })
 
       alert('팝업이 수정되었습니다.')

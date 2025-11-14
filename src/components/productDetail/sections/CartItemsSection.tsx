@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { collection, addDoc, updateDoc, doc, getDoc } from 'firebase/firestore'
+import { collection, addDoc, updateDoc, doc, getDoc, serverTimestamp, Timestamp } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { User } from 'firebase/auth'
 import OptimizedImage from '@/components/common/OptimizedImage'
@@ -29,16 +29,20 @@ interface CartItemsSectionProps {
 const isDiscountValid = (product: Product): boolean => {
   if (!product.discount) return false
 
-  const now = new Date()
+  const now = Timestamp.now()
 
   // 항상 활성화된 할인
   if (product.discount.isAlwaysActive) return true
 
   // 기간 제한 할인
   if (product.discount.startDate && product.discount.endDate) {
-    const startDate = new Date(product.discount.startDate)
-    const endDate = new Date(product.discount.endDate)
-    return now >= startDate && now <= endDate
+    const startDate = typeof product.discount.startDate === 'string'
+      ? Timestamp.fromDate(new Date(product.discount.startDate))
+      : product.discount.startDate as unknown as Timestamp
+    const endDate = typeof product.discount.endDate === 'string'
+      ? Timestamp.fromDate(new Date(product.discount.endDate))
+      : product.discount.endDate as unknown as Timestamp
+    return now.toMillis() >= startDate.toMillis() && now.toMillis() <= endDate.toMillis()
   }
 
   return false
@@ -267,7 +271,7 @@ export default function CartItemsSection({
           totalProductPrice: totalPrice,
           totalQuantity: totalQuantity,
           request: storeRequest || existingData?.request || '',
-          updatedAt: new Date().toISOString()
+          updatedAt: serverTimestamp()
         }
 
         await updateDoc(docRef, updateData)
@@ -298,8 +302,8 @@ export default function CartItemsSection({
           totalProductPrice: totalPrice,
           totalQuantity: totalQuantity,
           request: storeRequest || '',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
         }
 
         await addDoc(collection(db, 'shoppingCart'), cartData)
@@ -428,8 +432,8 @@ export default function CartItemsSection({
         totalProductPrice: totalPrice,
         totalQuantity: totalQuantity,
         request: storeRequest,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
       }
 
       let cartId: string
@@ -442,8 +446,8 @@ export default function CartItemsSection({
 
         await updateDoc(cartRef, {
           ...orderData,
-          createdAt: existingData?.createdAt || new Date(),
-          updatedAt: new Date().toISOString()
+          createdAt: existingData?.createdAt || serverTimestamp(),
+          updatedAt: serverTimestamp()
         })
         cartId = editingCartItemId
       } else {

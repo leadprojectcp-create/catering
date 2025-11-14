@@ -10,7 +10,8 @@ import {
   orderBy,
   where,
   Timestamp,
-  FieldValue
+  FieldValue,
+  serverTimestamp
 } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 
@@ -24,9 +25,9 @@ export interface Notice {
   status: 'draft' | 'published' | 'archived'
   isVisible?: boolean  // 공지사항 노출 여부
   viewCount?: number
-  createdAt?: Date | Timestamp | FieldValue
-  updatedAt?: Date | Timestamp | FieldValue
-  publishedAt?: Date | Timestamp | FieldValue | null
+  createdAt?: Timestamp
+  updatedAt?: Timestamp
+  publishedAt?: Timestamp | null
 }
 
 const COLLECTION_NAME = 'partner_notices'
@@ -50,14 +51,13 @@ export const createNotice = async (noticeData: Omit<Notice, 'id'>): Promise<stri
       await Promise.all(updatePromises)
     }
 
-    const now = new Date().toISOString()
     const docRef = await addDoc(collection(db, COLLECTION_NAME), {
       ...noticeData,
       isVisible: noticeData.isVisible ?? true,  // 기본값: 노출
       viewCount: 0,
-      createdAt: now,
-      updatedAt: now,
-      publishedAt: noticeData.status === 'published' ? now : null
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+      publishedAt: noticeData.status === 'published' ? serverTimestamp() : null
     })
     return docRef.id
   } catch (error) {
@@ -96,15 +96,14 @@ export const updateNotice = async (id: string, noticeData: Partial<Notice>): Pro
     }
 
     const docRef = doc(db, COLLECTION_NAME, id)
-    const now = new Date().toISOString()
     const updateData: Record<string, unknown> = {
       ...noticeData,
-      updatedAt: now
+      updatedAt: serverTimestamp()
     }
 
     // 상태가 published로 변경되고 publishedAt이 없으면 설정
     if (noticeData.status === 'published' && !noticeData.publishedAt) {
-      updateData.publishedAt = now
+      updateData.publishedAt = serverTimestamp()
     }
 
     await updateDoc(docRef, updateData)

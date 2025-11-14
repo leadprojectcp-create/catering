@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { Timestamp } from 'firebase/firestore'
 
 export type SortOption = 'recommended' | 'mostReviewed' | 'highestRating' | 'lowestPrice' | 'highestPrice'
 
@@ -11,8 +12,8 @@ export interface SortableProduct {
   discountedPrice?: number
   discount?: {
     discountPercent: number
-    startDate?: string | null
-    endDate?: string | null
+    startDate?: Timestamp | null
+    endDate?: Timestamp | null
     isAlwaysActive?: boolean
   }
 }
@@ -110,8 +111,12 @@ function isDiscountValid(product: SortableProduct): boolean {
   }
 
   const now = new Date()
-  const startDate = new Date(product.discount.startDate)
-  const endDate = new Date(product.discount.endDate)
+  const startDate = product.discount.startDate instanceof Timestamp
+    ? product.discount.startDate.toDate()
+    : new Date(product.discount.startDate)
+  const endDate = product.discount.endDate instanceof Timestamp
+    ? product.discount.endDate.toDate()
+    : new Date(product.discount.endDate)
 
   // 현재 시간이 시작일과 종료일 사이에 있는지 체크
   return now >= startDate && now <= endDate

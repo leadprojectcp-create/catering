@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { Timestamp } from 'firebase/firestore'
 import { createPopup } from '@/lib/services/popupService'
 import styles from './PopupWritePage.module.css'
 
@@ -110,8 +111,8 @@ export default function PopupWritePage() {
         targetType,
         status,
         displayOrder,
-        startDate: startDate,
-        endDate: endDate
+        startDate: Timestamp.fromDate(new Date(startDate)),
+        endDate: Timestamp.fromDate(new Date(endDate))
       })
 
       alert('팝업이 등록되었습니다.')

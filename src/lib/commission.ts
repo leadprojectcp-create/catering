@@ -23,13 +23,8 @@ export async function getCommissionConfig(): Promise<CommissionConfig> {
     cachedConfig = config
     return config
   } catch (error) {
-    console.error('수수료 설정을 불러오는데 실패했습니다. 기본값을 사용합니다:', error)
-    // 기본값 반환
-    return {
-      firstOrdersRate: 0.03,
-      firstOrdersCount: 5,
-      standardRate: 0.13
-    }
+    console.error('수수료 설정을 불러오는데 실패했습니다:', error)
+    throw error
   }
 }
 

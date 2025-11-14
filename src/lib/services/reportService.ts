@@ -1,4 +1,4 @@
-import { collection, addDoc, FieldValue } from 'firebase/firestore'
+import { collection, addDoc, FieldValue, serverTimestamp, Timestamp } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 
 export interface ReportData {
@@ -8,7 +8,7 @@ export interface ReportData {
   reason: string              // 신고 유형
   details: string             // 신고 상세 내용
   status: 'pending' | 'reviewed' | 'resolved' // 처리 상태
-  createdAt: string           // 생성 시간
+  createdAt: Timestamp        // 생성 시간
 }
 
 /**
@@ -22,14 +22,14 @@ export async function createReport(
   details: string
 ): Promise<string> {
   try {
-    const reportData: ReportData = {
+    const reportData = {
       reporterUid,
       reportedUid,
       chatRoomId,
       reason,
       details,
       status: 'pending',
-      createdAt: new Date().toISOString()
+      createdAt: serverTimestamp()
     }
 
     const docRef = await addDoc(collection(db, 'reports'), reportData)

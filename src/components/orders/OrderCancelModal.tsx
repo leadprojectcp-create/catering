@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { doc, updateDoc, getDoc } from 'firebase/firestore'
+import { doc, updateDoc, getDoc, Timestamp } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import Image from 'next/image'
 import styles from './OrderCancelModal.module.css'

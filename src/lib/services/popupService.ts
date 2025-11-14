@@ -8,7 +8,9 @@ import {
   deleteDoc,
   query,
   where,
-  orderBy
+  orderBy,
+  serverTimestamp,
+  Timestamp
 } from 'firebase/firestore'
 
 export interface Popup {
@@ -18,11 +20,11 @@ export interface Popup {
   linkUrl?: string
   targetType: 'all' | 'partner' | 'user' // 대상: 전체, 파트너, 일반 유저
   status: 'active' | 'inactive' // 활성화 상태
-  startDate: string
-  endDate: string
+  startDate: Timestamp
+  endDate: Timestamp
   displayOrder: number // 표시 순서 (낮을수록 먼저 표시)
-  createdAt: string
-  updatedAt: string
+  createdAt: Timestamp
+  updatedAt: Timestamp
 }
 
 const POPUPS_COLLECTION = 'popups'
@@ -46,11 +48,11 @@ export async function getPopups(
         linkUrl: data.linkUrl || '',
         targetType: data.targetType || 'all',
         status: data.status || 'inactive',
-        startDate: data.startDate || new Date().toISOString(),
-        endDate: data.endDate || new Date().toISOString(),
+        startDate: data.startDate,
+        endDate: data.endDate,
         displayOrder: data.displayOrder || 0,
-        createdAt: data.createdAt || new Date().toISOString(),
-        updatedAt: data.updatedAt || new Date().toISOString()
+        createdAt: data.createdAt,
+        updatedAt: data.updatedAt
       } as Popup
     })
 
@@ -74,7 +76,7 @@ export async function getPopups(
 export async function getActivePopups(targetType: 'all' | 'partner' | 'user'): Promise<Popup[]> {
   try {
     const popupsRef = collection(db, POPUPS_COLLECTION)
-    const now = new Date()
+    const now = Timestamp.now()
 
     const q = query(
       popupsRef,
@@ -93,18 +95,16 @@ export async function getActivePopups(targetType: 'all' | 'partner' | 'user'): P
           linkUrl: data.linkUrl || '',
           targetType: data.targetType || 'all',
           status: data.status || 'inactive',
-          startDate: data.startDate || new Date().toISOString(),
-          endDate: data.endDate || new Date().toISOString(),
+          startDate: data.startDate,
+          endDate: data.endDate,
           displayOrder: data.displayOrder || 0,
-          createdAt: data.createdAt || new Date().toISOString(),
-          updatedAt: data.updatedAt || new Date().toISOString()
+          createdAt: data.createdAt,
+          updatedAt: data.updatedAt
         } as Popup
       })
       .filter((popup) => {
-        // 날짜 범위 체크 (ISO 8601 문자열 비교)
-        const popupStart = new Date(popup.startDate)
-        const popupEnd = new Date(popup.endDate)
-        const isInDateRange = popupStart <= now && popupEnd >= now
+        // 날짜 범위 체크 (Timestamp 비교)
+        const isInDateRange = popup.startDate.toMillis() <= now.toMillis() && popup.endDate.toMillis() >= now.toMillis()
         // 대상 타입 체크 (all이거나 지정된 타입과 일치)
         const isTargetMatch = popup.targetType === 'all' || popup.targetType === targetType
         return isInDateRange && isTargetMatch
@@ -135,11 +135,11 @@ export async function getPopup(id: string): Promise<Popup | null> {
       linkUrl: data.linkUrl || '',
       targetType: data.targetType || 'all',
       status: data.status || 'inactive',
-      startDate: data.startDate || new Date().toISOString(),
-      endDate: data.endDate || new Date().toISOString(),
+      startDate: data.startDate,
+      endDate: data.endDate,
       displayOrder: data.displayOrder || 0,
-      createdAt: data.createdAt || new Date().toISOString(),
-      updatedAt: data.updatedAt || new Date().toISOString()
+      createdAt: data.createdAt,
+      updatedAt: data.updatedAt
     } as Popup
   } catch (error) {
     console.error('팝업 조회 실패:', error)
@@ -155,11 +155,10 @@ export async function createPopup(
     const popupsRef = collection(db, POPUPS_COLLECTION)
     const newPopupRef = doc(popupsRef)
 
-    const now = new Date().toISOString()
     await setDoc(newPopupRef, {
       ...popupData,
-      createdAt: now,
-      updatedAt: now
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
     })
 
     return newPopupRef.id
@@ -179,7 +178,7 @@ export async function updatePopup(
 
     const updateData: Record<string, unknown> = {
       ...popupData,
-      updatedAt: new Date().toISOString()
+      updatedAt: serverTimestamp()
     }
 
     await setDoc(popupRef, updateData, { merge: true })

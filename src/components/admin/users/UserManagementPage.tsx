@@ -1,9 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { Timestamp } from 'firebase/firestore'
 import { getAllUsers, updateUserType, toggleUserStatus } from '@/lib/services/userService'
 import type { User } from '@/lib/services/userService'
-import type { Timestamp, FieldValue } from 'firebase/firestore'
+import type { FieldValue } from 'firebase/firestore'
 import Loading from '@/components/Loading'
 import styles from './UserManagementPage.module.css'
 
@@ -71,14 +72,16 @@ export default function UserManagementPage() {
 
   const formatDate = (date: Date | Timestamp | FieldValue | undefined) => {
     if (!date) return '-'
-    const d = new Date(date as unknown as string)
-    return d.toLocaleDateString('ko-KR', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
+    if (date instanceof Timestamp) {
+      return date.toDate().toLocaleDateString('ko-KR', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+      })
+    }
+    return '-'
   }
 
   const filteredUsers = users.filter(user => {

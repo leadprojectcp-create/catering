@@ -1,4 +1,4 @@
-import { collection, addDoc } from 'firebase/firestore'
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 
 interface LogActivityParams {
@@ -19,7 +19,7 @@ export const logActivity = async ({
       restaurantId,
       restaurantName,
       actionType,
-      timestamp: new Date(),
+      timestamp: serverTimestamp(),
       userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
       ...additionalData
     }

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import styles from './ProductManagement.module.css'
 import { db } from '@/lib/firebase'
-import { collection, query, where, getDocs, updateDoc, deleteDoc, doc } from 'firebase/firestore'
+import { collection, query, where, getDocs, updateDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore'
 import { useAuth } from '@/contexts/AuthContext'
 import ProductPreviewModal from '../product/common/modals/ProductPreviewModal'
 
@@ -158,7 +158,7 @@ export default function ProductManagement() {
     try {
       await updateDoc(doc(db, 'products', item.id), {
         status: item.status === 'active' ? 'inactive' : 'active',
-        updatedAt: new Date().toISOString()
+        updatedAt: serverTimestamp()
       })
       fetchMenuItems()
     } catch (error) {

@@ -8,7 +8,9 @@ import {
   deleteDoc,
   query,
   where,
-  orderBy
+  orderBy,
+  serverTimestamp,
+  Timestamp
 } from 'firebase/firestore'
 
 export interface Banner {
@@ -20,8 +22,8 @@ export interface Banner {
   linkUrl?: string
   status: 'active' | 'inactive'
   displayOrder: number
-  createdAt: string
-  updatedAt: string
+  createdAt: Timestamp
+  updatedAt: Timestamp
 }
 
 const BANNERS_COLLECTION = 'banners'
@@ -44,8 +46,8 @@ export async function getBanners(statusFilter: string = 'all'): Promise<Banner[]
         linkUrl: data.linkUrl || '',
         status: data.status || 'inactive',
         displayOrder: data.displayOrder || 0,
-        createdAt: data.createdAt || new Date().toISOString(),
-        updatedAt: data.updatedAt || new Date().toISOString()
+        createdAt: data.createdAt || serverTimestamp(),
+        updatedAt: data.updatedAt || serverTimestamp()
       } as Banner
     })
 
@@ -83,8 +85,8 @@ export async function getActiveBanners(): Promise<Banner[]> {
         linkUrl: data.linkUrl || '',
         status: data.status || 'inactive',
         displayOrder: data.displayOrder || 0,
-        createdAt: data.createdAt || new Date().toISOString(),
-        updatedAt: data.updatedAt || new Date().toISOString()
+        createdAt: data.createdAt || serverTimestamp(),
+        updatedAt: data.updatedAt || serverTimestamp()
       } as Banner
     })
 
@@ -132,11 +134,10 @@ export async function createBanner(
     const bannersRef = collection(db, BANNERS_COLLECTION)
     const newBannerRef = doc(bannersRef)
 
-    const now = new Date().toISOString()
     await setDoc(newBannerRef, {
       ...bannerData,
-      createdAt: now,
-      updatedAt: now
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
     })
 
     return newBannerRef.id
@@ -156,7 +157,7 @@ export async function updateBanner(
 
     const updateData: Record<string, unknown> = {
       ...bannerData,
-      updatedAt: new Date().toISOString()
+      updatedAt: serverTimestamp()
     }
 
     await setDoc(bannerRef, updateData, { merge: true })

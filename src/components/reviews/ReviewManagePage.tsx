@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { collection, query, where, getDocs, deleteDoc, doc, orderBy } from 'firebase/firestore'
+import { collection, query, where, getDocs, deleteDoc, doc, orderBy, Timestamp } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { useAuth } from '@/contexts/AuthContext'
 import Loading from '@/components/Loading'
@@ -20,10 +20,10 @@ interface Review {
   rating: number
   content: string
   images: string[]
-  createdAt: { toDate: () => Date } | string
+  createdAt: Timestamp
   reply?: {
     content: string
-    createdAt: { toDate: () => Date } | string
+    createdAt: Timestamp
     partnerId: string
     isPrivate?: boolean
   }
@@ -107,9 +107,9 @@ export default function ReviewManagePage() {
     setReviewToDelete(null)
   }
 
-  const formatDate = (timestamp: { toDate: () => Date } | string) => {
-    if (!timestamp) return ''
-    const date = new Date(timestamp as string)
+  const formatDate = (timestamp: Timestamp) => {
+    if (!timestamp || !(timestamp instanceof Timestamp)) return ''
+    const date = timestamp.toDate()
     const year = date.getFullYear()
     const month = String(date.getMonth() + 1).padStart(2, '0')
     const day = String(date.getDate()).padStart(2, '0')
@@ -117,15 +117,16 @@ export default function ReviewManagePage() {
   }
 
   // 7일 이내 작성 여부 확인
-  const canEdit = (createdAt: { toDate: () => Date } | string): boolean => {
-    const reviewDate = new Date(createdAt as string)
+  const canEdit = (createdAt: Timestamp): boolean => {
+    if (!createdAt || !(createdAt instanceof Timestamp)) return false
+    const reviewDate = createdAt.toDate()
     const now = new Date()
     const diffTime = now.getTime() - reviewDate.getTime()
     const diffDays = diffTime / (1000 * 60 * 60 * 24)
     return diffDays <= 7
   }
 
-  const handleEdit = (reviewId: string, createdAt: { toDate: () => Date } | string) => {
+  const handleEdit = (reviewId: string, createdAt: Timestamp) => {
     if (!canEdit(createdAt)) {
       alert('작성한 지 7일이 지난 리뷰는 수정할 수 없습니다.')
       return

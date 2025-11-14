@@ -1,4 +1,4 @@
-import { doc, getDoc, updateDoc, addDoc, collection, increment, serverTimestamp, deleteDoc, deleteField } from 'firebase/firestore'
+import { doc, getDoc, updateDoc, addDoc, collection, increment, serverTimestamp, deleteDoc, deleteField, Timestamp } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { requestPayment } from '@/lib/services/paymentService'
 import { sendOrderAlimtalk } from '@/lib/services/smsService'
@@ -259,8 +259,8 @@ export async function handlePaymentProcess(params: UsePaymentHandlerParams): Pro
       orderStatus: 'pending',
       paymentStatus: 'paid',
       request: cartData.request,
-      createdAt: cartData.createdAt || new Date(),
-      updatedAt: new Date()
+      createdAt: cartData.createdAt instanceof Timestamp ? cartData.createdAt : serverTimestamp(),
+      updatedAt: serverTimestamp()
     }
 
     // 택배 배송인 경우에만 parcelPaymentMethod 추가
@@ -329,7 +329,7 @@ export async function handlePaymentProcess(params: UsePaymentHandlerParams): Pro
 
     const updateData: Record<string, unknown> = {
       items: itemsWithPaymentId,
-      verifiedAt: new Date().toISOString()
+      verifiedAt: serverTimestamp()
     }
 
     // actualPaymentAmount가 0보다 클 때만 paymentInfo, paymentId 저장
@@ -375,8 +375,8 @@ export async function handlePaymentProcess(params: UsePaymentHandlerParams): Pro
         totalProductPrice: newTotalProductPrice,
         totalQuantity: currentTotalQuantity + (additionalData.totalQuantity || 0),
         totalPrice: currentTotalPrice + actualPaymentAmount,
-        verifiedAt: new Date().toISOString(),
-        updatedAt: new Date(),
+        verifiedAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
         addTotalProductPrice: deleteField(),
         addTotalQuantity: deleteField()
       }
@@ -417,7 +417,7 @@ export async function handlePaymentProcess(params: UsePaymentHandlerParams): Pro
     const updateData: Record<string, unknown> = {
       paymentStatus: 'paid',
       items: itemsWithPaymentId,
-      verifiedAt: new Date().toISOString()
+      verifiedAt: serverTimestamp()
     }
 
     // actualPaymentAmount가 0보다 클 때만 paymentInfo, paymentId 저장
@@ -466,7 +466,7 @@ export async function handlePaymentProcess(params: UsePaymentHandlerParams): Pro
         orderId: finalOrderId,
         productId: orderData?.productId || '',
         productName: orderData?.productName || '',
-        createdAt: new Date().toISOString()
+        createdAt: serverTimestamp()
       })
     } catch (pointError) {
       console.error('포인트 사용 처리 실패:', pointError)

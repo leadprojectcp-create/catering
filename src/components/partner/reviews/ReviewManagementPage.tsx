@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { getPartnerReviews, addReplyToReview, deleteReplyFromReview, updateReplyInReview } from '@/lib/services/reviewService'
 import { useAuth } from '@/contexts/AuthContext'
 import type { Review } from '@/lib/services/reviewService'
-import { collection, query, where, getDocs } from 'firebase/firestore'
+import { collection, query, where, getDocs, Timestamp } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import Loading from '@/components/Loading'
 import Image from 'next/image'
@@ -97,21 +97,33 @@ export default function ReviewManagementPage() {
     // 기간 필터
     if (startDate) {
       filtered = filtered.filter(review => {
-        const reviewDate = review.createdAt instanceof Date ? review.createdAt : new Date()
+        const reviewDate = review.createdAt instanceof Timestamp
+          ? review.createdAt.toDate()
+          : new Date()
         return reviewDate >= new Date(startDate)
       })
     }
     if (endDate) {
       filtered = filtered.filter(review => {
-        const reviewDate = review.createdAt instanceof Date ? review.createdAt : new Date()
+        const reviewDate = review.createdAt instanceof Timestamp
+          ? review.createdAt.toDate()
+          : new Date()
         return reviewDate <= new Date(endDate + ' 23:59:59')
       })
     }
 
     // 정렬
     filtered.sort((a, b) => {
-      const dateA = typeof a.createdAt === 'string' ? new Date(a.createdAt).getTime() : 0
-      const dateB = typeof b.createdAt === 'string' ? new Date(b.createdAt).getTime() : 0
+      const dateA = a.createdAt instanceof Timestamp
+        ? a.createdAt.toMillis()
+        : typeof a.createdAt === 'string'
+        ? new Date(a.createdAt).getTime()
+        : 0
+      const dateB = b.createdAt instanceof Timestamp
+        ? b.createdAt.toMillis()
+        : typeof b.createdAt === 'string'
+        ? new Date(b.createdAt).getTime()
+        : 0
 
       switch (sortOrder) {
         case 'latest':
@@ -149,8 +161,8 @@ export default function ReviewManagementPage() {
     return firstChar + maskedMiddle + lastChar
   }
 
-  const formatDate = (date: Date) => {
-    const d = new Date(date as unknown as string)
+  const formatDate = (date: Timestamp) => {
+    const d = date instanceof Timestamp ? date.toDate() : new Date()
     const year = d.getFullYear()
     const month = String(d.getMonth() + 1).padStart(2, '0')
     const day = String(d.getDate()).padStart(2, '0')
@@ -381,7 +393,7 @@ export default function ReviewManagementPage() {
                   </div>
                 </div>
                 <span className={styles.reviewDate}>
-                  {formatDate(review.createdAt as Date)}
+                  {formatDate(review.createdAt)}
                 </span>
               </div>
               <div className={styles.reviewBody}>
@@ -474,7 +486,7 @@ export default function ReviewManagementPage() {
                     <div className={styles.replyDisplay}>
                       <div className={styles.replyHeader}>
                         <span className={styles.replyDate}>
-                          {review.reply.createdAt instanceof Date
+                          {review.reply.createdAt instanceof Timestamp
                             ? formatDate(review.reply.createdAt)
                             : ''}
                         </span>

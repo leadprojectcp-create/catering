@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { Timestamp } from 'firebase/firestore'
 import { getMagazine } from '@/lib/services/magazineService'
 import type { Magazine } from '@/lib/services/magazineService'
 import Loading from '@/components/Loading'
@@ -35,12 +36,14 @@ export default function MagazineViewPage({ magazineId }: MagazineViewPageProps) 
 
   const formatDate = (date: unknown) => {
     if (!date) return '-'
-    const d = new Date(date as string)
-    return d.toLocaleDateString('ko-KR', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    })
+    if (date instanceof Timestamp) {
+      return date.toDate().toLocaleDateString('ko-KR', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      })
+    }
+    return '-'
   }
 
   const getStatusBadge = (status: string) => {

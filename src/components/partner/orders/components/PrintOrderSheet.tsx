@@ -12,7 +12,7 @@ interface PrintOrderSheetProps {
 export default function PrintOrderSheet({ order, driverInfo }: PrintOrderSheetProps) {
   const formatDate = (date: Date | Timestamp | FieldValue | undefined) => {
     if (!date) return '-'
-    const d = new Date(date as unknown as string)
+    const d = date instanceof Timestamp ? date.toDate() : new Date(date as unknown as string)
     return d.toLocaleString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
   }
 

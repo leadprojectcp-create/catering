@@ -9,6 +9,8 @@ import {
   query,
   where,
   orderBy,
+  serverTimestamp,
+  Timestamp,
 } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 
@@ -20,7 +22,7 @@ export interface AIRecommendedCategory {
   productIds: string[]
   productReasons?: { [productId: string]: string } // 각 상품별 추천 이유
   createdBy: string
-  createdAt: string // ISO 8601 format
+  createdAt: Timestamp
   prompt: string
   isActive: boolean
   displayOrder: number
@@ -68,7 +70,7 @@ export async function createAICategory(
     const docRef = await addDoc(collection(db, 'aiRecommendedCategories'), {
       ...categoryData,
       imageUrl: '', // 임시
-      createdAt: new Date().toISOString(),
+      createdAt: serverTimestamp(),
     })
 
     // 2. 이미지 업로드

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { doc, getDoc, query, collection, where, getDocs } from 'firebase/firestore'
+import { doc, getDoc, query, collection, where, getDocs, Timestamp } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { getAICategoryById } from '@/lib/services/aiCategoryService'
 import type { AIRecommendedCategory } from '@/lib/services/aiCategoryService'
@@ -24,8 +24,8 @@ interface Product {
   discount?: {
     discountAmount: number
     discountPercent: number
-    startDate?: string | null
-    endDate?: string | null
+    startDate?: Timestamp | null
+    endDate?: Timestamp | null
     isAlwaysActive?: boolean
   }
   images?: string[]
@@ -123,8 +123,12 @@ export default function AICategoryProductList({ categoryId }: Props) {
     }
 
     const now = new Date()
-    const startDate = new Date(product.discount.startDate)
-    const endDate = new Date(product.discount.endDate)
+    const startDate = product.discount.startDate instanceof Timestamp
+      ? product.discount.startDate.toDate()
+      : new Date(product.discount.startDate)
+    const endDate = product.discount.endDate instanceof Timestamp
+      ? product.discount.endDate.toDate()
+      : new Date(product.discount.endDate)
 
     return now >= startDate && now <= endDate
   }

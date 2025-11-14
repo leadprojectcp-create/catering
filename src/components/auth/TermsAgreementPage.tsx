@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { onAuthStateChanged, User, signOut } from 'firebase/auth'
-import { doc, getDoc, updateDoc } from 'firebase/firestore'
+import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore'
 import { auth, db } from '@/lib/firebase'
 import AuthGuard from './AuthGuard'
 import TermsModal from '../terms/TermsModal'
@@ -125,7 +125,7 @@ export default function TermsAgreementPage() {
           type: selectedType,
           terms: termsArray,
           registrationComplete: false, // 회원가입 진행 중
-          updatedAt: new Date().toISOString()
+          updatedAt: serverTimestamp()
         })
       } catch (error) {
         console.error('약관 동의 저장 오류:', error)

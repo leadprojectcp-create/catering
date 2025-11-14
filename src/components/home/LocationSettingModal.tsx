@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
-import { doc, updateDoc } from 'firebase/firestore'
+import { doc, updateDoc, Timestamp } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import styles from './LocationSettingModal.module.css'
 
@@ -161,7 +161,7 @@ export default function LocationSettingModal({ isOpen, onClose, onLocationSet, o
                   latitude: location.latitude,
                   longitude: location.longitude
                 },
-                updatedAt: new Date()
+                updatedAt: Timestamp.now()
               })
 
               console.log('위치 저장 완료:', location)
@@ -225,7 +225,7 @@ export default function LocationSettingModal({ isOpen, onClose, onLocationSet, o
           latitude: selectedLocation.latitude,
           longitude: selectedLocation.longitude
         },
-        updatedAt: new Date()
+        updatedAt: Timestamp.now()
       })
 
       console.log('위치 저장 완료:', selectedLocation)

@@ -1,9 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { collection, getDocs, query, orderBy, updateDoc, doc } from 'firebase/firestore'
+import { collection, getDocs, query, orderBy, updateDoc, doc, Timestamp } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
-import type { Timestamp, FieldValue } from 'firebase/firestore'
+import type { FieldValue } from 'firebase/firestore'
 import Loading from '@/components/Loading'
 import Image from 'next/image'
 import styles from './StoreManagementPage.module.css'
@@ -121,14 +121,16 @@ export default function StoreManagementPage() {
 
   const formatDate = (date: Date | Timestamp | FieldValue | undefined) => {
     if (!date) return '-'
-    const d = new Date(date as unknown as string)
-    return d.toLocaleDateString('ko-KR', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
+    if (date instanceof Timestamp) {
+      return date.toDate().toLocaleDateString('ko-KR', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+      })
+    }
+    return '-'
   }
 
   const handleViewDetail = (store: Store) => {

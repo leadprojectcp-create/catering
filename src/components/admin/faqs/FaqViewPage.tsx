@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { Timestamp } from 'firebase/firestore'
 import { getFaq, deleteFaq, type Faq, type FaqCategory } from '@/lib/services/faqService'
 import Loading from '@/components/Loading'
 import styles from './FaqViewPage.module.css'
@@ -65,14 +66,16 @@ export default function FaqViewPage({ id }: FaqViewPageProps) {
 
   const formatDate = (timestamp: unknown) => {
     if (!timestamp) return ''
-    const date = new Date(timestamp as string)
-    return date.toLocaleDateString('ko-KR', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
+    if (timestamp instanceof Timestamp) {
+      return timestamp.toDate().toLocaleDateString('ko-KR', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      })
+    }
+    return ''
   }
 
   if (loading) return <Loading />

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { doc, getDoc, collection, addDoc, updateDoc, serverTimestamp, query, where, getDocs, limit, increment } from 'firebase/firestore'
+import { doc, getDoc, collection, addDoc, updateDoc, serverTimestamp, query, where, getDocs, limit, increment, Timestamp } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { useAuth } from '@/contexts/AuthContext'
 import Loading from '@/components/Loading'
@@ -274,8 +274,8 @@ export default function ReviewWritePage() {
         rating,
         content: content.trim(),
         images: [],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
       })
 
       let hasImages = false
@@ -289,7 +289,7 @@ export default function ReviewWritePage() {
           // 리뷰 문서에 이미지 URL 추가
           await updateDoc(doc(db, 'reviews', reviewRef.id), {
             images: imageUrls,
-            updatedAt: new Date().toISOString(),
+            updatedAt: serverTimestamp(),
           })
           hasImages = true
         } catch (uploadError) {
@@ -321,7 +321,7 @@ export default function ReviewWritePage() {
           orderId: order.id,
           productId: order.items[0]?.productId || '',
           productName: order.items[0]?.productName || '',
-          createdAt: new Date().toISOString()
+          createdAt: serverTimestamp()
         })
 
         alert(`리뷰가 등록되었습니다. ${pointAmount}포인트가 적립되었습니다!`)

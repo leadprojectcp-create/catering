@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { collection, query, where, orderBy, getDocs, doc, getDoc, limit, onSnapshot } from 'firebase/firestore'
+import { collection, query, where, orderBy, getDocs, doc, getDoc, limit, onSnapshot, Timestamp, serverTimestamp } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { useAuth } from '@/contexts/AuthContext'
 import { createOrGetChatRoom } from '@/lib/services/chatService'
@@ -172,8 +172,17 @@ export default function OrdersPage() {
         let paidAtValue
         if (data.paymentInfo && Array.isArray(data.paymentInfo) && data.paymentInfo.length > 0) {
           const lastPayment = data.paymentInfo[data.paymentInfo.length - 1]
-          paidAtValue = lastPayment?.paidAt ? new Date(lastPayment.paidAt) : undefined
+          if (lastPayment?.paidAt) {
+            paidAtValue = lastPayment.paidAt instanceof Timestamp
+              ? lastPayment.paidAt.toDate()
+              : new Date(lastPayment.paidAt)
+          }
         }
+
+        // createdAt이 Timestamp인 경우 Date로 변환
+        const createdAtValue = data.createdAt instanceof Timestamp
+          ? data.createdAt.toDate()
+          : data.createdAt || new Date()
 
         ordersData.push({
           id: docSnapshot.id,
@@ -181,7 +190,7 @@ export default function OrdersPage() {
           partnerId: partnerId,
           partnerPhone: storePhone,
           items: itemsWithImages,
-          createdAt: data.createdAt || new Date().toISOString(),
+          createdAt: createdAtValue,
           paidAt: paidAtValue,
           hasReview: hasReview,
         } as Order)
@@ -511,8 +520,8 @@ export default function OrdersPage() {
         totalQuantity: order.items.reduce((sum, item) => sum + item.quantity, 0),
         deliveryMethod: order.deliveryMethod,
         request: order.request,
-        createdAt: new Date(),
-        updatedAt: new Date()
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
       }
 
       await addCartItem(cartData)
@@ -773,7 +782,9 @@ export default function OrdersPage() {
 
                 <div className={styles.orderDate}>
                   {(() => {
-                    const date = new Date(order.createdAt as string)
+                    const date = order.createdAt instanceof Timestamp
+                      ? order.createdAt.toDate()
+                      : new Date()
                     const year = date.getFullYear()
                     const month = date.getMonth() + 1
                     const day = date.getDate()

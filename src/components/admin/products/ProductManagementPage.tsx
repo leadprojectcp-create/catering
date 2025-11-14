@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { collection, getDocs, query, orderBy } from 'firebase/firestore'
+import { collection, getDocs, query, orderBy, Timestamp } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { updateProductStatus } from '@/lib/services/productService'
 import type { ProductData } from '@/lib/services/productService'
@@ -76,16 +76,18 @@ export default function ProductManagementPage() {
     }
   }
 
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return '-'
-    const date = new Date(dateString)
-    return date.toLocaleDateString('ko-KR', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
+  const formatDate = (date: unknown) => {
+    if (!date) return '-'
+    if (date instanceof Timestamp) {
+      return date.toDate().toLocaleDateString('ko-KR', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+      })
+    }
+    return '-'
   }
 
   const formatNumber = (num?: number) => {

@@ -8,7 +8,9 @@ import {
   query,
   where,
   orderBy,
-  Timestamp
+  Timestamp,
+  serverTimestamp,
+  FieldValue
 } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 
@@ -47,8 +49,8 @@ export interface CartItem {
     perQuantity?: number
   }
   parcelPaymentMethod?: '선결제' | '착불'  // 택배 결제 방식
-  createdAt: Date | Timestamp
-  updatedAt: Date | Timestamp
+  createdAt: Timestamp | FieldValue
+  updatedAt: Timestamp | FieldValue
 }
 
 // 하위 호환성을 위한 레거시 타입 (기존 단일 옵션 구조)
@@ -62,7 +64,7 @@ export interface LegacyCartItem {
   productImage: string
   options: { [key: string]: string }
   quantity: number
-  createdAt: Date | Timestamp
+  createdAt: Timestamp
 }
 
 const COLLECTION_NAME = 'shoppingCart'
@@ -119,8 +121,8 @@ export const addCartItem = async (cartData: Omit<CartItem, 'id'>): Promise<strin
   try {
     const docRef = await addDoc(collection(db, COLLECTION_NAME), {
       ...cartData,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
     })
     return docRef.id
   } catch (error) {

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Image from 'next/image'
-import { doc, updateDoc } from 'firebase/firestore'
+import { doc, updateDoc, Timestamp } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import type { Order, OrderItem } from './types'
 import styles from '../OrderDetailPage.module.css'
@@ -31,8 +31,8 @@ const isDiscountValid = (item: OrderItem) => {
   return now >= startDate && now <= endDate
 }
 
-const formatOrderDate = (date: Date) => {
-  const d = new Date(date as unknown as string)
+const formatOrderDate = (date: Date | Timestamp) => {
+  const d = date instanceof Timestamp ? date.toDate() : new Date(date as unknown as string)
   const datePart = d.toLocaleDateString('ko-KR', {
     year: 'numeric',
     month: 'long',

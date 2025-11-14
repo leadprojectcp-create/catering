@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore'
+import { doc, getDoc, updateDoc, serverTimestamp, Timestamp } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { useAuth } from '@/contexts/AuthContext'
 import Loading from '@/components/Loading'
@@ -43,7 +43,7 @@ interface Review {
   rating: number
   content: string
   images: string[]
-  createdAt: { toDate: () => Date } | string
+  createdAt: Timestamp
 }
 
 interface ReviewEditPageProps {
@@ -83,8 +83,9 @@ export default function ReviewEditPage({ reviewId }: ReviewEditPageProps) {
   }
 
   // 7일 이내 작성 여부 확인
-  const canEdit = (createdAt: { toDate: () => Date } | string): boolean => {
-    const reviewDate = new Date(createdAt as string)
+  const canEdit = (createdAt: Timestamp): boolean => {
+    if (!createdAt || !(createdAt instanceof Timestamp)) return false
+    const reviewDate = createdAt.toDate()
     const now = new Date()
     const diffTime = now.getTime() - reviewDate.getTime()
     const diffDays = diffTime / (1000 * 60 * 60 * 24)
@@ -292,7 +293,7 @@ export default function ReviewEditPage({ reviewId }: ReviewEditPageProps) {
         rating,
         content: content.trim(),
         images: finalImages,
-        updatedAt: new Date().toISOString(),
+        updatedAt: serverTimestamp(),
       })
 
       alert('리뷰가 수정되었습니다.')

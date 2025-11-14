@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { db } from '@/lib/firebase'
-import { doc, getDoc, setDoc, deleteDoc, serverTimestamp } from 'firebase/firestore'
+import { doc, getDoc, setDoc, deleteDoc, serverTimestamp, Timestamp } from 'firebase/firestore'
 import { deleteUser } from 'firebase/auth'
 import styles from './WithdrawalPage.module.css'
 
@@ -82,7 +82,7 @@ export default function WithdrawalPage() {
         ...userData,
         withdrawalReason: selectedReason,
         withdrawalFeedback: additionalFeedback,
-        withdrawalDate: new Date().toISOString(),
+        withdrawalDate: serverTimestamp(),
         originalUserId: user.uid
       })
 

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
-import { collection, getDocs, orderBy, query } from 'firebase/firestore'
+import { collection, getDocs, orderBy, query, Timestamp } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import styles from './AdminLogsPage.module.css'
 
@@ -11,7 +11,7 @@ interface LogEntry {
   restaurantId: string
   restaurantName: string
   actionType: 'phone_call' | 'website_visit'
-  timestamp: { toDate?: () => Date } | Date | string
+  timestamp: Timestamp
   userAgent?: string
   ipAddress?: string
 }
@@ -58,10 +58,12 @@ export default function AdminLogsPage() {
     ? logs
     : logs.filter(log => log.actionType === filter)
 
-  const formatTimestamp = (timestamp: { toDate?: () => Date } | Date | string) => {
+  const formatTimestamp = (timestamp: Timestamp) => {
     if (!timestamp) return '-'
-    const date = new Date(timestamp as string)
-    return date.toLocaleString('ko-KR')
+    if (timestamp instanceof Timestamp) {
+      return timestamp.toDate().toLocaleString('ko-KR')
+    }
+    return '-'
   }
 
   const getActionText = (actionType: string) => {
