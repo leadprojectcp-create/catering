@@ -187,13 +187,10 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
   const [quickDeliveryDriver, setQuickDeliveryDriver] = useState<QuickDeliveryDriver | null>(null)
   const [loadingDriver, setLoadingDriver] = useState(false)
 
-  // 배송비 계산 함수 (실제 배송비 금액 - totalPrice 기준)
+  // 배송비 계산 함수 (실제 배송비 금액)
   const getDeliveryFeeAmount = (order: Order): number => {
-    // totalPrice에서 totalProductPrice를 빼면 실제 소비자가 부담한 배송비
-    const deliveryFeeFromTotal = (order.totalPrice || 0) - (order.totalProductPrice || 0)
-
-    // 음수가 나오면 0 반환
-    return Math.max(0, deliveryFeeFromTotal)
+    // Firestore에 저장된 deliveryFee 값을 그대로 사용
+    return order.deliveryFee || 0
   }
 
   useEffect(() => {

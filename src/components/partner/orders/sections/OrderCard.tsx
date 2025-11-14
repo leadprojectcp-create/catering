@@ -71,14 +71,32 @@ export default function OrderCard({
 
   const formatDate = (date: Date | Timestamp | FieldValue | undefined) => {
     if (!date) return '-'
-    const d = new Date(date as unknown as string)
-    return d.toLocaleDateString('ko-KR', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
+
+    // Firestore Timestamp를 Date로 변환
+    let d: Date
+    if (date instanceof Date) {
+      d = date
+    } else if (typeof date === 'object' && 'toDate' in date && typeof date.toDate === 'function') {
+      d = (date as Timestamp).toDate()
+    } else {
+      d = new Date(date as unknown as string)
+    }
+
+    // Invalid Date 체크
+    if (isNaN(d.getTime())) return '-'
+
+    const year = d.getFullYear()
+    const month = d.getMonth() + 1
+    const day = d.getDate()
+    const weekdays = ['일', '월', '화', '수', '목', '금', '토']
+    const weekday = weekdays[d.getDay()]
+    const hours = d.getHours()
+    const minutes = d.getMinutes()
+    const seconds = d.getSeconds()
+    const period = hours >= 12 ? '오후' : '오전'
+    const displayHours = hours > 12 ? hours - 12 : hours === 0 ? 12 : hours
+
+    return `${year}년 ${month}월 ${day}일 (${weekday}) ${period} ${displayHours}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
   }
 
   const formatCurrency = (amount: number) => {
@@ -545,23 +563,6 @@ export default function OrderCard({
                 <div className={styles.totalRow}>
                   <span className={styles.totalLabel}>총 상품갯수</span>
                   <span className={styles.totalValue}>{order.totalQuantity || order.items.reduce((sum, item) => sum + item.quantity, 0)}개</span>
-                </div>
-                <div className={styles.totalRow}>
-                  <span className={styles.totalLabel}>배송비</span>
-                  <span className={styles.totalValue}>
-                    {order.deliveryMethod === '퀵업체 배송' && order.deliveryFee > 0 ? (
-                      <span>조건부 지원</span>
-                    ) : order.deliveryFee === 0 ? (
-                      <span>조건부 무료 (가게부담)</span>
-                    ) : (
-                      <>
-                        {order.deliveryMethod === '택배 배송' && order.parcelPaymentMethod && (
-                          <span>({order.parcelPaymentMethod}) </span>
-                        )}
-                        {order.parcelPaymentMethod === '착불' ? formatCurrency(order.deliveryFee) : `+${formatCurrency(order.deliveryFee)}`}
-                      </>
-                    )}
-                  </span>
                 </div>
                 <div className={styles.totalRow}>
                   <span className={styles.totalLabel}>총 상품금액</span>
