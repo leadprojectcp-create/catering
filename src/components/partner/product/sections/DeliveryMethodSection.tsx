@@ -43,7 +43,10 @@ export default function DeliveryMethodSection({
 
   const handleToggle = (method: string, enabled: boolean) => {
     if (enabled) {
-      onChange([...deliveryMethods, method])
+      // 중복 방지: 이미 포함되어 있지 않을 때만 추가
+      if (!deliveryMethods.includes(method)) {
+        onChange([...deliveryMethods, method])
+      }
     } else {
       onChange(deliveryMethods.filter(m => m !== method))
     }
