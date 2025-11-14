@@ -181,7 +181,7 @@ export default function OrdersPage() {
           partnerId: partnerId,
           partnerPhone: storePhone,
           items: itemsWithImages,
-          createdAt: data.createdAt? || new Date(),
+          createdAt: data.createdAt || new Date().toISOString(),
           paidAt: paidAtValue,
           hasReview: hasReview,
         } as Order)

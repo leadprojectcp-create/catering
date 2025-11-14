@@ -170,11 +170,11 @@ export default function SettlementPage() {
           orderId: doc.id,
           productName: productName,
           totalProductPrice: data.totalProductPrice || 0,
-          orderDate: data.createdAt? || new Date(),
+          orderDate: data.createdAt || new Date().toISOString(),
           orderNumber: data.orderNumber || doc.id, // Firestore의 orderNumber 사용
           orderIndex: index + 1, // 수수료 계산용 인덱스
           settlementStatus: data.settlementStatus, // 값이 없으면 undefined
-          settlementDate: data.settlementDate?,
+          settlementDate: data.settlementDate,
           settlementId: data.settlementId
         })
 
