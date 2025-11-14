@@ -159,7 +159,7 @@ export const addStoreLike = async (
       storeId,
       storeName,
       storeImage: storeImage || null,
-      likedAt: serverTimestamp()
+      likedAt: new Date().toISOString()
     })
 
     // stores의 likeCount 증가

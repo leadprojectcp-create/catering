@@ -358,7 +358,7 @@ export async function addProductLike(
       productId,
       productName,
       productImage: productImage || null,
-      likedAt: serverTimestamp()
+      likedAt: new Date().toISOString()
     })
 
     // products의 likeCount 증가

@@ -27,6 +27,17 @@ interface UsePaymentHandlerParams {
   saveAddress: (address: Omit<DeliveryAddress, 'id'>) => Promise<DeliveryAddress>
   checkDuplicateAddress: (address: string, detailAddress: string) => Promise<boolean>
   onRouter: (path: string) => void
+  quickDeliveryFeeSettings?: {
+    type: '무료' | '조건부 지원' | '유료'
+    freeCondition?: number
+    maxSupport?: number
+  } | null
+  deliveryFeeSettings?: {
+    type: '무료' | '조건부 무료' | '유료' | '수량별'
+    baseFee?: number
+    freeCondition?: number
+    perQuantity?: number
+  } | null
 }
 
 export async function handlePaymentProcess(params: UsePaymentHandlerParams): Promise<boolean> {
@@ -51,7 +62,9 @@ export async function handlePaymentProcess(params: UsePaymentHandlerParams): Pro
     paymentType,
     saveAddress,
     checkDuplicateAddress,
-    onRouter
+    onRouter,
+    quickDeliveryFeeSettings,
+    deliveryFeeSettings
   } = params
 
   if (!user) {
@@ -255,6 +268,16 @@ export async function handlePaymentProcess(params: UsePaymentHandlerParams): Pro
       newOrderData.parcelPaymentMethod = parcelPaymentMethod
     }
 
+    // 퀵 배송비 설정 저장
+    if (deliveryMethod === '퀵업체 배송' && quickDeliveryFeeSettings) {
+      newOrderData.quickDeliveryFeeSettings = quickDeliveryFeeSettings
+    }
+
+    // 택배 배송비 설정 저장
+    if (deliveryMethod === '택배 배송' && deliveryFeeSettings) {
+      newOrderData.deliveryFeeSettings = deliveryFeeSettings
+    }
+
     const newOrderRef = await addDoc(collection(db, 'orders'), newOrderData)
     finalOrderId = newOrderRef.id
     console.log('✅ 결제 성공 후 shoppingCart에서 orders로 이동 완료:', finalOrderId)
@@ -443,7 +466,7 @@ export async function handlePaymentProcess(params: UsePaymentHandlerParams): Pro
         orderId: finalOrderId,
         productId: orderData?.productId || '',
         productName: orderData?.productName || '',
-        createdAt: serverTimestamp()
+        createdAt: new Date().toISOString()
       })
     } catch (pointError) {
       console.error('포인트 사용 처리 실패:', pointError)

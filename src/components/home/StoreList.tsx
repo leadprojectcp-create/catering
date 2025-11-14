@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { collection, getDocs, query, where, limit } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
@@ -43,8 +43,12 @@ interface StoreListProps {
 
 export default function StoreList({ selectedCategory }: StoreListProps) {
   const router = useRouter()
-  const [stores, setStores] = useState<Store[]>([])
+  const [allStores, setAllStores] = useState<Store[]>([]) // 전체 스토어 (60개)
+  const [displayedStores, setDisplayedStores] = useState<Store[]>([]) // 화면에 표시할 스토어 (30개)
+  const [displayCount, setDisplayCount] = useState(30) // 현재 표시 개수
   const [isLoading, setIsLoading] = useState(true)
+  const observerRef = useRef<IntersectionObserver | null>(null)
+  const loadMoreRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const fetchStores = async () => {
@@ -52,7 +56,7 @@ export default function StoreList({ selectedCategory }: StoreListProps) {
         const q = query(
           collection(db, 'stores'),
           where('status', '==', 'active'),
-          limit(20)
+          limit(60) // 60개를 미리 로드
         )
         const querySnapshot = await getDocs(q)
         const storeData = querySnapshot.docs.map(doc => {
@@ -79,10 +83,12 @@ export default function StoreList({ selectedCategory }: StoreListProps) {
 
         // 랜덤 셔플
         const shuffledStores = storeData.sort(() => Math.random() - 0.5)
-        setStores(shuffledStores)
+        setAllStores(shuffledStores)
+        setDisplayedStores(shuffledStores.slice(0, 30)) // 처음 30개만 표시
       } catch (error) {
         console.error('스토어 데이터 가져오기 실패:', error)
-        setStores([])
+        setAllStores([])
+        setDisplayedStores([])
       } finally {
         setIsLoading(false)
       }
@@ -91,9 +97,50 @@ export default function StoreList({ selectedCategory }: StoreListProps) {
     fetchStores()
   }, [])
 
-  const filteredStores = selectedCategory === '전체'
-    ? stores
-    : stores.filter(store => store.businessCategory === selectedCategory)
+  // 카테고리 변경 시 필터링
+  const filteredAllStores = selectedCategory === '전체'
+    ? allStores
+    : allStores.filter(store => store.businessCategory === selectedCategory)
+
+  const filteredDisplayedStores = selectedCategory === '전체'
+    ? displayedStores
+    : displayedStores.filter(store => store.businessCategory === selectedCategory)
+
+  // 다음 30개 로드
+  const loadMore = useCallback(() => {
+    const nextCount = displayCount + 30
+    const newDisplayedStores = filteredAllStores.slice(0, nextCount)
+    setDisplayedStores(newDisplayedStores)
+    setDisplayCount(nextCount)
+  }, [displayCount, filteredAllStores])
+
+  // Intersection Observer로 스크롤 감지
+  useEffect(() => {
+    if (observerRef.current) {
+      observerRef.current.disconnect()
+    }
+
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && displayCount < filteredAllStores.length) {
+          loadMore()
+        }
+      },
+      { threshold: 0.1 }
+    )
+
+    if (loadMoreRef.current) {
+      observerRef.current.observe(loadMoreRef.current)
+    }
+
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect()
+      }
+    }
+  }, [loadMore, displayCount, filteredAllStores.length])
+
+  const filteredStores = filteredDisplayedStores
 
   if (isLoading) {
     return <Loading />
@@ -103,7 +150,7 @@ export default function StoreList({ selectedCategory }: StoreListProps) {
     <div className={styles.container}>
       <div className={styles.header}>
         <h2 className={styles.title}>단모 제휴업체</h2>
-        <p className={styles.subtitle}>총 {filteredStores.length}개</p>
+        <p className={styles.subtitle}>총 {filteredAllStores.length}개</p>
       </div>
       <div className={styles.storeGrid}>
         {filteredStores.length === 0 ? (
@@ -111,7 +158,8 @@ export default function StoreList({ selectedCategory }: StoreListProps) {
             {selectedCategory === '전체' ? '등록된 업체가 없습니다.' : `${selectedCategory} 카테고리에 등록된 업체가 없습니다.`}
           </div>
         ) : (
-          filteredStores.map((store, storeIndex) => {
+          <>
+            {filteredStores.map((store, storeIndex) => {
             const images = store.storeImages && store.storeImages.length > 0 ? store.storeImages : []
 
             // URL 슬러그 생성
@@ -161,23 +209,20 @@ export default function StoreList({ selectedCategory }: StoreListProps) {
                         // 상위 10개 스토어의 첫 번째 이미지만 priority
                         const shouldPrioritize = storeIndex < 10 && index === 0
 
-                        // BunnyCDN 이미지 최적화: 짧은 쪽을 260px으로 보장 (레티나 대응)
-                        const optimizedImage = image.includes('b-cdn.net')
-                          ? `${image}?width=260&height=260&format=webp&quality=100`
-                          : image
-
                         return (
                           <SwiperSlide key={index}>
                             <div className={styles.imageWrapper}>
                               <OptimizedImage
-                                src={optimizedImage}
+                                src={image}
                                 alt={`${store.storeName || '가게'} 이미지 ${index + 1}`}
                                 fill
-                                sizes="(max-width: 768px) 260px, 346px"
+                                sizes="260px"
+                                quality={75}
                                 className={styles.cardImage}
                                 style={{ objectFit: 'cover' }}
                                 priority={shouldPrioritize}
                                 loading={shouldPrioritize ? undefined : "lazy"}
+                                unoptimized
                               />
                             </div>
                           </SwiperSlide>
@@ -204,7 +249,15 @@ export default function StoreList({ selectedCategory }: StoreListProps) {
                 </div>
               </div>
             )
-          })
+          })}
+
+          {/* Intersection Observer 타겟 */}
+          {filteredStores.length < filteredAllStores.length && (
+            <div ref={loadMoreRef} className={styles.loadMoreTrigger}>
+              {/* 스크롤 감지용 요소 */}
+            </div>
+          )}
+          </>
         )}
       </div>
     </div>

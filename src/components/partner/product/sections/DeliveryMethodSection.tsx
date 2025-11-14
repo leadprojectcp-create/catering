@@ -2,7 +2,7 @@ import React from 'react'
 import styles from './DeliveryMethodSection.module.css'
 
 export interface QuickDeliveryFeeSettings {
-  type: '무료' | '조건부 무료' | '유료'
+  type: '무료' | '조건부 지원' | '유료'
   freeCondition?: number  // 최소 구매 금액
   maxSupport?: number     // 최대 지원비 (0이면 퀵비 최대비용 지원)
 }
@@ -143,12 +143,12 @@ export default function DeliveryMethodSection({
                 <input
                   type="radio"
                   name="quickDeliveryFeeType"
-                  checked={quickDeliveryFeeSettings?.type === '조건부 무료'}
-                  onChange={() => handleQuickFeeTypeChange('조건부 무료')}
+                  checked={quickDeliveryFeeSettings?.type === '조건부 지원'}
+                  onChange={() => handleQuickFeeTypeChange('조건부 지원')}
                   className={styles.hiddenRadio}
                 />
-                <span className={`${styles.customRadio} ${quickDeliveryFeeSettings?.type === '조건부 무료' ? styles.customRadioActive : ''}`}></span>
-                조건부 무료
+                <span className={`${styles.customRadio} ${quickDeliveryFeeSettings?.type === '조건부 지원' ? styles.customRadioActive : ''}`}></span>
+                조건부 지원
               </label>
               <label className={styles.radioLabel}>
                 <input
@@ -163,8 +163,8 @@ export default function DeliveryMethodSection({
               </label>
             </div>
 
-            {/* 조건부 무료 상세 설정 */}
-            {quickDeliveryFeeSettings?.type === '조건부 무료' && (
+            {/* 조건부 지원 상세 설정 */}
+            {quickDeliveryFeeSettings?.type === '조건부 지원' && (
               <div className={styles.feeDetailSettings}>
                 <div className={styles.inputRow}>
                   <label className={styles.inputLabel}>배송비 조건</label>

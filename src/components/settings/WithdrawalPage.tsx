@@ -82,7 +82,7 @@ export default function WithdrawalPage() {
         ...userData,
         withdrawalReason: selectedReason,
         withdrawalFeedback: additionalFeedback,
-        withdrawalDate: serverTimestamp(),
+        withdrawalDate: new Date().toISOString(),
         originalUserId: user.uid
       })
 

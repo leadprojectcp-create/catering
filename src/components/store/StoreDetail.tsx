@@ -11,6 +11,10 @@ import { useStoreLike } from '@/hooks/useStoreLike'
 import Loading from '@/components/Loading'
 import ProductList from '@/components/store/ProductList'
 import OptimizedImage from '@/components/common/OptimizedImage'
+import { Swiper, SwiperSlide } from 'swiper/react'
+import { Pagination } from 'swiper/modules'
+import 'swiper/css'
+import 'swiper/css/pagination'
 import styles from './StoreDetail.module.css'
 
 interface Store {
@@ -142,62 +146,78 @@ export default function StoreDetail({ storeId }: StoreDetailProps) {
         <div className={styles.imageSection}>
         {images.length > 0 ? (
           <>
-            <div className={styles.mainImage}>
-              <OptimizedImage
-                src={images[currentImageIndex]}
-                alt={store.storeName}
-                fill
-                sizes="390px"
-                className={styles.image}
-                style={{ objectFit: 'cover' }}
-                priority
-              />
+            {/* PC: 기존 화살표 방식 */}
+            <div className={styles.pcSlider}>
+              <div className={styles.mainImage}>
+                <OptimizedImage
+                  src={images[currentImageIndex]}
+                  alt={store.storeName}
+                  fill
+                  sizes="390px"
+                  quality={75}
+                  className={styles.image}
+                  style={{ objectFit: 'cover' }}
+                  priority
+                  unoptimized
+                />
+              </div>
+
+              {images.length > 1 && (
+                <>
+                  <button
+                    className={`${styles.arrowButton} ${styles.arrowLeft}`}
+                    onClick={() => setCurrentImageIndex(prev => prev === 0 ? images.length - 1 : prev - 1)}
+                  >
+                    ‹
+                  </button>
+                  <button
+                    className={`${styles.arrowButton} ${styles.arrowRight}`}
+                    onClick={() => setCurrentImageIndex(prev => prev === images.length - 1 ? 0 : prev + 1)}
+                  >
+                    ›
+                  </button>
+
+                  <div className={styles.indicators}>
+                    {images.map((_, index) => (
+                      <button
+                        key={index}
+                        className={`${styles.indicator} ${index === currentImageIndex ? styles.indicatorActive : ''}`}
+                        onClick={() => setCurrentImageIndex(index)}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
 
-            {/* 다음/이전 이미지 미리 로드 */}
-            {images.length > 1 && (
-              <>
-                <link
-                  rel="preload"
-                  as="image"
-                  href={images[(currentImageIndex + 1) % images.length]}
-                />
-                {currentImageIndex > 0 && (
-                  <link
-                    rel="preload"
-                    as="image"
-                    href={images[currentImageIndex - 1]}
-                  />
-                )}
-              </>
-            )}
-
-            {images.length > 1 && (
-              <>
-                <button
-                  className={`${styles.arrowButton} ${styles.arrowLeft}`}
-                  onClick={() => setCurrentImageIndex(prev => prev === 0 ? images.length - 1 : prev - 1)}
-                >
-                  ‹
-                </button>
-                <button
-                  className={`${styles.arrowButton} ${styles.arrowRight}`}
-                  onClick={() => setCurrentImageIndex(prev => prev === images.length - 1 ? 0 : prev + 1)}
-                >
-                  ›
-                </button>
-
-                <div className={styles.indicators}>
-                  {images.map((_, index) => (
-                    <button
-                      key={index}
-                      className={`${styles.indicator} ${index === currentImageIndex ? styles.indicatorActive : ''}`}
-                      onClick={() => setCurrentImageIndex(index)}
-                    />
-                  ))}
-                </div>
-              </>
-            )}
+            {/* 모바일: Swiper 터치 슬라이드 */}
+            <div className={styles.mobileSlider}>
+              <Swiper
+                modules={[Pagination]}
+                slidesPerView={1}
+                pagination={{ clickable: true }}
+                className={styles.storeSwiper}
+              >
+                {images.map((image, index) => (
+                  <SwiperSlide key={index}>
+                    <div className={styles.mainImage}>
+                      <OptimizedImage
+                        src={image}
+                        alt={`${store.storeName} 이미지 ${index + 1}`}
+                        fill
+                        sizes="390px"
+                        quality={75}
+                        className={styles.image}
+                        style={{ objectFit: 'cover' }}
+                        priority={index === 0}
+                        loading={index === 0 ? undefined : "lazy"}
+                        unoptimized
+                      />
+                    </div>
+                  </SwiperSlide>
+                ))}
+              </Swiper>
+            </div>
           </>
         ) : (
           <div className={styles.placeholderImage}>

@@ -9,7 +9,6 @@ import {
   query,
   orderBy,
   where,
-  serverTimestamp,
   QueryConstraint,
   Timestamp,
   FieldValue
@@ -40,12 +39,13 @@ export interface Notice {
 // 공지사항 생성
 export const createNotice = async (noticeData: Omit<Notice, 'id'>): Promise<string> => {
   try {
+    const now = new Date().toISOString()
     const docRef = await addDoc(collection(db, COLLECTION_NAME), {
       ...noticeData,
       viewCount: 0,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-      publishedAt: noticeData.status === 'published' ? serverTimestamp() : null
+      createdAt: now,
+      updatedAt: now,
+      publishedAt: noticeData.status === 'published' ? now : null
     })
     return docRef.id
   } catch (error) {
@@ -58,14 +58,15 @@ export const createNotice = async (noticeData: Omit<Notice, 'id'>): Promise<stri
 export const updateNotice = async (id: string, noticeData: Partial<Notice>): Promise<void> => {
   try {
     const docRef = doc(db, COLLECTION_NAME, id)
+    const now = new Date().toISOString()
     const updateData: Record<string, unknown> = {
       ...noticeData,
-      updatedAt: serverTimestamp()
+      updatedAt: now
     }
 
     // 상태가 published로 변경되고 publishedAt이 없으면 설정
     if (noticeData.status === 'published' && !noticeData.publishedAt) {
-      updateData.publishedAt = serverTimestamp()
+      updateData.publishedAt = now
     }
 
     await updateDoc(docRef, updateData)

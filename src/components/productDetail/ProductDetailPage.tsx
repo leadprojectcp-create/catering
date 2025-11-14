@@ -553,14 +553,12 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
             />
           </div>
 
-          {!isModalOpen && (
-            <button
-              className={styles.mobileOrderButton}
-              onClick={() => setIsModalOpen(true)}
-            >
-              주문하기
-            </button>
-          )}
+          <button
+            className={`${styles.mobileOrderButton} ${isModalOpen ? styles.hidden : ''}`}
+            onClick={() => setIsModalOpen(true)}
+          >
+            주문하기
+          </button>
 
           <BottomModal
             isOpen={isModalOpen}

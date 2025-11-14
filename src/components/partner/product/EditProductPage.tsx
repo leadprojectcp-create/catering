@@ -331,18 +331,18 @@ export default function EditProductPage({ productId }: { productId: string }) {
     // 퀵업체 배송 선택 시 배송비 설정 필수 검사
     if (formData.deliveryMethods.includes('퀵업체 배송')) {
       if (!formData.quickDeliveryFeeSettings?.type) {
-        alert('퀵업체 배송 시 배송비 타입(무료/조건부 무료/유료)을 선택해주세요.')
+        alert('퀵업체 배송 시 배송비 타입(무료/조건부 지원/유료)을 선택해주세요.')
         return
       }
 
-      // 조건부 무료인 경우
-      if (formData.quickDeliveryFeeSettings.type === '조건부 무료') {
+      // 조건부 지원인 경우
+      if (formData.quickDeliveryFeeSettings.type === '조건부 지원') {
         if (!formData.quickDeliveryFeeSettings.freeCondition || formData.quickDeliveryFeeSettings.freeCondition <= 0) {
-          alert('조건부 무료 배송 시 최소 구매 금액을 입력해주세요.')
+          alert('조건부 지원 배송 시 최소 구매 금액을 입력해주세요.')
           return
         }
         if (formData.quickDeliveryFeeSettings.maxSupport === undefined || formData.quickDeliveryFeeSettings.maxSupport < 0) {
-          alert('조건부 무료 배송 시 퀵 비용 지원액을 입력해주세요.')
+          alert('조건부 지원 배송 시 퀵 비용 지원액을 입력해주세요.')
           return
         }
       }

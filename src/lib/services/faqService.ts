@@ -9,7 +9,6 @@ import {
   query,
   orderBy,
   where,
-  serverTimestamp,
   QueryConstraint,
   Timestamp,
   FieldValue
@@ -39,11 +38,12 @@ export interface Faq {
 // FAQ 생성
 export const createFaq = async (faqData: Omit<Faq, 'id'>): Promise<string> => {
   try {
+    const now = new Date().toISOString()
     const docRef = await addDoc(collection(db, COLLECTION_NAME), {
       ...faqData,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-      publishedAt: faqData.status === 'published' ? serverTimestamp() : null
+      createdAt: now,
+      updatedAt: now,
+      publishedAt: faqData.status === 'published' ? now : null
     })
     return docRef.id
   } catch (error) {
@@ -56,14 +56,15 @@ export const createFaq = async (faqData: Omit<Faq, 'id'>): Promise<string> => {
 export const updateFaq = async (id: string, faqData: Partial<Faq>): Promise<void> => {
   try {
     const docRef = doc(db, COLLECTION_NAME, id)
+    const now = new Date().toISOString()
     const updateData: Record<string, unknown> = {
       ...faqData,
-      updatedAt: serverTimestamp()
+      updatedAt: now
     }
 
     // 상태가 published로 변경되고 publishedAt이 없으면 설정
     if (faqData.status === 'published' && !faqData.publishedAt) {
-      updateData.publishedAt = serverTimestamp()
+      updateData.publishedAt = now
     }
 
     await updateDoc(docRef, updateData)

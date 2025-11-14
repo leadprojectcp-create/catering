@@ -173,7 +173,7 @@ export default function AdminSettlementPage() {
       console.log('[AdminSettlement] 정산 처리 시작:', orderIds)
 
       const batch = writeBatch(db)
-      const now = serverTimestamp()
+      const now = new Date().toISOString()
 
       orderIds.forEach((orderId) => {
         const orderRef = doc(db, 'orders', orderId)

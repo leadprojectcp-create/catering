@@ -224,3 +224,9 @@
   color: #6b7280;
   padding: 48px 0;
 }
+
+.loadMoreTrigger {
+  grid-column: 1 / -1;
+  height: 1px;
+  visibility: hidden;
+}

@@ -71,7 +71,7 @@
 /* 요약 섹션 */
 .summarySection {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 16px;
   margin-bottom: 40px;
 }
@@ -93,6 +93,19 @@
   font-size: 16px;
   font-weight: 500;
   margin-bottom: 8px;
+}
+
+.feeDetailText {
+  color: #999;
+  font-size: 13px;
+  font-weight: 400;
+}
+
+.feeBreakdown {
+  color: #666;
+  font-size: 16px;
+  font-weight: 600;
+  margin-right: 4px;
 }
 
 .summaryCard.highlight .summaryLabel {

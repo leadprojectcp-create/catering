@@ -24,6 +24,11 @@ interface UsePaymentSummaryParams {
     freeCondition?: number
     perQuantity?: number
   } | null
+  quickDeliveryFeeSettings: {
+    type: '무료' | '조건부 지원' | '유료'
+    freeCondition?: number
+    maxSupport?: number
+  } | null
   orderData: OrderData | null
   orderInfo: OrderInfo
   recipient: string
@@ -53,7 +58,7 @@ export function usePaymentSummary(params: UsePaymentSummaryParams) {
   const router = useRouter()
   const {
     user, deliveryMethod, deliveryFeeFromAPI, usePoint, parcelPaymentMethod,
-    deliveryFeeSettings, orderData, orderInfo, recipient, addressName,
+    deliveryFeeSettings, quickDeliveryFeeSettings, orderData, orderInfo, recipient, addressName,
     deliveryRequest, detailedRequest, entranceCode, agreements, orderId,
     searchParams, paymentMethod, paymentType, onProcessingChange
   } = params
@@ -70,6 +75,7 @@ export function usePaymentSummary(params: UsePaymentSummaryParams) {
     deliveryMethod,
     deliveryFeeFromAPI,
     deliveryFeeSettings,
+    quickDeliveryFeeSettings,
     totalProductPrice,
     totalQuantity,
     isAdditionalOrder,
@@ -165,7 +171,9 @@ export function usePaymentSummary(params: UsePaymentSummaryParams) {
         paymentType,
         saveAddress,
         checkDuplicateAddress,
-        onRouter: (path: string) => router.push(path)
+        onRouter: (path: string) => router.push(path),
+        quickDeliveryFeeSettings,
+        deliveryFeeSettings
       })
     } catch (error) {
       console.error('주문 생성 실패:', error)

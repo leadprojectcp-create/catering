@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { User } from 'firebase/auth'
 import OptimizedImage from '@/components/common/OptimizedImage'
 import { OrderData, OrderInfo } from '../types'
@@ -9,6 +9,15 @@ import { useDeliveryFeeInquiry } from '../hooks/useDeliveryFeeInquiry'
 import { useRefundCalculation } from '../hooks/useRefundCalculation'
 import { calculateTotalProductPrice, calculateTotalQuantity, calculateTotalPrice } from '../utils/orderCalculations'
 import styles from './PaymentSummarySection.module.css'
+
+interface DeliveryPromotionConfig {
+  quickDelivery: {
+    enabled: boolean
+    minOrderAmount: number
+    discountAmount: number
+    description: string
+  }
+}
 
 interface PaymentSummarySectionProps {
   user: User | null
@@ -22,6 +31,11 @@ interface PaymentSummarySectionProps {
     baseFee?: number
     freeCondition?: number
     perQuantity?: number
+  } | null
+  quickDeliveryFeeSettings: {
+    type: '무료' | '조건부 지원' | '유료'
+    freeCondition?: number
+    maxSupport?: number
   } | null
   orderData: OrderData | null
   orderInfo: OrderInfo
@@ -52,6 +66,7 @@ export default function PaymentSummarySection({
   availablePoint,
   parcelPaymentMethod,
   deliveryFeeSettings,
+  quickDeliveryFeeSettings,
   orderData,
   orderInfo,
   orderId,
@@ -59,6 +74,22 @@ export default function PaymentSummarySection({
   onUsePointChange,
   onDeliveryFeeFromAPIChange
 }: PaymentSummarySectionProps) {
+  const [promotionConfig, setPromotionConfig] = useState<DeliveryPromotionConfig | null>(null)
+
+  // 배송비 프로모션 설정 불러오기
+  useEffect(() => {
+    const loadPromotionConfig = async () => {
+      try {
+        const response = await fetch('/assets/delivery-promotion.json')
+        const config = await response.json()
+        setPromotionConfig(config)
+      } catch (error) {
+        console.error('Failed to load delivery promotion config:', error)
+      }
+    }
+    loadPromotionConfig()
+  }, [])
+
   // 추가 결제 모드 확인
   const isAdditionalOrder = !!searchParams.get('additionalOrderId')
 
@@ -76,6 +107,7 @@ export default function PaymentSummarySection({
     deliveryMethod,
     deliveryFeeFromAPI,
     deliveryFeeSettings,
+    quickDeliveryFeeSettings,
     totalProductPrice,
     totalQuantity,
     isAdditionalOrder,
@@ -151,10 +183,51 @@ export default function PaymentSummarySection({
               <span className={styles.paymentLabel}>배송비</span>
               <span className={styles.paymentValue}>+{deliveryFee.toLocaleString()}원</span>
             </div>
-            {totalProductPrice >= 300000 && (
+
+            {/* 조건부 지원일 때: 판매자 부담 표시 */}
+            {quickDeliveryFeeSettings?.type === '조건부 지원' &&
+             quickDeliveryFeeSettings.freeCondition &&
+             quickDeliveryFeeSettings.maxSupport &&
+             totalProductPrice >= quickDeliveryFeeSettings.freeCondition && (
               <div className={styles.paymentRow}>
-                <span className={styles.paymentLabel}>배송비 프로모션</span>
-                <span className={styles.promotionValue}>-10,000원</span>
+                <div>
+                  <div className={styles.paymentLabel}>판매자 부담</div>
+                  <div className={styles.deliveryPromotionInfo}>
+                    <OptimizedImage
+                      src="/icons/quick_delivery.png"
+                      alt="퀵배송"
+                      width={16}
+                      height={16}
+                    />
+                    <span className={styles.deliveryPromotionLabel}>퀵배송</span>
+                    <span className={styles.deliveryPromotionDesc}>
+                      {quickDeliveryFeeSettings.freeCondition.toLocaleString()}원 이상 구매 시, {quickDeliveryFeeSettings.maxSupport.toLocaleString()}원 기본 배송비 지원
+                    </span>
+                  </div>
+                </div>
+                <span className={styles.promotionValue}>-{quickDeliveryFeeSettings.maxSupport.toLocaleString()}원</span>
+              </div>
+            )}
+
+            {/* 유료일 때: 프로모션(JSON 설정 기반) 표시 */}
+            {deliveryPromotion > 0 && promotionConfig && (
+              <div className={styles.paymentRow}>
+                <div>
+                  <div className={styles.paymentLabel}>판매자 부담</div>
+                  <div className={styles.deliveryPromotionInfo}>
+                    <OptimizedImage
+                      src="/icons/quick_delivery.png"
+                      alt="퀵배송"
+                      width={16}
+                      height={16}
+                    />
+                    <span className={styles.deliveryPromotionLabel}>퀵배송</span>
+                    <span className={styles.deliveryPromotionDesc}>
+                      {promotionConfig.quickDelivery.minOrderAmount.toLocaleString()}원 이상 구매 시, {promotionConfig.quickDelivery.discountAmount.toLocaleString()}원 기본 배송비 지원
+                    </span>
+                  </div>
+                </div>
+                <span className={styles.promotionValue}>-{deliveryPromotion.toLocaleString()}원</span>
               </div>
             )}
           </>
@@ -168,7 +241,7 @@ export default function PaymentSummarySection({
               {deliveryFeeSettings?.type === '수량별' && deliveryFeeSettings.perQuantity && deliveryFeeSettings.baseFee && (
                 <div className={styles.deliveryFeeInfo}>
                   <OptimizedImage
-                    src="/icons/delivery.svg"
+                    src="/icons/parcel_delivery.png"
                     alt="배송비"
                     width={16}
                     height={16}

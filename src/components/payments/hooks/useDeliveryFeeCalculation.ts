@@ -2,6 +2,15 @@ import { useState, useEffect, useMemo } from 'react'
 import { doc, getDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 
+interface DeliveryPromotionConfig {
+  quickDelivery: {
+    enabled: boolean
+    minOrderAmount: number
+    discountAmount: number
+    description: string
+  }
+}
+
 interface DeliveryFeeSettings {
   type: '무료' | '조건부 무료' | '유료' | '수량별'
   baseFee?: number
@@ -9,10 +18,17 @@ interface DeliveryFeeSettings {
   perQuantity?: number
 }
 
+interface QuickDeliveryFeeSettings {
+  type: '무료' | '조건부 지원' | '유료'
+  freeCondition?: number
+  maxSupport?: number
+}
+
 interface UseDeliveryFeeCalculationProps {
   deliveryMethod: string
   deliveryFeeFromAPI: number | null
   deliveryFeeSettings: DeliveryFeeSettings | null
+  quickDeliveryFeeSettings: QuickDeliveryFeeSettings | null
   totalProductPrice: number
   totalQuantity: number
   isAdditionalOrder: boolean
@@ -28,12 +44,28 @@ export function useDeliveryFeeCalculation({
   deliveryMethod,
   deliveryFeeFromAPI,
   deliveryFeeSettings,
+  quickDeliveryFeeSettings,
   totalProductPrice,
   totalQuantity,
   isAdditionalOrder,
   orderId
 }: UseDeliveryFeeCalculationProps) {
   const [existingOrder, setExistingOrder] = useState<ExistingOrder | null>(null)
+  const [promotionConfig, setPromotionConfig] = useState<DeliveryPromotionConfig | null>(null)
+
+  // 배송비 프로모션 설정 불러오기
+  useEffect(() => {
+    const loadPromotionConfig = async () => {
+      try {
+        const response = await fetch('/assets/delivery-promotion.json')
+        const config = await response.json()
+        setPromotionConfig(config)
+      } catch (error) {
+        console.error('Failed to load delivery promotion config:', error)
+      }
+    }
+    loadPromotionConfig()
+  }, [])
 
   // 추가 주문일 때 기존 주문 정보 가져오기
   useEffect(() => {
@@ -113,6 +145,38 @@ export function useDeliveryFeeCalculation({
       if (isAdditionalOrder) {
         return 0
       }
+
+      // quickDeliveryFeeSettings에 따른 배송비 계산
+      if (quickDeliveryFeeSettings) {
+        if (quickDeliveryFeeSettings.type === '무료') {
+          return 0
+        }
+
+        if (quickDeliveryFeeSettings.type === '조건부 지원') {
+          const apiFee = deliveryFeeFromAPI || 0
+          const minAmount = quickDeliveryFeeSettings.freeCondition || 0
+          const support = quickDeliveryFeeSettings.maxSupport || 0
+
+          // 최소 구매 금액 조건을 만족하지 않으면 배송비 그대로
+          if (totalProductPrice < minAmount) {
+            return apiFee
+          }
+
+          // 조건 만족 시: maxSupport가 0이면 전액 지원 (무료)
+          if (support === 0) {
+            return 0
+          }
+
+          // 조건 만족 시: 지원 금액만큼 할인 (음수가 되지 않도록)
+          return Math.max(0, apiFee - support)
+        }
+
+        // 유료일 때는 API에서 받은 배송비 그대로
+        if (quickDeliveryFeeSettings.type === '유료') {
+          return deliveryFeeFromAPI || 0
+        }
+      }
+
       return deliveryFeeFromAPI || 0
     }
 
@@ -128,15 +192,31 @@ export function useDeliveryFeeCalculation({
     }
 
     return 0
-  }, [isAdditionalOrder, deliveryMethod, deliveryFeeFromAPI, calculateParcelDeliveryFee, deliveryFeeSettings])
+  }, [isAdditionalOrder, deliveryMethod, deliveryFeeFromAPI, quickDeliveryFeeSettings, calculateParcelDeliveryFee, deliveryFeeSettings])
 
-  // 배송비 프로모션 (퀵업체 배송이고 30만원 이상일 때만 1만원 할인, 추가 주문은 제외)
+  // 배송비 프로모션 (JSON 설정 파일 기반)
+  // 단, 조건부 지원일 때는 프로모션 적용 안 함 (지원금액만 할인)
   const deliveryPromotion = useMemo(() => {
     if (isAdditionalOrder) {
       return 0
     }
-    return deliveryMethod === '퀵업체 배송' && deliveryFeeFromAPI && totalProductPrice >= 300000 ? 10000 : 0
-  }, [isAdditionalOrder, deliveryMethod, deliveryFeeFromAPI, totalProductPrice])
+
+    // 조건부 지원일 때는 배송비 프로모션 적용 안 함
+    if (deliveryMethod === '퀵업체 배송' && quickDeliveryFeeSettings?.type === '조건부 지원') {
+      return 0
+    }
+
+    // JSON 설정에서 프로모션 정보 가져오기
+    if (promotionConfig && deliveryMethod === '퀵업체 배송' && deliveryFeeFromAPI) {
+      const { enabled, minOrderAmount, discountAmount } = promotionConfig.quickDelivery
+
+      if (enabled && totalProductPrice >= minOrderAmount) {
+        return discountAmount
+      }
+    }
+
+    return 0
+  }, [isAdditionalOrder, deliveryMethod, deliveryFeeFromAPI, totalProductPrice, quickDeliveryFeeSettings, promotionConfig])
 
   return {
     deliveryFee,

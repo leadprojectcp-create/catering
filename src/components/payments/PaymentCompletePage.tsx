@@ -255,7 +255,7 @@ export default function PaymentCompletePage() {
             orderId: finalOrderId,
             productId: existingOrderData.productId || '',
             productName: productName || '',
-            createdAt: serverTimestamp()
+            createdAt: new Date().toISOString()
           })
         }
 

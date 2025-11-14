@@ -47,6 +47,7 @@ export default function PaymentsPage() {
     quantityRanges,
     totalQuantity,
     deliveryFeeSettings,
+    quickDeliveryFeeSettings,
     savedAddresses,
     availablePoint,
     setDeliveryMethod,
@@ -100,6 +101,7 @@ export default function PaymentsPage() {
     availablePoint,
     parcelPaymentMethod,
     deliveryFeeSettings,
+    quickDeliveryFeeSettings,
     orderData,
     orderInfo,
     recipient,
@@ -232,6 +234,7 @@ export default function PaymentsPage() {
           availablePoint={availablePoint}
           parcelPaymentMethod={parcelPaymentMethod}
           deliveryFeeSettings={deliveryFeeSettings}
+          quickDeliveryFeeSettings={quickDeliveryFeeSettings}
           orderData={orderData}
           orderInfo={orderInfo}
           recipient={recipient}

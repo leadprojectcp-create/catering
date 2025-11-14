@@ -1,0 +1,8 @@
+{
+  "quickDelivery": {
+    "enabled": true,
+    "minOrderAmount": 300000,
+    "discountAmount": 10000,
+    "description": "퀵배송 30만원 이상 구매 시 배송비 1만원 할인"
+  }
+}

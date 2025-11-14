@@ -14,6 +14,14 @@
   }
 }
 
+@font-face {
+  font-family: "Hakgyoansim Allimjang OTF";
+  src: url('/fonts/Hakgyoansim Allimjang OTF R.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 body {
   background: var(--background);
   font-family: "Pretendard", -apple-system, BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif;

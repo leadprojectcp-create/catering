@@ -21,7 +21,7 @@ export interface QuantityRange {
 }
 
 export interface QuickDeliveryFeeSettings {
-  type: '무료' | '조건부 무료' | '유료'
+  type: '무료' | '조건부 지원' | '유료'
   freeCondition?: number  // 최소 구매 금액
   maxSupport?: number     // 최대 지원비 (0이면 퀵비 최대비용 지원)
 }

@@ -23,6 +23,11 @@ interface UseOrderDataResult {
     freeCondition?: number
     perQuantity?: number
   } | null
+  quickDeliveryFeeSettings: {
+    type: '무료' | '조건부 지원' | '유료'
+    freeCondition?: number
+    maxSupport?: number
+  } | null
   savedAddresses: DeliveryAddress[]
   availablePoint: number
   setDeliveryMethod: (method: string) => void
@@ -46,6 +51,11 @@ export function useOrderData(user: User | null): UseOrderDataResult {
     baseFee?: number
     freeCondition?: number
     perQuantity?: number
+  } | null>(null)
+  const [quickDeliveryFeeSettings, setQuickDeliveryFeeSettings] = useState<{
+    type: '무료' | '조건부 지원' | '유료'
+    freeCondition?: number
+    maxSupport?: number
   } | null>(null)
   const [quantityRanges, setQuantityRanges] = useState<{
     minQuantity: number
@@ -116,6 +126,11 @@ export function useOrderData(user: User | null): UseOrderDataResult {
           if (productData.deliveryFeeSettings) {
             const { paymentMethods, ...rest } = productData.deliveryFeeSettings
             setDeliveryFeeSettings(rest)
+          }
+
+          // quickDeliveryFeeSettings 가져오기
+          if (productData.quickDeliveryFeeSettings) {
+            setQuickDeliveryFeeSettings(productData.quickDeliveryFeeSettings)
           }
 
           // orderDocData에서 저장된 배송방법 확인
@@ -212,6 +227,7 @@ export function useOrderData(user: User | null): UseOrderDataResult {
     quantityRanges,
     totalQuantity,
     deliveryFeeSettings,
+    quickDeliveryFeeSettings,
     savedAddresses,
     availablePoint,
     setDeliveryMethod,

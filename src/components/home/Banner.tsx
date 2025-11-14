@@ -83,8 +83,11 @@ export default function Banner() {
                     alt={banner.title}
                     className={styles.bannerImage}
                     fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 640px"
+                    quality={75}
                     style={{ objectFit: 'cover' }}
                     priority
+                    unoptimized
                   />
                 )}
               </div>

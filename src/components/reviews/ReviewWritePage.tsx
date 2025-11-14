@@ -274,8 +274,8 @@ export default function ReviewWritePage() {
         rating,
         content: content.trim(),
         images: [],
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       })
 
       let hasImages = false
@@ -289,7 +289,7 @@ export default function ReviewWritePage() {
           // 리뷰 문서에 이미지 URL 추가
           await updateDoc(doc(db, 'reviews', reviewRef.id), {
             images: imageUrls,
-            updatedAt: serverTimestamp(),
+            updatedAt: new Date().toISOString(),
           })
           hasImages = true
         } catch (uploadError) {
@@ -321,7 +321,7 @@ export default function ReviewWritePage() {
           orderId: order.id,
           productId: order.items[0]?.productId || '',
           productName: order.items[0]?.productName || '',
-          createdAt: serverTimestamp()
+          createdAt: new Date().toISOString()
         })
 
         alert(`리뷰가 등록되었습니다. ${pointAmount}포인트가 적립되었습니다!`)

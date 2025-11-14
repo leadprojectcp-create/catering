@@ -10,7 +10,6 @@ import {
   orderBy,
   where,
   Timestamp,
-  serverTimestamp,
   FieldValue
 } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
@@ -39,13 +38,14 @@ const COLLECTION_NAME = 'magazines'
 // 매거진 생성
 export const createMagazine = async (magazineData: Omit<Magazine, 'id'>): Promise<string> => {
   try {
+    const now = new Date().toISOString()
     const docRef = await addDoc(collection(db, COLLECTION_NAME), {
       ...magazineData,
       viewCount: 0,
       likeCount: 0,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-      publishedAt: magazineData.status === 'published' ? serverTimestamp() : null
+      createdAt: now,
+      updatedAt: now,
+      publishedAt: magazineData.status === 'published' ? now : null
     })
     return docRef.id
   } catch (error) {
@@ -58,14 +58,15 @@ export const createMagazine = async (magazineData: Omit<Magazine, 'id'>): Promis
 export const updateMagazine = async (id: string, magazineData: Partial<Magazine>): Promise<void> => {
   try {
     const docRef = doc(db, COLLECTION_NAME, id)
+    const now = new Date().toISOString()
     const updateData: Record<string, unknown> = {
       ...magazineData,
-      updatedAt: serverTimestamp()
+      updatedAt: now
     }
 
     // 상태가 published로 변경되고 publishedAt이 없으면 설정
     if (magazineData.status === 'published' && !magazineData.publishedAt) {
-      updateData.publishedAt = serverTimestamp()
+      updateData.publishedAt = now
     }
 
     await updateDoc(docRef, updateData)

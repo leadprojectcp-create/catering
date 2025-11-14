@@ -39,6 +39,15 @@ export default function SettlementPage() {
   const [totalSettlement, setTotalSettlement] = useState(0)
   const [totalFee, setTotalFee] = useState(0)
   const [account, setAccount] = useState<SettlementAccount | null>(null)
+  const [filteredSettlementData, setFilteredSettlementData] = useState({
+    totalSales: 0,
+    totalFee: 0,
+    platformFee: 0,
+    quickDeliveryCost: 0,
+    totalSettlement: 0,
+    pendingSettlement: 0,
+    completedSettlement: 0
+  })
 
   // 필터 상태
   const [periodFilter, setPeriodFilter] = useState<PeriodFilter>('all')
@@ -196,7 +205,7 @@ export default function SettlementPage() {
     }
   }
 
-  const calculateSettlement = (ordersList: OrderItem[]) => {
+  const calculateSettlement = async (ordersList: OrderItem[]) => {
     console.log('[SettlementPage] calculateSettlement 시작, ordersList.length:', ordersList.length)
 
     if (!commissionConfig) {
@@ -206,31 +215,47 @@ export default function SettlementPage() {
 
     let totalSettlementAmount = 0
     let totalFeeAmount = 0
+    let totalQuickDeliveryCost = 0
 
-    ordersList.forEach((order, index) => {
+    for (const [index, order] of ordersList.entries()) {
       const orderNumber = index + 1
       const feeRate = calculateFeeRate(orderNumber, commissionConfig)
       const fee = order.totalProductPrice * feeRate
+
+      // Firestore에서 주문 상세 정보 가져오기 (퀵 배송비 확인)
+      try {
+        const orderRef = doc(db, 'orders', order.orderId)
+        const orderDoc = await getDoc(orderRef)
+        if (orderDoc.exists()) {
+          const orderData = orderDoc.data()
+          // 퀵 배송이고 조건부 지원인 경우 판매자 부담 배송비 계산
+          if (orderData.deliveryMethod === '퀵업체 배송' && orderData.quickDeliveryFeeSettings?.type === '조건부 지원') {
+            const maxSupport = orderData.quickDeliveryFeeSettings.maxSupport || 0
+            const freeCondition = orderData.quickDeliveryFeeSettings.freeCondition || 0
+            // 조건 만족 시 판매자가 부담하는 배송비
+            if (orderData.totalProductPrice >= freeCondition && maxSupport > 0) {
+              totalQuickDeliveryCost += maxSupport
+            }
+          }
+        }
+      } catch (error) {
+        console.error(`[SettlementPage] 주문 ${order.orderId} 상세 정보 조회 실패:`, error)
+      }
+
       const settlementAmount = order.totalProductPrice - fee
-
-      console.log(`[SettlementPage] 주문 #${orderNumber} 계산:`, {
-        totalProductPrice: order.totalProductPrice,
-        feeRate,
-        fee,
-        settlementAmount
-      })
-
       totalSettlementAmount += settlementAmount
       totalFeeAmount += fee
-    })
+    }
 
     console.log('[SettlementPage] 최종 계산 결과:', {
       totalSettlementAmount,
-      totalFeeAmount
+      totalFeeAmount,
+      totalQuickDeliveryCost,
+      totalFeeWithDelivery: totalFeeAmount + totalQuickDeliveryCost
     })
 
     setTotalSettlement(totalSettlementAmount)
-    setTotalFee(totalFeeAmount)
+    setTotalFee(totalFeeAmount + totalQuickDeliveryCost)
   }
 
   const calculateOrderSettlement = (order: OrderItem) => {
@@ -411,48 +436,95 @@ export default function SettlementPage() {
   }
 
   // 날짜 필터링된 주문 (settlementStatus가 있는 주문만)
-  const filteredOrders = orders.filter(order => {
-    // settlementStatus가 없는 주문은 제외
-    if (!order.settlementStatus) return false
+  const filteredOrders = useMemo(() => {
+    return orders.filter(order => {
+      // settlementStatus가 없는 주문은 제외
+      if (!order.settlementStatus) return false
 
-    if (!dateRange.start || !dateRange.end) return true
+      if (!dateRange.start || !dateRange.end) return true
 
-    const orderDate = new Date(order.orderDate)
-    orderDate.setHours(0, 0, 0, 0)
+      const orderDate = new Date(order.orderDate)
+      orderDate.setHours(0, 0, 0, 0)
 
-    const startDate = new Date(dateRange.start)
-    startDate.setHours(0, 0, 0, 0)
+      const startDate = new Date(dateRange.start)
+      startDate.setHours(0, 0, 0, 0)
 
-    const endDate = new Date(dateRange.end)
-    endDate.setHours(23, 59, 59, 999)
+      const endDate = new Date(dateRange.end)
+      endDate.setHours(23, 59, 59, 999)
 
-    return orderDate >= startDate && orderDate <= endDate
-  })
+      return orderDate >= startDate && orderDate <= endDate
+    })
+  }, [orders, dateRange.start, dateRange.end])
 
   // 필터링된 주문의 정산 금액 계산
-  const filteredSettlementData = useMemo(() => {
-    let totalSales = 0
-    let totalFee = 0
-    let totalSettlement = 0
-    let pendingSettlement = 0 // 정산 예정 금액
-    let completedSettlement = 0 // 정산 완료 금액
+  useEffect(() => {
+    const calculateFilteredSettlement = async () => {
+      let totalSales = 0
+      let totalFee = 0
+      let totalSettlement = 0
+      let pendingSettlement = 0
+      let completedSettlement = 0
+      let totalQuickDeliveryCost = 0
 
-    filteredOrders.forEach((order) => {
-      const { fee, settlementAmount } = calculateOrderSettlement(order)
-      totalSales += order.totalProductPrice
-      totalFee += fee
-      totalSettlement += settlementAmount
+      for (const order of filteredOrders) {
+        const { fee, settlementAmount } = calculateOrderSettlement(order)
+        totalSales += order.totalProductPrice
+        totalFee += fee
+        totalSettlement += settlementAmount
 
-      // 정산 상태에 따라 분리
-      if (order.settlementStatus === 'completed') {
-        completedSettlement += settlementAmount
-      } else if (order.settlementStatus === 'pending') {
-        pendingSettlement += settlementAmount
+        // Firestore에서 주문 상세 정보 가져오기 (퀵 배송비 확인)
+        try {
+          const orderRef = doc(db, 'orders', order.orderId)
+          const orderDoc = await getDoc(orderRef)
+
+          if (orderDoc.exists()) {
+            const orderData = orderDoc.data()
+
+            // 퀵 배송인 경우 배송비 타입별 처리
+            if (orderData.deliveryMethod === '퀵업체 배송' && orderData.quickDeliveryFeeSettings) {
+              const settings = orderData.quickDeliveryFeeSettings
+
+              if (settings.type === '무료') {
+                // 무료: 판매자 부담 없음 (0원)
+                totalQuickDeliveryCost += 0
+              } else if (settings.type === '조건부 지원') {
+                // 조건부 지원: 조건 만족 시 maxSupport만큼 판매자 부담
+                const maxSupport = settings.maxSupport || 0
+                const freeCondition = settings.freeCondition || 0
+                if (orderData.totalProductPrice >= freeCondition && maxSupport > 0) {
+                  totalQuickDeliveryCost += maxSupport
+                }
+              } else if (settings.type === '유료') {
+                // 유료: orders의 deliveryFee가 판매자 부담 (실제 배송비)
+                const actualDeliveryFee = orderData.deliveryFee || 0
+                totalQuickDeliveryCost += actualDeliveryFee
+              }
+            }
+          }
+        } catch (error) {
+          console.error(`[SettlementPage] 주문 ${order.orderId} 상세 정보 조회 실패:`, error)
+        }
+
+        // 정산 상태에 따라 분리
+        if (order.settlementStatus === 'completed') {
+          completedSettlement += settlementAmount
+        } else if (order.settlementStatus === 'pending') {
+          pendingSettlement += settlementAmount
+        }
       }
-      // settlementStatus가 undefined인 경우는 어디에도 포함시키지 않음
-    })
 
-    return { totalSales, totalFee, totalSettlement, pendingSettlement, completedSettlement }
+      setFilteredSettlementData({
+        totalSales,
+        totalFee: totalFee + totalQuickDeliveryCost,
+        platformFee: totalFee,
+        quickDeliveryCost: totalQuickDeliveryCost,
+        totalSettlement,
+        pendingSettlement,
+        completedSettlement
+      })
+    }
+
+    calculateFilteredSettlement()
   }, [filteredOrders])
 
   if (loading) {
@@ -491,8 +563,17 @@ export default function SettlementPage() {
           </div>
         </div>
         <div className={styles.summaryCard}>
-          <div className={styles.summaryLabel}>총 수수료</div>
+          <div className={styles.summaryLabel}>
+            총 수수료 <span className={styles.feeDetailText}>(플랫폼 수수료+퀵 비용)</span>
+          </div>
           <div className={styles.summaryValue}>
+            <span className={styles.feeBreakdown}>
+              {formatNumber(filteredSettlementData.platformFee)}원
+            </span>
+            <span className={styles.feeBreakdown}>
+              +{formatNumber(filteredSettlementData.quickDeliveryCost)}원
+            </span>
+            <span>=</span>
             -{formatNumber(filteredSettlementData.totalFee)}원
           </div>
         </div>

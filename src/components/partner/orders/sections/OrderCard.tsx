@@ -500,7 +500,9 @@ export default function OrderCard({
                 <div className={styles.totalRow}>
                   <span className={styles.totalLabel}>배송비</span>
                   <span className={styles.totalValue}>
-                    {order.deliveryFee === 0 ? (
+                    {order.deliveryMethod === '퀵업체 배송' && order.deliveryFee > 0 ? (
+                      <span>조건부 지원</span>
+                    ) : order.deliveryFee === 0 ? (
                       <span>조건부 무료 (가게부담)</span>
                     ) : (
                       <>

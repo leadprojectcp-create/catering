@@ -294,7 +294,7 @@ export default function ReviewEditPage({ reviewId }: ReviewEditPageProps) {
         rating,
         content: content.trim(),
         images: finalImages,
-        updatedAt: serverTimestamp(),
+        updatedAt: new Date().toISOString(),
       })
 
       alert('리뷰가 수정되었습니다.')

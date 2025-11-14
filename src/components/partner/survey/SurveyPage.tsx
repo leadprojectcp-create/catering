@@ -1,10 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { db } from '@/lib/firebase'
-import { collection, addDoc, doc, updateDoc } from 'firebase/firestore'
+import { collection, addDoc, doc, updateDoc, getDoc, query, where, getDocs } from 'firebase/firestore'
 import styles from './SurveyPage.module.css'
 
 interface SurveyFormData {
@@ -26,6 +26,8 @@ interface SurveyFormData {
 export default function SurveyPage() {
   const router = useRouter()
   const { user } = useAuth()
+  const [isLoading, setIsLoading] = useState(true)
+  const [alreadySubmitted, setAlreadySubmitted] = useState(false)
   const [formData, setFormData] = useState<SurveyFormData>({
     productTypes: [],
     bulkOrderExperience: '',
@@ -41,6 +43,50 @@ export default function SurveyPage() {
     suggestions: '',
     instagramScreenshot: null
   })
+
+  // 이미 제출했는지 확인
+  useEffect(() => {
+    const checkSurveySubmission = async () => {
+      if (!user) {
+        setIsLoading(false)
+        return
+      }
+
+      try {
+        // 1. users 컬렉션에서 survey 필드 확인
+        const userRef = doc(db, 'users', user.uid)
+        const userDoc = await getDoc(userRef)
+
+        if (userDoc.exists() && userDoc.data().survey === true) {
+          setAlreadySubmitted(true)
+          setIsLoading(false)
+          return
+        }
+
+        // 2. surveys 컬렉션에서 해당 userId로 제출한 적이 있는지 확인
+        const surveysQuery = query(
+          collection(db, 'surveys'),
+          where('userId', '==', user.uid)
+        )
+        const surveysSnapshot = await getDocs(surveysQuery)
+
+        if (!surveysSnapshot.empty) {
+          setAlreadySubmitted(true)
+          // users 컬렉션에도 survey 필드 업데이트
+          await updateDoc(userRef, {
+            survey: true,
+            surveyCompletedAt: new Date()
+          })
+        }
+      } catch (error) {
+        console.error('Survey check error:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    checkSurveySubmission()
+  }, [user])
 
   const handleCheckboxChange = (field: 'productTypes' | 'difficulties', value: string) => {
     setFormData(prev => {
@@ -169,7 +215,7 @@ export default function SurveyPage() {
       })
 
       alert('설문조사가 완료되었습니다. 소중한 의견 감사합니다!')
-      router.push('/partner')
+      router.push('/partner/dashboard')
     } catch (error) {
       console.error('Survey submission error:', error)
       alert('설문조사 제출 중 오류가 발생했습니다. 다시 시도해주세요.')
@@ -180,6 +226,53 @@ export default function SurveyPage() {
     if (confirm('작성 중인 내용이 사라집니다. 취소하시겠습니까?')) {
       router.back()
     }
+  }
+
+  // 로딩 중
+  if (isLoading) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.banner}>
+          <div className={styles.bannerText}>
+            단모 파트너 설문조사{'\n'}참여하기
+          </div>
+        </div>
+        <div className={styles.content}>
+          <div style={{ textAlign: 'center', padding: '40px', fontSize: '16px' }}>
+            설문조사 정보를 확인하는 중입니다...
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // 이미 제출한 경우
+  if (alreadySubmitted) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.banner}>
+          <div className={styles.bannerText}>
+            단모 파트너 설문조사{'\n'}참여하기
+          </div>
+        </div>
+        <div className={styles.content}>
+          <div style={{ textAlign: 'center', padding: '40px' }}>
+            <h2 style={{ fontSize: '20px', fontWeight: 'bold', marginBottom: '16px' }}>
+              이미 설문조사를 완료하셨습니다
+            </h2>
+            <p style={{ fontSize: '16px', color: '#666', marginBottom: '32px' }}>
+              소중한 의견 감사합니다!
+            </p>
+            <button
+              className={styles.submitButton}
+              onClick={() => router.push('/partner/dashboard')}
+            >
+              대시보드로 이동
+            </button>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
