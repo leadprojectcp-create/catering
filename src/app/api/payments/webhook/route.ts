@@ -180,9 +180,13 @@ export async function POST(request: NextRequest) {
         const orderData = orderDoc.data()
         const existingPaymentInfo = orderData.paymentInfo || []
 
+        console.log('[Webhook V2] 기존 paymentInfo:', JSON.stringify(existingPaymentInfo, null, 2))
+
         // 기존 paymentInfo에서 해당 paymentId를 찾아서 status를 'cancelled'로 변경
         const updatedPaymentInfo = existingPaymentInfo.map((info: any) => {
+          console.log('[Webhook V2] 비교 중:', info.paymentId, '===', paymentId, '?', info.paymentId === paymentId)
           if (info.paymentId === paymentId) {
+            console.log('[Webhook V2] paymentId 일치! status를 cancelled로 변경')
             return {
               ...info,
               status: 'cancelled',
@@ -191,6 +195,8 @@ export async function POST(request: NextRequest) {
           }
           return info
         })
+
+        console.log('[Webhook V2] 업데이트된 paymentInfo:', JSON.stringify(updatedPaymentInfo, null, 2))
 
         // paymentStatus를 'refunded'로 변경하고 paymentInfo 업데이트
         await updateDoc(orderRef, {

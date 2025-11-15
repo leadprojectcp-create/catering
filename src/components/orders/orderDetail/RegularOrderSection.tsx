@@ -80,7 +80,7 @@ export default function RegularOrderSection({ order }: Props) {
         if (normalizedStatus === 'paid') {
           paymentStatusText = '결제완료'
         } else if (normalizedStatus === 'cancelled') {
-          paymentStatusText = '결제취소'
+          paymentStatusText = '환불완료'
         }
 
         return (
