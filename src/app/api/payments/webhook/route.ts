@@ -39,16 +39,25 @@ export async function POST(request: NextRequest) {
         // 1. 서명할 메시지 생성: msg_id.timestamp.payload
         const signedContent = `${webhookId}.${webhookTimestamp}.${rawBody}`
 
+        console.log('[Webhook V2] Webhook ID:', webhookId)
+        console.log('[Webhook V2] Webhook Timestamp:', webhookTimestamp)
+        console.log('[Webhook V2] Raw Body length:', rawBody.length)
+        console.log('[Webhook V2] Signed Content (first 100 chars):', signedContent.substring(0, 100))
+
         // 2. whsec_ 접두사 제거 후 base64 디코드
         const secret = webhookSecret.startsWith('whsec_')
           ? webhookSecret.substring(7)
           : webhookSecret
+
+        console.log('[Webhook V2] Secret (after whsec_ removal, first 20):', secret.substring(0, 20))
 
         // 3. HMAC-SHA256으로 서명 생성
         const expectedSignature = crypto
           .createHmac('sha256', Buffer.from(secret, 'base64'))
           .update(signedContent, 'utf8')
           .digest('base64')
+
+        console.log('[Webhook V2] Expected signature:', expectedSignature)
 
         // 4. 서명 형식: v1,<signature> (공백으로 여러 서명 구분 가능)
         const signatures = signature.split(' ')
