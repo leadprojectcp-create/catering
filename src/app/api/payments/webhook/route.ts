@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
     } catch (error) {
       console.error('[Webhook V2] 웹훅 서명 검증 실패:', error)
 
-      if (error instanceof PortOne.Errors.WebhookVerificationError) {
+      if (error instanceof PortOne.Webhook.WebhookVerificationError) {
         return NextResponse.json(
           { error: 'Invalid webhook signature' },
           { status: 401 }
