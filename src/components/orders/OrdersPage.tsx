@@ -77,6 +77,14 @@ interface Order {
     freeCondition?: number
     maxSupport?: number
   }
+  paymentInfo?: Array<{
+    paymentId: string
+    paidAt: Date
+    amount?: number
+    method?: string
+    status?: string
+    cancelledAt?: Date
+  }>
 }
 
 export default function OrdersPage() {
