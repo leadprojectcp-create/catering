@@ -26,36 +26,62 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // PortOne V2 웹훅 서명 헤더 확인 (여러 가능한 헤더명 체크)
-    const signature = request.headers.get('webhook-signature') ||
-                     request.headers.get('portone-signature') ||
-                     request.headers.get('x-portone-signature')
+    // PortOne V2 웹훅은 Svix 표준 사용
+    const signature = request.headers.get('webhook-signature')
+    const webhookId = request.headers.get('webhook-id')
+    const webhookTimestamp = request.headers.get('webhook-timestamp')
 
-    if (signature) {
-      console.log('[Webhook V2] Signature found:', signature.substring(0, 20) + '...')
+    if (signature && webhookId && webhookTimestamp) {
+      console.log('[Webhook V2] Svix signature verification')
 
-      // 서명 검증 (임시로 비활성화 - 디버깅용)
-      const expectedSignature = crypto
-        .createHmac('sha256', webhookSecret)
-        .update(rawBody)
-        .digest('hex')
+      try {
+        // Svix 서명 검증
+        // 1. 서명할 메시지 생성: {id}.{timestamp}.{body}
+        const signedContent = `${webhookId}.${webhookTimestamp}.${rawBody}`
 
-      console.log('[Webhook V2] Signature verification (disabled for debugging):')
-      console.log('[Webhook V2] Expected:', expectedSignature)
-      console.log('[Webhook V2] Received:', signature)
-      console.log('[Webhook V2] Match:', signature === expectedSignature)
+        // 2. whsec_ 접두사 제거 후 base64 디코드
+        const secret = webhookSecret.startsWith('whsec_')
+          ? webhookSecret.substring(7)
+          : webhookSecret
 
-      // 임시로 서명 검증 실패해도 진행
-      /* if (signature !== expectedSignature) {
-        console.error('[Webhook V2] Invalid webhook signature')
+        // 3. HMAC-SHA256으로 서명 생성
+        const expectedSignature = crypto
+          .createHmac('sha256', Buffer.from(secret, 'base64'))
+          .update(signedContent)
+          .digest('base64')
+
+        // 4. 서명 형식: v1,<signature>
+        const signatures = signature.split(' ')
+        let verified = false
+
+        for (const sig of signatures) {
+          const [version, receivedSig] = sig.split(',')
+          if (version === 'v1' && receivedSig === expectedSignature) {
+            verified = true
+            break
+          }
+        }
+
+        if (!verified) {
+          console.error('[Webhook V2] Invalid Svix signature')
+          console.error('[Webhook V2] Expected:', expectedSignature)
+          console.error('[Webhook V2] Received:', signature)
+          return NextResponse.json(
+            { error: 'Invalid signature' },
+            { status: 401 }
+          )
+        }
+
+        console.log('[Webhook V2] Svix signature verified successfully')
+      } catch (error) {
+        console.error('[Webhook V2] Signature verification error:', error)
         return NextResponse.json(
-          { error: 'Invalid signature' },
+          { error: 'Signature verification failed' },
           { status: 401 }
         )
-      } */
-      console.log('[Webhook V2] Proceeding without signature verification (DEBUG MODE)')
+      }
     } else {
-      console.warn('[Webhook V2] No signature header found - proceeding without verification')
+      console.warn('[Webhook V2] Missing Svix signature headers - proceeding without verification')
     }
 
     // 웹훅 데이터 파싱
