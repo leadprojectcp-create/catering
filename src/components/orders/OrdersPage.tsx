@@ -260,6 +260,17 @@ export default function OrdersPage() {
     }
   }, [showDatePicker])
 
+  // paymentInfo 배열에서 최신 결제 상태 가져오기
+  const getLatestPaymentStatus = (order: Order): string => {
+    if (order.paymentInfo && Array.isArray(order.paymentInfo) && order.paymentInfo.length > 0) {
+      const latestPayment = order.paymentInfo[order.paymentInfo.length - 1]
+      if (latestPayment.status === 'cancelled') return 'refunded'
+      if (latestPayment.status === 'paid') return 'paid'
+    }
+    // paymentInfo가 없으면 기존 paymentStatus 사용
+    return order.paymentStatus || 'unpaid'
+  }
+
   const getStatusText = (orderStatus: string, paymentStatus: string) => {
     // 결제 상태 우선 체크
     if (paymentStatus === 'unpaid') return '결제 미완료'
@@ -849,11 +860,15 @@ export default function OrdersPage() {
                         }`}>
                           {order.deliveryMethod}
                         </div>
-                        <div className={`${styles.orderTotal} ${order.paymentStatus === 'failed' ? styles.orderTotalFailed : ''}`}>
-                          {(!order.paymentStatus || order.paymentStatus === 'unpaid') && `결제 미완료 ${(order.totalPrice || order.totalProductPrice || 0).toLocaleString()}원`}
-                          {order.paymentStatus === 'paid' && `결제 완료 ${(order.totalPrice || order.totalProductPrice || 0).toLocaleString()}원`}
-                          {order.paymentStatus === 'refunded' && `환불됨 ${(order.totalPrice || order.totalProductPrice || 0).toLocaleString()}원`}
-                          {order.paymentStatus === 'failed' && `결제 실패 ${(order.totalPrice || order.totalProductPrice || 0).toLocaleString()}원`}
+                        <div className={`${styles.orderTotal} ${getLatestPaymentStatus(order) === 'failed' ? styles.orderTotalFailed : ''}`}>
+                          {(() => {
+                            const paymentStatus = getLatestPaymentStatus(order)
+                            if (!paymentStatus || paymentStatus === 'unpaid') return `결제 미완료 ${(order.totalPrice || order.totalProductPrice || 0).toLocaleString()}원`
+                            if (paymentStatus === 'paid') return `결제 완료 ${(order.totalPrice || order.totalProductPrice || 0).toLocaleString()}원`
+                            if (paymentStatus === 'refunded') return `환불 완료 ${(order.totalPrice || order.totalProductPrice || 0).toLocaleString()}원`
+                            if (paymentStatus === 'failed') return `결제 실패 ${(order.totalPrice || order.totalProductPrice || 0).toLocaleString()}원`
+                            return ''
+                          })()}
                         </div>
                       </div>
                     </div>

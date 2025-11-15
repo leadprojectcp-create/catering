@@ -353,6 +353,18 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
     fetchQuickDeliveryDriver()
   }, [order?.quickDeliveryOrderNo, order?.deliveryInfo?.deliveryDate])
 
+  // paymentInfo 배열에서 최신 결제 상태 가져오기
+  const getLatestPaymentStatus = (): string => {
+    if (!order) return 'unpaid'
+    if (order.paymentInfo && Array.isArray(order.paymentInfo) && order.paymentInfo.length > 0) {
+      const latestPayment = order.paymentInfo[order.paymentInfo.length - 1]
+      if (latestPayment.status === 'cancelled') return 'refunded'
+      if (latestPayment.status === 'paid') return 'paid'
+    }
+    // paymentInfo가 없으면 기존 paymentStatus 사용
+    return order.paymentStatus || 'unpaid'
+  }
+
   const getStatusText = (orderStatus: string, paymentStatus: string) => {
     if (paymentStatus === 'unpaid') return '결제 미완료'
     if (paymentStatus === 'failed') return '결제 실패'
@@ -668,45 +680,57 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
 
         {/* 하단 버튼 */}
         <div className={styles.buttonGroup}>
-          {order.paymentStatus === 'unpaid' || order.paymentStatus === 'failed' ? (
-            <>
-              <button
-                className={styles.cancelButton}
-                onClick={() => setCancelOrderId(order.id)}
-              >
-                전체주문취소
-              </button>
-              <button
-                className={styles.payButton}
-                onClick={() => router.push(`/payments?orderId=${order.id}`)}
-              >
-                결제하기
-              </button>
-            </>
-          ) : order.orderStatus === 'delivered' ? (
-            <>
-              <button className={styles.detailButton} onClick={handleAddToCart}>
-                장바구니 담기
-              </button>
-              <button
-                className={styles.reviewButton}
-                onClick={() => router.push(`/reviews/write?orderId=${order.id}`)}
-              >
-                리뷰작성
-              </button>
-            </>
-          ) : (
-            <>
-              {(order.orderStatus === 'pending' || order.orderStatus === 'preparing') && (
+          {(() => {
+            const latestPaymentStatus = getLatestPaymentStatus()
+
+            if (latestPaymentStatus === 'unpaid' || latestPaymentStatus === 'failed') {
+              return (
+                <>
+                  <button
+                    className={styles.cancelButton}
+                    onClick={() => setCancelOrderId(order.id)}
+                  >
+                    전체주문취소
+                  </button>
+                  <button
+                    className={styles.payButton}
+                    onClick={() => router.push(`/payments?orderId=${order.id}`)}
+                  >
+                    결제하기
+                  </button>
+                </>
+              )
+            }
+
+            if (order.orderStatus === 'delivered') {
+              return (
+                <>
+                  <button className={styles.detailButton} onClick={handleAddToCart}>
+                    장바구니 담기
+                  </button>
+                  <button
+                    className={styles.reviewButton}
+                    onClick={() => router.push(`/reviews/write?orderId=${order.id}`)}
+                  >
+                    리뷰작성
+                  </button>
+                </>
+              )
+            }
+
+            if ((order.orderStatus === 'pending' || order.orderStatus === 'preparing') && latestPaymentStatus !== 'refunded') {
+              return (
                 <button
                   className={styles.cancelButton}
                   onClick={() => setCancelOrderId(order.id)}
                 >
                   전체주문취소
                 </button>
-              )}
-            </>
-          )}
+              )
+            }
+
+            return null
+          })()}
         </div>
       </div>
 

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/firebase'
-import { doc, getDoc } from 'firebase/firestore'
+import { doc, getDoc, updateDoc } from 'firebase/firestore'
 import { requestQuickDelivery } from '@/lib/services/quickDeliveryService'
 import crypto from 'crypto'
 
@@ -120,6 +120,65 @@ export async function POST(request: NextRequest) {
             }
           }
         }
+      } else {
+        console.error('[Webhook V2] 주문 정보를 찾을 수 없음:', orderId)
+      }
+
+      return NextResponse.json({ success: true })
+    }
+
+    // 결제 취소(환불) 완료 웹훅 처리
+    if (webhookData.type === 'Transaction.Cancelled') {
+      const paymentId = webhookData.data.paymentId
+      const cancelledAmount = webhookData.data.cancelledAmount
+      const cancelledAt = webhookData.data.cancelledAt
+
+      console.log('[Webhook V2] 결제 취소(환불) 완료 이벤트!')
+      console.log('[Webhook V2] paymentId:', paymentId)
+      console.log('[Webhook V2] cancelledAmount:', cancelledAmount)
+
+      // paymentId에서 orderId 추출 (format: payment-{orderId}-{timestamp})
+      const orderIdMatch = paymentId.match(/^payment-(.+)-\d+$/)
+      if (!orderIdMatch) {
+        console.error('[Webhook V2] Invalid paymentId format:', paymentId)
+        return NextResponse.json({ success: true, message: 'Invalid paymentId format' })
+      }
+
+      const orderId = orderIdMatch[1]
+      console.log('[Webhook V2] Extracted orderId:', orderId)
+
+      // Firestore에서 주문 정보 업데이트
+      const orderRef = doc(db, 'orders', orderId)
+      const orderDoc = await getDoc(orderRef)
+
+      if (orderDoc.exists()) {
+        const orderData = orderDoc.data()
+        const existingPaymentInfo = orderData.paymentInfo || []
+
+        // 환불 정보를 paymentInfo 배열에 추가
+        const cancelInfo = {
+          paymentId: paymentId,
+          paidAt: new Date(cancelledAt || Date.now()),
+          cancelledAt: new Date(cancelledAt || Date.now()),
+          amount: cancelledAmount,
+          status: 'cancelled',
+          method: 'refund'
+        }
+
+        // paymentStatus를 'refunded'로 변경하고 환불 정보 추가
+        await updateDoc(orderRef, {
+          paymentStatus: 'refunded',
+          orderStatus: 'cancelled',
+          paymentInfo: [...existingPaymentInfo, cancelInfo],
+          updatedAt: new Date()
+        })
+
+        console.log('[Webhook V2] 주문 상태 업데이트 완료:', {
+          orderId,
+          paymentStatus: 'refunded',
+          orderStatus: 'cancelled',
+          cancelledAmount
+        })
       } else {
         console.error('[Webhook V2] 주문 정보를 찾을 수 없음:', orderId)
       }
