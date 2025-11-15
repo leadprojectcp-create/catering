@@ -107,6 +107,11 @@ export interface Order {
     freeCondition?: number
     maxSupport?: number
   }
+  deliveryFeeBreakdown?: {
+    customerFee: number
+    storeFee: number
+    feeType: string
+  }
   createdAt?: Date | Timestamp | FieldValue
   updatedAt?: Date | Timestamp | FieldValue
 }
