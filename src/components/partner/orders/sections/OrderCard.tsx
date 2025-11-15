@@ -115,6 +115,8 @@ export default function OrderCard({
         return `${feeType} (고객 부담 ${formatCurrency(customerFee)})`
       } else if (customerFee > 0 && storeFee > 0) {
         return `${feeType} (고객 ${formatCurrency(customerFee)}, 가게 ${formatCurrency(storeFee)})`
+      } else if (feeType === '무료') {
+        return '무료 (가게부담)'
       } else {
         return `${feeType}`
       }
@@ -127,7 +129,7 @@ export default function OrderCard({
 
       switch (settings.type) {
         case '무료':
-          return '무료 배송 (가게 부담)'
+          return `무료 (가게 부담 ${formatCurrency(settings.baseFee || 0)})`
         case '유료':
           return `유료 배송 (고객 부담 ${formatCurrency(settings.baseFee || 0)})`
         case '조건부 무료':
