@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/firebase'
-import { doc, getDoc, updateDoc } from 'firebase/firestore'
+import { doc, getDoc, updateDoc, collection, query, where, getDocs } from 'firebase/firestore'
 import { requestQuickDelivery } from '@/lib/services/quickDeliveryService'
 import * as PortOne from '@portone/server-sdk'
 
@@ -61,19 +61,18 @@ export async function POST(request: NextRequest) {
       console.log('[Webhook V2] 결제 완료 이벤트!')
       console.log('[Webhook V2] paymentId:', paymentId)
 
-      // paymentId에서 orderId 추출 (format: payment-{orderId}-{timestamp})
-      const orderIdMatch = paymentId.match(/^payment-(.+)-\d+$/)
-      if (!orderIdMatch) {
-        console.error('[Webhook V2] Invalid paymentId format:', paymentId)
-        return NextResponse.json({ success: true, message: 'Invalid paymentId format' })
+      // paymentId 필드로 주문 검색
+      const ordersRef = collection(db, 'orders')
+      const q = query(ordersRef, where('paymentId', 'array-contains', paymentId))
+      const querySnapshot = await getDocs(q)
+
+      if (querySnapshot.empty) {
+        console.error('[Webhook V2] 주문 정보를 찾을 수 없음:', paymentId)
+        return NextResponse.json({ success: true, message: 'Order not found' })
       }
 
-      const orderId = orderIdMatch[1]
-      console.log('[Webhook V2] Extracted orderId:', orderId)
-
-      // Firestore에서 주문 정보 조회
-      const orderRef = doc(db, 'orders', orderId)
-      const orderDoc = await getDoc(orderRef)
+      const orderDoc = querySnapshot.docs[0]
+      const orderId = orderDoc.id
 
       if (orderDoc.exists()) {
         const orderData = orderDoc.data()
@@ -138,19 +137,19 @@ export async function POST(request: NextRequest) {
       console.log('[Webhook V2] paymentId:', paymentId)
       console.log('[Webhook V2] cancelledAmount:', cancelledAmount)
 
-      // paymentId에서 orderId 추출 (format: payment-{orderId}-{timestamp})
-      const orderIdMatch = paymentId.match(/^payment-(.+)-\d+$/)
-      if (!orderIdMatch) {
-        console.error('[Webhook V2] Invalid paymentId format:', paymentId)
-        return NextResponse.json({ success: true, message: 'Invalid paymentId format' })
+      // paymentId 필드로 주문 검색
+      const ordersRef = collection(db, 'orders')
+      const q = query(ordersRef, where('paymentId', 'array-contains', paymentId))
+      const querySnapshot = await getDocs(q)
+
+      if (querySnapshot.empty) {
+        console.error('[Webhook V2] 주문 정보를 찾을 수 없음:', paymentId)
+        return NextResponse.json({ success: true, message: 'Order not found' })
       }
 
-      const orderId = orderIdMatch[1]
-      console.log('[Webhook V2] Extracted orderId:', orderId)
-
-      // Firestore에서 주문 정보 업데이트
+      const orderDoc = querySnapshot.docs[0]
+      const orderId = orderDoc.id
       const orderRef = doc(db, 'orders', orderId)
-      const orderDoc = await getDoc(orderRef)
 
       if (orderDoc.exists()) {
         const orderData = orderDoc.data()
