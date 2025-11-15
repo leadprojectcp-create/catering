@@ -114,7 +114,7 @@ env:
       - BUILD
       - RUNTIME
   - variable: PORTONE_API_KEY
-    value: x37q9p3o83OPKhOpF43vDpkrGUbmeNdyoFF4zzInsWzPamQ0bvP1DfBop53YukuImQqO8WqtGOrjwRTf
+    value: bfBsm1srgvxBtvUfvNrFsJn25Up4UgeD95yiSon58I5woBsMo2ciLTcfKmqPAk3t8sED3rGwrA4wa1Ps
     availability:
       - RUNTIME
   - variable: PORTONE_WEBHOOK_SECRET
