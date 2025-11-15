@@ -4,6 +4,7 @@ import { requestPayment } from '@/lib/services/paymentService'
 import { sendOrderAlimtalk } from '@/lib/services/smsService'
 import { OrderData, OrderInfo, OrderItem, DeliveryAddress } from '../types'
 import { User } from 'firebase/auth'
+import { DeliveryFeeBreakdown } from '../utils/calculateDeliveryFeeBreakdown'
 
 interface UsePaymentHandlerParams {
   user: User | null
@@ -20,6 +21,7 @@ interface UsePaymentHandlerParams {
   totalPrice: number
   totalProductPrice: number
   deliveryFee: number
+  deliveryFeeBreakdown?: DeliveryFeeBreakdown
   orderId: string | null
   searchParams: URLSearchParams
   paymentMethod: 'card' | 'kakaopay' | 'naverpay'
@@ -276,6 +278,15 @@ export async function handlePaymentProcess(params: UsePaymentHandlerParams): Pro
     // 택배 배송비 설정 저장
     if (deliveryMethod === '택배 배송' && deliveryFeeSettings) {
       newOrderData.deliveryFeeSettings = deliveryFeeSettings
+    }
+
+    // 배송비 분리 정보 저장
+    if (params.deliveryFeeBreakdown) {
+      newOrderData.deliveryFeeBreakdown = {
+        customerFee: params.deliveryFeeBreakdown.customerFee,
+        storeFee: params.deliveryFeeBreakdown.storeFee,
+        feeType: params.deliveryFeeBreakdown.feeType
+      }
     }
 
     const newOrderRef = await addDoc(collection(db, 'orders'), newOrderData)

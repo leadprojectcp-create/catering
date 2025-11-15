@@ -10,6 +10,7 @@ import { useRefundCalculation } from './useRefundCalculation'
 import { Validator } from '../utils/validation'
 import { calculateTotalProductPrice, calculateTotalQuantity, calculateTotalPrice } from '../utils/orderCalculations'
 import { handlePaymentProcess } from './usePaymentHandler'
+import { calculateDeliveryFeeBreakdown } from '../utils/calculateDeliveryFeeBreakdown'
 
 interface UsePaymentSummaryParams {
   user: User | null
@@ -141,14 +142,143 @@ export function usePaymentSummary(params: UsePaymentSummaryParams) {
       return
     }
 
-    // 퀵업체 배송 시 배송비 조회 필수 검증 (추가 주문 제외, 무료 타입 제외)
-    if (!isAdditionalOrder && deliveryMethod === '퀵업체 배송' && !deliveryFeeFromAPI && quickDeliveryFeeSettings?.type !== '무료') {
-      alert('퀵업체 배송을 선택하셨습니다.\n반드시 "배송비 조회" 버튼을 눌러 배송비를 확인해주세요.')
-      return
+    // 퀵업체 배송 시 배송비 조회 필수 검증 (추가 주문 제외)
+    if (!isAdditionalOrder && deliveryMethod === '퀵업체 배송' && !deliveryFeeFromAPI) {
+      // 무료 타입일 때는 자동으로 배송비 조회
+      if (quickDeliveryFeeSettings?.type === '무료') {
+        try {
+          onProcessingChange(true)
+
+          // 배송비 조회 API 호출
+          if (!orderData?.storeId) {
+            alert('가게 정보를 찾을 수 없습니다.')
+            onProcessingChange(false)
+            return
+          }
+
+          const storeDoc = await getDoc(doc(db, 'stores', orderData.storeId))
+          if (!storeDoc.exists()) {
+            alert('가게 정보를 찾을 수 없습니다.')
+            onProcessingChange(false)
+            return
+          }
+
+          const storeData = storeDoc.data()
+          const startAddress = storeData?.address
+            ? `${storeData.address.city || ''} ${storeData.address.district || ''} ${storeData.address.dong || ''}`.trim()
+            : ''
+
+          if (!startAddress) {
+            alert('가게 주소 정보를 찾을 수 없습니다.')
+            onProcessingChange(false)
+            return
+          }
+
+          const destAddress = orderInfo.address
+          const reservDatetimeUp = orderInfo.deliveryDate && orderInfo.deliveryTime
+            ? `${orderInfo.deliveryDate} ${orderInfo.deliveryTime}:00`
+            : undefined
+
+          const response = await fetch('/api/quick-delivery/charge', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              serviceType: 'damas',
+              startAddress,
+              destAddress,
+              runtype: 0,
+              reservDatetimeUp,
+              upWay: 'free_customer',
+              downWay: 'free_customer',
+              deliveryItem: {
+                bgBox: 1
+              }
+            }),
+          })
+
+          const result = await response.json()
+
+          let actualDeliveryFee = 0
+
+          if (response.ok && result.data?.feeDetails?.feeTotal) {
+            // 배송비 조회 성공 - deliveryFeeFromAPI에 설정
+            const fetchedFee = result.data.feeDetails.feeTotal
+            params.onDeliveryFeeFromAPIChange(fetchedFee)
+            actualDeliveryFee = fetchedFee
+          } else {
+            alert(`배송비 조회 실패: ${result.errMsg || result.error || '알 수 없는 오류'}`)
+            onProcessingChange(false)
+            return
+          }
+
+          // 무료 타입이므로 실제 배송비를 DB에 저장
+          // 배송비 분리 계산
+          const deliveryFeeBreakdown = calculateDeliveryFeeBreakdown(
+            deliveryMethod,
+            deliveryFeeSettings,
+            quickDeliveryFeeSettings,
+            actualDeliveryFee,
+            totalProductPrice,
+            totalQuantity
+          )
+
+          onProcessingChange(true)
+
+          await handlePaymentProcess({
+            user,
+            orderData,
+            orderInfo,
+            recipient,
+            addressName,
+            deliveryRequest,
+            detailedRequest,
+            entranceCode,
+            deliveryMethod,
+            parcelPaymentMethod,
+            usePoint,
+            totalPrice, // 무료이므로 배송비가 포함되지 않음
+            totalProductPrice,
+            deliveryFee: deliveryFeeBreakdown.totalFee, // 실제 총 배송비 저장
+            deliveryFeeBreakdown, // 배송비 분리 정보 추가
+            orderId,
+            searchParams,
+            paymentMethod,
+            paymentType,
+            saveAddress,
+            checkDuplicateAddress,
+            onRouter: (path: string) => router.push(path),
+            quickDeliveryFeeSettings,
+            deliveryFeeSettings
+          })
+
+          return // 결제 처리 완료
+        } catch (error) {
+          console.error('배송비 조회 에러:', error)
+          alert('배송비 조회에 실패했습니다.')
+          onProcessingChange(false)
+          return
+        }
+      } else {
+        // 유료, 조건부 지원일 때는 배송비 조회 필수
+        alert('퀵업체 배송을 선택하셨습니다.\n반드시 "배송비 조회" 버튼을 눌러 배송비를 확인해주세요.')
+        return
+      }
     }
 
     try {
       onProcessingChange(true)
+
+      // 배송비 분리 계산
+      const deliveryFeeBreakdown = calculateDeliveryFeeBreakdown(
+        deliveryMethod,
+        deliveryFeeSettings,
+        quickDeliveryFeeSettings,
+        deliveryFeeFromAPI || 0,
+        totalProductPrice,
+        totalQuantity
+      )
 
       await handlePaymentProcess({
         user,
@@ -164,7 +294,8 @@ export function usePaymentSummary(params: UsePaymentSummaryParams) {
         usePoint,
         totalPrice,
         totalProductPrice,
-        deliveryFee,
+        deliveryFee: deliveryFeeBreakdown.totalFee,
+        deliveryFeeBreakdown,
         orderId,
         searchParams,
         paymentMethod,

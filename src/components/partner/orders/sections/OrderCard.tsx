@@ -103,8 +103,24 @@ export default function OrderCard({
     return new Intl.NumberFormat('ko-KR').format(amount) + '원'
   }
 
-  // 배송비 표시 텍스트 생성 함수
+  // 배송비 표시 텍스트 생성 함수 (deliveryFeeBreakdown 사용)
   const getDeliveryFeeText = () => {
+    // deliveryFeeBreakdown이 있으면 우선 사용
+    if (order.deliveryFeeBreakdown) {
+      const { customerFee, storeFee, feeType } = order.deliveryFeeBreakdown
+
+      if (storeFee > 0 && customerFee === 0) {
+        return `${feeType} (가게 부담 ${formatCurrency(storeFee)})`
+      } else if (customerFee > 0 && storeFee === 0) {
+        return `${feeType} (고객 부담 ${formatCurrency(customerFee)})`
+      } else if (customerFee > 0 && storeFee > 0) {
+        return `${feeType} (고객 ${formatCurrency(customerFee)}, 가게 ${formatCurrency(storeFee)})`
+      } else {
+        return `${feeType}`
+      }
+    }
+
+    // 레거시: deliveryFeeBreakdown이 없는 경우 기존 로직 사용
     if (order.deliveryMethod === '택배 배송' && order.deliveryFeeSettings) {
       const settings = order.deliveryFeeSettings
       const totalProductPrice = order.totalProductPrice || 0

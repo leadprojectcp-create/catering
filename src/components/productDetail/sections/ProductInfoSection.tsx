@@ -226,7 +226,7 @@ const ProductInfoSection = memo(function ProductInfoSection({
                   {product.quickDeliveryFeeSettings.type === '무료' && '배송비 무료'}
                   {product.quickDeliveryFeeSettings.type === '조건부 지원' &&
                     `${product.quickDeliveryFeeSettings.freeCondition?.toLocaleString()}원 이상 구매 시, ${product.quickDeliveryFeeSettings.maxSupport?.toLocaleString()}원 기본 배송비 지원`}
-                  {product.quickDeliveryFeeSettings.type === '유료' && `배송비 ${product.quickDeliveryFeeSettings.baseFee?.toLocaleString()}원`}
+                  {product.quickDeliveryFeeSettings.type === '유료' && '거리에 따라서 비용 차등적용'}
                 </span>
               </div>
             )}
