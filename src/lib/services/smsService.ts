@@ -210,9 +210,9 @@ export async function sendOrderAlimtalk(params: OrderAlimtalkParams): Promise<vo
     storeName: variables.storeName,
     orderNumber: variables.orderNumber,
     totalQuantity: String(variables.totalQuantity),
-    totalProductPrice: String(variables.totalProductPrice),
+    totalProductPrice: variables.totalProductPrice.toLocaleString(),
     additionalQuantity: String(variables.additionalQuantity),
-    additionalProductPrice: String(variables.additionalProductPrice),
+    additionalProductPrice: variables.additionalProductPrice.toLocaleString(),
   }
 
   console.log('[주문 알림톡] 발송 시작', { isAdditionalOrder, partnerTemplateCode, customerTemplateCode })
