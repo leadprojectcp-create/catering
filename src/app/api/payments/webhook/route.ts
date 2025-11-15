@@ -130,14 +130,34 @@ export async function POST(request: NextRequest) {
     // 결제 취소(환불) 완료 웹훅 처리
     if (webhookData.type === 'Transaction.Cancelled') {
       const paymentId = webhookData.data.paymentId
+      const cancellationId = webhookData.data.cancellationId
 
-      // 전체 데이터 로깅하여 구조 확인
       console.log('[Webhook V2] 결제 취소(환불) 완료 이벤트!')
-      console.log('[Webhook V2] 전체 webhookData:', JSON.stringify(webhookData, null, 2))
       console.log('[Webhook V2] paymentId:', paymentId)
+      console.log('[Webhook V2] cancellationId:', cancellationId)
 
-      const cancelledAmount = webhookData.data.cancelledAmount || webhookData.data.amount || 0
-      const cancelledAt = webhookData.data.cancelledAt || webhookData.data.canceledAt || new Date().toISOString()
+      // PortOne API로 결제 정보 조회하여 취소 금액 확인
+      const apiSecret = process.env.PORTONE_API_KEY
+      if (!apiSecret) {
+        console.error('[Webhook V2] PORTONE_API_KEY is not set')
+        return NextResponse.json({ success: true, message: 'API key not configured' })
+      }
+
+      const client = PortOne.PortOneClient({ secret: apiSecret })
+      const paymentResponse = await client.payment.getPayment({ paymentId })
+
+      console.log('[Webhook V2] Payment Info:', JSON.stringify(paymentResponse, null, 2))
+
+      // 취소 금액과 시간 추출
+      let cancelledAmount = 0
+      let cancelledAt = new Date().toISOString()
+
+      // PaymentResponse 타입 체크 후 cancellations 접근
+      if ('cancellations' in paymentResponse && Array.isArray(paymentResponse.cancellations) && paymentResponse.cancellations.length > 0) {
+        const latestCancellation = paymentResponse.cancellations[paymentResponse.cancellations.length - 1]
+        cancelledAmount = (latestCancellation as { cancelledAmount?: number }).cancelledAmount || 0
+        cancelledAt = (latestCancellation as { cancelledAt?: string }).cancelledAt || new Date().toISOString()
+      }
 
       console.log('[Webhook V2] cancelledAmount:', cancelledAmount)
       console.log('[Webhook V2] cancelledAt:', cancelledAt)
@@ -160,18 +180,14 @@ export async function POST(request: NextRequest) {
         const orderData = orderDoc.data()
         const existingPaymentInfo = orderData.paymentInfo || []
 
-        // 환불 정보를 paymentInfo 배열에 추가 (undefined 값 제외)
-        const cancelInfo: Record<string, any> = {
+        // 환불 정보를 paymentInfo 배열에 추가
+        const cancelInfo = {
           paymentId: paymentId,
           paidAt: new Date(cancelledAt),
           cancelledAt: new Date(cancelledAt),
+          amount: cancelledAmount,
           status: 'cancelled',
           method: 'refund'
-        }
-
-        // amount가 유효한 경우에만 추가
-        if (cancelledAmount !== undefined && cancelledAmount !== null && cancelledAmount > 0) {
-          cancelInfo.amount = cancelledAmount
         }
 
         // paymentStatus를 'refunded'로 변경하고 환불 정보 추가
