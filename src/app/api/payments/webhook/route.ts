@@ -182,6 +182,13 @@ export async function POST(request: NextRequest) {
 
         console.log('[Webhook V2] 기존 paymentInfo:', JSON.stringify(existingPaymentInfo, null, 2))
 
+        // 이미 취소된 경우 스킵
+        const targetPayment = existingPaymentInfo.find((info: any) => info.id === paymentId)
+        if (targetPayment?.status === 'cancelled') {
+          console.log('[Webhook V2] 이미 취소 처리됨, 스킵')
+          return NextResponse.json({ success: true, message: 'Already cancelled' })
+        }
+
         // 기존 paymentInfo에서 해당 paymentId를 찾아서 status를 'cancelled'로 변경
         const updatedPaymentInfo = existingPaymentInfo.map((info: any) => {
           console.log('[Webhook V2] 비교 중:', info.id, '===', paymentId, '?', info.id === paymentId)
