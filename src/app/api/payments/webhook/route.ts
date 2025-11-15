@@ -184,8 +184,8 @@ export async function POST(request: NextRequest) {
 
         // 기존 paymentInfo에서 해당 paymentId를 찾아서 status를 'cancelled'로 변경
         const updatedPaymentInfo = existingPaymentInfo.map((info: any) => {
-          console.log('[Webhook V2] 비교 중:', info.paymentId, '===', paymentId, '?', info.paymentId === paymentId)
-          if (info.paymentId === paymentId) {
+          console.log('[Webhook V2] 비교 중:', info.id, '===', paymentId, '?', info.id === paymentId)
+          if (info.id === paymentId) {
             console.log('[Webhook V2] paymentId 일치! status를 cancelled로 변경')
             return {
               ...info,

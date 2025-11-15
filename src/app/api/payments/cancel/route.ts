@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import * as PortOne from '@portone/server-sdk'
+import { db } from '@/lib/firebase'
+import { collection, query, where, getDocs, doc, updateDoc } from 'firebase/firestore'
 
 // PortOne V2 SDK로 결제 취소
 export async function POST(request: NextRequest) {
@@ -39,6 +41,52 @@ export async function POST(request: NextRequest) {
       cancelledAmount: refundAmount,
       status: 'cancelled'
     })
+
+    // 결제 취소 성공 후 바로 DB 업데이트
+    try {
+      // paymentId로 주문 검색
+      const ordersRef = collection(db, 'orders')
+      const q = query(ordersRef, where('paymentId', 'array-contains', paymentId))
+      const querySnapshot = await getDocs(q)
+
+      if (!querySnapshot.empty) {
+        const orderDoc = querySnapshot.docs[0]
+        const orderId = orderDoc.id
+        const orderData = orderDoc.data()
+        const existingPaymentInfo = orderData.paymentInfo || []
+
+        console.log('[Cancel API] 주문 찾음:', orderId)
+
+        // paymentInfo에서 해당 paymentId 찾아서 status를 'cancelled'로 변경
+        const updatedPaymentInfo = existingPaymentInfo.map((info: { id: string; status: string; cancelledAt?: Date }) => {
+          if (info.id === paymentId) {
+            console.log('[Cancel API] paymentInfo 업데이트:', info.id)
+            return {
+              ...info,
+              status: 'cancelled',
+              cancelledAt: new Date()
+            }
+          }
+          return info
+        })
+
+        // DB 업데이트
+        const orderRef = doc(db, 'orders', orderId)
+        await updateDoc(orderRef, {
+          paymentStatus: 'refunded',
+          orderStatus: 'cancelled',
+          paymentInfo: updatedPaymentInfo,
+          updatedAt: new Date()
+        })
+
+        console.log('[Cancel API] DB 업데이트 완료:', orderId)
+      } else {
+        console.warn('[Cancel API] 주문을 찾을 수 없음:', paymentId)
+      }
+    } catch (dbError) {
+      console.error('[Cancel API] DB 업데이트 실패:', dbError)
+      // DB 업데이트 실패해도 웹훅이 처리하므로 에러는 로그만
+    }
 
     return NextResponse.json({
       success: true,
