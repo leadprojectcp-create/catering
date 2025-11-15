@@ -104,12 +104,12 @@ env:
       - BUILD
       - RUNTIME
   - variable: NEXT_PUBLIC_PORTONE_GENERAL_CHANNEL_KEY
-    value: channel-key-b104be90-8bd3-4c6b-be01-7eb9c366af00
+    value: channel-key-e4c7e5c7-604c-4cdd-8a79-a1fc39d33f58
     availability:
       - BUILD
       - RUNTIME
   - variable: NEXT_PUBLIC_PORTONE_EASY_CHANNEL_KEY
-    value: channel-key-6df294ea-31b7-40c9-b214-52d87f5a243a
+    value: channel-key-0bc44dfa-5d47-440c-ad6b-c8280fa6b81a
     availability:
       - BUILD
       - RUNTIME
@@ -118,7 +118,7 @@ env:
     availability:
       - RUNTIME
   - variable: PORTONE_WEBHOOK_SECRET
-    value: whsec_Pb4Cw6vtHxG55lZkG3E2T1uMUkCk9Ix/5RcBCcXxJYY=
+    value: whsec_z+aDBvTj5/jrWrfAl28D7lYQWieCAE0RgUUrkTE7MWk=
     availability:
       - RUNTIME
 
