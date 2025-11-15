@@ -159,6 +159,11 @@ interface Order {
     maxSupport?: number
   }
   totalQuantity?: number
+  deliveryFeeBreakdown?: {
+    customerFee: number
+    storeFee: number
+    feeType: string
+  }
 }
 
 // 퀵 배송 기사 정보
