@@ -180,21 +180,23 @@ export async function POST(request: NextRequest) {
         const orderData = orderDoc.data()
         const existingPaymentInfo = orderData.paymentInfo || []
 
-        // 환불 정보를 paymentInfo 배열에 추가
-        const cancelInfo = {
-          paymentId: paymentId,
-          paidAt: new Date(cancelledAt),
-          cancelledAt: new Date(cancelledAt),
-          amount: cancelledAmount,
-          status: 'cancelled',
-          method: 'refund'
-        }
+        // 기존 paymentInfo에서 해당 paymentId를 찾아서 status를 'cancelled'로 변경
+        const updatedPaymentInfo = existingPaymentInfo.map((info: any) => {
+          if (info.paymentId === paymentId) {
+            return {
+              ...info,
+              status: 'cancelled',
+              cancelledAt: new Date(cancelledAt)
+            }
+          }
+          return info
+        })
 
-        // paymentStatus를 'refunded'로 변경하고 환불 정보 추가
+        // paymentStatus를 'refunded'로 변경하고 paymentInfo 업데이트
         await updateDoc(orderRef, {
           paymentStatus: 'refunded',
           orderStatus: 'cancelled',
-          paymentInfo: [...existingPaymentInfo, cancelInfo],
+          paymentInfo: updatedPaymentInfo,
           updatedAt: new Date()
         })
 
