@@ -140,7 +140,7 @@ export default function DeliveryMethodSection({
                   className={styles.hiddenRadio}
                 />
                 <span className={`${styles.customRadio} ${quickDeliveryFeeSettings?.type === '무료' ? styles.customRadioActive : ''}`}></span>
-                무료
+                무료 (가게부담)
               </label>
               <label className={styles.radioLabel}>
                 <input
@@ -162,7 +162,7 @@ export default function DeliveryMethodSection({
                   className={styles.hiddenRadio}
                 />
                 <span className={`${styles.customRadio} ${quickDeliveryFeeSettings?.type === '유료' ? styles.customRadioActive : ''}`}></span>
-                유료
+                유료 (고객부담)
               </label>
             </div>
 
@@ -240,7 +240,7 @@ export default function DeliveryMethodSection({
                   className={styles.hiddenRadio}
                 />
                 <span className={`${styles.customRadio} ${deliveryFeeSettings?.type === '무료' ? styles.customRadioActive : ''}`}></span>
-                무료
+                무료 (가게부담)
               </label>
               <label className={styles.radioLabel}>
                 <input
@@ -262,7 +262,7 @@ export default function DeliveryMethodSection({
                   className={styles.hiddenRadio}
                 />
                 <span className={`${styles.customRadio} ${deliveryFeeSettings?.type === '유료' ? styles.customRadioActive : ''}`}></span>
-                유료
+                유료 (고객부담)
               </label>
               <label className={styles.radioLabel}>
                 <input
