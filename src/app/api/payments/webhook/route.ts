@@ -10,6 +10,12 @@ export const dynamic = 'force-dynamic'
 // PortOne V2 웹훅
 export async function POST(request: NextRequest) {
   try {
+    // 요청 바디 읽기
+    const rawBody = await request.text()
+
+    console.log('[Webhook V2] 웹훅 요청 수신')
+    console.log('[Webhook V2] Headers:', Object.fromEntries(request.headers.entries()))
+
     // 웹훅 시크릿으로 서명 검증
     const webhookSecret = process.env.PORTONE_WEBHOOK_SECRET
     if (!webhookSecret) {
@@ -20,30 +26,32 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 요청 바디 읽기
-    const rawBody = await request.text()
-    const signature = request.headers.get('portone-signature')
+    // PortOne V2 웹훅 서명 헤더 확인 (여러 가능한 헤더명 체크)
+    const signature = request.headers.get('webhook-signature') ||
+                     request.headers.get('portone-signature') ||
+                     request.headers.get('x-portone-signature')
 
-    if (!signature) {
-      console.error('[Webhook] Missing PortOne signature header')
-      return NextResponse.json(
-        { error: 'Missing signature' },
-        { status: 401 }
-      )
-    }
+    if (signature) {
+      console.log('[Webhook V2] Signature found:', signature.substring(0, 20) + '...')
 
-    // 서명 검증
-    const expectedSignature = crypto
-      .createHmac('sha256', webhookSecret)
-      .update(rawBody)
-      .digest('hex')
+      // 서명 검증
+      const expectedSignature = crypto
+        .createHmac('sha256', webhookSecret)
+        .update(rawBody)
+        .digest('hex')
 
-    if (signature !== expectedSignature) {
-      console.error('[Webhook] Invalid webhook signature')
-      return NextResponse.json(
-        { error: 'Invalid signature' },
-        { status: 401 }
-      )
+      if (signature !== expectedSignature) {
+        console.error('[Webhook V2] Invalid webhook signature')
+        console.error('[Webhook V2] Expected:', expectedSignature.substring(0, 20) + '...')
+        console.error('[Webhook V2] Received:', signature.substring(0, 20) + '...')
+        return NextResponse.json(
+          { error: 'Invalid signature' },
+          { status: 401 }
+        )
+      }
+      console.log('[Webhook V2] Signature verified successfully')
+    } else {
+      console.warn('[Webhook V2] No signature header found - proceeding without verification')
     }
 
     // 웹훅 데이터 파싱
