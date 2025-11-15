@@ -113,7 +113,7 @@ export default function AdminDashboard() {
         })
         .slice(0, 5)
 
-      // 가게 조회
+      // 판매자 조회
       const storesSnapshot = await getDocs(collection(db, 'users'))
       const stores = storesSnapshot.docs.filter(doc =>
         doc.data().role === 'partner' && doc.data().registrationComplete === true
@@ -267,7 +267,7 @@ export default function AdminDashboard() {
             <Store size={24} color="#10b981" />
           </div>
           <div className={styles.statContent}>
-            <h3 className={styles.statLabel}>파트너 가게</h3>
+            <h3 className={styles.statLabel}>파트너 판매자</h3>
             <p className={styles.statValue}>{stats.totalStores}개</p>
             <span className={styles.statDescription}>
               활성: {stats.activeStores}개
@@ -325,7 +325,7 @@ export default function AdminDashboard() {
                       {order.orderNumber || order.id.substring(0, 8)}
                     </p>
                     <p className={styles.activityDetail}>
-                      {order.storeName || '가게명 없음'} | {order.customerName || '고객명 없음'} | {formatNumber(order.totalPrice || order.totalAmount || 0)}원
+                      {order.storeName || '판매자명 없음'} | {order.customerName || '고객명 없음'} | {formatNumber(order.totalPrice || order.totalAmount || 0)}원
                     </p>
                     <span className={`${styles.orderStatus} ${styles[order.orderStatus || 'pending']}`}>
                       {order.orderStatus === 'pending' ? '승인 대기' :
@@ -389,7 +389,7 @@ export default function AdminDashboard() {
           </a>
           <a href="/admin/stores" className={styles.quickMenuItem}>
             <Store size={20} />
-            <span>가게 관리</span>
+            <span>판매자 관리</span>
           </a>
           <a href="/admin/users" className={styles.quickMenuItem}>
             <Users size={20} />

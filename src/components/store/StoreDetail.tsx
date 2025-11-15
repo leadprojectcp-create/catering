@@ -75,7 +75,7 @@ export default function StoreDetail({ storeId }: StoreDetailProps) {
           setLikeCount(storeData.likeCount || 0)
         }
       } catch (error) {
-        console.error('가게 정보 로드 실패:', error)
+        console.error('판매자 정보 로드 실패:', error)
       } finally {
         setLoading(false)
       }
@@ -105,7 +105,7 @@ export default function StoreDetail({ storeId }: StoreDetailProps) {
   if (!store) {
     return (
       <div className={styles.container}>
-        <div className={styles.error}>가게를 찾을 수 없습니다.</div>
+        <div className={styles.error}>판매자를 찾을 수 없습니다.</div>
       </div>
     )
   }
@@ -120,7 +120,7 @@ export default function StoreDetail({ storeId }: StoreDetailProps) {
     }
 
     if (!store?.partnerId) {
-      alert('가게 정보를 불러오는 중입니다.')
+      alert('판매자 정보를 불러오는 중입니다.')
       return
     }
 
@@ -226,7 +226,7 @@ export default function StoreDetail({ storeId }: StoreDetailProps) {
         )}
       </div>
 
-      {/* 가게 정보 */}
+      {/* 판매자 정보 */}
       <div className={styles.infoSection}>
         <div className={styles.header}>
           <div className={styles.topRow}>
@@ -315,7 +315,7 @@ export default function StoreDetail({ storeId }: StoreDetailProps) {
         {/* 공지사항 섹션 */}
         {!noticesLoading && notices.length > 0 && (
           <div className={styles.noticeSection}>
-            <div className={styles.sectionTitle}>가게공지사항</div>
+            <div className={styles.sectionTitle}>판매자공지사항</div>
             <div className={styles.noticeList}>
               {notices.map((notice) => (
                 <div key={notice.id} className={styles.noticeItem} onClick={() => setSelectedNotice(notice)}>
@@ -332,7 +332,7 @@ export default function StoreDetail({ storeId }: StoreDetailProps) {
           <div className={styles.noticeModal} onClick={() => setSelectedNotice(null)}>
             <div className={styles.noticeModalContent} onClick={(e) => e.stopPropagation()}>
               <div className={styles.noticeModalHeader}>
-                <h3 className={styles.noticeModalTitle}>가게공지사항</h3>
+                <h3 className={styles.noticeModalTitle}>판매자공지사항</h3>
                 <button
                   className={styles.noticeModalClose}
                   onClick={() => setSelectedNotice(null)}

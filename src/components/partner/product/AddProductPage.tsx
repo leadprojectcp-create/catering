@@ -63,7 +63,7 @@ export default function AddProductPage() {
     }
   })
 
-  // 가게 정보 등록 확인
+  // 판매자 정보 등록 확인
   useEffect(() => {
     const checkStoreInfo = async () => {
       if (!loading && user) {
@@ -74,7 +74,7 @@ export default function AddProductPage() {
           const storeDoc = await getDoc(doc(db, 'stores', user.uid))
 
           if (!storeDoc.exists()) {
-            setMissingInfo('가게 정보가 등록되지 않았습니다.')
+            setMissingInfo('판매자 정보가 등록되지 않았습니다.')
             setShowStoreInfoModal(true)
             return
           }
@@ -86,7 +86,7 @@ export default function AddProductPage() {
 
           // 필수 필드 체크
           const requiredFields = [
-            { field: 'storeName', name: '가게명' },
+            { field: 'storeName', name: '판매자명' },
             { field: 'businessRegistration', name: '사업자번호' },
             { field: 'businessRegistrationImage', name: '사업자등록증 이미지' },
           ]
@@ -99,12 +99,12 @@ export default function AddProductPage() {
 
           // 주소 체크
           if (!storeData.address || !storeData.address.fullAddress) {
-            missingItems.push('가게 주소')
+            missingItems.push('판매자 주소')
           }
 
-          // 가게 사진 체크 (최소 3장)
+          // 판매자 사진 체크 (최소 3장)
           if (!storeData.storeImages || storeData.storeImages.length < 3) {
-            missingItems.push(`가게 사진 (최소 3장 필요, 현재 ${storeData.storeImages?.length || 0}장)`)
+            missingItems.push(`판매자 사진 (최소 3장 필요, 현재 ${storeData.storeImages?.length || 0}장)`)
           }
 
           // 휴무일 체크
@@ -119,7 +119,7 @@ export default function AddProductPage() {
             return
           }
         } catch (error) {
-          console.error('가게 정보 확인 실패:', error)
+          console.error('판매자 정보 확인 실패:', error)
         }
       }
     }
@@ -576,7 +576,7 @@ export default function AddProductPage() {
         </form>
       </div>
 
-      {/* 가게 정보 미등록 모달 */}
+      {/* 판매자 정보 미등록 모달 */}
       {showStoreInfoModal && (
         <StoreInfoRequiredModal
           missingInfo={missingInfo}

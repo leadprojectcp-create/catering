@@ -220,7 +220,7 @@ export default function AICategoryProductList({ categoryId }: Props) {
           const productData = productDoc.data()
           const updatedProduct: any = { id: productDoc.id, ...productData }
 
-          // 가게 정보 가져오기
+          // 판매자 정보 가져오기
           if (productData.storeId) {
             const storeDoc = await getDoc(doc(db, 'stores', productData.storeId))
             if (storeDoc.exists()) {
@@ -233,8 +233,8 @@ export default function AICategoryProductList({ categoryId }: Props) {
                 updatedProduct.storeLongitude = storeData.address.longitude
 
                 console.log(`\n=== ${updatedProduct.storeName} 위치 정보 ===`)
-                console.log('가게 위도 (latitude):', storeData.address.latitude)
-                console.log('가게 경도 (longitude):', storeData.address.longitude)
+                console.log('판매자 위도 (latitude):', storeData.address.latitude)
+                console.log('판매자 경도 (longitude):', storeData.address.longitude)
 
                 // 사용자 위치가 있으면 거리 계산
                 if (userLocation) {

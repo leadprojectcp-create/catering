@@ -268,12 +268,20 @@
 
 .orderTotal {
   color: #025BD9;
-  font-size: 15px;
-  font-weight: 700;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.orderTotalRefunded {
+  color: #D90206;
+  font-size: 14px;
+  font-weight: 500;
 }
 
 .orderTotalFailed {
   color: #FF4C4C;
+  font-size: 14px;
+  font-weight: 500;
 }
 
 .buttonGroup {

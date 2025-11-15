@@ -19,9 +19,9 @@ export default function StoreInfoRequiredModal({ missingInfo, onClose }: StoreIn
   return (
     <div className={styles.modalOverlay}>
       <div className={styles.storeInfoModal}>
-        <h2 className={styles.modalTitle}>가게 정보 등록 필요</h2>
+        <h2 className={styles.modalTitle}>판매자 정보 등록 필요</h2>
         <p className={styles.modalMessage}>
-          상품 등록을 하려면 먼저 가게 정보를 모두 등록해주세요.
+          상품 등록을 하려면 먼저 판매자 정보를 모두 등록해주세요.
         </p>
         <div className={styles.missingInfoBox}>
           <p className={styles.missingInfoLabel}>누락된 정보:</p>
@@ -32,7 +32,7 @@ export default function StoreInfoRequiredModal({ missingInfo, onClose }: StoreIn
             className={styles.modalButton}
             onClick={handleGoToStoreManagement}
           >
-            가게 정보 등록하러 가기
+            판매자 정보 등록하러 가기
           </button>
         </div>
       </div>

@@ -150,7 +150,7 @@ export default function OrderCancelModal({ isOpen, onClose, onConfirm }: OrderCa
           </button>
           {showPenaltyInfo && (
             <div className={styles.infoContent}>
-              <h4 className={styles.infoContentTitle}>가게사정으로 인한 주문 취소 패널티 규정안내</h4>
+              <h4 className={styles.infoContentTitle}>판매자사정으로 인한 주문 취소 패널티 규정안내</h4>
               <p className={styles.infoContentText}>
                 예약임박 또는 예약당일에 고객과의 합의가 이루어지지 않은 주문 취소 시, 단모 운영 정책에 따라 패널티가 부과 됩니다.
               </p>

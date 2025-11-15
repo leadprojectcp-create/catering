@@ -187,10 +187,10 @@ export default function PartnerSignupStep2() {
 
     // 사업자 정보 검증
     const validationError =
-      !formData.storeName ? '가게명을 입력해주세요.' :
+      !formData.storeName ? '판매자명을 입력해주세요.' :
       !formData.businessRegistration ? '사업자등록번호를 입력해주세요.' :
       !formData.businessOwner ? '사업자 대표이름을 입력해주세요.' :
-      !formData.address ? '가게 주소를 입력해주세요.' :
+      !formData.address ? '판매자 주소를 입력해주세요.' :
       null
 
     if (validationError) {
@@ -337,10 +337,10 @@ export default function PartnerSignupStep2() {
 
           <form className={styles.form} onSubmit={handleSubmit}>
             <div>
-              {/* 가게명 */}
+              {/* 판매자명 */}
               <div className={styles.inputGroup}>
                 <label htmlFor="storeName" className={styles.label}>
-                  가게명
+                  판매자명
                 </label>
                 <input
                   id="storeName"
@@ -350,7 +350,7 @@ export default function PartnerSignupStep2() {
                   value={formData.storeName}
                   onChange={handleChange}
                   className={styles.inputNoIcon}
-                  placeholder="가게명을 입력해주세요"
+                  placeholder="판매자명을 입력해주세요"
                 />
               </div>
 
@@ -388,10 +388,10 @@ export default function PartnerSignupStep2() {
                 />
               </div>
 
-              {/* 가게 대표전화 */}
+              {/* 판매자 대표전화 */}
               <div className={styles.inputGroup}>
                 <label htmlFor="businessPhone" className={styles.label}>
-                  가게 대표전화
+                  판매자 대표전화
                 </label>
                 <input
                   id="businessPhone"
@@ -401,7 +401,7 @@ export default function PartnerSignupStep2() {
                   value={formData.businessPhone}
                   onChange={handleChange}
                   className={styles.inputNoIcon}
-                  placeholder="가게 대표전화를 입력해주세요"
+                  placeholder="판매자 대표전화를 입력해주세요"
                 />
               </div>
 
@@ -442,10 +442,10 @@ export default function PartnerSignupStep2() {
                 </div>
               </div>
 
-              {/* 가게 주소 */}
+              {/* 판매자 주소 */}
               <div className={styles.inputGroup}>
                 <label className={styles.label}>
-                  가게 주소
+                  판매자 주소
                 </label>
                 <div className={styles.addressContainer}>
                   <input

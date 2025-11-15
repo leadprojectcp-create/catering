@@ -85,7 +85,7 @@ export default function OrderHeaderSection({ order, user }: Props) {
     }
 
     if (!order.partnerId) {
-      alert('가게 정보를 불러오는 중입니다.')
+      alert('판매자 정보를 불러오는 중입니다.')
       return
     }
 

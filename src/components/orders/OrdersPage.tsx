@@ -130,11 +130,11 @@ export default function OrdersPage() {
 
       const ordersData: Order[] = []
 
-      // 각 주문에 대해 가게 정보를 가져와서 전화번호와 partnerId 추가
+      // 각 주문에 대해 판매자 정보를 가져와서 전화번호와 partnerId 추가
       for (const docSnapshot of querySnapshot.docs) {
         const data = docSnapshot.data()
 
-        // storeId로 가게 정보 가져오기
+        // storeId로 판매자 정보 가져오기
         let storePhone = data.partnerPhone
         let partnerId = data.partnerId
         if (data.storeId && (!storePhone || !partnerId)) {
@@ -146,7 +146,7 @@ export default function OrdersPage() {
               if (!partnerId) partnerId = storeData.partnerId
             }
           } catch (error) {
-            console.error('가게 정보 로드 실패:', error)
+            console.error('판매자 정보 로드 실패:', error)
           }
         }
 
@@ -502,7 +502,7 @@ export default function OrdersPage() {
     }
 
     if (!order.partnerId) {
-      alert('가게 정보를 불러오는 중입니다.')
+      alert('판매자 정보를 불러오는 중입니다.')
       return
     }
 
@@ -868,7 +868,10 @@ export default function OrdersPage() {
                         }`}>
                           {order.deliveryMethod}
                         </div>
-                        <div className={`${styles.orderTotal} ${getLatestPaymentStatus(order) === 'failed' ? styles.orderTotalFailed : ''}`}>
+                        <div className={`${styles.orderTotal} ${
+                          getLatestPaymentStatus(order) === 'failed' ? styles.orderTotalFailed :
+                          getLatestPaymentStatus(order) === 'refunded' ? styles.orderTotalRefunded : ''
+                        }`}>
                           {(() => {
                             const paymentStatus = getLatestPaymentStatus(order)
                             if (!paymentStatus || paymentStatus === 'unpaid') return `결제 미완료 ${(order.totalPrice || order.totalProductPrice || 0).toLocaleString()}원`

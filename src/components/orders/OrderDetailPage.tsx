@@ -231,7 +231,7 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
           return
         }
 
-        // storeId로 가게 정보 가져오기
+        // storeId로 판매자 정보 가져오기
         let storePhone = orderData.partnerPhone
         let partnerId = orderData.partnerId
         if (orderData.storeId && (!storePhone || !partnerId)) {
@@ -243,7 +243,7 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
               if (!partnerId) partnerId = storeData.partnerId
             }
           } catch (error) {
-            console.error('가게 정보 로드 실패:', error)
+            console.error('판매자 정보 로드 실패:', error)
           }
         }
 
@@ -403,7 +403,7 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
     }
 
     if (!order?.partnerId) {
-      alert('가게 정보를 불러오는 중입니다.')
+      alert('판매자 정보를 불러오는 중입니다.')
       return
     }
 
@@ -505,7 +505,7 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
                 className={styles.actionButton}
                 onClick={async () => {
                   try {
-                    // storeId로 가게 주소 가져오기
+                    // storeId로 판매자 주소 가져오기
                     const storeDoc = await getDoc(doc(db, 'stores', order.storeId))
                     if (storeDoc.exists()) {
                       const storeData = storeDoc.data()
@@ -513,10 +513,10 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
                       const naverMapUrl = `https://map.naver.com/v5/search/${encodeURIComponent(address)}`
                       window.open(naverMapUrl, '_blank')
                     } else {
-                      alert('가게 정보를 찾을 수 없습니다.')
+                      alert('판매자 정보를 찾을 수 없습니다.')
                     }
                   } catch (error) {
-                    console.error('가게 정보 조회 실패:', error)
+                    console.error('판매자 정보 조회 실패:', error)
                     alert('길찾기를 실행할 수 없습니다.')
                   }
                 }}

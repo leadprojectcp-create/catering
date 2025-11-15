@@ -258,7 +258,7 @@ const ProductInfoSection = memo(function ProductInfoSection({
             </div>
           )}
 
-          {/* 채팅 및 가게 버튼 */}
+          {/* 채팅 및 판매자 버튼 */}
           <div className={styles.actionButtons}>
             <button className={styles.actionButton} onClick={() => {
               if (!user) {
@@ -280,8 +280,8 @@ const ProductInfoSection = memo(function ProductInfoSection({
                 router.push(`/store/${product.storeId}`)
               }
             }}>
-              <img src="/icons/product_store.png" alt="가게" className={styles.actionIcon} />
-              가게
+              <img src="/icons/product_store.png" alt="판매자" className={styles.actionIcon} />
+              판매자
             </button>
           </div>
         </div>

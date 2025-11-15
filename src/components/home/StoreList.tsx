@@ -214,7 +214,7 @@ export default function StoreList({ selectedCategory }: StoreListProps) {
                             <div className={styles.imageWrapper}>
                               <OptimizedImage
                                 src={image}
-                                alt={`${store.storeName || '가게'} 이미지 ${index + 1}`}
+                                alt={`${store.storeName || '판매자'} 이미지 ${index + 1}`}
                                 fill
                                 sizes="260px"
                                 quality={75}

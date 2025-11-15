@@ -1,7 +1,7 @@
 export interface DeliveryFeeBreakdown {
   totalFee: number          // 실제 총 배송비
   customerFee: number       // 고객 부담 배송비
-  storeFee: number          // 가게 부담 배송비
+  storeFee: number          // 판매자 부담 배송비
   feeType: string          // 배송비 타입
 }
 
@@ -19,7 +19,7 @@ interface QuickDeliveryFeeSettings {
 }
 
 /**
- * 배송비를 고객 부담과 가게 부담으로 분리 계산
+ * 배송비를 고객 부담과 판매자 부담으로 분리 계산
  */
 export function calculateDeliveryFeeBreakdown(
   deliveryMethod: string,

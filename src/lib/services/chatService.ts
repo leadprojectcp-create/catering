@@ -47,7 +47,7 @@ export const createOrGetChatRoom = async (
 
     if (snapshot.exists()) {
       const rooms = snapshot.val()
-      // 동일한 사용자와 가게의 채팅방이 이미 있는지 확인
+      // 동일한 사용자와 판매자의 채팅방이 이미 있는지 확인
       for (const [roomId, room] of Object.entries(rooms as Record<string, ChatRoom>)) {
         if (
           room.storeId === storeId &&

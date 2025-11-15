@@ -140,7 +140,7 @@ export default function DeliveryMethodSection({
                   className={styles.hiddenRadio}
                 />
                 <span className={`${styles.customRadio} ${quickDeliveryFeeSettings?.type === '무료' ? styles.customRadioActive : ''}`}></span>
-                무료 (가게부담)
+                무료 (판매자부담)
               </label>
               <label className={styles.radioLabel}>
                 <input
@@ -240,7 +240,7 @@ export default function DeliveryMethodSection({
                   className={styles.hiddenRadio}
                 />
                 <span className={`${styles.customRadio} ${deliveryFeeSettings?.type === '무료' ? styles.customRadioActive : ''}`}></span>
-                무료 (가게부담)
+                무료 (판매자부담)
               </label>
               <label className={styles.radioLabel}>
                 <input

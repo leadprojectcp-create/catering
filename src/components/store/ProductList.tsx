@@ -157,7 +157,7 @@ export default function ProductList({ storeId }: ProductListProps) {
 
   return (
     <div className={styles.container}>
-      <h2 className={styles.title}>가게상품</h2>
+      <h2 className={styles.title}>판매자상품</h2>
 
       <div className={styles.filterContainer}>
         {filterOptions.map((option) => (

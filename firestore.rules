@@ -76,12 +76,12 @@ service cloud.firestore {
       allow update, delete: if isAdmin();
     }
 
-    // Stores collection (가게 정보)
+    // Stores collection (판매자 정보)
     match /stores/{storeId} {
       // 모든 사용자 읽기 가능 (웹훅 포함)
       allow read: if true;
 
-      // 본인 가게만 생성/수정/삭제 가능 (storeId는 userId와 동일)
+      // 본인 판매자만 생성/수정/삭제 가능 (storeId는 userId와 동일)
       allow create, update, delete: if isSignedIn() && isOwner(storeId);
 
       // 조회수 업데이트는 모든 사용자 가능
@@ -92,7 +92,7 @@ service cloud.firestore {
       allow update: if isSignedIn() &&
         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likeCount']);
 
-      // 관리자는 모든 가게 정보 수정/삭제 가능
+      // 관리자는 모든 판매자 정보 수정/삭제 가능
       allow update, delete: if isAdmin();
     }
 

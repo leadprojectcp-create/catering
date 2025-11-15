@@ -74,7 +74,7 @@ export default function ChooseTypePage() {
           >
             <div className={styles.cardContent}>
               <p className={styles.cardDescription}>
-                판매 및 우리가게홍보를 원하신다면
+                판매 및 홍보를 원하신다면
               </p>
               <p className={styles.cardAction}>
                 파트너회원으로 가입하기

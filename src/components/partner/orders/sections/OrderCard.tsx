@@ -110,13 +110,13 @@ export default function OrderCard({
       const { customerFee, storeFee, feeType } = order.deliveryFeeBreakdown
 
       if (storeFee > 0 && customerFee === 0) {
-        return `${feeType} (가게 부담 ${formatCurrency(storeFee)})`
+        return `${feeType} (판매자 부담 ${formatCurrency(storeFee)})`
       } else if (customerFee > 0 && storeFee === 0) {
         return `${feeType} (고객 부담 ${formatCurrency(customerFee)})`
       } else if (customerFee > 0 && storeFee > 0) {
-        return `${feeType} (고객 ${formatCurrency(customerFee)}, 가게 ${formatCurrency(storeFee)})`
+        return `${feeType} (고객 ${formatCurrency(customerFee)}, 판매자 ${formatCurrency(storeFee)})`
       } else if (feeType === '무료') {
-        return '무료 (가게부담)'
+        return '무료 (판매자부담)'
       } else {
         return `${feeType}`
       }
@@ -129,13 +129,13 @@ export default function OrderCard({
 
       switch (settings.type) {
         case '무료':
-          return `무료 (가게 부담 ${formatCurrency(settings.baseFee || 0)})`
+          return `무료 (판매자 부담 ${formatCurrency(settings.baseFee || 0)})`
         case '유료':
           return `유료 배송 (고객 부담 ${formatCurrency(settings.baseFee || 0)})`
         case '조건부 무료':
           const conditionMet = totalProductPrice >= (settings.freeCondition || 0)
           return conditionMet
-            ? '조건부 무료 적용 (가게부담)'
+            ? '조건부 무료 적용 (판매자부담)'
             : `조건부 무료 미적용 (고객부담 ${formatCurrency(settings.baseFee || 0)})`
         case '수량별':
           const totalQuantity = order.totalQuantity || order.items.reduce((sum, item) => sum + item.quantity, 0)
@@ -151,7 +151,7 @@ export default function OrderCard({
 
       switch (settings.type) {
         case '무료':
-          return `퀵 배송 무료 (가게 부담 ${formatCurrency(actualQuickFee)})`
+          return `퀵 배송 무료 (판매자 부담 ${formatCurrency(actualQuickFee)})`
         case '유료':
           return '퀵 유료 (고객 부담)'
         case '조건부 지원':
@@ -159,7 +159,7 @@ export default function OrderCard({
           const supportAmount = Math.min(actualQuickFee, settings.maxSupport || 0)
 
           if (conditionMet) {
-            return `퀵비 지원 적용 (가게부담 ${formatCurrency(supportAmount)})`
+            return `퀵비 지원 적용 (판매자부담 ${formatCurrency(supportAmount)})`
           } else {
             return '퀵비 지원 미적용 (고객 부담)'
           }
@@ -241,8 +241,11 @@ export default function OrderCard({
         statusClass = styles.statusCompleted
         break
       case 'rejected':
+        statusText = '판매자 취소'
+        statusClass = styles.statusCancelled
+        break
       case 'cancelled':
-        statusText = '주문취소'
+        statusText = '고객 취소'
         statusClass = styles.statusCancelled
         break
       default:

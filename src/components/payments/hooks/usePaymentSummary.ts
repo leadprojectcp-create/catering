@@ -151,14 +151,14 @@ export function usePaymentSummary(params: UsePaymentSummaryParams) {
 
           // 배송비 조회 API 호출
           if (!orderData?.storeId) {
-            alert('가게 정보를 찾을 수 없습니다.')
+            alert('판매자 정보를 찾을 수 없습니다.')
             onProcessingChange(false)
             return
           }
 
           const storeDoc = await getDoc(doc(db, 'stores', orderData.storeId))
           if (!storeDoc.exists()) {
-            alert('가게 정보를 찾을 수 없습니다.')
+            alert('판매자 정보를 찾을 수 없습니다.')
             onProcessingChange(false)
             return
           }
@@ -169,7 +169,7 @@ export function usePaymentSummary(params: UsePaymentSummaryParams) {
             : ''
 
           if (!startAddress) {
-            alert('가게 주소 정보를 찾을 수 없습니다.')
+            alert('판매자 주소 정보를 찾을 수 없습니다.')
             onProcessingChange(false)
             return
           }

@@ -84,7 +84,7 @@ const fetchStore = async (storeId: string): Promise<Store | null> => {
     }
     return null
   } catch (error) {
-    console.error('가게 로드 실패:', error)
+    console.error('판매자 로드 실패:', error)
     return null
   }
 }

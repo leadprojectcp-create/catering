@@ -24,7 +24,7 @@ interface StoreInfo {
     fullAddress: string
   }
   phone: string
-  businessPhone: string // 가게 대표 전화번호 (공개용)
+  businessPhone: string // 판매자 대표 전화번호 (공개용)
   description: string
   openingHours: string
   closedDays: string[]
@@ -199,16 +199,16 @@ export default function StoreManagement() {
   const handleApplyAllChanges = async () => {
     if (!user || !storeInfo) return
 
-    // 가게 대표 전화번호 검증
+    // 판매자 대표 전화번호 검증
     if (!storeInfo.businessPhone || storeInfo.businessPhone.trim() === '') {
-      alert('가게 대표 전화번호를 입력해주세요.')
+      alert('판매자 대표 전화번호를 입력해주세요.')
       return
     }
 
     // 이미지 개수 검증 (기존 + 새로운 이미지)
     const totalImageCount = (storeInfo.storeImages || []).length + tempImages.length
     if (totalImageCount < 3) {
-      alert(`가게 사진은 최소 3장 이상 등록해야 합니다.\n현재: ${totalImageCount}장`)
+      alert(`판매자 사진은 최소 3장 이상 등록해야 합니다.\n현재: ${totalImageCount}장`)
       return
     }
 
@@ -318,7 +318,7 @@ export default function StoreManagement() {
       setHasChanges(false)
       setMainImageIndex(0) // 대표 이미지 인덱스 초기화
 
-      alert('가게 정보가 저장되었습니다.')
+      alert('판매자 정보가 저장되었습니다.')
     } catch (error) {
       console.error('저장 실패:', error)
       alert(`저장에 실패했습니다: ${error}`)
@@ -386,12 +386,12 @@ export default function StoreManagement() {
     return (
       <div className={styles.container}>
         <div className={styles.emptyState}>
-          <p>등록된 가게 정보가 없습니다.</p>
+          <p>등록된 판매자 정보가 없습니다.</p>
           <button
             className={styles.registerButton}
             onClick={() => router.push('/partner/store/register')}
           >
-            가게 등록하기
+            판매자 등록하기
           </button>
         </div>
       </div>
@@ -407,7 +407,7 @@ export default function StoreManagement() {
       />
 
       <div className={styles.header}>
-        <h1>가게 관리</h1>
+        <h1>판매자 관리</h1>
         <button
           className={styles.previewButton}
           onClick={() => setShowPreviewModal(true)}
@@ -420,11 +420,11 @@ export default function StoreManagement() {
         {/* 왼쪽: 편집 영역 */}
         <div className={styles.leftSection}>
           <div className={styles.storeCard}>
-          {/* 가게 사진 */}
+          {/* 판매자 사진 */}
           <div className={styles.infoSection}>
-            <h2 className={styles.sectionTitle}>가게 사진</h2>
+            <h2 className={styles.sectionTitle}>판매자 사진</h2>
             <p className={styles.sectionSubtitle}>
-              파트너님의 가게 대표사진을 추가해주세요.{'\n'}
+              파트너님의 판매자 대표사진을 추가해주세요.{'\n'}
               <span className={styles.boldText}>최소 3장에서 최대 10장</span>까지 가능합니다.
             </p>
             <div className={styles.imageGrid}>
@@ -455,7 +455,7 @@ export default function StoreManagement() {
                       >
                         <img
                           src={img}
-                          alt={`가게 사진 ${displayIndex + 1}`}
+                          alt={`판매자 사진 ${displayIndex + 1}`}
                           className={styles.previewImage}
                         />
                         {isMainImage && (
@@ -523,11 +523,11 @@ export default function StoreManagement() {
             </div>
           </div>
 
-          {/* 가게명과 가게 대표 전화 */}
+          {/* 판매자명과 판매자 대표 전화 */}
           <div className={styles.infoRow}>
             <div className={styles.infoSection}>
               <h2 className={styles.sectionTitle}>
-                가게명
+                판매자명
                 <button
                   type="button"
                   className={styles.infoIconButton}
@@ -545,13 +545,13 @@ export default function StoreManagement() {
             </div>
 
             <div className={styles.infoSection}>
-              <h2 className={styles.sectionTitle}>가게 대표 전화</h2>
+              <h2 className={styles.sectionTitle}>판매자 대표 전화</h2>
               <input
                 type="tel"
                 value={storeInfo.businessPhone || ''}
                 onChange={(e) => handleFieldChange('businessPhone', e.target.value)}
                 className={styles.editInput}
-                placeholder="고객이 볼 가게 전화번호"
+                placeholder="고객이 볼 판매자 전화번호"
               />
             </div>
           </div>
@@ -619,9 +619,9 @@ export default function StoreManagement() {
             </div>
           </div>
 
-          {/* 가게 위치 */}
+          {/* 판매자 위치 */}
           <div className={styles.infoSection}>
-            <h2 className={styles.sectionTitle}>가게 위치</h2>
+            <h2 className={styles.sectionTitle}>판매자 위치</h2>
             <div className={styles.addressContainer}>
               <input
                 type="text"
@@ -658,9 +658,9 @@ export default function StoreManagement() {
             />
           </div>
 
-          {/* 가게 휴무일 */}
+          {/* 판매자 휴무일 */}
           <div className={styles.infoSection}>
-            <h2 className={styles.sectionTitle}>가게 휴무일</h2>
+            <h2 className={styles.sectionTitle}>판매자 휴무일</h2>
             <input
               type="text"
               defaultValue={storeInfo.closedDays?.join(', ') || ''}
@@ -702,7 +702,7 @@ export default function StoreManagement() {
         <div className={styles.rightSection}>
           <div className={styles.previewHeader}>미리보기</div>
           <div className={styles.previewCard}>
-            {/* 가게 대표사진 슬라이더 */}
+            {/* 판매자 대표사진 슬라이더 */}
             {((storeInfo.storeImages && storeInfo.storeImages.length > 0) || previewUrls.length > 0) ? (
               <>
                 {(() => {
@@ -724,7 +724,7 @@ export default function StoreManagement() {
                       <div className={styles.previewImage}>
                         <img
                           src={sortedImages[currentImageIndex]}
-                          alt={`가게 사진 ${currentImageIndex + 1}`}
+                          alt={`판매자 사진 ${currentImageIndex + 1}`}
                           className={styles.previewMainImage}
                         />
                       </div>
@@ -767,10 +767,10 @@ export default function StoreManagement() {
               </div>
             )}
 
-            {/* 가게 정보 */}
+            {/* 판매자 정보 */}
             <div className={styles.previewInfo}>
               <div className={styles.previewStoreName}>
-                {storeInfo.storeName || '가게명'}
+                {storeInfo.storeName || '판매자명'}
               </div>
               <div className={styles.previewRating}>
                 <Image src="/icons/star.png" alt="star" width={16} height={16} style={{ width: '16px', height: 'auto' }} />
@@ -780,13 +780,13 @@ export default function StoreManagement() {
             </div>
 
             <div className={styles.previewDetails}>
-              <h3 className={styles.previewDetailsTitle}>가게 정보</h3>
+              <h3 className={styles.previewDetailsTitle}>판매자 정보</h3>
               <div className={styles.previewDetailItem}>
                 <span className={styles.previewLabel}>전화</span>
                 <span className={styles.previewValue}>{storeInfo.businessPhone || storeInfo.phone || '02-1234-5678'}</span>
               </div>
               <div className={styles.previewDetailItem}>
-                <span className={styles.previewLabel}>가게위치</span>
+                <span className={styles.previewLabel}>판매자위치</span>
                 <div className={styles.previewValueColumn}>
                   <span className={styles.previewValue}>{storeInfo.address.fullAddress}</span>
                   <span className={styles.previewValue}>{storeInfo.address.detail}</span>
@@ -819,7 +819,7 @@ export default function StoreManagement() {
               </button>
             </div>
             <div className={styles.previewCard}>
-              {/* 가게 대표사진 슬라이더 */}
+              {/* 판매자 대표사진 슬라이더 */}
               {((storeInfo.storeImages && storeInfo.storeImages.length > 0) || previewUrls.length > 0) ? (
                 <>
                   {(() => {
@@ -841,7 +841,7 @@ export default function StoreManagement() {
                         <div className={styles.previewImage}>
                           <img
                             src={sortedImages[modalImageIndex]}
-                            alt={`가게 사진 ${modalImageIndex + 1}`}
+                            alt={`판매자 사진 ${modalImageIndex + 1}`}
                             className={styles.previewMainImage}
                           />
                         </div>
@@ -884,10 +884,10 @@ export default function StoreManagement() {
                 </div>
               )}
 
-              {/* 가게 정보 */}
+              {/* 판매자 정보 */}
               <div className={styles.previewInfo}>
                 <div className={styles.previewStoreName}>
-                  {storeInfo.storeName || '가게명'}
+                  {storeInfo.storeName || '판매자명'}
                 </div>
                 <div className={styles.previewRating}>
                   <Image src="/icons/star.png" alt="star" width={16} height={16} />
@@ -897,13 +897,13 @@ export default function StoreManagement() {
               </div>
 
               <div className={styles.previewDetails}>
-                <h3 className={styles.previewDetailsTitle}>가게 정보</h3>
+                <h3 className={styles.previewDetailsTitle}>판매자 정보</h3>
                 <div className={styles.previewDetailItem}>
                   <span className={styles.previewLabel}>전화</span>
                   <span className={styles.previewValue}>{storeInfo.businessPhone || storeInfo.phone || '02-1234-5678'}</span>
                 </div>
                 <div className={styles.previewDetailItem}>
-                  <span className={styles.previewLabel}>가게위치</span>
+                  <span className={styles.previewLabel}>판매자위치</span>
                   <div className={styles.previewValueColumn}>
                     <span className={styles.previewValue}>{storeInfo.address.fullAddress}</span>
                     <span className={styles.previewValue}>{storeInfo.address.detail}</span>
@@ -923,12 +923,12 @@ export default function StoreManagement() {
         </div>
       )}
 
-      {/* 가게명 변경 안내 모달 */}
+      {/* 판매자명 변경 안내 모달 */}
       {showStoreNameInfoModal && (
         <div className={styles.infoModalOverlay} onClick={() => setShowStoreNameInfoModal(false)}>
           <div className={styles.infoModalContent} onClick={(e) => e.stopPropagation()}>
             <div className={styles.infoModalHeader}>
-              <h3 className={styles.infoModalTitle}>가게명 변경안내</h3>
+              <h3 className={styles.infoModalTitle}>판매자명 변경안내</h3>
               <button
                 className={styles.infoModalCloseButton}
                 onClick={() => setShowStoreNameInfoModal(false)}
@@ -937,7 +937,7 @@ export default function StoreManagement() {
               </button>
             </div>
             <p className={styles.infoModalText}>
-              가게명 변경은 사업자 등록 확인을 위해 고객센터를 통해 진행되며, 요청 후 본사 검수 후 변경까지 영업일 기준 1~2일 소요될 수 있습니다.
+              판매자명 변경은 사업자 등록 확인을 위해 고객센터를 통해 진행되며, 요청 후 본사 검수 후 변경까지 영업일 기준 1~2일 소요될 수 있습니다.
             </p>
           </div>
         </div>

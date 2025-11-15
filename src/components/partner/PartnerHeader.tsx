@@ -13,7 +13,7 @@ import { subscribeToUnreadCount } from '@/lib/services/chatService'
 // 페이지 경로에 따른 타이틀 매핑
 const getPageTitle = (path: string): string => {
   if (path === '/partner/dashboard') return ''
-  if (path === '/partner/store/management') return '가게관리'
+  if (path === '/partner/store/management') return '판매자관리'
   if (path === '/partner/reviews') return '리뷰관리'
   if (path === '/partner/notice') return '공지사항'
   if (path.startsWith('/partner/notice/') && path !== '/partner/notice/management' && path !== '/partner/notice/write') return '공지사항 상세'
@@ -45,10 +45,10 @@ const getPageTitle = (path: string): string => {
 
 const partnerMenuItems = [
   {
-    category: '가게',
+    category: '판매자',
     iconSrc: '/partner-menu-icons/partner_store.png',
     items: [
-      { name: '가게관리', path: '/partner/store/management' }
+      { name: '판매자관리', path: '/partner/store/management' }
     ]
   },
   {

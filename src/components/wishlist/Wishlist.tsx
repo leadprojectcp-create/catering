@@ -175,7 +175,7 @@ export default function Wishlist() {
           className={`${styles.tab} ${activeTab === 'stores' ? styles.activeTab : ''}`}
           onClick={() => setActiveTab('stores')}
         >
-          찜한 가게
+          찜한 판매자
         </button>
       </div>
 
@@ -185,10 +185,10 @@ export default function Wishlist() {
               <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
             </svg>
             <p className={styles.emptyText}>
-              {activeTab === 'stores' ? '찜한 가게가 없습니다' : '찜한 상품이 없습니다'}
+              {activeTab === 'stores' ? '찜한 판매자가 없습니다' : '찜한 상품이 없습니다'}
             </p>
             <p className={styles.emptySubtext}>
-              {activeTab === 'stores' ? '마음에 드는 가게를 찜해보세요' : '마음에 드는 상품을 찜해보세요'}
+              {activeTab === 'stores' ? '마음에 드는 판매자를 찜해보세요' : '마음에 드는 상품을 찜해보세요'}
             </p>
           </div>
         ) : activeTab === 'stores' ? (
@@ -225,7 +225,7 @@ export default function Wishlist() {
                             <div className={styles.imageWrapper}>
                               <OptimizedImage
                                 src={image}
-                                alt={`${store.storeName || '가게'} 이미지 ${index + 1}`}
+                                alt={`${store.storeName || '판매자'} 이미지 ${index + 1}`}
                                 fill
                                 sizes="130px"
                                 className={styles.cardImage}

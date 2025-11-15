@@ -14,7 +14,7 @@ export function calculateDistance(
 ): number {
   console.log('=== 거리 계산 시작 ===');
   console.log('사용자 위치 (lat1, lon1):', lat1, lon1);
-  console.log('가게 위치 (lat2, lon2):', lat2, lon2);
+  console.log('판매자 위치 (lat2, lon2):', lat2, lon2);
 
   const R = 6371; // 지구의 반지름 (km)
   const dLat = toRad(lat2 - lat1);
