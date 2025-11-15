@@ -1,79 +1,63 @@
 import { NextRequest, NextResponse } from 'next/server'
+import * as PortOne from '@portone/server-sdk'
 
-// PortOne V1 REST API로 결제 취소
+// PortOne V2 SDK로 결제 취소
 export async function POST(request: NextRequest) {
   try {
-    const { imp_uid, merchant_uid, reason, amount, checksum } = await request.json()
+    const { paymentId, reason, refundAmount } = await request.json()
 
-    if (!imp_uid && !merchant_uid) {
+    if (!paymentId) {
       return NextResponse.json(
-        { error: 'imp_uid or merchant_uid is required' },
+        { error: 'paymentId is required' },
         { status: 400 }
       )
     }
 
-    // PortOne V1 액세스 토큰 발급
-    const tokenResponse = await fetch('https://api.iamport.kr/users/getToken', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        imp_key: process.env.PORTONE_API_KEY,
-        imp_secret: process.env.PORTONE_API_SECRET,
-      }),
-    })
-
-    if (!tokenResponse.ok) {
-      console.error('PortOne token error:', await tokenResponse.text())
+    const apiSecret = process.env.PORTONE_API_KEY
+    if (!apiSecret) {
+      console.error('PORTONE_API_KEY is not set')
       return NextResponse.json(
-        { success: false, error: 'Failed to get access token' },
+        { success: false, error: 'API key not configured' },
         { status: 500 }
       )
     }
 
-    const tokenData = await tokenResponse.json()
-    const accessToken = tokenData.response.access_token
+    // PortOne V2 클라이언트 생성
+    const client = PortOne.PortOneClient({
+      secret: apiSecret,
+    })
 
     // 결제 취소 요청
-    const cancelResponse = await fetch('https://api.iamport.kr/payments/cancel', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${accessToken}`,
-      },
-      body: JSON.stringify({
-        imp_uid: imp_uid || undefined,
-        merchant_uid: merchant_uid || undefined,
-        reason: reason || '고객 요청에 의한 취소',
-        amount: amount || undefined, // 부분 취소 금액
-        checksum: checksum || undefined, // 현재 남은 금액
-      }),
+    const cancelResponse = await client.payment.cancelPayment({
+      paymentId: paymentId,
+      reason: reason || '고객 요청에 의한 취소',
+      amount: refundAmount, // 부분 취소 금액 (전체 취소는 undefined)
     })
 
-    if (!cancelResponse.ok) {
-      const errorData = await cancelResponse.text()
-      console.error('PortOne cancel API error:', errorData)
-      return NextResponse.json(
-        { success: false, error: 'Failed to cancel payment' },
-        { status: 500 }
-      )
-    }
-
-    const cancelData = await cancelResponse.json()
-
-    console.log('[Cancel API] PortOne V1 결제 취소 완료:', {
-      imp_uid: cancelData.response.imp_uid,
-      merchant_uid: cancelData.response.merchant_uid,
-      status: cancelData.response.status,
+    console.log('[Cancel API] PortOne V2 결제 취소 완료:', {
+      paymentId: paymentId,
+      cancelledAmount: refundAmount,
+      status: 'cancelled'
     })
 
     return NextResponse.json({
       success: true,
-      cancellation: cancelData.response,
+      cancellation: cancelResponse,
     })
   } catch (error) {
     console.error('Payment cancellation error:', error)
+
+    // PortOne SDK 에러 처리
+    if (error instanceof PortOne.PortOneError) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: error.message || 'PortOne API error',
+        },
+        { status: 500 }
+      )
+    }
+
     return NextResponse.json(
       { success: false, error: 'Internal server error' },
       { status: 500 }
