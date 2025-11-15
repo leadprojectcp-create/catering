@@ -26,17 +26,17 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // PortOne V2 웹훅은 Svix 표준 사용
+    // PortOne V2 웹훅은 Standard Webhooks 스펙 사용
     const signature = request.headers.get('webhook-signature')
     const webhookId = request.headers.get('webhook-id')
     const webhookTimestamp = request.headers.get('webhook-timestamp')
 
     if (signature && webhookId && webhookTimestamp) {
-      console.log('[Webhook V2] Svix signature verification')
+      console.log('[Webhook V2] Standard Webhooks signature verification')
 
       try {
-        // Svix 서명 검증
-        // 1. 서명할 메시지 생성: {id}.{timestamp}.{body}
+        // Standard Webhooks 서명 검증
+        // 1. 서명할 메시지 생성: msg_id.timestamp.payload
         const signedContent = `${webhookId}.${webhookTimestamp}.${rawBody}`
 
         // 2. whsec_ 접두사 제거 후 base64 디코드
@@ -47,10 +47,10 @@ export async function POST(request: NextRequest) {
         // 3. HMAC-SHA256으로 서명 생성
         const expectedSignature = crypto
           .createHmac('sha256', Buffer.from(secret, 'base64'))
-          .update(signedContent)
+          .update(signedContent, 'utf8')
           .digest('base64')
 
-        // 4. 서명 형식: v1,<signature>
+        // 4. 서명 형식: v1,<signature> (공백으로 여러 서명 구분 가능)
         const signatures = signature.split(' ')
         let verified = false
 
@@ -63,8 +63,8 @@ export async function POST(request: NextRequest) {
         }
 
         if (!verified) {
-          console.error('[Webhook V2] Invalid Svix signature')
-          console.error('[Webhook V2] Expected:', expectedSignature)
+          console.error('[Webhook V2] Invalid webhook signature')
+          console.error('[Webhook V2] Expected (v1):', expectedSignature)
           console.error('[Webhook V2] Received:', signature)
           return NextResponse.json(
             { error: 'Invalid signature' },
@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
           )
         }
 
-        console.log('[Webhook V2] Svix signature verified successfully')
+        console.log('[Webhook V2] Signature verified successfully')
       } catch (error) {
         console.error('[Webhook V2] Signature verification error:', error)
         return NextResponse.json(
@@ -81,7 +81,11 @@ export async function POST(request: NextRequest) {
         )
       }
     } else {
-      console.warn('[Webhook V2] Missing Svix signature headers - proceeding without verification')
+      console.warn('[Webhook V2] Missing webhook signature headers')
+      return NextResponse.json(
+        { error: 'Missing signature headers' },
+        { status: 401 }
+      )
     }
 
     // 웹훅 데이터 파싱
