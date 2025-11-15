@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/firebase'
 import { doc, getDoc, updateDoc } from 'firebase/firestore'
 import { requestQuickDelivery } from '@/lib/services/quickDeliveryService'
-import crypto from 'crypto'
+import * as PortOne from '@portone/server-sdk'
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic'
@@ -14,7 +14,6 @@ export async function POST(request: NextRequest) {
     const rawBody = await request.text()
 
     console.log('[Webhook V2] 웹훅 요청 수신')
-    console.log('[Webhook V2] Headers:', Object.fromEntries(request.headers.entries()))
 
     // 웹훅 시크릿으로 서명 검증
     const webhookSecret = process.env.PORTONE_WEBHOOK_SECRET
@@ -26,75 +25,26 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // PortOne V2 웹훅은 Standard Webhooks 스펙 사용
-    const signature = request.headers.get('webhook-signature')
-    const webhookId = request.headers.get('webhook-id')
-    const webhookTimestamp = request.headers.get('webhook-timestamp')
+    // PortOne V2 SDK를 사용한 웹훅 검증
+    try {
+      const webhook = await PortOne.Webhook.verify(
+        webhookSecret,
+        rawBody,
+        Object.fromEntries(request.headers.entries())
+      )
 
-    if (signature && webhookId && webhookTimestamp) {
-      console.log('[Webhook V2] Standard Webhooks signature verification')
+      console.log('[Webhook V2] 서명 검증 성공')
+    } catch (error) {
+      console.error('[Webhook V2] 웹훅 서명 검증 실패:', error)
 
-      try {
-        // Standard Webhooks 서명 검증
-        // 1. 서명할 메시지 생성: msg_id.timestamp.payload
-        const signedContent = `${webhookId}.${webhookTimestamp}.${rawBody}`
-
-        console.log('[Webhook V2] Webhook ID:', webhookId)
-        console.log('[Webhook V2] Webhook Timestamp:', webhookTimestamp)
-        console.log('[Webhook V2] Raw Body length:', rawBody.length)
-        console.log('[Webhook V2] Signed Content (first 100 chars):', signedContent.substring(0, 100))
-
-        // 2. whsec_ 접두사 제거 후 base64 디코드
-        const secret = webhookSecret.startsWith('whsec_')
-          ? webhookSecret.substring(7)
-          : webhookSecret
-
-        console.log('[Webhook V2] Secret (after whsec_ removal, first 20):', secret.substring(0, 20))
-
-        // 3. HMAC-SHA256으로 서명 생성
-        const expectedSignature = crypto
-          .createHmac('sha256', Buffer.from(secret, 'base64'))
-          .update(signedContent, 'utf8')
-          .digest('base64')
-
-        console.log('[Webhook V2] Expected signature:', expectedSignature)
-
-        // 4. 서명 형식: v1,<signature> (공백으로 여러 서명 구분 가능)
-        const signatures = signature.split(' ')
-        let verified = false
-
-        for (const sig of signatures) {
-          const [version, receivedSig] = sig.split(',')
-          if (version === 'v1' && receivedSig === expectedSignature) {
-            verified = true
-            break
-          }
-        }
-
-        if (!verified) {
-          console.error('[Webhook V2] Invalid webhook signature')
-          console.error('[Webhook V2] Expected (v1):', expectedSignature)
-          console.error('[Webhook V2] Received:', signature)
-          return NextResponse.json(
-            { error: 'Invalid signature' },
-            { status: 401 }
-          )
-        }
-
-        console.log('[Webhook V2] Signature verified successfully')
-      } catch (error) {
-        console.error('[Webhook V2] Signature verification error:', error)
+      if (error instanceof PortOne.Errors.WebhookVerificationError) {
         return NextResponse.json(
-          { error: 'Signature verification failed' },
+          { error: 'Invalid webhook signature' },
           { status: 401 }
         )
       }
-    } else {
-      console.warn('[Webhook V2] Missing webhook signature headers')
-      return NextResponse.json(
-        { error: 'Missing signature headers' },
-        { status: 401 }
-      )
+
+      throw error
     }
 
     // 웹훅 데이터 파싱
