@@ -97,18 +97,10 @@ export function useDeliveryFeeCalculation({
 
     if (type === '무료') return 0
 
-    // 조건부 무료: 추가 주문일 때는 기존 주문 금액과 합산
+    // 조건부 무료: 추가 주문일 때는 계산하지 않음
     if (type === '조건부 무료') {
-      if (isAdditionalOrder && existingOrder) {
-        const existingTotalPrice = existingOrder.totalProductPrice || 0
-        const combinedPrice = existingTotalPrice + totalProductPrice
-
-        const wasAlreadyFree = existingTotalPrice >= freeCondition
-        const isNowFree = combinedPrice >= freeCondition
-
-        if (!wasAlreadyFree && isNowFree) {
-          return -baseFee
-        }
+      // 추가 주문이면 배송비 계산 안 함
+      if (isAdditionalOrder) {
         return 0
       }
       return totalProductPrice >= freeCondition ? 0 : baseFee
@@ -182,7 +174,8 @@ export function useDeliveryFeeCalculation({
 
     if (deliveryMethod === '택배 배송') {
       if (isAdditionalOrder) {
-        if (deliveryFeeSettings?.type === '조건부 무료' || deliveryFeeSettings?.type === '수량별') {
+        // 수량별일 때만 추가 배송비 계산 (조건부 무료는 계산 안 함)
+        if (deliveryFeeSettings?.type === '수량별') {
           return calculateParcelDeliveryFee
         }
         return 0

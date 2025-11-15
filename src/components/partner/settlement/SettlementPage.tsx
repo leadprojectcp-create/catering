@@ -44,6 +44,7 @@ export default function SettlementPage() {
     totalFee: 0,
     platformFee: 0,
     quickDeliveryCost: 0,
+    parcelRefund: 0,
     totalSettlement: 0,
     pendingSettlement: 0,
     completedSettlement: 0
@@ -466,6 +467,7 @@ export default function SettlementPage() {
       let pendingSettlement = 0
       let completedSettlement = 0
       let totalQuickDeliveryCost = 0
+      let totalParcelRefund = 0
 
       for (const order of filteredOrders) {
         const { fee, settlementAmount } = calculateOrderSettlement(order)
@@ -473,7 +475,7 @@ export default function SettlementPage() {
         totalFee += fee
         totalSettlement += settlementAmount
 
-        // Firestore에서 주문 상세 정보 가져오기 (퀵 배송비 확인)
+        // Firestore에서 주문 상세 정보 가져오기 (배송비 확인)
         try {
           const orderRef = doc(db, 'orders', order.orderId)
           const orderDoc = await getDoc(orderRef)
@@ -501,6 +503,12 @@ export default function SettlementPage() {
                 totalQuickDeliveryCost += actualDeliveryFee
               }
             }
+
+            // 택배 배송인 경우 고객이 부담한 배송비를 환불 항목으로 추가
+            if (orderData.deliveryMethod === '택배 배송' && orderData.deliveryFeeBreakdown) {
+              const customerFee = orderData.deliveryFeeBreakdown.customerFee || 0
+              totalParcelRefund += customerFee
+            }
           }
         } catch (error) {
           console.error(`[SettlementPage] 주문 ${order.orderId} 상세 정보 조회 실패:`, error)
@@ -516,9 +524,10 @@ export default function SettlementPage() {
 
       setFilteredSettlementData({
         totalSales,
-        totalFee: totalFee + totalQuickDeliveryCost,
+        totalFee: totalFee + totalQuickDeliveryCost - totalParcelRefund,
         platformFee: totalFee,
         quickDeliveryCost: totalQuickDeliveryCost,
+        parcelRefund: totalParcelRefund,
         totalSettlement,
         pendingSettlement,
         completedSettlement
@@ -565,7 +574,7 @@ export default function SettlementPage() {
         </div>
         <div className={styles.summaryCard}>
           <div className={styles.summaryLabel}>
-            총 수수료 <span className={styles.feeDetailText}>(플랫폼 수수료+퀵 비용)</span>
+            총 수수료 <span className={styles.feeDetailText}>(플랫폼 수수료+퀵 비용-택배비용 환불)</span>
           </div>
           <div className={styles.summaryValue}>
             <span className={styles.feeBreakdown}>
@@ -573,6 +582,9 @@ export default function SettlementPage() {
             </span>
             <span className={styles.feeBreakdown}>
               +{formatNumber(filteredSettlementData.quickDeliveryCost)}원
+            </span>
+            <span className={styles.feeBreakdown}>
+              -{formatNumber(filteredSettlementData.parcelRefund)}원
             </span>
             <span>=</span>
             -{formatNumber(filteredSettlementData.totalFee)}원
