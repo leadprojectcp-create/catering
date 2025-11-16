@@ -163,9 +163,9 @@ export default function OrderManagementPage() {
       preparing: '준비중',
       shipping: '배송·픽업중',
       completed: '완료',
-      rejected: '거부됨',
-      cancelled: '취소됨',
-      cancelled_before_accept: '취소됨'
+      rejected: '판매자 취소',
+      cancelled: '고객 취소',
+      cancelled_before_accept: '고객 취소'
     }
     return labels[status] || status
   }

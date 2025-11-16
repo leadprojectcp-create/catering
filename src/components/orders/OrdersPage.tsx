@@ -287,12 +287,12 @@ export default function OrdersPage() {
 
     // 주문 상태 체크
     if (orderStatus === 'pending') return '주문 확인 대기'
-    if (orderStatus === 'rejected') return '업체 거부'
+    if (orderStatus === 'rejected') return '판매자 취소'
     if (orderStatus === 'preparing') return '준비 중'
     if (orderStatus === 'shipping') return '배송·픽업중'
     if (orderStatus === 'completed') return '완료'
-    if (orderStatus === 'cancelled') return '취소요청'
-    if (orderStatus === 'cancelled_before_accept') return '취소요청'
+    if (orderStatus === 'cancelled') return '고객 취소'
+    if (orderStatus === 'cancelled_before_accept') return '고객 취소'
 
     return '알 수 없음'
   }
