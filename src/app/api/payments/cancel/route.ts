@@ -54,8 +54,9 @@ export async function POST(request: NextRequest) {
         const orderId = orderDoc.id
         const orderData = orderDoc.data()
         const existingPaymentInfo = orderData.paymentInfo || []
+        const currentOrderStatus = orderData.orderStatus
 
-        console.log('[Cancel API] 주문 찾음:', orderId)
+        console.log('[Cancel API] 주문 찾음:', orderId, '현재 상태:', currentOrderStatus)
 
         // paymentInfo에서 해당 paymentId 찾아서 status를 'cancelled'로 변경
         const updatedPaymentInfo = existingPaymentInfo.map((info: { id: string; status: string; cancelledAt?: Date }) => {
@@ -70,11 +71,16 @@ export async function POST(request: NextRequest) {
           return info
         })
 
+        // orderStatus 결정: pending 상태면 cancelled_before_accept, 그 외는 cancelled
+        const newOrderStatus = currentOrderStatus === 'pending' ? 'cancelled_before_accept' : 'cancelled'
+
+        console.log('[Cancel API] orderStatus 업데이트:', currentOrderStatus, '->', newOrderStatus)
+
         // DB 업데이트
         const orderRef = doc(db, 'orders', orderId)
         await updateDoc(orderRef, {
           paymentStatus: 'refunded',
-          orderStatus: 'cancelled',
+          orderStatus: newOrderStatus,
           paymentInfo: updatedPaymentInfo,
           updatedAt: new Date()
         })

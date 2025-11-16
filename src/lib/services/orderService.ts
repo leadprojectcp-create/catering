@@ -15,7 +15,7 @@ export interface OrderItem {
   isAddItem?: boolean
 }
 
-export type OrderStatus = 'pending' | 'preparing' | 'shipping' | 'completed' | 'rejected' | 'cancelled'
+export type OrderStatus = 'pending' | 'preparing' | 'shipping' | 'completed' | 'rejected' | 'cancelled' | 'cancelled_before_accept'
 
 export interface PaymentInfo {
   paymentId: string

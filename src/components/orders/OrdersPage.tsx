@@ -292,6 +292,7 @@ export default function OrdersPage() {
     if (orderStatus === 'shipping') return '배송·픽업중'
     if (orderStatus === 'completed') return '완료'
     if (orderStatus === 'cancelled') return '취소요청'
+    if (orderStatus === 'cancelled_before_accept') return '취소요청'
 
     return '알 수 없음'
   }
@@ -309,6 +310,7 @@ export default function OrdersPage() {
     if (orderStatus === 'shipping') return '#9C27B0'
     if (orderStatus === 'completed') return '#4CAF50'
     if (orderStatus === 'cancelled') return '#f44336'
+    if (orderStatus === 'cancelled_before_accept') return '#f44336'
 
     return '#999'
   }
@@ -327,7 +329,7 @@ export default function OrdersPage() {
     } else if (filterStatus === 'completed') {
       statusMatch = order.paymentStatus === 'paid' && order.orderStatus === 'completed'
     } else if (filterStatus === 'cancelled') {
-      statusMatch = order.orderStatus === 'cancelled' || order.orderStatus === 'rejected' || order.paymentStatus === 'refunded'
+      statusMatch = order.orderStatus === 'cancelled' || order.orderStatus === 'cancelled_before_accept' || order.orderStatus === 'rejected' || order.paymentStatus === 'refunded'
     }
 
     // 배송 방법 필터
@@ -652,7 +654,7 @@ export default function OrdersPage() {
             className={filterStatus === 'cancelled' ? styles.filterActive : styles.filterButton}
             onClick={() => setFilterStatus('cancelled')}
           >
-            주문취소 <span className={styles.filterCount}>{orders.filter(o => o.orderStatus === 'cancelled' || o.orderStatus === 'rejected' || o.paymentStatus === 'refunded').length}건</span>
+            주문취소 <span className={styles.filterCount}>{orders.filter(o => o.orderStatus === 'cancelled' || o.orderStatus === 'cancelled_before_accept' || o.orderStatus === 'rejected' || o.paymentStatus === 'refunded').length}건</span>
           </button>
           </div>
 
