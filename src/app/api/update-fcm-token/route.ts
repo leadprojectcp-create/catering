@@ -1,5 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+// Firebase Admin을 동적으로 import하여 빌드 시점 에러 방지
+function initializeFirebaseAdmin() {
+  const { initializeApp, getApps, cert } = require('firebase-admin/app')
+
+  if (!getApps().length) {
+    const serviceAccount: {
+      projectId: string
+      clientEmail: string
+      privateKey: string
+    } = {
+      projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || '',
+      clientEmail: process.env.FIREBASE_CLIENT_EMAIL || '',
+      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n') || ''
+    }
+
+    const app = initializeApp({
+      credential: cert(serviceAccount),
+      databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL,
+      projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID
+    })
+
+    console.log('[Firebase Admin] 초기화됨, Project ID:', app.options.projectId)
+  }
+}
+
 function getAdminDb(): ReturnType<typeof import('firebase-admin/firestore').getFirestore> {
   const { getApps } = require('firebase-admin/app')
   const { getFirestore } = require('firebase-admin/firestore')
@@ -31,6 +56,10 @@ export async function POST(request: NextRequest) {
 
     console.log('[Update FCM Token] Updating token for user:', userId)
     console.log('[Update FCM Token] Token:', fcmToken.substring(0, 30) + '...')
+
+    // Firebase Admin 초기화
+    initializeFirebaseAdmin()
+    console.log('[Update FCM Token] Firebase Admin 초기화 완료')
 
     const db = getAdminDb()
 
