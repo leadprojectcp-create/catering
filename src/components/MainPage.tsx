@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
-import MainTitle from './home/MainTitle'
 import Banner from './home/Banner'
 import StoreList from './home/StoreList'
 import CategorySelector from './home/CategorySelector'
@@ -71,8 +70,6 @@ export default function MainPage() {
 
       {/* 메인 컨텐츠 영역 */}
       <main className={styles.main}>
-          <MainTitle />
-
           {/* 카테고리 선택 */}
           <div>
             <CategorySelector

@@ -165,7 +165,7 @@ export async function handlePaymentProcess(params: UsePaymentHandlerParams): Pro
 
     // 포트원 V2 결제창 호출
     paymentResult = await requestPayment({
-      orderName: `${orderData.productName} ${orderData.items.length > 1 ? `외 ${orderData.items.length - 1}건` : ''}`,
+      orderName: '주식회사 리프컴퍼니',
       amount: actualPaymentAmount,
       orderId: cartIdParam || orderId || 'temp',
       customerName: orderInfo.orderer,
