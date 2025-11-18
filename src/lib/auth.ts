@@ -547,13 +547,23 @@ export async function signInWithApple() {
     console.log('[signInWithApple] Calling signInWithPopup...')
     const result = await signInWithPopup(auth, provider)
     console.log('[signInWithApple] Popup login successful')
+    console.log('[signInWithApple] User email:', result.user.email)
+    console.log('[signInWithApple] User displayName:', result.user.displayName)
+    console.log('[signInWithApple] Provider data:', result.user.providerData)
 
-    const userEmail = result.user.email
+    let userEmail = result.user.email
+
+    // providerData에서 이메일 확인
+    if (!userEmail && result.user.providerData.length > 0) {
+      userEmail = result.user.providerData[0].email
+      console.log('[signInWithApple] Email from providerData:', userEmail)
+    }
 
     if (!userEmail) {
+      console.error('[signInWithApple] No email available')
       return {
         success: false,
-        error: 'Apple 계정에서 이메일 정보를 가져올 수 없습니다.'
+        error: 'Apple 로그인 시 이메일 정보를 가져올 수 없습니다. 다시 시도해주세요.'
       }
     }
 
