@@ -18,6 +18,7 @@ interface OrderCardProps {
   onOpenTrackingModal: (orderId: string) => void
   onOpenChat: (order: Order) => void
   onPrint: () => void
+  onRefresh?: () => void
 }
 
 export default function OrderCard({
@@ -30,10 +31,12 @@ export default function OrderCard({
   onOpenTrackingModal,
   onOpenChat,
   onPrint,
+  onRefresh,
 }: OrderCardProps) {
   const [allowAdditionalOrder, setAllowAdditionalOrder] = useState(order.allowAdditionalOrder ?? false)
   const [memo, setMemo] = useState(order.partnerMemo || '')
   const [isSavingMemo, setIsSavingMemo] = useState(false)
+  const [isCancelingAdditional, setIsCancelingAdditional] = useState(false)
 
   const handleToggleAdditionalOrder = async () => {
     if (!order.id) return
@@ -66,6 +69,94 @@ export default function OrderCard({
       alert('메모 저장에 실패했습니다.')
     } finally {
       setIsSavingMemo(false)
+    }
+  }
+
+  const handleCancelAdditionalOrder = async () => {
+    if (!order.id) return
+
+    // 추가주문 상품만 필터링
+    const additionalItems = order.items.filter(item => item.isAddItem)
+    if (additionalItems.length === 0) {
+      alert('취소할 추가주문 상품이 없습니다.')
+      return
+    }
+
+    // 추가주문 상품의 총 금액 계산
+    const additionalOrderAmount = additionalItems.reduce((sum, item) => {
+      return sum + (item.itemPrice || (item.price * item.quantity))
+    }, 0)
+
+    if (!window.confirm(`추가주문 상품만 취소하시겠습니까?\n\n취소 상품: ${additionalItems.length}개\n환불 금액: ${additionalOrderAmount.toLocaleString()}원 (100%)`)) {
+      return
+    }
+
+    setIsCancelingAdditional(true)
+    try {
+      // 추가주문 상품의 paymentId 찾기
+      const additionalPaymentIds = [...new Set(additionalItems.map(item => item.paymentId).filter(Boolean))] as string[]
+
+      if (additionalPaymentIds.length === 0) {
+        alert('추가주문 상품의 결제 정보를 찾을 수 없습니다.')
+        return
+      }
+
+      // 각 추가주문 결제에 대해 환불 처리
+      for (const paymentId of additionalPaymentIds) {
+        // 해당 paymentId의 상품들만 계산
+        const itemsForThisPayment = additionalItems.filter(item => item.paymentId === paymentId)
+        const refundAmount = itemsForThisPayment.reduce((sum, item) => {
+          return sum + (item.itemPrice || (item.price * item.quantity))
+        }, 0)
+
+        const cancelResponse = await fetch('/api/payments/cancel', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            paymentId: paymentId,
+            reason: '판매자 요청 - 추가주문 취소',
+            refundAmount: refundAmount,
+            isPartnerCancel: true,
+            isPartialCancel: true, // 부분 취소: orderStatus 변경 안함
+          }),
+        })
+
+        const cancelData = await cancelResponse.json()
+        if (!cancelData.success) {
+          throw new Error(cancelData.error || '결제 취소에 실패했습니다.')
+        }
+      }
+
+      // Firestore에서 추가주문 상품 제거
+      const remainingItems = order.items.filter(item => !item.isAddItem)
+      const orderRef = doc(db, 'orders', order.id)
+
+      // totalProductPrice 재계산
+      const newTotalProductPrice = remainingItems.reduce((sum, item) => {
+        return sum + (item.itemPrice || (item.price * item.quantity))
+      }, 0)
+
+      await updateDoc(orderRef, {
+        items: remainingItems,
+        totalProductPrice: newTotalProductPrice,
+        updatedAt: new Date()
+      })
+
+      alert(`추가주문이 취소되었습니다.\n환불 금액: ${additionalOrderAmount.toLocaleString()}원 (100%)`)
+
+      // 페이지 새로고침
+      if (onRefresh) {
+        onRefresh()
+      } else {
+        window.location.reload()
+      }
+    } catch (error) {
+      console.error('추가주문 취소 실패:', error)
+      alert(error instanceof Error ? error.message : '추가주문 취소에 실패했습니다.')
+    } finally {
+      setIsCancelingAdditional(false)
     }
   }
 
@@ -269,7 +360,7 @@ export default function OrderCard({
           <div className={styles.productName}>{productSummary}</div>
           <div className={styles.orderInfo}>예약날짜 {formattedReservation}</div>
           <div className={styles.orderInfo}>
-            결제완료 {formatCurrency(order.totalProductPrice)}
+            {order.paymentStatus === 'refunded' ? '환불완료' : '결제완료'} {formatCurrency(order.totalProductPrice)}
           </div>
         </div>
         <div className={styles.cardRight}>
@@ -558,20 +649,19 @@ export default function OrderCard({
                   })}
 
                   {/* 추가주문 취소 버튼 */}
-                  <div className={styles.cancelAdditionalOrderButtonWrapper}>
-                    <button
-                      className={styles.cancelAdditionalOrderButton}
-                      onClick={() => {
-                        if (window.confirm('추가주문을 취소하시겠습니까?')) {
-                          // TODO: 추가주문 취소 로직 구현
-                          alert('추가주문 취소 기능은 곧 구현될 예정입니다.')
-                        }
-                      }}
-                      type="button"
-                    >
-                      추가주문 취소하기
-                    </button>
-                  </div>
+                  {(order.orderStatus === 'preparing' || order.orderStatus === 'shipping') && (
+                    <div className={styles.cancelAdditionalOrderButtonWrapper}>
+                      <button
+                        className={styles.cancelAdditionalOrderButton}
+                        onClick={handleCancelAdditionalOrder}
+                        disabled={isCancelingAdditional}
+                        type="button"
+                      >
+                        {isCancelingAdditional ? '취소 처리 중...' : '추가주문 취소하기'}
+                      </button>
+                    </div>
+                  )}
+
                 </>
               )}
 

@@ -18,7 +18,7 @@ export default function OrderFilterTabs({ filter, orders, onFilterChange }: Orde
         className={`${styles.filterBtn} ${filter === 'all' ? styles.active : ''}`}
         onClick={() => onFilterChange('all')}
       >
-        전체 <span className={styles.filterCount}>{orders.filter(o => o.paymentStatus === 'paid').length}건</span>
+        전체 <span className={styles.filterCount}>{orders.filter(o => (o.paymentStatus === 'paid' || o.paymentStatus === 'refunded') && o.orderStatus !== 'cancelled_before_accept').length}건</span>
       </button>
       <button
         className={`${styles.filterBtn} ${filter === 'pending' ? styles.active : ''}`}
@@ -30,7 +30,7 @@ export default function OrderFilterTabs({ filter, orders, onFilterChange }: Orde
         className={`${styles.filterBtn} ${filter === 'cancelled_rejected' ? styles.active : ''}`}
         onClick={() => onFilterChange('cancelled_rejected')}
       >
-        주문 취소 <span className={styles.filterCount}>{orders.filter(o => o.paymentStatus === 'paid' && (o.orderStatus === 'rejected' || o.orderStatus === 'cancelled')).length}건</span>
+        주문 취소 <span className={styles.filterCount}>{orders.filter(o => (o.paymentStatus === 'paid' || o.paymentStatus === 'refunded') && (o.orderStatus === 'rejected' || o.orderStatus === 'cancelled')).length}건</span>
       </button>
       <button
         className={`${styles.filterBtn} ${filter === 'preparing' ? styles.active : ''}`}

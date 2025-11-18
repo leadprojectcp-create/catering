@@ -207,30 +207,46 @@ export default function OrderManagementPage() {
     try {
       // 결제 정보가 있으면 환불 처리 (판매자 취소는 항상 100% 환불)
       if (order.paymentId && order.paymentId.length > 0) {
-        const targetPaymentId = Array.isArray(order.paymentId)
-          ? order.paymentId[order.paymentId.length - 1]
-          : order.paymentId
+        const paymentIds = Array.isArray(order.paymentId) ? order.paymentId : [order.paymentId]
 
-        const refundAmount = order.totalAmount || order.totalPrice
-
-        // 포트원 결제 취소 API 호출 (100% 환불)
-        const cancelResponse = await fetch('/api/payments/cancel', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            paymentId: targetPaymentId,
-            reason: reason,
-            refundAmount: refundAmount, // 판매자 취소는 전액 환불
-            isPartnerCancel: true, // 판매자 취소 플래그
-          }),
+        // 취소되지 않은 결제만 필터링
+        const notCancelledPaymentIds = paymentIds.filter(pid => {
+          const paymentInfo = order.paymentInfo?.find(p => p.paymentId === pid)
+          return paymentInfo?.status !== 'cancelled'
         })
 
-        const cancelData = await cancelResponse.json()
+        if (notCancelledPaymentIds.length === 0) {
+          // 모든 결제가 이미 취소됨
+          console.log('[전체 취소] 모든 결제가 이미 취소되어 있음')
+        } else {
+          // 취소되지 않은 결제들을 모두 취소
+          for (const paymentId of notCancelledPaymentIds) {
+            // 해당 paymentId의 금액 계산
+            const itemsForPayment = order.items.filter(item => item.paymentId === paymentId)
+            const refundAmount = itemsForPayment.reduce((sum, item) => {
+              return sum + (item.itemPrice || (item.price * item.quantity))
+            }, 0)
 
-        if (!cancelData.success) {
-          throw new Error(cancelData.error || '결제 취소에 실패했습니다.')
+            // 포트원 결제 취소 API 호출 (100% 환불)
+            const cancelResponse = await fetch('/api/payments/cancel', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                paymentId: paymentId,
+                reason: reason,
+                refundAmount: refundAmount, // 판매자 취소는 전액 환불
+                isPartnerCancel: true, // 판매자 취소 플래그
+              }),
+            })
+
+            const cancelData = await cancelResponse.json()
+
+            if (!cancelData.success) {
+              throw new Error(cancelData.error || '결제 취소에 실패했습니다.')
+            }
+          }
         }
       }
 
@@ -240,8 +256,21 @@ export default function OrderManagementPage() {
       setShowCancelModal(false)
       setCancelOrderId(null)
 
-      const refundAmountDisplay = order.totalAmount || order.totalPrice
-      alert(`주문이 취소되었습니다.\n취소 사유: ${reason}\n환불 금액: ${refundAmountDisplay.toLocaleString()}원 (100%)`)
+      // 실제 환불된 금액 계산 (이미 취소된 결제 제외)
+      const paymentIds = Array.isArray(order.paymentId) ? order.paymentId : [order.paymentId]
+      const notCancelledPaymentIds = paymentIds.filter(pid => {
+        const paymentInfo = order.paymentInfo?.find(p => p.paymentId === pid)
+        return paymentInfo?.status !== 'cancelled'
+      })
+      const actualRefundAmount = order.items
+        .filter(item => notCancelledPaymentIds.includes(item.paymentId || ''))
+        .reduce((sum, item) => sum + (item.itemPrice || (item.price * item.quantity)), 0)
+
+      if (actualRefundAmount > 0) {
+        alert(`주문이 취소되었습니다.\n취소 사유: ${reason}\n환불 금액: ${actualRefundAmount.toLocaleString()}원 (100%)`)
+      } else {
+        alert(`주문이 취소되었습니다.\n취소 사유: ${reason}\n(이미 모든 결제가 환불되었습니다)`)
+      }
     } catch (error) {
       console.error('주문 취소 실패:', error)
       alert(error instanceof Error ? error.message : '주문 취소에 실패했습니다.')
@@ -393,15 +422,27 @@ export default function OrderManagementPage() {
   console.log('날짜 범위:', dateRange)
 
   const filteredOrders = orders.filter(order => {
-    // 결제 완료된 주문만 표시
-    if (order.paymentStatus !== 'paid') {
+    // 결제 완료된 주문 또는 환불된 주문(취소된 주문)만 표시
+    if (order.paymentStatus !== 'paid' && order.paymentStatus !== 'refunded') {
+      console.log('[필터링 제외] paymentStatus:', order.paymentStatus, 'orderNumber:', order.orderNumber)
+      return false
+    }
+
+    // cancelled_before_accept는 파트너 주문 내역에서 제외 (파트너가 수락하기 전 고객이 취소한 주문)
+    if (order.orderStatus === 'cancelled_before_accept') {
+      console.log('[필터링 제외] cancelled_before_accept:', order.orderNumber)
       return false
     }
 
     // 주문 상태 필터
     if (filter !== 'all') {
       if (filter === 'cancelled_rejected') {
-        if (order.orderStatus !== 'rejected' && order.orderStatus !== 'cancelled') return false
+        if (order.orderStatus !== 'rejected' && order.orderStatus !== 'cancelled') {
+          console.log('[주문취소탭 제외] orderStatus:', order.orderStatus, 'orderNumber:', order.orderNumber)
+          return false
+        } else {
+          console.log('[주문취소탭 포함] paymentStatus:', order.paymentStatus, 'orderStatus:', order.orderStatus, 'orderNumber:', order.orderNumber)
+        }
       } else if (order.orderStatus !== filter) {
         return false
       }

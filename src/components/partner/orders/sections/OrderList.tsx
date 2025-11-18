@@ -38,8 +38,13 @@ export default function OrderList({
 }: OrderListProps) {
   const filterOrders = (orders: Order[]) => {
     return orders.filter(order => {
-      // 결제 완료된 주문만 표시
-      if (order.paymentStatus !== 'paid') {
+      // 결제 완료된 주문 또는 환불된 주문만 표시
+      if (order.paymentStatus !== 'paid' && order.paymentStatus !== 'refunded') {
+        return false
+      }
+
+      // cancelled_before_accept는 제외
+      if (order.orderStatus === 'cancelled_before_accept') {
         return false
       }
 

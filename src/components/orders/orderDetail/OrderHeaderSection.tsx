@@ -15,14 +15,13 @@ interface Props {
 const getStatusText = (orderStatus: string, paymentStatus: string) => {
   if (paymentStatus === 'unpaid') return '결제 미완료'
   if (paymentStatus === 'failed') return '결제 실패'
-  if (paymentStatus === 'refunded') return '환불됨'
-
   if (orderStatus === 'pending') return '업체 승인 대기'
-  if (orderStatus === 'rejected') return '업체 거부'
+  if (orderStatus === 'rejected') return '판매자 취소'
   if (orderStatus === 'preparing') return '준비 중'
   if (orderStatus === 'shipping') return '배송 중'
   if (orderStatus === 'completed') return '완료'
-  if (orderStatus === 'cancelled') return '취소됨'
+  if (orderStatus === 'cancelled') return '고객 취소'
+  if (orderStatus === 'cancelled_before_accept') return '고객 취소'
 
   return '알 수 없음'
 }

@@ -283,9 +283,8 @@ export default function OrdersPage() {
     // 결제 상태 우선 체크
     if (paymentStatus === 'unpaid') return '결제 미완료'
     if (paymentStatus === 'failed') return '결제 실패'
-    if (paymentStatus === 'refunded') return '환불됨'
 
-    // 주문 상태 체크
+    // 주문 상태 체크 (환불됨은 orderStatus에 따라 판매자 취소 또는 고객 취소로 표시)
     if (orderStatus === 'pending') return '주문 확인 대기'
     if (orderStatus === 'rejected') return '판매자 취소'
     if (orderStatus === 'preparing') return '준비 중'

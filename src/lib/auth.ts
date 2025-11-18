@@ -512,6 +512,56 @@ export async function signInWithKakao() {
   }
 }
 
+// Apple 로그인
+export async function signInWithApple() {
+  try {
+    console.log('[signInWithApple] Starting Apple login...')
+
+    const provider = new OAuthProvider('apple.com')
+
+    provider.addScope('email')
+    provider.addScope('name')
+
+    const useRedirect = isWebView()
+    console.log('[signInWithApple] Using redirect:', useRedirect)
+
+    if (useRedirect) {
+      // WebView에서는 Redirect 사용
+      console.log('[signInWithApple] Calling signInWithRedirect...')
+      await signInWithRedirect(auth, provider)
+      return { success: true, isRedirecting: true }
+    } else {
+      // 일반 브라우저에서는 Popup 사용
+      console.log('[signInWithApple] Calling signInWithPopup...')
+      const result = await signInWithPopup(auth, provider)
+      console.log('[signInWithApple] Popup login successful')
+
+      const userEmail = result.user.email
+
+      if (!userEmail) {
+        return {
+          success: false,
+          error: 'Apple 계정에서 이메일 정보를 가져올 수 없습니다.'
+        }
+      }
+
+      const additionalInfo = {
+        name: result.user.displayName || userEmail.split('@')[0] || '',
+        email: userEmail,
+        phone: null
+      }
+
+      return await handleSocialUser(result.user, 'apple', additionalInfo)
+    }
+  } catch (error: unknown) {
+    console.error('[signInWithApple] Error:', error)
+    // 사용자가 팝업을 닫은 경우
+    if ((error as { code?: string }).code === 'auth/popup-closed-by-user') {
+      return { success: false, error: '로그인이 취소되었습니다.' }
+    }
+    return { success: false, error: 'Apple 로그인 중 오류가 발생했습니다.' }
+  }
+}
 
 // 리다이렉트 결과 처리 함수
 export async function handleRedirectResult() {

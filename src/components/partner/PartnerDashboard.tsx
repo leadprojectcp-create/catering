@@ -831,7 +831,22 @@ export default function PartnerDashboard() {
 
   const formatDate = (date: unknown) => {
     if (!date) return ''
-    const d = new Date(date as string)
+
+    // Firestore Timestamp 처리
+    let d: Date
+    if (typeof date === 'object' && date !== null && 'toDate' in date && typeof (date as any).toDate === 'function') {
+      d = (date as any).toDate()
+    } else if (typeof date === 'string') {
+      d = new Date(date)
+    } else if (date instanceof Date) {
+      d = date
+    } else {
+      return ''
+    }
+
+    // Invalid Date 체크
+    if (isNaN(d.getTime())) return ''
+
     return d.toLocaleDateString('ko-KR', {
       month: '2-digit',
       day: '2-digit',
