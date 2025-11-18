@@ -628,6 +628,30 @@ export async function handleRedirectResult() {
         return await handleSocialUser(result.user, 'kakao', additionalInfo)
       }
 
+      // Apple 로그인 추가 정보 처리
+      if (provider === 'apple') {
+        let userEmail = result.user.email
+
+        if (!userEmail && result.user.providerData.length > 0) {
+          userEmail = result.user.providerData[0].email
+        }
+
+        if (!userEmail) {
+          return {
+            success: false,
+            error: 'Apple 계정에서 이메일 정보를 가져올 수 없습니다.'
+          }
+        }
+
+        const additionalInfo = {
+          name: result.user.displayName || userEmail.split('@')[0] || '',
+          email: userEmail,
+          phone: null
+        }
+
+        return await handleSocialUser(result.user, 'apple', additionalInfo)
+      }
+
       // 기타 provider
       return await handleSocialUser(result.user, provider)
     }
