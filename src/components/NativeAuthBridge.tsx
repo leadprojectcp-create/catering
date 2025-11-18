@@ -23,6 +23,7 @@ interface AppleLoginResult {
   email: string | null
   displayName: string | null
   idToken: string
+  nonce: string
 }
 
 declare global {
@@ -159,10 +160,11 @@ export default function NativeAuthBridge() {
         const auth = getAuth()
         const provider = new OAuthProvider('apple.com')
 
-        console.log('[NativeAuth] Creating Apple credential with idToken')
+        console.log('[NativeAuth] Creating Apple credential with idToken and rawNonce')
 
         const credential = provider.credential({
-          idToken: result.idToken
+          idToken: result.idToken,
+          rawNonce: result.nonce
         })
 
         console.log('[NativeAuth] Credential created, signing in...')
