@@ -6,7 +6,7 @@ import { collection, query, where, getDocs, doc, updateDoc } from 'firebase/fire
 // PortOne V2 SDK로 결제 취소
 export async function POST(request: NextRequest) {
   try {
-    const { paymentId, reason, refundAmount } = await request.json()
+    const { paymentId, reason, refundAmount, isPartnerCancel } = await request.json()
 
     if (!paymentId) {
       return NextResponse.json(
@@ -71,10 +71,17 @@ export async function POST(request: NextRequest) {
           return info
         })
 
-        // orderStatus 결정: pending 상태면 cancelled_before_accept, 그 외는 cancelled
-        const newOrderStatus = currentOrderStatus === 'pending' ? 'cancelled_before_accept' : 'cancelled'
+        // orderStatus 결정
+        let newOrderStatus: string
+        if (isPartnerCancel) {
+          // 판매자 취소는 항상 'rejected'
+          newOrderStatus = 'rejected'
+        } else {
+          // 고객 취소는 pending 상태면 cancelled_before_accept, 그 외는 cancelled
+          newOrderStatus = currentOrderStatus === 'pending' ? 'cancelled_before_accept' : 'cancelled'
+        }
 
-        console.log('[Cancel API] orderStatus 업데이트:', currentOrderStatus, '->', newOrderStatus)
+        console.log('[Cancel API] orderStatus 업데이트:', currentOrderStatus, '->', newOrderStatus, isPartnerCancel ? '(판매자 취소)' : '(고객 취소)')
 
         // DB 업데이트
         const orderRef = doc(db, 'orders', orderId)

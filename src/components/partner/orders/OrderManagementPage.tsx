@@ -198,15 +198,53 @@ export default function OrderManagementPage() {
   const handleCancelConfirm = async (reason: string) => {
     if (!cancelOrderId) return
 
+    const order = orders.find(o => o.id === cancelOrderId)
+    if (!order) {
+      alert('주문 정보를 찾을 수 없습니다.')
+      return
+    }
+
     try {
+      // 결제 정보가 있으면 환불 처리 (판매자 취소는 항상 100% 환불)
+      if (order.paymentId && order.paymentId.length > 0) {
+        const targetPaymentId = Array.isArray(order.paymentId)
+          ? order.paymentId[order.paymentId.length - 1]
+          : order.paymentId
+
+        const refundAmount = order.totalAmount || order.totalPrice
+
+        // 포트원 결제 취소 API 호출 (100% 환불)
+        const cancelResponse = await fetch('/api/payments/cancel', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            paymentId: targetPaymentId,
+            reason: reason,
+            refundAmount: refundAmount, // 판매자 취소는 전액 환불
+            isPartnerCancel: true, // 판매자 취소 플래그
+          }),
+        })
+
+        const cancelData = await cancelResponse.json()
+
+        if (!cancelData.success) {
+          throw new Error(cancelData.error || '결제 취소에 실패했습니다.')
+        }
+      }
+
+      // 주문 상태를 'rejected'로 업데이트
       await updateOrderStatus(cancelOrderId, 'rejected', reason)
       setOrders(orders.map(o => o.id === cancelOrderId ? { ...o, orderStatus: 'rejected', cancelReason: reason } : o))
       setShowCancelModal(false)
       setCancelOrderId(null)
-      alert(`주문이 취소되었습니다.\n취소 사유: ${reason}`)
+
+      const refundAmountDisplay = order.totalAmount || order.totalPrice
+      alert(`주문이 취소되었습니다.\n취소 사유: ${reason}\n환불 금액: ${refundAmountDisplay.toLocaleString()}원 (100%)`)
     } catch (error) {
       console.error('주문 취소 실패:', error)
-      alert('주문 취소에 실패했습니다.')
+      alert(error instanceof Error ? error.message : '주문 취소에 실패했습니다.')
     }
   }
 

@@ -41,6 +41,7 @@ export interface Order {
   totalPrice: number
   totalProductPrice: number
   totalQuantity?: number
+  totalAmount?: number // 총 결제 금액 (totalPrice + deliveryFee 등)
   deliveryFee: number
   orderStatus: OrderStatus
   paymentStatus: 'paid' | 'unpaid'
@@ -61,6 +62,7 @@ export interface Order {
     deliveryRequest?: string
     detailedRequest?: string
   }
+  paymentId?: string[] | string // 결제 ID 배열 또는 단일 ID
   paymentInfo?: PaymentInfo[]
   address: string
   detailAddress: string
