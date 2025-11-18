@@ -267,13 +267,17 @@ export async function handleSocialUser(
         registrationComplete: userData.registrationComplete || false
       }
     } else {
-      // 2. 이메일 확인
+      // 2. 이메일 확인 - 모든 소셜 로그인에서 이메일 필수
       const userEmail = additionalInfo.email || firebaseUser.email || ''
+
       if (!userEmail) {
         console.error('Social login: No email available')
+        const errorMessage = provider === 'apple'
+          ? 'Apple 로그인을 하려면 이메일 제공이 필요합니다. "이메일 공유" 옵션을 선택해주세요.'
+          : '소셜 계정에서 이메일 정보를 가져올 수 없습니다. 계정 설정을 확인해주세요.'
         return {
           success: false,
-          error: '소셜 계정에서 이메일 정보를 가져올 수 없습니다. 계정 설정을 확인해주세요.',
+          error: errorMessage,
           needsEmailSetup: true
         }
       }
@@ -304,8 +308,10 @@ export async function handleSocialUser(
       console.log('New social user detected, creating incomplete registration')
       console.log('Social user email:', userEmail, 'from additionalInfo:', additionalInfo.email, 'from firebaseUser:', firebaseUser.email)
 
+      const displayName = additionalInfo.name || firebaseUser.displayName || userEmail.split('@')[0]
+
       const socialUserData: {
-        email: string | null;
+        email: string;
         name: string;
         phone: string;
         provider: string;
@@ -316,8 +322,8 @@ export async function handleSocialUser(
         updatedAt: ReturnType<typeof serverTimestamp>;
         fcmToken?: string;
       } = {
-        email: additionalInfo.email || firebaseUser.email || userEmail,
-        name: additionalInfo.name || firebaseUser.displayName || (additionalInfo.email || firebaseUser.email || userEmail)?.split('@')[0] || '',
+        email: userEmail,
+        name: displayName,
         phone: additionalInfo.phone || '',
         provider: provider,
         level: 1, // 기본 레벨 1
