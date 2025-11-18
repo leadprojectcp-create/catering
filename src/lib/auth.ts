@@ -267,17 +267,19 @@ export async function handleSocialUser(
         registrationComplete: userData.registrationComplete || false
       }
     } else {
-      // 2. 이메일 확인 - 모든 소셜 로그인에서 이메일 필수
-      const userEmail = additionalInfo.email || firebaseUser.email || ''
+      // 2. 이메일 확인
+      let userEmail = additionalInfo.email || firebaseUser.email || ''
 
-      if (!userEmail) {
+      // Apple 로그인의 경우 이메일이 없으면 Private Relay 이메일 생성
+      if (!userEmail && provider === 'apple') {
+        userEmail = `${firebaseUser.uid}@privaterelay.appleid.com`
+        console.log('[handleSocialUser] Apple login without email, using private relay:', userEmail)
+      } else if (!userEmail) {
+        // 다른 소셜 로그인은 이메일 필수
         console.error('Social login: No email available')
-        const errorMessage = provider === 'apple'
-          ? 'Apple 로그인을 하려면 이메일 제공이 필요합니다. "이메일 공유" 옵션을 선택해주세요.'
-          : '소셜 계정에서 이메일 정보를 가져올 수 없습니다. 계정 설정을 확인해주세요.'
         return {
           success: false,
-          error: errorMessage,
+          error: '소셜 계정에서 이메일 정보를 가져올 수 없습니다. 계정 설정을 확인해주세요.',
           needsEmailSetup: true
         }
       }
