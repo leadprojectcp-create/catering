@@ -11,6 +11,14 @@ import { doc, setDoc, query, where, getDocs, collection, getDoc, serverTimestamp
 import { auth, db } from './firebase'
 import { requestWebFcmToken, saveFcmToken } from './fcmToken'
 
+declare global {
+  interface Window {
+    ReactNativeWebView?: {
+      postMessage: (message: string) => void
+    }
+  }
+}
+
 interface SignupData {
   email: string
   password?: string // 소셜 로그인 사용자는 비밀번호가 없을 수 있음
@@ -517,42 +525,39 @@ export async function signInWithApple() {
   try {
     console.log('[signInWithApple] Starting Apple login...')
 
+    // 네이티브 앱인 경우 네이티브 Apple 로그인 사용
+    if (typeof window !== 'undefined' && window.ReactNativeWebView) {
+      console.log('[signInWithApple] Using native Apple login')
+      window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'APPLE_LOGIN' }))
+      return { success: true, isRedirecting: true }
+    }
+
     const provider = new OAuthProvider('apple.com')
 
     provider.addScope('email')
     provider.addScope('name')
 
-    const useRedirect = isWebView()
-    console.log('[signInWithApple] Using redirect:', useRedirect)
+    // 일반 브라우저에서는 Popup 사용
+    console.log('[signInWithApple] Calling signInWithPopup...')
+    const result = await signInWithPopup(auth, provider)
+    console.log('[signInWithApple] Popup login successful')
 
-    if (useRedirect) {
-      // WebView에서는 Redirect 사용
-      console.log('[signInWithApple] Calling signInWithRedirect...')
-      await signInWithRedirect(auth, provider)
-      return { success: true, isRedirecting: true }
-    } else {
-      // 일반 브라우저에서는 Popup 사용
-      console.log('[signInWithApple] Calling signInWithPopup...')
-      const result = await signInWithPopup(auth, provider)
-      console.log('[signInWithApple] Popup login successful')
+    const userEmail = result.user.email
 
-      const userEmail = result.user.email
-
-      if (!userEmail) {
-        return {
-          success: false,
-          error: 'Apple 계정에서 이메일 정보를 가져올 수 없습니다.'
-        }
+    if (!userEmail) {
+      return {
+        success: false,
+        error: 'Apple 계정에서 이메일 정보를 가져올 수 없습니다.'
       }
-
-      const additionalInfo = {
-        name: result.user.displayName || userEmail.split('@')[0] || '',
-        email: userEmail,
-        phone: null
-      }
-
-      return await handleSocialUser(result.user, 'apple', additionalInfo)
     }
+
+    const additionalInfo = {
+      name: result.user.displayName || userEmail.split('@')[0] || '',
+      email: userEmail,
+      phone: null
+    }
+
+    return await handleSocialUser(result.user, 'apple', additionalInfo)
   } catch (error: unknown) {
     console.error('[signInWithApple] Error:', error)
     // 사용자가 팝업을 닫은 경우

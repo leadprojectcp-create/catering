@@ -18,10 +18,18 @@ interface KakaoLoginResult {
   idToken: string
 }
 
+interface AppleLoginResult {
+  uid: string
+  email: string | null
+  displayName: string | null
+  idToken: string
+}
+
 declare global {
   interface Window {
     handleNativeGoogleLogin?: (result: GoogleLoginResult) => Promise<void>
     handleNativeKakaoLogin?: (result: KakaoLoginResult) => Promise<void>
+    handleNativeAppleLogin?: (result: AppleLoginResult) => Promise<void>
   }
 }
 
@@ -143,10 +151,72 @@ export default function NativeAuthBridge() {
       }
     }
 
+    // Apple 로그인 핸들러
+    window.handleNativeAppleLogin = async (result: AppleLoginResult) => {
+      try {
+        console.log('[NativeAuth] Apple login started:', result)
+
+        const auth = getAuth()
+        const provider = new OAuthProvider('apple.com')
+
+        console.log('[NativeAuth] Creating Apple credential with idToken')
+
+        const credential = provider.credential({
+          idToken: result.idToken
+        })
+
+        console.log('[NativeAuth] Credential created, signing in...')
+
+        const userCredential = await signInWithCredential(auth, credential)
+
+        console.log('[NativeAuth] Firebase authentication successful')
+
+        // 웹과 동일한 handleSocialUser 함수 사용
+        const socialResult = await handleSocialUser(
+          userCredential.user,
+          'apple',
+          {
+            name: result.displayName,
+            email: result.email
+          }
+        )
+
+        console.log('[NativeAuth] handleSocialUser result:', socialResult)
+
+        if (socialResult.success) {
+          if ('isExistingUser' in socialResult && socialResult.isExistingUser && 'registrationComplete' in socialResult && socialResult.registrationComplete) {
+            // 기존 사용자이고 가입이 완료된 경우 - 메인 페이지로 이동
+            console.log('[NativeAuth] Existing user with complete registration, redirecting to home')
+            window.location.href = '/'
+          } else if ('isExistingUser' in socialResult && socialResult.isExistingUser && 'registrationComplete' in socialResult && !socialResult.registrationComplete) {
+            // 기존 사용자이지만 가입이 완료되지 않은 경우 - 회원 타입 선택으로 이동
+            console.log('[NativeAuth] Existing user with incomplete registration, redirecting to choose-type')
+            window.location.href = '/signup/choose-type'
+          } else if ('isExistingUser' in socialResult && !socialResult.isExistingUser) {
+            // 신규 사용자 - 회원 타입 선택 페이지로 이동
+            console.log('[NativeAuth] New user, redirecting to choose-type')
+            window.location.href = '/signup/choose-type'
+          }
+        } else {
+          // 에러 처리
+          console.error('[NativeAuth] Social user handle failed:', socialResult.error)
+          alert(socialResult.error || 'Apple 로그인 중 오류가 발생했습니다.')
+        }
+
+        console.log('[NativeAuth] Apple login successful')
+      } catch (error) {
+        console.error('[NativeAuth] Apple login failed:', error)
+        const errorMessage = error instanceof Error ? error.message : String(error)
+        alert(`Apple 로그인 실패: ${errorMessage}`)
+        throw error
+      }
+    }
+
     return () => {
       // 클린업
       delete window.handleNativeGoogleLogin
       delete window.handleNativeKakaoLogin
+      delete window.handleNativeAppleLogin
     }
   }, [])
 
