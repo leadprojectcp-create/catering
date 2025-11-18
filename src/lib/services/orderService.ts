@@ -44,7 +44,7 @@ export interface Order {
   totalAmount?: number // 총 결제 금액 (totalPrice + deliveryFee 등)
   deliveryFee: number
   orderStatus: OrderStatus
-  paymentStatus: 'paid' | 'unpaid'
+  paymentStatus: 'paid' | 'unpaid' | 'refunded'
   deliveryMethod: string
   parcelPaymentMethod?: '선결제' | '착불'
   deliveryDate: string
