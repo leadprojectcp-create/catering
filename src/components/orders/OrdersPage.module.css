@@ -615,6 +615,10 @@
     width: 100%;
   }
 
+  .searchButton {
+    width: 100%;
+  }
+
   .dropdown {
     width: 100%;
     min-width: unset;

@@ -551,7 +551,16 @@ export default function CategoryProductList({ categoryName }: CategoryProductLis
 
                 <div className={styles.info}>
                   {product.storeName && (
-                    <div className={styles.storeName}>
+                    <div
+                      className={styles.storeName}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        if (product.storeId) {
+                          router.push(`/store/${product.storeId}`)
+                        }
+                      }}
+                      style={{ cursor: 'pointer' }}
+                    >
                       {product.storeName}
                       <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M4.5 2L8.5 6L4.5 10" stroke="#999" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>

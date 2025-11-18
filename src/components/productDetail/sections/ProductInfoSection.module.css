@@ -279,13 +279,122 @@
   width: 390px;
   height: 390px;
   flex-shrink: 0;
-  background: #f5f5f5;
-  border-radius: 8px;
+  border-radius: 20px;
   overflow: hidden;
+  background: #f5f5f5;
 }
 
-.productImage {
+/* PC 슬라이더 - 기본 표시 */
+.pcSlider {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* 모바일 슬라이더 - 기본 숨김 */
+.mobileSlider {
+  display: none;
+  width: 100%;
+  height: 100%;
+}
+
+/* Swiper 스타일 */
+.productSwiper {
+  width: 100%;
+  height: 100%;
+  border-radius: 20px;
+}
+
+.productSwiper :global(.swiper-pagination) {
+  bottom: 12px;
+}
+
+.productSwiper :global(.swiper-pagination-bullet) {
+  width: 8px;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.5);
+  opacity: 1;
+}
+
+.productSwiper :global(.swiper-pagination-bullet-active) {
+  background: white;
+  opacity: 1;
+}
+
+.mainImage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.image {
   object-fit: cover;
+}
+
+.placeholderImage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  background: #f5f5f5;
+  color: #999;
+  font-size: 18px;
+}
+
+.arrowButton {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.9);
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  font-size: 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  transition: background 0.2s;
+}
+
+.arrowButton:hover {
+  background: rgba(255, 255, 255, 1);
+}
+
+.arrowLeft {
+  left: 20px;
+}
+
+.arrowRight {
+  right: 20px;
+}
+
+.indicators {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+  z-index: 10;
+}
+
+.indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5);
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.2s;
+}
+
+.indicatorActive {
+  background: rgba(255, 255, 255, 1);
 }
 
 .likeButton {
@@ -299,64 +408,6 @@
   cursor: pointer;
   padding: 0;
   flex-shrink: 0;
-}
-
-.prevButton,
-.nextButton {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 40px;
-  height: 40px;
-  background: rgba(0, 0, 0, 0.5);
-  color: white;
-  border: none;
-  border-radius: 50%;
-  font-size: 24px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.3s ease;
-  z-index: 10;
-}
-
-.prevButton:hover,
-.nextButton:hover {
-  background: rgba(0, 0, 0, 0.7);
-}
-
-.prevButton {
-  left: 16px;
-}
-
-.nextButton {
-  right: 16px;
-}
-
-.imageIndicator {
-  position: absolute;
-  bottom: 16px;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 6px 12px;
-  background: rgba(0, 0, 0, 0.6);
-  color: white;
-  border-radius: 16px;
-  font-size: 13px;
-  font-weight: 500;
-  z-index: 10;
-}
-
-.placeholderImage {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 100%;
-  background: #f5f5f5;
-  color: #999;
-  font-size: 14px;
 }
 
 /* 액션 버튼 */
@@ -487,6 +538,16 @@
     width: 100%;
     aspect-ratio: 1 / 1;
     height: auto;
+  }
+
+  /* 모바일에서 PC 슬라이더 숨김 */
+  .pcSlider {
+    display: none;
+  }
+
+  /* 모바일에서 Swiper 슬라이더 표시 */
+  .mobileSlider {
+    display: block;
   }
 
   .badgeContainerDesktop {

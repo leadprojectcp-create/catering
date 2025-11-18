@@ -6,6 +6,11 @@ import { Timestamp } from 'firebase/firestore'
 import { Product, Store } from '../types'
 import OptimizedImage from '@/components/common/OptimizedImage'
 import { calculateDistance, getUserLocation, formatDistance } from '@/lib/utils/distance'
+import { useAuth } from '@/contexts/AuthContext'
+import { Swiper, SwiperSlide } from 'swiper/react'
+import { Pagination } from 'swiper/modules'
+import 'swiper/css'
+import 'swiper/css/pagination'
 import styles from './ProductInfoSection.module.css'
 
 interface ProductInfoSectionProps {
@@ -34,13 +39,26 @@ const ProductInfoSection = memo(function ProductInfoSection({
   onLikeToggle
 }: ProductInfoSectionProps) {
   const router = useRouter()
+  const { userData } = useAuth()
   const [distance, setDistance] = useState<number | undefined>(undefined)
 
   // 거리 계산
   useEffect(() => {
     if (store?.address?.latitude && store?.address?.longitude) {
-      // 사용자 위치 가져오기
-      const userLocation = getUserLocation()
+      // 사용자 위치 가져오기 - DB 우선
+      let userLocation: { latitude: number; longitude: number } | null = null
+
+      // 1순위: DB에 저장된 위치 (userData)
+      if (userData?.location?.latitude && userData?.location?.longitude) {
+        userLocation = {
+          latitude: userData.location.latitude,
+          longitude: userData.location.longitude,
+        }
+      }
+      // 2순위: 로컬/앱에 저장된 위치
+      else {
+        userLocation = getUserLocation()
+      }
 
       if (userLocation) {
         const calculatedDistance = calculateDistance(
@@ -52,7 +70,7 @@ const ProductInfoSection = memo(function ProductInfoSection({
         setDistance(calculatedDistance)
       }
     }
-  }, [store])
+  }, [store, userData])
 
   // 할인 기간이 유효한지 체크하는 함수
   const isDiscountValid = () => {
@@ -84,36 +102,85 @@ const ProductInfoSection = memo(function ProductInfoSection({
         <div className={styles.imageWrapper}>
           {product.images && product.images.length > 0 ? (
             <>
-              <OptimizedImage
-                src={product.images[currentImageIndex]}
-                alt={product.name}
-                fill
-                sizes="(max-width: 768px) 100vw, 600px"
-                priority
-                className={styles.productImage}
-                style={{ objectFit: 'cover' }}
-              />
-              {product.images.length > 1 && (
-                <>
-                  <button
-                    className={styles.prevButton}
-                    onClick={onPrevImage}
-                    aria-label="이전 이미지"
-                  >
-                    ‹
-                  </button>
-                  <button
-                    className={styles.nextButton}
-                    onClick={onNextImage}
-                    aria-label="다음 이미지"
-                  >
-                    ›
-                  </button>
-                  <div className={styles.imageIndicator}>
-                    {currentImageIndex + 1} / {product.images.length}
-                  </div>
-                </>
-              )}
+              {/* PC: 기존 화살표 방식 */}
+              <div className={styles.pcSlider}>
+                <div className={styles.mainImage}>
+                  <OptimizedImage
+                    src={product.images[currentImageIndex]}
+                    alt={product.name}
+                    fill
+                    sizes="390px"
+                    quality={75}
+                    className={styles.image}
+                    style={{ objectFit: 'cover' }}
+                    priority
+                    unoptimized
+                  />
+                </div>
+
+                {product.images.length > 1 && (
+                  <>
+                    <button
+                      className={`${styles.arrowButton} ${styles.arrowLeft}`}
+                      onClick={onPrevImage}
+                    >
+                      ‹
+                    </button>
+                    <button
+                      className={`${styles.arrowButton} ${styles.arrowRight}`}
+                      onClick={onNextImage}
+                    >
+                      ›
+                    </button>
+
+                    <div className={styles.indicators}>
+                      {product.images.map((_, index) => (
+                        <button
+                          key={index}
+                          className={`${styles.indicator} ${index === currentImageIndex ? styles.indicatorActive : ''}`}
+                          onClick={() => {
+                            const diff = index - currentImageIndex
+                            if (diff > 0) {
+                              for (let i = 0; i < diff; i++) onNextImage()
+                            } else if (diff < 0) {
+                              for (let i = 0; i < Math.abs(diff); i++) onPrevImage()
+                            }
+                          }}
+                        />
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {/* 모바일: Swiper 터치 슬라이드 */}
+              <div className={styles.mobileSlider}>
+                <Swiper
+                  modules={[Pagination]}
+                  slidesPerView={1}
+                  pagination={{ clickable: true }}
+                  className={styles.productSwiper}
+                >
+                  {product.images.map((image, index) => (
+                    <SwiperSlide key={index}>
+                      <div className={styles.mainImage}>
+                        <OptimizedImage
+                          src={image}
+                          alt={`${product.name} 이미지 ${index + 1}`}
+                          fill
+                          sizes="390px"
+                          quality={75}
+                          className={styles.image}
+                          style={{ objectFit: 'cover' }}
+                          priority={index === 0}
+                          loading={index === 0 ? undefined : "lazy"}
+                          unoptimized
+                        />
+                      </div>
+                    </SwiperSlide>
+                  ))}
+                </Swiper>
+              </div>
             </>
           ) : (
             <div className={styles.placeholderImage}>
