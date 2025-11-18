@@ -14,9 +14,9 @@ export default function SocialLogin({ onError }: SocialLoginProps) {
   const router = useRouter()
   const [loadingProvider, setLoadingProvider] = useState<string | null>(null)
 
-  // Apple 기기 확인 (iOS, iPadOS, macOS)
+  // Apple 기기 확인 (iOS, iPadOS만)
   const isAppleDevice = typeof window !== 'undefined' &&
-    (/iPhone|iPad|iPod|Macintosh/.test(navigator.userAgent))
+    (/iPhone|iPad|iPod/.test(navigator.userAgent))
 
   const handleSocialLogin = async (provider: 'google' | 'kakao' | 'apple') => {
     setLoadingProvider(provider)

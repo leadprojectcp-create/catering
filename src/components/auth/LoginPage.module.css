@@ -226,6 +226,16 @@
   background-color: #f9fafb;
 }
 
+.appleButton {
+  background-color: #000000;
+  color: #ffffff;
+  border-color: #000000;
+}
+
+.appleButton:hover:not(:disabled) {
+  background-color: #1f2937;
+}
+
 .emailSignupButton {
   background-color: white;
 }
