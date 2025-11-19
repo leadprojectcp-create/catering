@@ -130,18 +130,35 @@ export default function PaymentSummarySection({
     onDeliveryFeeChange: onDeliveryFeeFromAPIChange
   })
 
+  // 판매자 지원 금액 계산 (조건부 지원일 때)
+  const sellerSupport = useMemo(() => {
+    if (!isAdditionalOrder &&
+        deliveryMethod === '퀵업체 배송' &&
+        quickDeliveryFeeSettings?.type === '조건부 지원' &&
+        quickDeliveryFeeSettings.freeCondition &&
+        quickDeliveryFeeSettings.maxSupport &&
+        totalProductPrice >= quickDeliveryFeeSettings.freeCondition) {
+      return quickDeliveryFeeSettings.maxSupport
+    }
+    return 0
+  }, [isAdditionalOrder, deliveryMethod, quickDeliveryFeeSettings, totalProductPrice])
+
   // 실제 결제 금액 (배송비 환급 반영) - 음수 가능
   const actualPaymentAmount = useMemo(() => {
     if (deliveryFeeRefund > 0) {
       return totalProductPrice - deliveryFeeRefund - usePoint
     }
-    return calculateTotalPrice(totalProductPrice, deliveryFee, deliveryPromotion, usePoint, parcelPaymentMethod)
-  }, [totalProductPrice, deliveryFee, deliveryPromotion, usePoint, deliveryFeeRefund, parcelPaymentMethod])
+    // 조건부 지원 금액과 프로모션 중 큰 값을 사용
+    const discount = Math.max(sellerSupport, deliveryPromotion)
+    return calculateTotalPrice(totalProductPrice, deliveryFee, discount, usePoint, parcelPaymentMethod)
+  }, [totalProductPrice, deliveryFee, deliveryPromotion, sellerSupport, usePoint, deliveryFeeRefund, parcelPaymentMethod])
 
   // 총 결제금액 (화면 표시용)
-  const totalPrice = useMemo(() =>
-    calculateTotalPrice(totalProductPrice, deliveryFee, deliveryPromotion, usePoint, parcelPaymentMethod)
-  , [totalProductPrice, deliveryFee, deliveryPromotion, usePoint, parcelPaymentMethod])
+  const totalPrice = useMemo(() => {
+    // 조건부 지원 금액과 프로모션 중 큰 값을 사용
+    const discount = Math.max(sellerSupport, deliveryPromotion)
+    return calculateTotalPrice(totalProductPrice, deliveryFee, discount, usePoint, parcelPaymentMethod)
+  }, [totalProductPrice, deliveryFee, deliveryPromotion, sellerSupport, usePoint, parcelPaymentMethod])
 
   return (
     <section className={styles.section}>

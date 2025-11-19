@@ -146,21 +146,10 @@ export function useDeliveryFeeCalculation({
 
         if (quickDeliveryFeeSettings.type === '조건부 지원') {
           const apiFee = deliveryFeeFromAPI || 0
-          const minAmount = quickDeliveryFeeSettings.freeCondition || 0
-          const support = quickDeliveryFeeSettings.maxSupport || 0
 
-          // 최소 구매 금액 조건을 만족하지 않으면 배송비 그대로
-          if (totalProductPrice < minAmount) {
-            return apiFee
-          }
-
-          // 조건 만족 시: maxSupport가 0이면 전액 지원 (무료)
-          if (support === 0) {
-            return 0
-          }
-
-          // 조건 만족 시: 지원 금액만큼 할인 (음수가 되지 않도록)
-          return Math.max(0, apiFee - support)
+          // 조건부 지원일 때는 항상 원래 API 금액 반환
+          // 할인은 판매자 지원으로 별도 표시됨
+          return apiFee
         }
 
         // 유료일 때는 API에서 받은 배송비 그대로
