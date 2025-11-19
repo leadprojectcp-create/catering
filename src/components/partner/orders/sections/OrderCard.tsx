@@ -95,12 +95,14 @@ export default function OrderCard({
     setIsCancelingAdditional(true)
     try {
       // 해당 paymentId의 paymentInfo에서 금액 찾기
-      const paymentInfo = order.paymentInfo?.find((info: any) => info.id === targetPaymentId)
+      const paymentInfo = order.paymentInfo?.find(info => info.id === targetPaymentId)
       if (!paymentInfo) {
         throw new Error('결제 정보를 찾을 수 없습니다.')
       }
 
-      const refundAmount = (paymentInfo as any).amount?.total || paymentInfo.amount
+      const refundAmount = typeof paymentInfo.amount === 'object' && paymentInfo.amount?.total
+        ? paymentInfo.amount.total
+        : (paymentInfo.amount as number)
 
       const cancelResponse = await fetch('/api/payments/cancel', {
         method: 'POST',

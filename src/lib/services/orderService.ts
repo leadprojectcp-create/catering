@@ -18,11 +18,12 @@ export interface OrderItem {
 export type OrderStatus = 'pending' | 'preparing' | 'shipping' | 'completed' | 'rejected' | 'cancelled' | 'cancelled_before_accept'
 
 export interface PaymentInfo {
-  paymentId: string
+  id: string // PortOne V2 paymentId
+  paymentId?: string // deprecated, use id instead
   paidAt: Date
   paymentKey?: string
   orderId?: string
-  amount?: number
+  amount?: number | { total?: number; [key: string]: unknown } // PortOne V2는 객체 구조
   method?: string
   status?: string
   cancelledAt?: Date

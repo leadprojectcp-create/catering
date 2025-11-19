@@ -211,7 +211,7 @@ export default function OrderManagementPage() {
 
         // 취소되지 않은 결제만 필터링
         const notCancelledPaymentIds = paymentIds.filter(pid => {
-          const paymentInfo = order.paymentInfo?.find((p: any) => p.id === pid)
+          const paymentInfo = order.paymentInfo?.find(p => p.id === pid)
           return paymentInfo?.status !== 'cancelled'
         })
 
@@ -259,7 +259,7 @@ export default function OrderManagementPage() {
       // 실제 환불된 금액 계산 (이미 취소된 결제 제외)
       const paymentIds = Array.isArray(order.paymentId) ? order.paymentId : [order.paymentId]
       const notCancelledPaymentIds = paymentIds.filter(pid => {
-        const paymentInfo = order.paymentInfo?.find((p: any) => p.id === pid)
+        const paymentInfo = order.paymentInfo?.find(p => p.id === pid)
         return paymentInfo?.status !== 'cancelled'
       })
       const actualRefundAmount = order.items

@@ -66,6 +66,15 @@ export const requestPayment = async (
       paymentParams.channelKey = request.channelKey
     }
 
+    // 가상계좌 결제인 경우 추가 파라미터 설정
+    if (payMethod === 'VIRTUAL_ACCOUNT') {
+      paymentParams.virtualAccount = {
+        accountExpiry: {
+          validHours: 24 // 24시간 유효
+        }
+      }
+    }
+
     // 포트원 V2 결제 요청
     const response = await PortOne.requestPayment(paymentParams)
 
