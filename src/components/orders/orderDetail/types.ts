@@ -35,14 +35,15 @@ export interface DeliveryInfo {
 }
 
 export interface PaymentInfo {
-  paymentId: string
+  id?: string // PortOne V2 paymentId
+  paymentId?: string // PortOne V1 결제 ID (deprecated, use id for V2)
   paidAt: Date
   imp_uid?: string // PortOne V1 결제 ID
   paid_at?: number // Unix 타임스탬프 (초 단위)
   paymentKey?: string
   orderId?: string
   merchant_uid?: string
-  amount?: number
+  amount?: number | { total?: number; [key: string]: unknown } // PortOne V2는 객체 구조
   method?: string
   status?: string
   cancelledAt?: Date

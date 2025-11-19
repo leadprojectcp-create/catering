@@ -127,6 +127,15 @@ export default function OrderCard({
       const remainingItems = order.items.filter(item => item.paymentId !== targetPaymentId)
       console.log('[추가주문 취소] 남은 items:', remainingItems)
 
+      // paymentId 배열에서 해당 paymentId 제거
+      const currentPaymentIds = Array.isArray(order.paymentId) ? order.paymentId : [order.paymentId]
+      const remainingPaymentIds = currentPaymentIds.filter(id => id !== targetPaymentId)
+      console.log('[추가주문 취소] 남은 paymentIds:', remainingPaymentIds)
+
+      // paymentInfo 배열에서 해당 paymentId 제거
+      const remainingPaymentInfo = order.paymentInfo?.filter(info => info.id !== targetPaymentId) || []
+      console.log('[추가주문 취소] 남은 paymentInfo:', remainingPaymentInfo)
+
       const orderRef = doc(db, 'orders', order.id)
 
       // totalProductPrice 재계산
@@ -149,6 +158,8 @@ export default function OrderCard({
 
       await updateDoc(orderRef, {
         items: remainingItems,
+        paymentId: remainingPaymentIds,
+        paymentInfo: remainingPaymentInfo,
         totalProductPrice: newTotalProductPrice,
         totalQuantity: newTotalQuantity,
         totalPrice: newTotalPrice,

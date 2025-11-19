@@ -76,6 +76,13 @@ export default function AdditionalOrderSection({ order }: Props) {
       const orderRef = doc(db, 'orders', order.id)
       const remainingItems = order.items.filter(item => item.paymentId !== cancelModalData.paymentId)
 
+      // paymentId 배열에서 해당 paymentId 제거
+      const currentPaymentIds = Array.isArray(order.paymentId) ? order.paymentId : [order.paymentId]
+      const remainingPaymentIds = currentPaymentIds.filter(id => id !== cancelModalData.paymentId)
+
+      // paymentInfo 배열에서 해당 paymentId 제거
+      const remainingPaymentInfo = order.paymentInfo?.filter(info => info.id !== cancelModalData.paymentId) || []
+
       // totalProductPrice 재계산
       const newTotalProductPrice = remainingItems.reduce((sum, item) => {
         return sum + (item.itemPrice || (item.price * item.quantity))
@@ -92,6 +99,8 @@ export default function AdditionalOrderSection({ order }: Props) {
 
       await updateDoc(orderRef, {
         items: remainingItems,
+        paymentId: remainingPaymentIds,
+        paymentInfo: remainingPaymentInfo,
         totalProductPrice: newTotalProductPrice,
         totalQuantity: newTotalQuantity,
         totalPrice: newTotalPrice,
@@ -134,7 +143,7 @@ export default function AdditionalOrderSection({ order }: Props) {
         const paymentDate = getPaymentDate(order, paymentId)
 
         // 해당 paymentId의 결제 상태 찾기
-        const paymentInfo = order.paymentInfo?.find((p: { paymentId: string }) => p.paymentId === paymentId)
+        const paymentInfo = order.paymentInfo?.find(p => p.id === paymentId || p.paymentId === paymentId)
         const paymentStatus = paymentInfo?.status || order.paymentStatus
 
         // 결제 상태 텍스트 (대소문자 구분 없이 비교)
