@@ -120,16 +120,16 @@ export async function handlePaymentProcess(params: UsePaymentHandlerParams): Pro
       sessionStorage.setItem('cartIdForPayment', cartIdParam)
     }
 
-    // V2에서는 paymentType에 따라 payMethod 결정
+    // V2에서는 paymentType이 vbank/trans인 경우 해당 결제수단 사용
+    // 그 외에는 paymentMethod로 CARD/EASY_PAY 결정
     let v2PayMethod: 'CARD' | 'VIRTUAL_ACCOUNT' | 'TRANSFER' | 'EASY_PAY'
-    if (paymentType === 'card') {
-      v2PayMethod = 'CARD'
-    } else if (paymentType === 'vbank') {
+    if (paymentType === 'vbank') {
       v2PayMethod = 'VIRTUAL_ACCOUNT'
     } else if (paymentType === 'trans') {
       v2PayMethod = 'TRANSFER'
     } else {
-      v2PayMethod = 'EASY_PAY'
+      // 일반결제/간편결제는 paymentMethod로 결정
+      v2PayMethod = paymentMethod === 'card' ? 'CARD' : 'EASY_PAY'
     }
 
     // V2에서는 EASY_PAY일 때 provider 지정
