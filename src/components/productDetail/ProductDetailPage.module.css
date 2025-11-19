@@ -2,6 +2,8 @@
 .container {
   max-width: 800px;
   margin: 0 auto;
+  position: relative;
+  min-height: 100vh;
 }
 
 .leftSection {
@@ -19,14 +21,11 @@
 /* 모바일 주문하기 버튼 */
 .mobileOrderButton {
   display: block;
-  position: -webkit-sticky; /* Safari 지원 */
   position: sticky;
-  bottom: 76px; /* 바텀 네비게이터(60px) + 여백(16px) */
-  left: 0;
-  right: 0;
-  width: 100%;
-  max-width: 800px;
-  margin: 20px 0 0;
+  bottom: 16px;
+  width: calc(100% - 32px);
+  max-width: 768px;
+  margin: 20px auto 0;
   background: #025BD9;
   color: white;
   border: none;
@@ -37,13 +36,15 @@
   z-index: 100;
   box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
   border-radius: 8px;
-  /* 모바일 브라우저 최적화 */
-  -webkit-transform: translateZ(0);
-  transform: translateZ(0);
-  will-change: transform;
   opacity: 1;
   visibility: visible;
   transition: opacity 0.2s, visibility 0.2s;
+}
+
+@media (max-width: 768px) {
+  .mobileOrderButton {
+    bottom: 76px; /* 모바일에서만 바텀 네비게이터(60px) + 여백(16px) */
+  }
 }
 
 .mobileOrderButton.hidden {

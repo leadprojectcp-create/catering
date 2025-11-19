@@ -148,7 +148,7 @@ export default function PaymentSummarySection({
       <h2 className={styles.sectionTitle}>총 결제금액</h2>
       <div className={styles.paymentContainer}>
         <div className={styles.paymentRow}>
-          <span className={styles.paymentLabel}>총 상품금액</span>
+          <span className={styles.paymentLabel}>총 상품갯수</span>
           <span className={styles.paymentValue}>{totalQuantity}개</span>
         </div>
         <div className={styles.paymentRow}>
