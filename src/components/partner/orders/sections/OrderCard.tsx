@@ -132,11 +132,24 @@ export default function OrderCard({
         return sum + (item.itemPrice || (item.price * item.quantity))
       }, 0)
 
+      // totalQuantity 재계산
+      const newTotalQuantity = remainingItems.reduce((sum, item) => {
+        return sum + item.quantity
+      }, 0)
+
+      // totalPrice 재계산 (totalProductPrice + deliveryFee)
+      const currentDeliveryFee = order.deliveryFee || 0
+      const newTotalPrice = newTotalProductPrice + currentDeliveryFee
+
       console.log('[추가주문 취소] 새로운 totalProductPrice:', newTotalProductPrice)
+      console.log('[추가주문 취소] 새로운 totalQuantity:', newTotalQuantity)
+      console.log('[추가주문 취소] 새로운 totalPrice:', newTotalPrice)
 
       await updateDoc(orderRef, {
         items: remainingItems,
         totalProductPrice: newTotalProductPrice,
+        totalQuantity: newTotalQuantity,
+        totalPrice: newTotalPrice,
         updatedAt: new Date()
       })
 

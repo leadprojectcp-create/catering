@@ -72,17 +72,30 @@ export default function AdditionalOrderSection({ order }: Props) {
     if (!cancelModalData) return
 
     try {
-      // Firestore에서 해당 paymentId의 아이템들을 취소 상태로 업데이트
+      // Firestore에서 해당 paymentId의 상품만 제거
       const orderRef = doc(db, 'orders', order.id)
-      const updatedItems = order.items.map(item => {
-        if (item.paymentId === cancelModalData.paymentId) {
-          return { ...item, isCancelled: true }
-        }
-        return item
-      })
+      const remainingItems = order.items.filter(item => item.paymentId !== cancelModalData.paymentId)
+
+      // totalProductPrice 재계산
+      const newTotalProductPrice = remainingItems.reduce((sum, item) => {
+        return sum + (item.itemPrice || (item.price * item.quantity))
+      }, 0)
+
+      // totalQuantity 재계산
+      const newTotalQuantity = remainingItems.reduce((sum, item) => {
+        return sum + item.quantity
+      }, 0)
+
+      // totalPrice 재계산 (totalProductPrice + deliveryFee)
+      const currentDeliveryFee = order.deliveryFee || 0
+      const newTotalPrice = newTotalProductPrice + currentDeliveryFee
 
       await updateDoc(orderRef, {
-        items: updatedItems,
+        items: remainingItems,
+        totalProductPrice: newTotalProductPrice,
+        totalQuantity: newTotalQuantity,
+        totalPrice: newTotalPrice,
+        updatedAt: new Date()
       })
 
       window.location.reload()
