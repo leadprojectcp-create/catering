@@ -202,7 +202,7 @@ export default function OrderManagementPage() {
     const order = orders.find(o =>
       o.items.some(item => item.paymentId === paymentId)
     )
-    if (order) {
+    if (order && order.id) {
       setCancelOrderId(order.id)
       setCancelPaymentId(paymentId) // 부분 취소
       setShowCancelModal(true)
