@@ -597,16 +597,6 @@ export default function OrderCard({
                           <div className={styles.detailSectionDivider}></div>
                           <div className={styles.detailTitleRow}>
                             <h3 className={styles.detailTitle}>추가주문상품 #{groupIndex + 1}</h3>
-                            {(order.orderStatus === 'preparing' || order.orderStatus === 'shipping') && (
-                              <button
-                                className={styles.cancelAdditionalOrderButtonInline}
-                                onClick={() => handleCancelAdditionalOrder(paymentId)}
-                                disabled={isCancelingAdditional}
-                                type="button"
-                              >
-                                {isCancelingAdditional ? '취소중...' : '취소'}
-                              </button>
-                            )}
                           </div>
                           {items.map((item, index) => {
                             const showProductName = index === 0 || items[index - 1].productName !== item.productName
@@ -674,6 +664,20 @@ export default function OrderCard({
                               </div>
                             )
                           })}
+
+                          {/* 추가주문 취소 버튼 */}
+                          {(order.orderStatus === 'preparing' || order.orderStatus === 'shipping') && (
+                            <div className={styles.cancelAdditionalOrderButtonWrapper}>
+                              <button
+                                className={styles.cancelAdditionalOrderButton}
+                                onClick={() => handleCancelAdditionalOrder(paymentId)}
+                                disabled={isCancelingAdditional}
+                                type="button"
+                              >
+                                {isCancelingAdditional ? '취소 처리 중...' : '추가주문 취소하기'}
+                              </button>
+                            </div>
+                          )}
                         </div>
                       )
                     })

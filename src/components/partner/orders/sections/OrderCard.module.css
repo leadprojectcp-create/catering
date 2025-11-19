@@ -460,29 +460,6 @@
   background: #F4F4F4;
 }
 
-.cancelAdditionalOrderButtonInline {
-  padding: 6px 12px;
-  border-radius: 5px;
-  border: 1px solid #FF6B6B;
-  background: #FFF;
-  color: #FF6B6B;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  white-space: nowrap;
-}
-
-.cancelAdditionalOrderButtonInline:hover {
-  background: #FF6B6B;
-  color: #FFF;
-}
-
-.cancelAdditionalOrderButtonInline:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
 @media (max-width: 768px) {
   .orderCard {
     padding: 12px;
