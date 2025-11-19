@@ -306,7 +306,9 @@ export default function PaymentSummarySection({
                 value={usePoint ? usePoint.toLocaleString() : ''}
                 onChange={(e) => {
                   const value = parseInt(e.target.value.replace(/,/g, '')) || 0
-                  if (value <= availablePoint && value >= 0) {
+                  // 총 상품금액을 초과할 수 없음
+                  const maxUsablePoint = Math.min(availablePoint, totalProductPrice)
+                  if (value <= maxUsablePoint && value >= 0) {
                     onUsePointChange(value)
                   } else if (e.target.value === '') {
                     onUsePointChange(0)
@@ -319,7 +321,11 @@ export default function PaymentSummarySection({
               <button
                 type="button"
                 className={styles.useAllButton}
-                onClick={() => onUsePointChange(availablePoint)}
+                onClick={() => {
+                  // 총 상품금액을 초과하지 않도록 제한
+                  const maxUsablePoint = Math.min(availablePoint, totalProductPrice)
+                  onUsePointChange(maxUsablePoint)
+                }}
               >
                 전액 사용
               </button>
