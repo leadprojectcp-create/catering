@@ -120,8 +120,17 @@ export async function handlePaymentProcess(params: UsePaymentHandlerParams): Pro
       sessionStorage.setItem('cartIdForPayment', cartIdParam)
     }
 
-    // V2에서는 payMethod가 'CARD' 또는 'EASY_PAY'
-    const v2PayMethod: 'CARD' | 'EASY_PAY' = paymentMethod === 'card' ? 'CARD' : 'EASY_PAY'
+    // V2에서는 paymentType에 따라 payMethod 결정
+    let v2PayMethod: 'CARD' | 'VIRTUAL_ACCOUNT' | 'TRANSFER' | 'EASY_PAY'
+    if (paymentType === 'card') {
+      v2PayMethod = 'CARD'
+    } else if (paymentType === 'vbank') {
+      v2PayMethod = 'VIRTUAL_ACCOUNT'
+    } else if (paymentType === 'trans') {
+      v2PayMethod = 'TRANSFER'
+    } else {
+      v2PayMethod = 'EASY_PAY'
+    }
 
     // V2에서는 EASY_PAY일 때 provider 지정
     let easyPayProvider: 'KAKAOPAY' | 'NAVERPAY' | 'TOSSPAY' | undefined

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import * as PortOne from '@portone/server-sdk'
 import { db } from '@/lib/firebase'
-import { collection, query, where, getDocs, doc, updateDoc } from 'firebase/firestore'
+import { collection, query, where, getDocs, doc, updateDoc, addDoc, serverTimestamp, increment } from 'firebase/firestore'
 
 // PortOne V2 SDK로 결제 취소
 export async function POST(request: NextRequest) {
@@ -101,6 +101,32 @@ export async function POST(request: NextRequest) {
             paymentInfo: updatedPaymentInfo,
             updatedAt: new Date()
           })
+
+          // 포인트 환불 처리 (전체 취소인 경우만)
+          const usePoint = orderData.usePoint || 0
+          if (usePoint > 0 && orderData.uid) {
+            console.log('[Cancel API] 포인트 환불:', usePoint, 'P')
+
+            // 사용자 포인트 복구
+            const userRef = doc(db, 'users', orderData.uid)
+            await updateDoc(userRef, {
+              point: increment(usePoint)
+            })
+
+            // 포인트 내역 추가
+            await addDoc(collection(db, 'points'), {
+              uid: orderData.uid,
+              amount: usePoint,
+              type: 'refund',
+              reason: '주문 취소로 인한 포인트 환불',
+              orderId: orderId,
+              productId: orderData.productId || '',
+              productName: orderData.productName || orderData.storeName || '',
+              createdAt: serverTimestamp()
+            })
+
+            console.log('[Cancel API] 포인트 환불 완료:', usePoint, 'P')
+          }
         }
 
         console.log('[Cancel API] DB 업데이트 완료:', orderId)

@@ -9,7 +9,7 @@ export interface PaymentRequest {
   customerEmail: string
   customerPhoneNumber: string
   customerUid?: string
-  payMethod: 'CARD' | 'EASY_PAY'
+  payMethod: 'CARD' | 'VIRTUAL_ACCOUNT' | 'TRANSFER' | 'EASY_PAY'
   easyPayProvider?: 'KAKAOPAY' | 'NAVERPAY' | 'TOSSPAY'
   channelKey?: string
 }
