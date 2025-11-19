@@ -31,6 +31,7 @@ export default function OrderManagementPage() {
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null)
   const [showCancelModal, setShowCancelModal] = useState(false)
   const [cancelOrderId, setCancelOrderId] = useState<string | null>(null)
+  const [cancelPaymentId, setCancelPaymentId] = useState<string | null>(null)
   const [showTrackingModal, setShowTrackingModal] = useState(false)
   const [trackingOrderId, setTrackingOrderId] = useState<string | null>(null)
   const [driverInfo, setDriverInfo] = useState<{ [orderId: string]: { rName: string; rMobile: string } }>({})
@@ -192,7 +193,20 @@ export default function OrderManagementPage() {
 
   const handleCancelClick = (orderId: string) => {
     setCancelOrderId(orderId)
+    setCancelPaymentId(null) // 전체 취소
     setShowCancelModal(true)
+  }
+
+  const handleCancelAdditionalOrderClick = (paymentId: string) => {
+    // 추가주문 취소 - paymentId로 orderId 찾기
+    const order = orders.find(o =>
+      o.items.some(item => item.paymentId === paymentId)
+    )
+    if (order) {
+      setCancelOrderId(order.id)
+      setCancelPaymentId(paymentId) // 부분 취소
+      setShowCancelModal(true)
+    }
   }
 
   const handleCancelConfirm = async (reason: string) => {
@@ -205,7 +219,50 @@ export default function OrderManagementPage() {
     }
 
     try {
-      // 결제 정보가 있으면 환불 처리 (판매자 취소는 항상 100% 환불)
+      // 추가주문 취소인 경우
+      if (cancelPaymentId) {
+        const targetItems = order.items.filter(item => item.paymentId === cancelPaymentId)
+        const targetOrderAmount = targetItems.reduce((sum, item) => {
+          return sum + (item.itemPrice || (item.price * item.quantity))
+        }, 0)
+
+        const paymentInfo = order.paymentInfo?.find(info => info.id === cancelPaymentId)
+        if (!paymentInfo) {
+          throw new Error('결제 정보를 찾을 수 없습니다.')
+        }
+
+        const refundAmount = typeof paymentInfo.amount === 'object' && paymentInfo.amount?.total
+          ? paymentInfo.amount.total
+          : (paymentInfo.amount as number)
+
+        const cancelResponse = await fetch('/api/payments/cancel', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            paymentId: cancelPaymentId,
+            reason: reason,
+            refundAmount: refundAmount,
+            isPartnerCancel: true,
+            isPartialCancel: true,
+          }),
+        })
+
+        const cancelData = await cancelResponse.json()
+        if (!cancelData.success) {
+          throw new Error(cancelData.error || '결제 취소에 실패했습니다.')
+        }
+
+        setShowCancelModal(false)
+        setCancelOrderId(null)
+        setCancelPaymentId(null)
+        alert(`추가주문이 취소되었습니다.\n취소 사유: ${reason}\n환불 금액: ${targetOrderAmount.toLocaleString()}원 (100%)`)
+        window.location.reload()
+        return
+      }
+
+      // 전체 주문 취소인 경우
       if (order.paymentId && order.paymentId.length > 0) {
         const paymentIds = Array.isArray(order.paymentId) ? order.paymentId : [order.paymentId]
 
@@ -216,13 +273,11 @@ export default function OrderManagementPage() {
         })
 
         if (notCancelledPaymentIds.length === 0) {
-          // 모든 결제가 이미 취소됨
           console.log('[전체 취소] 모든 결제가 이미 취소되어 있음')
         } else {
           // 취소되지 않은 결제들을 모두 취소
           for (const paymentId of notCancelledPaymentIds) {
             // 전체 취소 시 배송비 포함 금액 계산
-            // 첫 번째 결제(최초 주문)에는 배송비 포함, 추가 주문에는 상품 금액만
             const itemsForPayment = order.items.filter(item => item.paymentId === paymentId)
             const productAmount = itemsForPayment.reduce((sum, item) => {
               return sum + (item.itemPrice || (item.price * item.quantity))
@@ -232,7 +287,6 @@ export default function OrderManagementPage() {
             const isFirstPayment = paymentId === notCancelledPaymentIds[0]
             const refundAmount = isFirstPayment ? productAmount + (order.deliveryFee || 0) : productAmount
 
-            // 포트원 결제 취소 API 호출 (100% 환불)
             const cancelResponse = await fetch('/api/payments/cancel', {
               method: 'POST',
               headers: {
@@ -241,8 +295,8 @@ export default function OrderManagementPage() {
               body: JSON.stringify({
                 paymentId: paymentId,
                 reason: reason,
-                refundAmount: refundAmount, // 판매자 취소는 전액 환불 (배송비 포함)
-                isPartnerCancel: true, // 판매자 취소 플래그
+                refundAmount: refundAmount,
+                isPartnerCancel: true,
               }),
             })
 
@@ -260,8 +314,9 @@ export default function OrderManagementPage() {
       setOrders(orders.map(o => o.id === cancelOrderId ? { ...o, orderStatus: 'rejected', cancelReason: reason } : o))
       setShowCancelModal(false)
       setCancelOrderId(null)
+      setCancelPaymentId(null)
 
-      // 실제 환불된 금액 계산 (이미 취소된 결제 제외)
+      // 실제 환불된 금액 계산
       const paymentIds = Array.isArray(order.paymentId) ? order.paymentId : [order.paymentId]
       const notCancelledPaymentIds = paymentIds.filter(pid => {
         const paymentInfo = order.paymentInfo?.find(p => p.id === pid)
@@ -285,6 +340,7 @@ export default function OrderManagementPage() {
   const handleCancelModalClose = () => {
     setShowCancelModal(false)
     setCancelOrderId(null)
+    setCancelPaymentId(null)
   }
 
   const handleTrackingSubmit = async (carrier: string, trackingNumber: string) => {
@@ -546,6 +602,7 @@ export default function OrderManagementPage() {
         onOpenTrackingModal={(orderId) => { setTrackingOrderId(orderId); setShowTrackingModal(true) }}
         onOpenChat={handleChatClick}
         onPrint={() => window.print()}
+        onCancelAdditionalOrder={handleCancelAdditionalOrderClick}
       />
 
       {/* 주문취소 모달 */}

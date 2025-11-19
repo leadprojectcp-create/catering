@@ -409,7 +409,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px;
+  padding: 20px 20px 0 20px;
 }
 
 .noticeModalTitle {
@@ -446,7 +446,7 @@
 }
 
 .noticeModalBody {
-  padding: 12px;
+  padding: 20px;
   overflow-y: auto;
 }
 
@@ -461,8 +461,8 @@
 .noticeModalText {
   color: #333;
   font-size: 14px;
-  font-weight: 500;
-  line-height: 150%;
+  font-weight: 400;
+  line-height: 180%; /* 25.2px */
   margin: 0;
   white-space: pre-wrap;
 }

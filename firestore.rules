@@ -212,16 +212,22 @@ service cloud.firestore {
       // 모든 사용자 읽기 가능 (리뷰는 공개)
       allow read: if true;
 
-      // 일반 사용자(type이 user)만 리뷰 생성 가능 (자신의 uid로만 생성)
+      // 일반 사용자는 리뷰 생성 가능 (자신의 uid로만 생성)
       allow create: if isUser() &&
         request.resource.data.uid == request.auth.uid;
+
+      // 파트너도 리뷰 생성 가능 (단, 본인 매장이 아닌 경우만)
+      allow create: if isPartner() &&
+        request.resource.data.uid == request.auth.uid &&
+        request.resource.data.storeId != request.auth.uid;
 
       // 본인의 리뷰만 수정/삭제 가능
       allow update, delete: if isSignedIn() &&
         resource.data.uid == request.auth.uid;
 
-      // 파트너는 답글(reply) 필드만 업데이트 가능
+      // 파트너는 자신의 매장 리뷰에 답글(reply) 필드만 업데이트 가능
       allow update: if isPartner() &&
+        resource.data.storeId == request.auth.uid &&
         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reply']);
     }
 
@@ -397,6 +403,32 @@ service cloud.firestore {
       allow update, delete: if false;
 
       // 관리자는 모든 설문조사 수정 가능
+      allow update: if isAdmin();
+    }
+
+    // OrdersCancel collection - 주문 취소 내역
+    match /ordersCancel/{cancelId} {
+      // 관리자는 모든 취소 내역 읽기 가능
+      allow read: if isAdmin();
+
+      // 주문자 본인의 취소 내역만 읽기 가능
+      allow read: if isSignedIn() &&
+        resource.data.uid == request.auth.uid;
+
+      // 해당 파트너의 취소 내역만 읽기 가능
+      allow read: if isSignedIn() &&
+        resource.data.storeId == request.auth.uid;
+
+      // 쿼리 읽기: 로그인한 사용자가 자신과 관련된 취소 내역 쿼리 가능
+      allow list: if isSignedIn();
+
+      // 시스템(API)에서 취소 내역 생성 가능 (인증 불필요)
+      allow create: if true;
+
+      // 수정/삭제 불가 (취소 내역은 변경 불가)
+      allow update, delete: if false;
+
+      // 관리자는 모든 취소 내역 수정 가능
       allow update: if isAdmin();
     }
   }

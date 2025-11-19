@@ -134,6 +134,14 @@ export default function ProductList({ storeId }: ProductListProps) {
     )
   }
 
+  // 상품 타입 우선순위 (대표 > 추천 > 시즌)
+  const getProductTypePriority = (product: Product) => {
+    if (product.productTypes?.includes('대표상품')) return 1
+    if (product.productTypes?.includes('추천상품')) return 2
+    if (product.productTypes?.includes('시즌상품')) return 3
+    return 4 // 타입 없는 경우
+  }
+
   // 정렬 함수
   const getSortedProducts = () => {
     const sorted = [...products]
@@ -147,7 +155,8 @@ export default function ProductList({ storeId }: ProductListProps) {
       case '주문적은순':
       case '추천순':
       default:
-        return sorted
+        // 추천순일 때는 상품 타입 우선순위로 정렬 (대표 > 추천 > 시즌)
+        return sorted.sort((a, b) => getProductTypePriority(a) - getProductTypePriority(b))
     }
   }
 

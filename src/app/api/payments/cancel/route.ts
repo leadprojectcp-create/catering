@@ -82,6 +82,27 @@ export async function POST(request: NextRequest) {
             paymentInfo: updatedPaymentInfo,
             updatedAt: new Date()
           })
+
+          // ordersCancel 컬렉션에 부분 취소 정보 저장
+          const cancelledItems = orderData.items?.filter((item: { paymentId: string }) => item.paymentId === paymentId) || []
+          await addDoc(collection(db, 'ordersCancel'), {
+            orderId: orderId,
+            paymentId: paymentId,
+            cancelReason: reason || '판매자 요청 - 추가주문 취소',
+            refundAmount: refundAmount,
+            isPartnerCancel: isPartnerCancel || false,
+            isPartialCancel: true,
+            orderStatus: currentOrderStatus,
+            newOrderStatus: currentOrderStatus, // 부분 취소는 상태 변경 없음
+            items: cancelledItems,
+            uid: orderData.uid || '',
+            storeId: orderData.storeId || '',
+            storeName: orderData.storeName || '',
+            cancelledAt: serverTimestamp(),
+            createdAt: serverTimestamp()
+          })
+
+          console.log('[Cancel API] ordersCancel 컬렉션에 부분 취소 정보 저장 완료')
         } else {
           // 전체 주문 취소: orderStatus 변경
           let newOrderStatus: string
@@ -101,6 +122,29 @@ export async function POST(request: NextRequest) {
             paymentInfo: updatedPaymentInfo,
             updatedAt: new Date()
           })
+
+          // ordersCancel 컬렉션에 취소 정보 저장
+          await addDoc(collection(db, 'ordersCancel'), {
+            orderId: orderId,
+            paymentId: paymentId,
+            cancelReason: reason || '고객 요청에 의한 취소',
+            refundAmount: refundAmount,
+            isPartnerCancel: isPartnerCancel || false,
+            isPartialCancel: false,
+            orderStatus: currentOrderStatus,
+            newOrderStatus: newOrderStatus,
+            totalPrice: orderData.totalPrice || 0,
+            totalProductPrice: orderData.totalProductPrice || 0,
+            deliveryFee: orderData.deliveryFee || 0,
+            items: orderData.items || [],
+            uid: orderData.uid || '',
+            storeId: orderData.storeId || '',
+            storeName: orderData.storeName || '',
+            cancelledAt: serverTimestamp(),
+            createdAt: serverTimestamp()
+          })
+
+          console.log('[Cancel API] ordersCancel 컬렉션에 취소 정보 저장 완료')
 
           // 포인트 환불 처리 (전체 취소인 경우만)
           const usePoint = orderData.usePoint || 0

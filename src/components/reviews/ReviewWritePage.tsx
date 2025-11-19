@@ -98,6 +98,13 @@ export default function ReviewWritePage() {
           return
         }
 
+        // 파트너가 본인 매장 주문에 리뷰 작성 시도하는 경우 차단
+        if (orderData.storeId === user.uid) {
+          alert('본인 매장의 상품에는 리뷰를 작성할 수 없습니다.')
+          router.push('/orders')
+          return
+        }
+
         if (orderData.orderStatus !== 'completed') {
           alert('완료된 주문만 리뷰를 작성할 수 있습니다.')
           router.push('/orders')

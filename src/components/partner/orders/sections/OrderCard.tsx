@@ -19,6 +19,7 @@ interface OrderCardProps {
   onOpenChat: (order: Order) => void
   onPrint: () => void
   onRefresh?: () => void
+  onCancelAdditionalOrder?: (paymentId: string) => void
 }
 
 export default function OrderCard({
@@ -32,6 +33,7 @@ export default function OrderCard({
   onOpenChat,
   onPrint,
   onRefresh,
+  onCancelAdditionalOrder,
 }: OrderCardProps) {
   const [allowAdditionalOrder, setAllowAdditionalOrder] = useState(order.allowAdditionalOrder ?? false)
   const [memo, setMemo] = useState(order.partnerMemo || '')
@@ -72,7 +74,14 @@ export default function OrderCard({
     }
   }
 
-  const handleCancelAdditionalOrder = async (targetPaymentId: string) => {
+  const handleCancelAdditionalOrderClick = (targetPaymentId: string) => {
+    // 취소 모달을 통해 사유를 받도록 변경
+    if (onCancelAdditionalOrder) {
+      onCancelAdditionalOrder(targetPaymentId)
+    }
+  }
+
+  const handleCancelAdditionalOrder = async (targetPaymentId: string, reason: string) => {
     if (!order.id) return
 
     // 해당 paymentId의 상품만 필터링
@@ -87,10 +96,6 @@ export default function OrderCard({
     const targetOrderAmount = targetItems.reduce((sum, item) => {
       return sum + (item.itemPrice || (item.price * item.quantity))
     }, 0)
-
-    if (!window.confirm(`이 추가주문을 취소하시겠습니까?\n\n취소 상품: ${targetItems.length}개\n환불 금액: ${targetOrderAmount.toLocaleString()}원 (100%)`)) {
-      return
-    }
 
     setIsCancelingAdditional(true)
     try {
@@ -111,7 +116,7 @@ export default function OrderCard({
         },
         body: JSON.stringify({
           paymentId: targetPaymentId,
-          reason: '판매자 요청 - 추가주문 취소',
+          reason: reason,
           refundAmount: refundAmount,
           isPartnerCancel: true,
           isPartialCancel: true, // 부분 취소: orderStatus 변경 안함
@@ -696,7 +701,7 @@ export default function OrderCard({
                             <div className={styles.cancelAdditionalOrderButtonWrapper}>
                               <button
                                 className={styles.cancelAdditionalOrderButton}
-                                onClick={() => handleCancelAdditionalOrder(paymentId)}
+                                onClick={() => handleCancelAdditionalOrderClick(paymentId)}
                                 disabled={isCancelingAdditional}
                                 type="button"
                               >
