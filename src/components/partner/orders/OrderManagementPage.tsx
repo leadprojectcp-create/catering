@@ -221,11 +221,16 @@ export default function OrderManagementPage() {
         } else {
           // 취소되지 않은 결제들을 모두 취소
           for (const paymentId of notCancelledPaymentIds) {
-            // 해당 paymentId의 금액 계산
+            // 전체 취소 시 배송비 포함 금액 계산
+            // 첫 번째 결제(최초 주문)에는 배송비 포함, 추가 주문에는 상품 금액만
             const itemsForPayment = order.items.filter(item => item.paymentId === paymentId)
-            const refundAmount = itemsForPayment.reduce((sum, item) => {
+            const productAmount = itemsForPayment.reduce((sum, item) => {
               return sum + (item.itemPrice || (item.price * item.quantity))
             }, 0)
+
+            // 첫 번째 결제인 경우 배송비 포함
+            const isFirstPayment = paymentId === notCancelledPaymentIds[0]
+            const refundAmount = isFirstPayment ? productAmount + (order.deliveryFee || 0) : productAmount
 
             // 포트원 결제 취소 API 호출 (100% 환불)
             const cancelResponse = await fetch('/api/payments/cancel', {
@@ -236,7 +241,7 @@ export default function OrderManagementPage() {
               body: JSON.stringify({
                 paymentId: paymentId,
                 reason: reason,
-                refundAmount: refundAmount, // 판매자 취소는 전액 환불
+                refundAmount: refundAmount, // 판매자 취소는 전액 환불 (배송비 포함)
                 isPartnerCancel: true, // 판매자 취소 플래그
               }),
             })
