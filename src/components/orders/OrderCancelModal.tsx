@@ -95,7 +95,10 @@ export default function OrderCancelModal({ orderId, deliveryDate, totalAmount, p
       return
     }
 
-    if (!paymentId) {
+    // 포인트 전용 결제는 paymentId가 없을 수 있음
+    const isPointOnlyPayment = !paymentId || (Array.isArray(paymentId) && paymentId.length === 0)
+
+    if (!isPointOnlyPayment && !paymentId) {
       alert('결제 정보를 찾을 수 없습니다.')
       return
     }
@@ -104,6 +107,40 @@ export default function OrderCancelModal({ orderId, deliveryDate, totalAmount, p
       setIsSubmitting(true)
 
       const finalReason = selectedReason === '기타' ? customReason : selectedReason
+
+      // 포인트 전용 결제는 paymentId가 없으므로 전체 취소로 처리
+      if (isPointOnlyPayment) {
+        console.log('[OrderCancelModal] 포인트 전용 결제 취소:', {
+          orderId: orderId,
+          isPointOnlyPayment: true
+        })
+
+        const cancelResponse = await fetch('/api/payments/cancel', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            orderId: orderId,
+            paymentId: null,
+            reason: finalReason,
+            refundAmount: undefined,
+            isPartnerCancel: false,
+            isPartialCancel: false,
+          }),
+        })
+
+        const cancelData = await cancelResponse.json()
+
+        if (!cancelData.success) {
+          throw new Error(cancelData.error || '결제 취소에 실패했습니다.')
+        }
+
+        alert(`주문이 취소되었습니다.\n환불 금액: ${refundAmount.toLocaleString()}원 (${Math.floor(refundRate * 100)}%)`)
+        onCancel()
+        onClose()
+        return
+      }
 
       // 부분 취소 여부 판단: paymentId가 단일 문자열이면 추가주문 취소 (부분 취소)
       const isPartialCancel = typeof paymentId === 'string' && !Array.isArray(paymentId)

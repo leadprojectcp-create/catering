@@ -51,6 +51,9 @@ service cloud.firestore {
       allow update: if isSignedIn() && isOwner(userId) &&
         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['point']);
 
+      // 시스템(API)에서 포인트 업데이트 가능 (주문 취소 시 포인트 환불 등)
+      allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['point']);
+
       // 관리자는 모든 필드 수정 가능
       allow update: if isAdmin();
 
