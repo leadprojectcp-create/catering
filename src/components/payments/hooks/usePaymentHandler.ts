@@ -271,7 +271,12 @@ export async function handlePaymentProcess(params: UsePaymentHandlerParams): Pro
       paymentStatus: 'paid',
       request: cartData.request,
       createdAt: cartData.createdAt instanceof Timestamp ? cartData.createdAt : serverTimestamp(),
-      updatedAt: serverTimestamp()
+      updatedAt: serverTimestamp(),
+      orderDates: [{
+        type: 'regular',
+        createdAt: serverTimestamp(),
+        paymentId: paymentResult.paymentId || ''
+      }]
     }
 
     // 택배 배송인 경우에만 parcelPaymentMethod 추가
@@ -388,6 +393,9 @@ export async function handlePaymentProcess(params: UsePaymentHandlerParams): Pro
         isAddItem: true
       }))
 
+      // 기존 orderDates 배열 가져오기
+      const existingOrderDates = existingOrderData?.orderDates || []
+
       // 실제 결제한 금액만 totalPrice에 추가
       const updateData: Record<string, unknown> = {
         paymentStatus: 'paid',
@@ -398,7 +406,15 @@ export async function handlePaymentProcess(params: UsePaymentHandlerParams): Pro
         verifiedAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
         addTotalProductPrice: deleteField(),
-        addTotalQuantity: deleteField()
+        addTotalQuantity: deleteField(),
+        orderDates: [
+          ...existingOrderDates,
+          {
+            type: 'additional',
+            createdAt: serverTimestamp(),
+            paymentId: currentPaymentId || ''
+          }
+        ]
       }
 
       // actualPaymentAmount가 0보다 클 때만 paymentInfo, paymentId 저장
