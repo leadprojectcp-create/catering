@@ -54,6 +54,11 @@ interface Order {
   paidAt?: Date
   hasReview?: boolean
   allowAdditionalOrder?: boolean
+  orderDates?: Array<{
+    type: 'regular' | 'additional'
+    createdAt: Date
+    paymentId?: string
+  }>
   deliveryInfo?: {
     addressName?: string
     deliveryDate?: string
