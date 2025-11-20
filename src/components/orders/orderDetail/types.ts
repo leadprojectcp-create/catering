@@ -82,6 +82,12 @@ export interface Order {
   orderNumber?: string
   createdAt: Date
   usedPoint?: number
+  // 주문 날짜 배열 (일반 주문 + 추가 주문)
+  orderDates?: Array<{
+    type: 'regular' | 'additional'
+    createdAt: Date
+    paymentId?: string
+  }>
   // 퀵 배송 관련 필드
   quickDeliveryOrderNo?: number
   quickDeliveryStatus?: string
