@@ -198,14 +198,19 @@ export default function OrderManagementPage() {
   }
 
   const handleCancelAdditionalOrderClick = (paymentId: string) => {
+    console.log('[OrderManagementPage] handleCancelAdditionalOrderClick 호출:', paymentId)
     // 추가주문 취소 - paymentId로 orderId 찾기
     const order = orders.find(o =>
       o.items.some(item => item.paymentId === paymentId)
     )
+    console.log('[OrderManagementPage] 찾은 주문:', order?.id)
     if (order && order.id) {
       setCancelOrderId(order.id)
       setCancelPaymentId(paymentId) // 부분 취소
       setShowCancelModal(true)
+      console.log('[OrderManagementPage] 취소 모달 열기')
+    } else {
+      console.error('[OrderManagementPage] 주문을 찾을 수 없습니다!')
     }
   }
 

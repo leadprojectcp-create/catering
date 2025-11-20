@@ -817,7 +817,9 @@ export default function OrdersPage() {
                   {(() => {
                     const date = order.createdAt instanceof Timestamp
                       ? order.createdAt.toDate()
-                      : new Date()
+                      : order.createdAt instanceof Date
+                      ? order.createdAt
+                      : new Date(order.createdAt)
                     const year = date.getFullYear()
                     const month = date.getMonth() + 1
                     const day = date.getDate()

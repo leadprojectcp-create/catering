@@ -5,10 +5,7 @@
       {
         "appID": "RR5CF93Z4U.com.leadproject.danmo",
         "paths": [
-          "/partner/*",
-          "/user/*",
-          "/chat/*",
-          "/order/*"
+          "*"
         ]
       }
     ]

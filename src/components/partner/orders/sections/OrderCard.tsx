@@ -76,8 +76,12 @@ export default function OrderCard({
 
   const handleCancelAdditionalOrderClick = (targetPaymentId: string) => {
     // 취소 모달을 통해 사유를 받도록 변경
+    console.log('[OrderCard] 추가주문 취소 버튼 클릭:', targetPaymentId)
+    console.log('[OrderCard] onCancelAdditionalOrder 존재:', !!onCancelAdditionalOrder)
     if (onCancelAdditionalOrder) {
       onCancelAdditionalOrder(targetPaymentId)
+    } else {
+      console.error('[OrderCard] onCancelAdditionalOrder 함수가 없습니다!')
     }
   }
 

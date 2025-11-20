@@ -75,11 +75,28 @@ export async function POST(request: NextRequest) {
         const orderRef = doc(db, 'orders', orderId)
 
         if (isPartialCancel) {
-          // 부분 취소 (추가주문 취소 등): orderStatus 변경 없이 paymentInfo만 업데이트
+          // 부분 취소 (추가주문 취소 등): orderStatus 변경 없이 paymentInfo, items, paymentId 업데이트
           console.log('[Cancel API] 부분 취소 - orderStatus 유지:', currentOrderStatus)
 
+          // items 배열에서 해당 paymentId를 가진 아이템 제거
+          const updatedItems = (orderData.items || []).filter((item: { paymentId: string }) => item.paymentId !== paymentId)
+          console.log('[Cancel API] items 배열 업데이트:', orderData.items?.length, '->', updatedItems.length)
+
+          // paymentInfo 배열에서 해당 paymentId를 가진 결제 정보 제거
+          const filteredPaymentInfo = updatedPaymentInfo.filter((info: { id: string }) => info.id !== paymentId)
+          console.log('[Cancel API] paymentInfo 배열 업데이트:', updatedPaymentInfo.length, '->', filteredPaymentInfo.length)
+
+          // paymentId 배열에서 해당 paymentId 제거
+          const existingPaymentIds = orderData.paymentId || []
+          const updatedPaymentIds = Array.isArray(existingPaymentIds)
+            ? existingPaymentIds.filter((id: string) => id !== paymentId)
+            : existingPaymentIds === paymentId ? [] : [existingPaymentIds]
+          console.log('[Cancel API] paymentId 배열 업데이트:', Array.isArray(existingPaymentIds) ? existingPaymentIds.length : 1, '->', updatedPaymentIds.length)
+
           await updateDoc(orderRef, {
-            paymentInfo: updatedPaymentInfo,
+            items: updatedItems,
+            paymentInfo: filteredPaymentInfo,
+            paymentId: updatedPaymentIds,
             updatedAt: new Date()
           })
 
