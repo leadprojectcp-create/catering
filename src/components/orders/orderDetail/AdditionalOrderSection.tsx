@@ -2,8 +2,7 @@
 
 import { useState } from 'react'
 import Image from 'next/image'
-import { doc, updateDoc, Timestamp } from 'firebase/firestore'
-import { db } from '@/lib/firebase'
+import { Timestamp } from 'firebase/firestore'
 import type { Order, OrderItem } from './types'
 import styles from '../OrderDetailPage.module.css'
 import OrderCancelModal from '../OrderCancelModal'
@@ -69,48 +68,9 @@ export default function AdditionalOrderSection({ order }: Props) {
   if (addItems.length === 0) return null
 
   const handleCancelSuccess = async () => {
-    if (!cancelModalData) return
-
-    try {
-      // Firestore에서 해당 paymentId의 상품만 제거
-      const orderRef = doc(db, 'orders', order.id)
-      const remainingItems = order.items.filter(item => item.paymentId !== cancelModalData.paymentId)
-
-      // paymentId 배열에서 해당 paymentId 제거
-      const currentPaymentIds = Array.isArray(order.paymentId) ? order.paymentId : [order.paymentId]
-      const remainingPaymentIds = currentPaymentIds.filter(id => id !== cancelModalData.paymentId)
-
-      // paymentInfo 배열에서 해당 paymentId 제거
-      const remainingPaymentInfo = order.paymentInfo?.filter(info => info.id !== cancelModalData.paymentId) || []
-
-      // totalProductPrice 재계산
-      const newTotalProductPrice = remainingItems.reduce((sum, item) => {
-        return sum + (item.itemPrice || (item.price * item.quantity))
-      }, 0)
-
-      // totalQuantity 재계산
-      const newTotalQuantity = remainingItems.reduce((sum, item) => {
-        return sum + item.quantity
-      }, 0)
-
-      // totalPrice 재계산 (totalProductPrice + deliveryFee)
-      const currentDeliveryFee = order.deliveryFee || 0
-      const newTotalPrice = newTotalProductPrice + currentDeliveryFee
-
-      await updateDoc(orderRef, {
-        items: remainingItems,
-        paymentId: remainingPaymentIds,
-        paymentInfo: remainingPaymentInfo,
-        totalProductPrice: newTotalProductPrice,
-        totalQuantity: newTotalQuantity,
-        totalPrice: newTotalPrice,
-        updatedAt: new Date()
-      })
-
-      window.location.reload()
-    } catch (error) {
-      console.error('주문 상태 업데이트 실패:', error)
-    }
+    // OrderCancelModal에서 취소 처리가 완료되면 호출됨
+    // API 호출은 OrderCancelModal 내부에서 처리됨
+    window.location.reload()
   }
 
   // paymentId별로 그룹화

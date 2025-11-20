@@ -93,10 +93,36 @@ export async function POST(request: NextRequest) {
             : existingPaymentIds === paymentId ? [] : [existingPaymentIds]
           console.log('[Cancel API] paymentId 배열 업데이트:', Array.isArray(existingPaymentIds) ? existingPaymentIds.length : 1, '->', updatedPaymentIds.length)
 
+          // totalProductPrice 재계산
+          const newTotalProductPrice = updatedItems.reduce((sum: number, item: { itemPrice?: number; price: number; quantity: number }) => {
+            return sum + (item.itemPrice || (item.price * item.quantity))
+          }, 0)
+
+          // totalQuantity 재계산
+          const newTotalQuantity = updatedItems.reduce((sum: number, item: { quantity: number }) => {
+            return sum + item.quantity
+          }, 0)
+
+          // totalPrice 재계산 (totalProductPrice + deliveryFee)
+          const currentDeliveryFee = orderData.deliveryFee || 0
+          const newTotalPrice = newTotalProductPrice + currentDeliveryFee
+
+          console.log('[Cancel API] 가격/수량 재계산:', {
+            이전TotalProductPrice: orderData.totalProductPrice,
+            새TotalProductPrice: newTotalProductPrice,
+            이전TotalQuantity: orderData.totalQuantity,
+            새TotalQuantity: newTotalQuantity,
+            배송비: currentDeliveryFee,
+            새TotalPrice: newTotalPrice
+          })
+
           await updateDoc(orderRef, {
             items: updatedItems,
             paymentInfo: filteredPaymentInfo,
             paymentId: updatedPaymentIds,
+            totalProductPrice: newTotalProductPrice,
+            totalQuantity: newTotalQuantity,
+            totalPrice: newTotalPrice,
             updatedAt: new Date()
           })
 

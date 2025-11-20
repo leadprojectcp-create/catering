@@ -205,20 +205,52 @@ export async function POST(request: NextRequest) {
 
         console.log('[Webhook V2] 업데이트된 paymentInfo:', JSON.stringify(updatedPaymentInfo, null, 2))
 
-        // paymentStatus를 'refunded'로 변경하고 paymentInfo 업데이트
-        await updateDoc(orderRef, {
-          paymentStatus: 'refunded',
-          orderStatus: 'cancelled',
-          paymentInfo: updatedPaymentInfo,
-          updatedAt: new Date()
+        // 부분 취소인지 확인: paymentId 배열에 다른 결제가 남아있는지 확인
+        const existingPaymentIds = orderData.paymentId || []
+        const remainingPaymentIds = Array.isArray(existingPaymentIds)
+          ? existingPaymentIds.filter((id: string) => id !== paymentId)
+          : []
+
+        const isPartialCancel = remainingPaymentIds.length > 0
+
+        console.log('[Webhook V2] 취소 유형 확인:', {
+          전체PaymentIds: existingPaymentIds,
+          취소된PaymentId: paymentId,
+          남은PaymentIds: remainingPaymentIds,
+          부분취소여부: isPartialCancel
         })
 
-        console.log('[Webhook V2] 주문 상태 업데이트 완료:', {
-          orderId,
-          paymentStatus: 'refunded',
-          orderStatus: 'cancelled',
-          cancelledAmount: cancelledAmount || '금액 정보 없음'
-        })
+        if (isPartialCancel) {
+          // 부분 취소: orderStatus와 paymentStatus 변경 없이 paymentInfo만 업데이트
+          console.log('[Webhook V2] 부분 취소 감지 - orderStatus/paymentStatus 유지')
+          await updateDoc(orderRef, {
+            paymentInfo: updatedPaymentInfo,
+            updatedAt: new Date()
+          })
+
+          console.log('[Webhook V2] 부분 취소 처리 완료:', {
+            orderId,
+            cancelledPaymentId: paymentId,
+            remainingPayments: remainingPaymentIds.length,
+            cancelledAmount: cancelledAmount || '금액 정보 없음'
+          })
+        } else {
+          // 전체 취소: orderStatus와 paymentStatus도 함께 업데이트
+          console.log('[Webhook V2] 전체 취소 감지 - orderStatus/paymentStatus 업데이트')
+          await updateDoc(orderRef, {
+            paymentStatus: 'refunded',
+            orderStatus: 'cancelled',
+            paymentInfo: updatedPaymentInfo,
+            updatedAt: new Date()
+          })
+
+          console.log('[Webhook V2] 전체 취소 처리 완료:', {
+            orderId,
+            paymentStatus: 'refunded',
+            orderStatus: 'cancelled',
+            cancelledAmount: cancelledAmount || '금액 정보 없음'
+          })
+        }
       } else {
         console.error('[Webhook V2] 주문 정보를 찾을 수 없음:', orderId)
       }

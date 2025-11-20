@@ -105,26 +105,70 @@ export default function OrderCancelModal({ orderId, deliveryDate, totalAmount, p
 
       const finalReason = selectedReason === '기타' ? customReason : selectedReason
 
-      // paymentId가 배열인 경우 마지막 결제 ID 사용
-      const targetPaymentId = Array.isArray(paymentId) ? paymentId[paymentId.length - 1] : paymentId
+      // 부분 취소 여부 판단: paymentId가 단일 문자열이면 추가주문 취소 (부분 취소)
+      const isPartialCancel = typeof paymentId === 'string' && !Array.isArray(paymentId)
 
-      // 포트원 결제 취소 API 호출
-      const cancelResponse = await fetch('/api/payments/cancel', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          paymentId: targetPaymentId,
-          reason: finalReason,
-          refundAmount: refundAmount,
-        }),
+      console.log('[OrderCancelModal] 취소 요청:', {
+        paymentId: paymentId,
+        isPartialCancel,
+        paymentIdType: typeof paymentId,
+        isArray: Array.isArray(paymentId)
       })
 
-      const cancelData = await cancelResponse.json()
+      if (isPartialCancel) {
+        // 부분 취소: 단일 paymentId만 취소
+        const cancelResponse = await fetch('/api/payments/cancel', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            orderId: orderId,
+            paymentId: paymentId,
+            reason: finalReason,
+            refundAmount: refundAmount,
+            isPartnerCancel: false,
+            isPartialCancel: true,
+          }),
+        })
 
-      if (!cancelData.success) {
-        throw new Error(cancelData.error || '결제 취소에 실패했습니다.')
+        const cancelData = await cancelResponse.json()
+
+        if (!cancelData.success) {
+          throw new Error(cancelData.error || '결제 취소에 실패했습니다.')
+        }
+      } else {
+        // 전체 취소: 모든 paymentId를 순회하며 취소
+        const paymentIds = Array.isArray(paymentId) ? paymentId : [paymentId]
+
+        console.log('[OrderCancelModal] 전체 취소 - 취소할 paymentId 목록:', paymentIds)
+
+        for (const pid of paymentIds) {
+          console.log('[OrderCancelModal] paymentId 취소 중:', pid)
+
+          const cancelResponse = await fetch('/api/payments/cancel', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              orderId: orderId,
+              paymentId: pid,
+              reason: finalReason,
+              refundAmount: undefined, // 전체 취소는 금액 지정 안 함
+              isPartnerCancel: false,
+              isPartialCancel: false,
+            }),
+          })
+
+          const cancelData = await cancelResponse.json()
+
+          if (!cancelData.success) {
+            throw new Error(cancelData.error || `결제 취소에 실패했습니다. (paymentId: ${pid})`)
+          }
+
+          console.log('[OrderCancelModal] paymentId 취소 완료:', pid)
+        }
       }
 
       // 웹훅이 paymentInfo와 orderStatus를 자동으로 업데이트합니다
