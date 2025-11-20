@@ -112,7 +112,12 @@ export async function POST(request: NextRequest) {
         paymentStatus: 'paid',
         request: cartData.request,
         createdAt: cartData.createdAt || new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
+        orderDates: [{
+          type: 'regular',
+          createdAt: serverTimestamp(),
+          paymentId: paymentId
+        }]
       }
 
       if (deliveryMethod === '택배 배송') {
@@ -190,6 +195,9 @@ export async function POST(request: NextRequest) {
         isAddItem: true
       }))
 
+      // 기존 orderDates 배열 가져오기
+      const existingOrderDates = existingOrderData?.orderDates || []
+
       await updateDoc(orderRef, {
         paymentStatus: 'paid',
         items: [...existingItems, ...itemsWithPaymentId],
@@ -198,6 +206,14 @@ export async function POST(request: NextRequest) {
         totalPrice: currentTotalPrice + totalPrice,
         paymentInfo: paymentInfoArray,
         paymentId: paymentIdArray,
+        orderDates: [
+          ...existingOrderDates,
+          {
+            type: 'additional',
+            createdAt: serverTimestamp(),
+            paymentId: paymentId
+          }
+        ],
         verifiedAt: new Date().toISOString(),
         updatedAt: new Date(),
         addTotalProductPrice: deleteField(),

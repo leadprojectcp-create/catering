@@ -93,6 +93,13 @@ export async function POST(request: NextRequest) {
             : existingPaymentIds === paymentId ? [] : [existingPaymentIds]
           console.log('[Cancel API] paymentId 배열 업데이트:', Array.isArray(existingPaymentIds) ? existingPaymentIds.length : 1, '->', updatedPaymentIds.length)
 
+          // orderDates 배열에서 해당 paymentId를 가진 항목 제거
+          const existingOrderDates = orderData.orderDates || []
+          const updatedOrderDates = Array.isArray(existingOrderDates)
+            ? existingOrderDates.filter((od: { paymentId?: string }) => od.paymentId !== paymentId)
+            : []
+          console.log('[Cancel API] orderDates 배열 업데이트:', Array.isArray(existingOrderDates) ? existingOrderDates.length : 0, '->', updatedOrderDates.length)
+
           // totalProductPrice 재계산
           const newTotalProductPrice = updatedItems.reduce((sum: number, item: { itemPrice?: number; price: number; quantity: number }) => {
             return sum + (item.itemPrice || (item.price * item.quantity))
@@ -120,6 +127,7 @@ export async function POST(request: NextRequest) {
             items: updatedItems,
             paymentInfo: filteredPaymentInfo,
             paymentId: updatedPaymentIds,
+            orderDates: updatedOrderDates,
             totalProductPrice: newTotalProductPrice,
             totalQuantity: newTotalQuantity,
             totalPrice: newTotalPrice,

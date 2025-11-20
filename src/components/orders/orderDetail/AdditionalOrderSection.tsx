@@ -48,7 +48,20 @@ const formatOrderDate = (date: Date | Timestamp) => {
 }
 
 const getPaymentDate = (order: Order, paymentId: string) => {
-  // paymentInfo 배열에서 imp_uid가 paymentId와 일치하는 항목의 paid_at 값을 반환
+  // 1순위: orderDates 배열에서 해당 paymentId의 날짜 찾기
+  if (order.orderDates && Array.isArray(order.orderDates)) {
+    const matchingOrderDate = order.orderDates.find((od: { paymentId?: string; createdAt: any }) => od.paymentId === paymentId)
+    if (matchingOrderDate?.createdAt) {
+      const timestamp = matchingOrderDate.createdAt instanceof Timestamp
+        ? matchingOrderDate.createdAt.toDate()
+        : matchingOrderDate.createdAt instanceof Date
+        ? matchingOrderDate.createdAt
+        : new Date(matchingOrderDate.createdAt)
+      return timestamp.getTime()
+    }
+  }
+
+  // 2순위: paymentInfo 배열에서 imp_uid가 paymentId와 일치하는 항목의 paid_at 값을 반환
   if (order.paymentInfo && Array.isArray(order.paymentInfo)) {
     const matchingPayment = order.paymentInfo.find((p: { imp_uid?: string; paid_at?: number }) => p.imp_uid === paymentId)
     if (matchingPayment?.paid_at) {

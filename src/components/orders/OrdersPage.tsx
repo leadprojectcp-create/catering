@@ -815,11 +815,22 @@ export default function OrdersPage() {
 
                 <div className={styles.orderDate}>
                   {(() => {
-                    const date = order.createdAt instanceof Timestamp
-                      ? order.createdAt.toDate()
-                      : order.createdAt instanceof Date
-                      ? order.createdAt
-                      : new Date(order.createdAt)
+                    // orderDates 배열이 있으면 첫 번째 주문 날짜 사용, 없으면 createdAt 사용
+                    let date: Date
+                    if (order.orderDates && Array.isArray(order.orderDates) && order.orderDates.length > 0) {
+                      const firstOrderDate = order.orderDates[0].createdAt
+                      date = firstOrderDate instanceof Timestamp
+                        ? firstOrderDate.toDate()
+                        : firstOrderDate instanceof Date
+                        ? firstOrderDate
+                        : new Date(firstOrderDate)
+                    } else {
+                      date = order.createdAt instanceof Timestamp
+                        ? order.createdAt.toDate()
+                        : order.createdAt instanceof Date
+                        ? order.createdAt
+                        : new Date(order.createdAt)
+                    }
                     const year = date.getFullYear()
                     const month = date.getMonth() + 1
                     const day = date.getDate()
