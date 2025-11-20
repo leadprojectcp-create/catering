@@ -10,7 +10,7 @@ import styles from './PointsPage.module.css'
 
 interface PointHistory {
   id: string
-  type: 'earned' | 'used' | 'expired'
+  type: 'earned' | 'used' | 'expired' | 'refund'
   amount: number
   reason: string
   createdAt: Timestamp
@@ -298,6 +298,8 @@ export default function PointsPage() {
                 iconSrc = '/icons/use.png'
               } else if (item.type === 'expired') {
                 iconSrc = '/icons/extinction.png'
+              } else if (item.type === 'refund') {
+                iconSrc = '/icons/earn.png' // 환불은 적립과 같은 아이콘 사용
               }
 
               return (
@@ -321,7 +323,7 @@ export default function PointsPage() {
                   <div className={styles.historyRight}>
                     <div
                       className={`${styles.historyAmount} ${
-                        item.type === 'earned'
+                        item.type === 'earned' || item.type === 'refund'
                           ? styles.earn
                           : item.type === 'expired'
                             ? styles.expired

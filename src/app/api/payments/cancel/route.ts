@@ -136,11 +136,32 @@ export async function POST(request: NextRequest) {
 
           // ordersCancel 컬렉션에 부분 취소 정보 저장
           const cancelledItems = orderData.items?.filter((item: { paymentId: string }) => item.paymentId === paymentId) || []
+
+          // 취소된 상품에 사용된 포인트 계산 (비례 배분)
+          const cancelledItemsTotal = cancelledItems.reduce((sum: number, item: { itemPrice?: number; price: number; quantity: number }) => {
+            return sum + (item.itemPrice || (item.price * item.quantity))
+          }, 0)
+          const totalUsedPoint = orderData.usedPoint || 0
+          const originalTotalProductPrice = orderData.totalProductPrice || 0
+
+          // 취소 상품 금액 비율로 포인트 환불 계산
+          let refundPoint = 0
+          if (totalUsedPoint > 0 && originalTotalProductPrice > 0) {
+            refundPoint = Math.floor((cancelledItemsTotal / originalTotalProductPrice) * totalUsedPoint)
+            console.log('[Cancel API] 부분 취소 포인트 환불 계산:', {
+              취소상품금액: cancelledItemsTotal,
+              전체상품금액: originalTotalProductPrice,
+              전체사용포인트: totalUsedPoint,
+              환불포인트: refundPoint
+            })
+          }
+
           await addDoc(collection(db, 'ordersCancel'), {
             orderId: orderId,
             paymentId: paymentId,
             cancelReason: reason || '판매자 요청 - 추가주문 취소',
             refundAmount: refundAmount,
+            refundPoint: refundPoint,
             isPartnerCancel: isPartnerCancel || false,
             isPartialCancel: true,
             orderStatus: currentOrderStatus,
@@ -154,6 +175,37 @@ export async function POST(request: NextRequest) {
           })
 
           console.log('[Cancel API] ordersCancel 컬렉션에 부분 취소 정보 저장 완료')
+
+          // 포인트 환불 처리 (부분 취소)
+          if (refundPoint > 0 && orderData.uid) {
+            console.log('[Cancel API] 부분 취소 포인트 환불:', refundPoint, 'P')
+
+            // 사용자 포인트 복구
+            const userRef = doc(db, 'users', orderData.uid)
+            await updateDoc(userRef, {
+              point: increment(refundPoint)
+            })
+
+            // 포인트 내역 추가
+            await addDoc(collection(db, 'points'), {
+              uid: orderData.uid,
+              amount: refundPoint,
+              type: 'refund',
+              reason: '추가주문 취소로 인한 포인트 환불',
+              orderId: orderId,
+              paymentId: paymentId,
+              productId: cancelledItems[0]?.productId || '',
+              productName: cancelledItems[0]?.productName || orderData.storeName || '',
+              createdAt: serverTimestamp()
+            })
+
+            // 주문 문서의 usedPoint 업데이트
+            await updateDoc(orderRef, {
+              usedPoint: totalUsedPoint - refundPoint
+            })
+
+            console.log('[Cancel API] 부분 취소 포인트 환불 완료:', refundPoint, 'P')
+          }
         } else {
           // 전체 주문 취소: orderStatus 변경
           let newOrderStatus: string
@@ -174,12 +226,16 @@ export async function POST(request: NextRequest) {
             updatedAt: new Date()
           })
 
+          // 포인트 환불 처리 (전체 취소)
+          const usedPoint = orderData.usedPoint || 0
+
           // ordersCancel 컬렉션에 취소 정보 저장
           await addDoc(collection(db, 'ordersCancel'), {
             orderId: orderId,
             paymentId: paymentId,
             cancelReason: reason || '고객 요청에 의한 취소',
             refundAmount: refundAmount,
+            refundPoint: usedPoint,
             isPartnerCancel: isPartnerCancel || false,
             isPartialCancel: false,
             orderStatus: currentOrderStatus,
@@ -197,21 +253,20 @@ export async function POST(request: NextRequest) {
 
           console.log('[Cancel API] ordersCancel 컬렉션에 취소 정보 저장 완료')
 
-          // 포인트 환불 처리 (전체 취소인 경우만)
-          const usePoint = orderData.usePoint || 0
-          if (usePoint > 0 && orderData.uid) {
-            console.log('[Cancel API] 포인트 환불:', usePoint, 'P')
+          // 포인트 환불 처리
+          if (usedPoint > 0 && orderData.uid) {
+            console.log('[Cancel API] 전체 취소 포인트 환불:', usedPoint, 'P')
 
             // 사용자 포인트 복구
             const userRef = doc(db, 'users', orderData.uid)
             await updateDoc(userRef, {
-              point: increment(usePoint)
+              point: increment(usedPoint)
             })
 
             // 포인트 내역 추가
             await addDoc(collection(db, 'points'), {
               uid: orderData.uid,
-              amount: usePoint,
+              amount: usedPoint,
               type: 'refund',
               reason: '주문 취소로 인한 포인트 환불',
               orderId: orderId,
@@ -220,7 +275,7 @@ export async function POST(request: NextRequest) {
               createdAt: serverTimestamp()
             })
 
-            console.log('[Cancel API] 포인트 환불 완료:', usePoint, 'P')
+            console.log('[Cancel API] 전체 취소 포인트 환불 완료:', usedPoint, 'P')
           }
         }
 
