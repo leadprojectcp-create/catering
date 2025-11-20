@@ -203,7 +203,7 @@ export interface OrderAlimtalkParams {
 export async function sendOrderAlimtalk(params: OrderAlimtalkParams): Promise<void> {
   const { partnerPhone, customerPhone, isAdditionalOrder, ...variables } = params
 
-  const partnerTemplateCode = isAdditionalOrder ? 'UD_3133' : 'UD_0958'
+  const partnerTemplateCode = isAdditionalOrder ? 'UD_6630' : 'UD_6629'
   const customerTemplateCode = isAdditionalOrder ? 'UD_3467' : 'UD_3466'
 
   const variablesStr = {
