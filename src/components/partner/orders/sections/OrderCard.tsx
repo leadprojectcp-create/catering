@@ -502,7 +502,11 @@ export default function OrderCard({
               </div>
               <div className={styles.detailRow}>
                 <span className={styles.detailLabel}>주문일시</span>
-                <span className={styles.detailValue}>{formatDate(order.createdAt)}</span>
+                <span className={styles.detailValue}>{formatDate(
+                  order.orderDates && Array.isArray(order.orderDates) && order.orderDates.length > 0
+                    ? (order.orderDates.find(od => od.type === 'regular')?.createdAt || order.createdAt)
+                    : order.createdAt
+                )}</span>
               </div>
               <div className={styles.detailRow}>
                 <span className={styles.detailLabel}>주문번호</span>

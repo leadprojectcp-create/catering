@@ -115,6 +115,11 @@ export interface Order {
     storeFee: number
     feeType: string
   }
+  orderDates?: Array<{
+    type: 'regular' | 'additional'
+    createdAt: Date | Timestamp
+    paymentId?: string
+  }>
   createdAt?: Date | Timestamp | FieldValue
   updatedAt?: Date | Timestamp | FieldValue
 }

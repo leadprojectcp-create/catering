@@ -274,7 +274,7 @@ export async function handlePaymentProcess(params: UsePaymentHandlerParams): Pro
       updatedAt: serverTimestamp(),
       orderDates: [{
         type: 'regular',
-        createdAt: serverTimestamp(),
+        createdAt: new Date(),
         paymentId: paymentResult.paymentId || ''
       }]
     }
@@ -411,7 +411,7 @@ export async function handlePaymentProcess(params: UsePaymentHandlerParams): Pro
           ...existingOrderDates,
           {
             type: 'additional',
-            createdAt: serverTimestamp(),
+            createdAt: new Date(),
             paymentId: currentPaymentId || ''
           }
         ]

@@ -66,6 +66,17 @@ export default function RegularOrderSection({ order }: Props) {
   const mainPaymentInfo = order.paymentInfo && order.paymentInfo.length > 0 ? order.paymentInfo[0] : null
   const mainPaymentStatus = mainPaymentInfo?.status || order.paymentStatus
 
+  // 주문 날짜 가져오기: orderDates 배열의 첫 번째 (regular) 주문 날짜 사용
+  const getOrderDate = () => {
+    if (order.orderDates && Array.isArray(order.orderDates) && order.orderDates.length > 0) {
+      const regularOrderDate = order.orderDates.find(od => od.type === 'regular')
+      if (regularOrderDate?.createdAt) {
+        return regularOrderDate.createdAt
+      }
+    }
+    return order.createdAt
+  }
+
   return (
     <>
       {Object.entries(groupedItems).map(([productName, items], groupIndex) => {
@@ -88,7 +99,7 @@ export default function RegularOrderSection({ order }: Props) {
             <div className={styles.orderInfoGroup}>
               <h3 className={styles.orderTypeTitle}>주문상품</h3>
               <div className={styles.orderDateText}>
-                {formatOrderDate(order.createdAt)}
+                {formatOrderDate(getOrderDate())}
               </div>
               <div className={styles.paymentStatusText}>
                 {paymentStatusText} {(order.totalPrice || 0).toLocaleString()}원
