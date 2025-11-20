@@ -19,7 +19,7 @@ export default function PartnerOrderHistoryPage() {
       setIsRedirecting(true)
 
       // 앱 스킴으로 리다이렉트 시도
-      const appScheme = 'danmo://danchemoim.com/partner/order/history'
+      const appScheme = 'danmo://partner/order/history'
       window.location.href = appScheme
 
       // 2초 후 앱이 열리지 않았다면 웹 페이지 표시
