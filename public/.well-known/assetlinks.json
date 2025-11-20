@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.leadproject.danmo",
+      "sha256_cert_fingerprints": [
+        "EA:D7:28:3E:CF:A2:33:70:FA:E7:21:6F:6C:65:B4:AB:14:E8:3D:C2:40:CB:70:88:1A:96:B1:20:41:A5:16:75"
+      ]
+    }
+  }
+]
