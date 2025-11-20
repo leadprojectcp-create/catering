@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { doc, getDoc, updateDoc, addDoc, collection, increment, serverTimestamp, deleteDoc, deleteField } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
-import { sendOrderAlimtalk } from '@/lib/services/smsService'
+import { sendOrderNotification } from '@/lib/services/smsService'
 
 interface OrderItem {
   quantity: number
@@ -279,9 +279,11 @@ export async function POST(request: NextRequest) {
         additionalProductPrice = additionalItems.reduce((sum: number, item) => sum + (item.itemPrice || 0), 0)
       }
 
-      await sendOrderAlimtalk({
+      await sendOrderNotification({
         partnerPhone: partnerPhone,
         customerPhone: orderInfo.phone,
+        partnerId: partnerId,
+        customerId: finalOrderData?.uid as string | undefined,
         isAdditionalOrder,
         storeName: storeName || '',
         orderNumber,
@@ -291,7 +293,7 @@ export async function POST(request: NextRequest) {
         additionalProductPrice,
       })
     } catch (error) {
-      console.error('알림톡 발송 실패:', error)
+      console.error('주문 알림 발송 실패:', error)
     }
 
     return NextResponse.json({

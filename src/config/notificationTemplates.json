@@ -1,0 +1,36 @@
+{
+  "order": {
+    "partner": {
+      "new": {
+        "sms": "[단모] 신규주문이 들어왔습니다.\n\n가게명: {{storeName}}\n주문번호: {{orderNumber}}\n총 수량: {{totalQuantity}}개\n상품금액: {{totalProductPrice}}원\n\n주문을 확인하려면 아래 주소를 클릭해주세요.\nhttps://danchemoim.com/partner/order/history/",
+        "push": {
+          "title": "💼 신규주문 접수",
+          "body": "[{{storeName}}] 신규주문 {{totalQuantity}}개 ({{totalProductPrice}}원)"
+        }
+      },
+      "additional": {
+        "sms": "[단모] 추가주문이 들어왔습니다.\n\n가게명: {{storeName}}\n주문번호: {{orderNumber}}\n추가 수량: {{additionalQuantity}}개\n추가 금액: {{additionalProductPrice}}원\n총 수량: {{totalQuantity}}개\n총 금액: {{totalProductPrice}}원\n\n주문을 확인하려면 아래 주소를 클릭해주세요.\nhttps://danchemoim.com/partner/order/history/",
+        "push": {
+          "title": "💼 추가주문 접수",
+          "body": "[{{storeName}}] 추가주문 {{additionalQuantity}}개 ({{additionalProductPrice}}원)"
+        }
+      }
+    },
+    "customer": {
+      "new": {
+        "sms": "[단모] 주문이 접수되었습니다.\n\n가게명: {{storeName}}\n주문번호: {{orderNumber}}\n총 수량: {{totalQuantity}}개\n상품금액: {{totalProductPrice}}원\n\n주문 내역 확인\nhttps://danchemoim.com/orders/",
+        "push": {
+          "title": "✅ 주문 접수 완료",
+          "body": "[{{storeName}}] 주문이 접수되었습니다. ({{totalProductPrice}}원)"
+        }
+      },
+      "additional": {
+        "sms": "[단모] 추가주문이 접수되었습니다.\n\n가게명: {{storeName}}\n주문번호: {{orderNumber}}\n추가 수량: {{additionalQuantity}}개\n추가 금액: {{additionalProductPrice}}원\n총 수량: {{totalQuantity}}개\n총 금액: {{totalProductPrice}}원\n\n주문 내역 확인\nhttps://danchemoim.com/orders/",
+        "push": {
+          "title": "✅ 추가주문 접수 완료",
+          "body": "[{{storeName}}] 추가주문이 접수되었습니다. ({{additionalProductPrice}}원)"
+        }
+      }
+    }
+  }
+}

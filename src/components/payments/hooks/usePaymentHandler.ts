@@ -1,7 +1,7 @@
 import { doc, getDoc, updateDoc, addDoc, collection, increment, serverTimestamp, deleteDoc, deleteField, Timestamp } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { requestPayment } from '@/lib/services/paymentService'
-import { sendOrderAlimtalk } from '@/lib/services/smsService'
+import { sendOrderNotification } from '@/lib/services/smsService'
 import { OrderData, OrderInfo, OrderItem, DeliveryAddress } from '../types'
 import { User } from 'firebase/auth'
 import { DeliveryFeeBreakdown } from '../utils/calculateDeliveryFeeBreakdown'
@@ -537,9 +537,11 @@ export async function handlePaymentProcess(params: UsePaymentHandlerParams): Pro
       additionalProductPrice = additionalItems.reduce((sum: number, item: OrderItem) => sum + (item.itemPrice || 0), 0)
     }
 
-    await sendOrderAlimtalk({
+    await sendOrderNotification({
       partnerPhone: storeData?.phone,
       customerPhone: orderInfo.phone,
+      partnerId: storeData?.partnerId,
+      customerId: user?.uid,
       isAdditionalOrder,
       storeName: orderData.storeName || '',
       orderNumber,
@@ -549,7 +551,7 @@ export async function handlePaymentProcess(params: UsePaymentHandlerParams): Pro
       additionalProductPrice,
     })
   } catch (alimtalkError) {
-    console.error('알림톡 발송 실패:', alimtalkError)
+    console.error('주문 알림 발송 실패:', alimtalkError)
   }
 
   // PC 결제 완료 후 localStorage도 정리

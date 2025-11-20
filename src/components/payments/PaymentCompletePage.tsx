@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { doc, getDoc, updateDoc, addDoc, collection, increment, serverTimestamp, deleteDoc, deleteField, Timestamp } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
-import { sendOrderAlimtalk } from '@/lib/services/smsService'
+import { sendOrderNotification } from '@/lib/services/smsService'
 import Loading from '@/components/Loading'
 
 interface OrderItem {
@@ -283,9 +283,11 @@ export default function PaymentCompletePage() {
             additionalProductPrice = additionalItems.reduce((sum: number, item) => sum + (item.itemPrice || 0), 0)
           }
 
-          await sendOrderAlimtalk({
+          await sendOrderNotification({
             partnerPhone: partnerPhone,
             customerPhone: orderInfo.phone,
+            partnerId: partnerId,
+            customerId: user?.uid,
             isAdditionalOrder,
             storeName: storeName || '',
             orderNumber,
@@ -295,7 +297,7 @@ export default function PaymentCompletePage() {
             additionalProductPrice,
           })
         } catch (alimtalkError) {
-          console.error('알림톡 발송 실패:', alimtalkError)
+          console.error('주문 알림 발송 실패:', alimtalkError)
         }
 
         // 스토리지 정리

@@ -187,10 +187,12 @@ export async function sendKakaoAlimtalk(
   }
 }
 
-// 주문 알림톡 발송 (파트너 + 고객)
-export interface OrderAlimtalkParams {
+// 주문 알림 발송 (파트너 + 고객) - SMS + 푸시알림
+export interface OrderNotificationParams {
   partnerPhone?: string
   customerPhone?: string
+  partnerId?: string
+  customerId?: string
   isAdditionalOrder: boolean
   storeName: string
   orderNumber: string
@@ -200,11 +202,20 @@ export interface OrderAlimtalkParams {
   additionalProductPrice: number
 }
 
-export async function sendOrderAlimtalk(params: OrderAlimtalkParams): Promise<void> {
-  const { partnerPhone, customerPhone, isAdditionalOrder, ...variables } = params
+// 템플릿 변수 치환 함수
+function replaceTemplateVariables(template: string, variables: Record<string, string>): string {
+  let result = template
+  Object.entries(variables).forEach(([key, value]) => {
+    result = result.replaceAll(`{{${key}}}`, value)
+  })
+  return result
+}
 
-  const partnerTemplateCode = isAdditionalOrder ? 'UD_6630' : 'UD_6629'
-  const customerTemplateCode = isAdditionalOrder ? 'UD_3467' : 'UD_3466'
+export async function sendOrderNotification(params: OrderNotificationParams): Promise<void> {
+  const { partnerPhone, customerPhone, partnerId, customerId, isAdditionalOrder, ...variables } = params
+
+  // 템플릿 불러오기
+  const templates = require('@/config/notificationTemplates.json')
 
   const variablesStr = {
     storeName: variables.storeName,
@@ -215,43 +226,111 @@ export async function sendOrderAlimtalk(params: OrderAlimtalkParams): Promise<vo
     additionalProductPrice: variables.additionalProductPrice.toLocaleString(),
   }
 
-  console.log('[주문 알림톡] 발송 시작', { isAdditionalOrder, partnerTemplateCode, customerTemplateCode })
+  console.log('[주문 알림] 발송 시작', { isAdditionalOrder })
 
-  // 파트너 알림톡
-  if (partnerPhone) {
-    try {
-      const response = await fetch('/api/alimtalk/send', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          phone: partnerPhone.replace(/-/g, ''),
-          templateCode: partnerTemplateCode,
-          variables: variablesStr
+  // 파트너 알림 (SMS + 푸시)
+  if (partnerPhone || partnerId) {
+    const templateType = isAdditionalOrder ? 'additional' : 'new'
+    const template = templates.order.partner[templateType]
+
+    // SMS 발송
+    if (partnerPhone) {
+      try {
+        const smsMessage = replaceTemplateVariables(template.sms, variablesStr)
+
+        const response = await fetch('/api/sms/send-notification', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            phone: partnerPhone,
+            message: smsMessage
+          })
         })
-      })
-      const result = await response.json()
-      console.log('[주문 알림톡] 파트너 발송 결과:', result.success)
-    } catch (error) {
-      console.error('[주문 알림톡] 파트너 발송 실패:', error)
+        const result = await response.json()
+        console.log('[주문 알림] 파트너 SMS 발송 결과:', result.success)
+      } catch (error) {
+        console.error('[주문 알림] 파트너 SMS 발송 실패:', error)
+      }
+    }
+
+    // 푸시 알림 발송
+    if (partnerId) {
+      try {
+        const pushTitle = replaceTemplateVariables(template.push.title, variablesStr)
+        const pushBody = replaceTemplateVariables(template.push.body, variablesStr)
+
+        const response = await fetch('/api/send-order-fcm', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: partnerId,
+            title: pushTitle,
+            body: pushBody,
+            data: {
+              type: 'order',
+              orderNumber: variables.orderNumber,
+              isAdditionalOrder: String(isAdditionalOrder)
+            }
+          })
+        })
+        const result = await response.json()
+        console.log('[주문 알림] 파트너 푸시 발송 결과:', result.success)
+      } catch (error) {
+        console.error('[주문 알림] 파트너 푸시 발송 실패:', error)
+      }
     }
   }
 
-  // 고객 알림톡
-  if (customerPhone) {
-    try {
-      const response = await fetch('/api/alimtalk/send', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          phone: customerPhone.replace(/-/g, ''),
-          templateCode: customerTemplateCode,
-          variables: variablesStr
+  // 고객 알림 (SMS + 푸시)
+  if (customerPhone || customerId) {
+    const templateType = isAdditionalOrder ? 'additional' : 'new'
+    const template = templates.order.customer[templateType]
+
+    // SMS 발송
+    if (customerPhone) {
+      try {
+        const smsMessage = replaceTemplateVariables(template.sms, variablesStr)
+
+        const response = await fetch('/api/sms/send-notification', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            phone: customerPhone,
+            message: smsMessage
+          })
         })
-      })
-      const result = await response.json()
-      console.log('[주문 알림톡] 고객 발송 결과:', result.success)
-    } catch (error) {
-      console.error('[주문 알림톡] 고객 발송 실패:', error)
+        const result = await response.json()
+        console.log('[주문 알림] 고객 SMS 발송 결과:', result.success)
+      } catch (error) {
+        console.error('[주문 알림] 고객 SMS 발송 실패:', error)
+      }
+    }
+
+    // 푸시 알림 발송
+    if (customerId) {
+      try {
+        const pushTitle = replaceTemplateVariables(template.push.title, variablesStr)
+        const pushBody = replaceTemplateVariables(template.push.body, variablesStr)
+
+        const response = await fetch('/api/send-order-fcm', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: customerId,
+            title: pushTitle,
+            body: pushBody,
+            data: {
+              type: 'order',
+              orderNumber: variables.orderNumber,
+              isAdditionalOrder: String(isAdditionalOrder)
+            }
+          })
+        })
+        const result = await response.json()
+        console.log('[주문 알림] 고객 푸시 발송 결과:', result.success)
+      } catch (error) {
+        console.error('[주문 알림] 고객 푸시 발송 실패:', error)
+      }
     }
   }
 }
