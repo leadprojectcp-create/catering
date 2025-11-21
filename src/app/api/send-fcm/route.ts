@@ -207,20 +207,27 @@ export async function POST(request: NextRequest) {
 
       if (userChatsSnapshot.exists()) {
         const userChats = userChatsSnapshot.val()
+        console.log('[FCM API] userChats 데이터:', JSON.stringify(userChats, null, 2))
         unreadCount = 0
 
         // 모든 채팅방의 읽지 않은 메시지 수 합산
         for (const chatRoomId in userChats) {
           const chatData = userChats[chatRoomId]
+          console.log(`[FCM API] 채팅방 ${chatRoomId}:`, chatData)
           if (chatData.unreadCount && typeof chatData.unreadCount === 'number') {
+            console.log(`[FCM API] unreadCount 추가: ${chatData.unreadCount}`)
             unreadCount += chatData.unreadCount
+          } else {
+            console.log(`[FCM API] unreadCount 없음 또는 타입 오류:`, typeof chatData.unreadCount, chatData.unreadCount)
           }
         }
 
         // 현재 메시지도 포함 (아직 DB에 반영되지 않았으므로)
         unreadCount += 1
 
-        console.log('[FCM API] 계산된 읽지 않은 메시지 수:', unreadCount)
+        console.log('[FCM API] 최종 계산된 읽지 않은 메시지 수:', unreadCount)
+      } else {
+        console.log('[FCM API] userChats 데이터가 존재하지 않음')
       }
     } catch (unreadError) {
       console.log('[FCM API] 읽지 않은 메시지 수 계산 실패 (기본값 1 사용):', unreadError)
@@ -256,7 +263,8 @@ export async function POST(request: NextRequest) {
               body: notificationBody
             },
             sound: 'default',
-            badge: unreadCount
+            badge: unreadCount,
+            'content-available': 1  // data 필드도 앱에 전달
           }
         },
         headers: {
