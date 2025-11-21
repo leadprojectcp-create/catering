@@ -190,7 +190,7 @@ service cloud.firestore {
         .hasOnly(['paymentStatus', 'orderStatus', 'paymentId', 'transactionId', 'paidAt', 'paymentInfo', 'items', 'verifiedAt',
                   'quickDeliveryOrderNo', 'quickDeliveryStatus', 'quickDeliveryError', 'quickDeliveryInfo',
                   'partnerNotified', 'partnerNotifiedAt', 'totalPrice', 'totalProductPrice', 'totalQuantity',
-                  'updatedAt', 'addTotalProductPrice', 'addTotalQuantity']);
+                  'updatedAt', 'addTotalProductPrice', 'addTotalQuantity', 'orderDates', 'usedPoint']);
 
       // 웹훅이 주문 정보를 읽을 수 있도록 허용
       allow read: if true;

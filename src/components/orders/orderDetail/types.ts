@@ -48,6 +48,7 @@ export interface PaymentInfo {
   status?: string
   cancelledAt?: Date
   cancelled_at?: number
+  usedPoint?: number // 해당 결제에서 사용한 포인트
 }
 
 export interface Order {

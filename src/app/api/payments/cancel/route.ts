@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 포인트 전용 결제인지 확인 (paymentId가 없는 경우)
-    const isPointOnlyPayment = !paymentId
+    const isPointOnlyPayment = !paymentId || paymentId === '' || paymentId === 'point-only'
 
     let cancelResponse = null
 
@@ -112,7 +112,37 @@ export async function POST(request: NextRequest) {
           console.log('[Cancel API] 부분 취소 - orderStatus 유지:', currentOrderStatus)
 
           // items 배열에서 해당 paymentId를 가진 아이템 제거
-          const updatedItems = (orderData.items || []).filter((item: { paymentId: string }) => item.paymentId !== paymentId)
+          const existingItems = orderData.items || []
+          console.log('[Cancel API] items 필터링 전:', {
+            paymentId: paymentId,
+            isPointOnlyPayment: isPointOnlyPayment,
+            totalItems: existingItems.length,
+            itemsWithPaymentId: existingItems.map((item: any) => ({
+              productName: item.productName,
+              paymentId: item.paymentId,
+              isAddItem: item.isAddItem
+            }))
+          })
+
+          let updatedItems
+          if (paymentId && paymentId !== '' && paymentId !== 'point-only') {
+            // paymentId가 있으면 일치하는 항목 제거
+            updatedItems = existingItems.filter((item: { paymentId?: string }) => item.paymentId !== paymentId)
+          } else {
+            // paymentId가 없으면 (포인트 전용) 추가주문 중 빈 paymentId를 가진 것들 찾아서 제거
+            const additionalItemsWithEmptyPayment = existingItems.filter((it: any) =>
+              it.isAddItem && (!it.paymentId || it.paymentId === '' || it.paymentId === 'point-only')
+            )
+            console.log('[Cancel API] 삭제할 추가주문 아이템:', additionalItemsWithEmptyPayment.length, '개')
+
+            // 첫 번째로 발견된 빈 paymentId 추가주문 아이템들 제거
+            if (additionalItemsWithEmptyPayment.length > 0) {
+              updatedItems = existingItems.filter((item: any) => !additionalItemsWithEmptyPayment.includes(item))
+            } else {
+              updatedItems = existingItems
+            }
+          }
+
           console.log('[Cancel API] items 배열 업데이트:', orderData.items?.length, '->', updatedItems.length)
 
           // paymentInfo 배열에서 해당 paymentId를 가진 결제 정보 제거
@@ -128,9 +158,25 @@ export async function POST(request: NextRequest) {
 
           // orderDates 배열에서 해당 paymentId를 가진 항목 제거
           const existingOrderDates = orderData.orderDates || []
-          const updatedOrderDates = Array.isArray(existingOrderDates)
-            ? existingOrderDates.filter((od: { paymentId?: string }) => od.paymentId !== paymentId)
-            : []
+          let updatedOrderDates
+
+          if (paymentId && paymentId !== '' && paymentId !== 'point-only') {
+            // paymentId가 있으면 일치하는 항목 제거
+            updatedOrderDates = existingOrderDates.filter((od: { paymentId?: string }) => od.paymentId !== paymentId)
+          } else {
+            // paymentId가 없거나 'point-only'면 추가주문 중 빈 paymentId를 가진 첫 번째 항목 제거
+            const additionalWithEmptyPayment = existingOrderDates.filter((item: any) =>
+              item.type === 'additional' && (!item.paymentId || item.paymentId === '' || item.paymentId === 'point-only')
+            )
+            console.log('[Cancel API] 삭제할 추가주문 orderDates:', additionalWithEmptyPayment.length, '개')
+
+            if (additionalWithEmptyPayment.length > 0) {
+              updatedOrderDates = existingOrderDates.filter((item: any) => !additionalWithEmptyPayment.includes(item))
+            } else {
+              updatedOrderDates = existingOrderDates
+            }
+          }
+
           console.log('[Cancel API] orderDates 배열 업데이트:', Array.isArray(existingOrderDates) ? existingOrderDates.length : 0, '->', updatedOrderDates.length)
 
           // totalProductPrice 재계산
@@ -170,23 +216,37 @@ export async function POST(request: NextRequest) {
           // ordersCancel 컬렉션에 부분 취소 정보 저장
           const cancelledItems = orderData.items?.filter((item: { paymentId: string }) => item.paymentId === paymentId) || []
 
-          // 취소된 상품에 사용된 포인트 계산 (비례 배분)
-          const cancelledItemsTotal = cancelledItems.reduce((sum: number, item: { itemPrice?: number; price: number; quantity: number }) => {
-            return sum + (item.itemPrice || (item.price * item.quantity))
-          }, 0)
-          const totalUsedPoint = orderData.usedPoint || 0
-          const originalTotalProductPrice = orderData.totalProductPrice || 0
+          // 취소된 상품에 사용된 포인트 계산
+          // paymentInfo에서 해당 paymentId의 usedPoint를 직접 가져옴
+          const cancelledPaymentInfo = existingPaymentInfo.find((info: { id?: string; paymentId?: string; usedPoint?: number }) =>
+            (paymentId && (info.id === paymentId || info.paymentId === paymentId)) ||
+            (!paymentId || paymentId === '' || paymentId === 'point-only')
+          )
 
-          // 취소 상품 금액 비율로 포인트 환불 계산
           let refundPoint = 0
-          if (totalUsedPoint > 0 && originalTotalProductPrice > 0) {
-            refundPoint = Math.floor((cancelledItemsTotal / originalTotalProductPrice) * totalUsedPoint)
-            console.log('[Cancel API] 부분 취소 포인트 환불 계산:', {
-              취소상품금액: cancelledItemsTotal,
-              전체상품금액: originalTotalProductPrice,
-              전체사용포인트: totalUsedPoint,
+          if (cancelledPaymentInfo?.usedPoint) {
+            refundPoint = cancelledPaymentInfo.usedPoint
+            console.log('[Cancel API] 추가 주문 취소 - paymentInfo에서 직접 환불 포인트 가져옴:', {
+              paymentId: paymentId,
               환불포인트: refundPoint
             })
+          } else {
+            // paymentInfo에 usedPoint가 없으면 구버전 로직 사용 (비례 배분)
+            const cancelledItemsTotal = cancelledItems.reduce((sum: number, item: { itemPrice?: number; price: number; quantity: number }) => {
+              return sum + (item.itemPrice || (item.price * item.quantity))
+            }, 0)
+            const totalUsedPoint = orderData.usedPoint || 0
+            const originalTotalProductPrice = orderData.totalProductPrice || 0
+
+            if (totalUsedPoint > 0 && originalTotalProductPrice > 0) {
+              refundPoint = Math.floor((cancelledItemsTotal / originalTotalProductPrice) * totalUsedPoint)
+              console.log('[Cancel API] 부분 취소 포인트 환불 계산 (구버전 비례배분):', {
+                취소상품금액: cancelledItemsTotal,
+                전체상품금액: originalTotalProductPrice,
+                전체사용포인트: totalUsedPoint,
+                환불포인트: refundPoint
+              })
+            }
           }
 
           await addDoc(collection(db, 'ordersCancel'), {
@@ -233,8 +293,15 @@ export async function POST(request: NextRequest) {
             })
 
             // 주문 문서의 usedPoint 업데이트
+            const currentUsedPoint = orderData.usedPoint || 0
             await updateDoc(orderRef, {
-              usedPoint: totalUsedPoint - refundPoint
+              usedPoint: currentUsedPoint - refundPoint
+            })
+
+            console.log('[Cancel API] 주문 문서 usedPoint 업데이트:', {
+              이전: currentUsedPoint,
+              환불: refundPoint,
+              새값: currentUsedPoint - refundPoint
             })
 
             console.log('[Cancel API] 부분 취소 포인트 환불 완료:', refundPoint, 'P')

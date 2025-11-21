@@ -161,10 +161,27 @@ export async function POST(request: NextRequest) {
       const payment = verifyData.payment as { status?: string; [key: string]: unknown }
       const normalizedPayment = {
         ...payment,
-        status: payment.status?.toLowerCase()
+        status: payment.status?.toLowerCase(),
+        usedPoint: usePoint || 0  // 포인트 사용 금액 추가
       }
       paymentInfoArray.push(normalizedPayment)
       paymentIdArray.push(paymentId)
+    } else if (usePoint > 0 && (!paymentId || paymentId === '' || paymentId === 'point-only')) {
+      // 포인트 전용 결제인 경우
+      console.log('[Process Order API] 포인트 전용 결제 - paymentInfo 추가:', {
+        paymentId: paymentId || 'point-only',
+        usedPoint: usePoint,
+        amount: 0
+      })
+      paymentInfoArray.push({
+        id: paymentId || 'point-only',
+        paymentId: paymentId || 'point-only',
+        status: 'paid',
+        usedPoint: usePoint,
+        amount: 0, // 포트원 결제 금액은 0원
+        paid_at: Math.floor(Date.now() / 1000)
+      })
+      paymentIdArray.push(paymentId || 'point-only')
     }
 
     // 주문 업데이트
@@ -188,6 +205,13 @@ export async function POST(request: NextRequest) {
       const currentTotalProductPrice = existingOrderData?.totalProductPrice || 0
       const currentTotalQuantity = existingOrderData?.totalQuantity || 0
       const currentTotalPrice = existingOrderData?.totalPrice || 0
+      const currentUsedPoint = existingOrderData?.usedPoint || 0
+
+      console.log('[Process Order API] 추가 주문 - usedPoint 업데이트:', {
+        currentUsedPoint,
+        usePoint,
+        newUsedPoint: currentUsedPoint + (usePoint || 0)
+      })
 
       const itemsWithPaymentId = newItems.map((item) => ({
         ...item,
@@ -204,6 +228,7 @@ export async function POST(request: NextRequest) {
         totalProductPrice: currentTotalProductPrice + (totalProductPrice || 0),
         totalQuantity: currentTotalQuantity + (newItems.reduce((sum: number, item) => sum + item.quantity, 0)),
         totalPrice: currentTotalPrice + totalPrice,
+        usedPoint: currentUsedPoint + (usePoint || 0),
         paymentInfo: paymentInfoArray,
         paymentId: paymentIdArray,
         orderDates: [

@@ -382,6 +382,7 @@ export async function handlePaymentProcess(params: UsePaymentHandlerParams): Pro
       const currentTotalProductPrice = existingOrderData?.totalProductPrice || 0
       const currentTotalQuantity = existingOrderData?.totalQuantity || 0
       const currentTotalPrice = existingOrderData?.totalPrice || 0
+      const currentUsedPoint = existingOrderData?.usedPoint || 0
       const currentPaymentId = paymentIdArray.length > 0 ? paymentIdArray[paymentIdArray.length - 1] : undefined
 
       // 추가 주문 후 총 상품 금액
@@ -403,6 +404,7 @@ export async function handlePaymentProcess(params: UsePaymentHandlerParams): Pro
         totalProductPrice: newTotalProductPrice,
         totalQuantity: currentTotalQuantity + (additionalData.totalQuantity || 0),
         totalPrice: currentTotalPrice + actualPaymentAmount,
+        usedPoint: currentUsedPoint + usePoint,
         verifiedAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
         addTotalProductPrice: deleteField(),
@@ -419,6 +421,19 @@ export async function handlePaymentProcess(params: UsePaymentHandlerParams): Pro
 
       // actualPaymentAmount가 0보다 클 때만 paymentInfo, paymentId 저장
       if (actualPaymentAmount > 0) {
+        updateData.paymentInfo = paymentInfoArray
+        updateData.paymentId = paymentIdArray
+      } else if (usePoint > 0) {
+        // 포인트 전용 결제일 때
+        paymentInfoArray.push({
+          id: 'point-only',
+          paymentId: 'point-only',
+          status: 'paid',
+          usedPoint: usePoint,
+          amount: 0,
+          paid_at: Math.floor(Date.now() / 1000)
+        })
+        paymentIdArray.push('point-only')
         updateData.paymentInfo = paymentInfoArray
         updateData.paymentId = paymentIdArray
       }

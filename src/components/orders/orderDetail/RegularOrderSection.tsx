@@ -94,6 +94,10 @@ export default function RegularOrderSection({ order }: Props) {
           paymentStatusText = '환불완료'
         }
 
+        // 포트원 결제 금액 = 전체 금액 - 사용한 포인트
+        const usedPoint = order.usedPoint || 0
+        const portonePaymentAmount = (order.totalPrice || 0) - usedPoint
+
         return (
           <section key={`regular-${groupIndex}`} className={styles.orderDetailSection}>
             <div className={styles.orderInfoGroup}>
@@ -102,7 +106,8 @@ export default function RegularOrderSection({ order }: Props) {
                 {formatOrderDate(getOrderDate())}
               </div>
               <div className={styles.paymentStatusText}>
-                {paymentStatusText} {(order.totalPrice || 0).toLocaleString()}원
+                {paymentStatusText} {portonePaymentAmount.toLocaleString()}원
+                {usedPoint > 0 && ` (포인트 ${usedPoint.toLocaleString()}원 사용)`}
               </div>
             </div>
 

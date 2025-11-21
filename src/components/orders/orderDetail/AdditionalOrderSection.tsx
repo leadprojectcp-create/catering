@@ -47,28 +47,52 @@ const formatOrderDate = (date: Date | Timestamp) => {
   return `${datePart} (${weekday}) ${timePart} 주문`
 }
 
-const getPaymentDate = (order: Order, paymentId: string) => {
-  // 1순위: orderDates 배열에서 해당 paymentId의 날짜 찾기
+const getPaymentDate = (order: Order, paymentId: string, groupIndex: number) => {
+  // orderDates 배열에서 type이 'additional'인 항목들 찾기
   if (order.orderDates && Array.isArray(order.orderDates)) {
-    const matchingOrderDate = order.orderDates.find((od: { paymentId?: string; createdAt: any }) => od.paymentId === paymentId)
-    if (matchingOrderDate?.createdAt) {
-      const timestamp = matchingOrderDate.createdAt instanceof Timestamp
-        ? matchingOrderDate.createdAt.toDate()
-        : matchingOrderDate.createdAt instanceof Date
-        ? matchingOrderDate.createdAt
-        : new Date(matchingOrderDate.createdAt)
+    const additionalOrderDates = order.orderDates.filter((od: any) => od.type === 'additional')
+
+    // paymentId가 있으면 일치하는 것 찾기
+    if (paymentId && paymentId !== 'point-only') {
+      const matchingOrderDate = additionalOrderDates.find((od: any) =>
+        od.paymentId === paymentId ||
+        od.id === paymentId ||
+        od.imp_uid === paymentId
+      )
+      if (matchingOrderDate?.createdAt) {
+        const timestamp = matchingOrderDate.createdAt instanceof Timestamp
+          ? matchingOrderDate.createdAt.toDate()
+          : matchingOrderDate.createdAt instanceof Date
+          ? matchingOrderDate.createdAt
+          : new Date(matchingOrderDate.createdAt)
+        return timestamp.getTime()
+      }
+    }
+
+    // paymentId가 없거나 찾지 못했으면 groupIndex로 찾기
+    if (additionalOrderDates[groupIndex]?.createdAt) {
+      const timestamp = additionalOrderDates[groupIndex].createdAt instanceof Timestamp
+        ? additionalOrderDates[groupIndex].createdAt.toDate()
+        : additionalOrderDates[groupIndex].createdAt instanceof Date
+        ? additionalOrderDates[groupIndex].createdAt
+        : new Date(additionalOrderDates[groupIndex].createdAt)
       return timestamp.getTime()
     }
   }
 
   // 2순위: paymentInfo 배열에서 imp_uid가 paymentId와 일치하는 항목의 paid_at 값을 반환
-  if (order.paymentInfo && Array.isArray(order.paymentInfo)) {
-    const matchingPayment = order.paymentInfo.find((p: { imp_uid?: string; paid_at?: number }) => p.imp_uid === paymentId)
+  if (paymentId && paymentId !== 'point-only' && order.paymentInfo && Array.isArray(order.paymentInfo)) {
+    const matchingPayment = order.paymentInfo.find((p: any) =>
+      p.imp_uid === paymentId ||
+      p.id === paymentId ||
+      p.paymentId === paymentId
+    )
     if (matchingPayment?.paid_at) {
       // Unix 타임스탬프를 밀리초로 변환 (paid_at은 초 단위)
       return matchingPayment.paid_at * 1000
     }
   }
+
   return null
 }
 
@@ -89,7 +113,7 @@ export default function AdditionalOrderSection({ order }: Props) {
   // paymentId별로 그룹화
   const groupedByPaymentId: { [key: string]: OrderItem[] } = {}
   addItems.forEach(item => {
-    const paymentId = item.paymentId || 'unknown'
+    const paymentId = item.paymentId || 'point-only'
     if (!groupedByPaymentId[paymentId]) {
       groupedByPaymentId[paymentId] = []
     }
@@ -98,7 +122,7 @@ export default function AdditionalOrderSection({ order }: Props) {
 
   return (
     <>
-      {Object.entries(groupedByPaymentId).map(([paymentId, paymentItems]) => {
+      {Object.entries(groupedByPaymentId).map(([paymentId, paymentItems], groupIndex) => {
         // 같은 paymentId 내에서 상품명별로 다시 그룹화
         const groupedByProduct: { [key: string]: OrderItem[] } = {}
         paymentItems.forEach(item => {
@@ -113,11 +137,41 @@ export default function AdditionalOrderSection({ order }: Props) {
         }, 0)
 
         const firstItem = paymentItems[0]
-        const paymentDate = getPaymentDate(order, paymentId)
+        const paymentDate = getPaymentDate(order, paymentId, groupIndex)
 
-        // 해당 paymentId의 결제 상태 찾기
-        const paymentInfo = order.paymentInfo?.find(p => p.id === paymentId || p.paymentId === paymentId)
+        // 해당 paymentId의 결제 정보 찾기
+        const paymentInfo = order.paymentInfo?.find(p =>
+          p.id === paymentId ||
+          p.paymentId === paymentId ||
+          p.imp_uid === paymentId
+        )
         const paymentStatus = paymentInfo?.status || order.paymentStatus
+
+        // 포인트 사용 금액
+        let usedPoint = paymentInfo?.usedPoint || 0
+
+        // 포트원 결제 금액 계산
+        // 1순위: paymentInfo.amount (새로운 주문의 경우)
+        // 2순위: paymentInfo가 있고 amount가 명시되어 있으면 그 값 사용
+        // 3순위: paymentInfo가 없거나 amount가 없으면 포인트 전용 결제로 판단
+        let portonePaymentAmount: number
+
+        if (paymentInfo?.amount !== undefined) {
+          // 새로운 주문: paymentInfo에 amount가 명시되어 있음
+          // amount가 객체일 수 있으므로 number로 변환
+          portonePaymentAmount = typeof paymentInfo.amount === 'number'
+            ? paymentInfo.amount
+            : (paymentInfo.amount.total || 0)
+          usedPoint = paymentInfo.usedPoint || 0
+        } else if (paymentId === 'point-only' || paymentId === '' || !paymentId) {
+          // 포인트 전용 결제
+          portonePaymentAmount = 0
+          usedPoint = paymentTotal
+        } else {
+          // 구버전 주문: paymentInfo는 있지만 amount가 없는 경우
+          // 포트원 결제 금액 = 상품 총액 - 포인트 사용
+          portonePaymentAmount = paymentTotal - usedPoint
+        }
 
         // 결제 상태 텍스트 (대소문자 구분 없이 비교)
         let paymentStatusText = '결제 미완료'
@@ -141,7 +195,8 @@ export default function AdditionalOrderSection({ order }: Props) {
                      firstItem.createdAt ? formatOrderDate(new Date(firstItem.createdAt)) : '-'}
                   </div>
                   <div className={styles.paymentStatusText}>
-                    {paymentStatusText} {paymentTotal.toLocaleString()}원
+                    {paymentStatusText} {portonePaymentAmount.toLocaleString()}원
+                    {usedPoint > 0 && ` (포인트 ${usedPoint.toLocaleString()}원 사용)`}
                   </div>
                 </div>
               )}
@@ -238,14 +293,27 @@ export default function AdditionalOrderSection({ order }: Props) {
               </div>
 
               {/* 추가주문 취소 버튼 - 각 productGroup의 마지막에만 표시 */}
-              {productIndex === Object.keys(groupedByProduct).length - 1 && (
-                <button
-                  onClick={() => setCancelModalData({ paymentId, amount: paymentTotal })}
-                  className={styles.cancelAdditionalOrderButton}
-                >
-                  추가주문취소
-                </button>
-              )}
+              {/* shipping, completed 상태일 때는 취소 버튼 숨김 */}
+              {(() => {
+                const shouldShowButton = productIndex === Object.keys(groupedByProduct).length - 1 &&
+                  order.orderStatus !== 'shipping' &&
+                  order.orderStatus !== 'completed'
+
+                console.log('[추가주문 취소버튼]', {
+                  orderStatus: order.orderStatus,
+                  isLastProduct: productIndex === Object.keys(groupedByProduct).length - 1,
+                  shouldShowButton
+                })
+
+                return shouldShowButton && (
+                  <button
+                    onClick={() => setCancelModalData({ paymentId, amount: paymentTotal })}
+                    className={styles.cancelAdditionalOrderButton}
+                  >
+                    추가주문취소
+                  </button>
+                )
+              })()}
             </section>
           )
         })
