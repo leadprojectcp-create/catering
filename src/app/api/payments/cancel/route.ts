@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import * as PortOne from '@portone/server-sdk'
 import { db } from '@/lib/firebase'
 import { collection, query, where, getDocs, getDoc, doc, updateDoc, addDoc, serverTimestamp, increment } from 'firebase/firestore'
+import { sendCancellationNotification } from '@/lib/services/smsService'
 
 // PortOne V2 SDK로 결제 취소
 export async function POST(request: NextRequest) {
@@ -391,6 +392,72 @@ export async function POST(request: NextRequest) {
         }
 
         console.log('[Cancel API] DB 업데이트 완료:', foundOrderId)
+
+        // 취소 알림 발송 (파트너 + 고객)
+        try {
+          // 파트너 정보 가져오기
+          let partnerPhone: string | undefined
+          let partnerId: string | undefined
+
+          if (orderData.storeId) {
+            const storeRef = doc(db, 'stores', orderData.storeId)
+            const storeDoc = await getDoc(storeRef)
+            if (storeDoc.exists()) {
+              const storeData = storeDoc.data()
+              partnerPhone = storeData?.phone
+              partnerId = storeData?.partnerId
+            }
+          }
+
+          // 고객 정보
+          const customerPhone = orderData.deliveryInfo?.recipientPhone || orderData.phone
+          const customerId = orderData.uid
+
+          // 취소 금액 계산
+          const cancelAmount = isPartialCancel
+            ? (refundAmount || 0)
+            : (orderData.totalPrice || 0)
+
+          const refundAmt = isPartialCancel
+            ? (refundAmount || 0)
+            : (orderData.totalPrice || 0)
+
+          // 환불 비율 계산 (부분 취소는 100%, 전체 취소는 취소 사유에서 계산된 값 사용)
+          const refundRateValue = isPartialCancel ? 1.0 : (refundAmount ? refundAmount / (orderData.totalPrice || 1) : 1.0)
+
+          console.log('[Cancel API] 취소 알림 발송 준비:', {
+            partnerPhone,
+            partnerId,
+            customerPhone,
+            customerId,
+            storeName: orderData.storeName,
+            orderNumber: orderData.orderNumber,
+            cancelAmount,
+            refundAmount: refundAmt,
+            refundRate: refundRateValue,
+            cancelReason: reason
+          })
+
+          // 알림 발송 (직접 함수 호출)
+          await sendCancellationNotification({
+            partnerPhone,
+            customerPhone,
+            partnerId,
+            customerId,
+            storeName: orderData.storeName || '',
+            orderNumber: orderData.orderNumber || foundOrderId,
+            cancelAmount,
+            refundAmount: refundAmt,
+            refundRate: refundRateValue,
+            cancelReason: reason || '취소',
+            isPartialCancel: isPartialCancel || false,
+          })
+
+          console.log('[Cancel API] 취소 알림 발송 완료')
+        } catch (notificationError) {
+          console.error('[Cancel API] 취소 알림 발송 실패:', notificationError)
+          // 알림 발송 실패는 치명적이지 않으므로 계속 진행
+        }
       } else {
         console.warn('[Cancel API] 주문을 찾을 수 없음:', paymentId || orderId)
       }

@@ -1,6 +1,11 @@
 /**
- * 알리고(Aligo) SMS 발송 서비스
+ * 알리고(Aligo) 알림 발송 서비스
+ * - 카카오톡 알림톡: 주문 알림
+ * - SMS: 인증번호 발송
+ * - 푸시 알림: FCM을 통한 모바일 알림
  */
+
+import { sendOrderFCM, sendCancellationFCM } from './fcmService'
 
 // 버튼 타입 정의
 interface TemplateButton {
@@ -187,7 +192,7 @@ export async function sendKakaoAlimtalk(
   }
 }
 
-// 주문 알림 발송 (파트너 + 고객) - SMS + 푸시알림
+// 주문 알림 발송 (파트너 + 고객) - 카카오톡 알림톡 + 푸시알림
 export interface OrderNotificationParams {
   partnerPhone?: string
   customerPhone?: string
@@ -228,28 +233,158 @@ export async function sendOrderNotification(params: OrderNotificationParams): Pr
 
   console.log('[주문 알림] 발송 시작', { isAdditionalOrder })
 
-  // 파트너 알림 (SMS + 푸시)
+  // 파트너 알림 (카카오톡 알림톡 + 푸시)
   if (partnerPhone || partnerId) {
     const templateType = isAdditionalOrder ? 'additional' : 'new'
     const template = templates.order.partner[templateType]
 
-    // SMS 발송
+    // 카카오톡 알림톡 발송
     if (partnerPhone) {
       try {
-        const smsMessage = replaceTemplateVariables(template.sms, variablesStr)
+        const templateCode = template.templateCode
 
-        const response = await fetch('/api/sms/send-notification', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            phone: partnerPhone,
-            message: smsMessage
-          })
-        })
-        const result = await response.json()
-        console.log('[주문 알림] 파트너 SMS 발송 결과:', result.success)
+        const kakaoVariables = {
+          storeName: variables.storeName,
+          orderNumber: variables.orderNumber,
+          totalQuantity: String(variables.totalQuantity),
+          totalProductPrice: variables.totalProductPrice.toLocaleString(),
+          additionalQuantity: String(variables.additionalQuantity),
+          additionalProductPrice: variables.additionalProductPrice.toLocaleString(),
+        }
+
+        const kakaoResult = await sendKakaoAlimtalk(partnerPhone, templateCode, kakaoVariables)
+        console.log('[주문 알림] 파트너 카카오톡 발송 결과:', kakaoResult)
       } catch (error) {
-        console.error('[주문 알림] 파트너 SMS 발송 실패:', error)
+        console.error('[주문 알림] 파트너 카카오톡 발송 실패:', error)
+      }
+    }
+
+    // 푸시 알림 발송 (앱이 있으면 자동으로 전송됨, 없으면 실패)
+    if (partnerId) {
+      try {
+        const pushTitle = replaceTemplateVariables(template.push.title, variablesStr)
+        const pushBody = replaceTemplateVariables(template.push.body, variablesStr)
+
+        const result = await sendOrderFCM({
+          userId: partnerId,
+          title: pushTitle,
+          body: pushBody,
+          data: {
+            type: 'order',
+            orderNumber: variables.orderNumber,
+            isAdditionalOrder: String(isAdditionalOrder)
+          }
+        })
+        console.log('[주문 알림] 파트너 푸시 발송 결과:', result)
+      } catch (error) {
+        console.error('[주문 알림] 파트너 푸시 발송 실패:', error)
+      }
+    }
+  }
+
+  // 고객 알림 (카카오톡 알림톡 + 푸시)
+  if (customerPhone || customerId) {
+    const templateType = isAdditionalOrder ? 'additional' : 'new'
+    const template = templates.order.customer[templateType]
+
+    // 카카오톡 알림톡 발송
+    if (customerPhone) {
+      try {
+        const templateCode = template.templateCode
+
+        const kakaoVariables = {
+          storeName: variables.storeName,
+          orderNumber: variables.orderNumber,
+          totalQuantity: String(variables.totalQuantity),
+          totalProductPrice: variables.totalProductPrice.toLocaleString(),
+          additionalQuantity: String(variables.additionalQuantity),
+          additionalProductPrice: variables.additionalProductPrice.toLocaleString(),
+        }
+
+        const kakaoResult = await sendKakaoAlimtalk(customerPhone, templateCode, kakaoVariables)
+        console.log('[주문 알림] 고객 카카오톡 발송 결과:', kakaoResult)
+      } catch (error) {
+        console.error('[주문 알림] 고객 카카오톡 발송 실패:', error)
+      }
+    }
+
+    // 푸시 알림 발송 (앱이 있으면 자동으로 전송됨, 없으면 실패)
+    if (customerId) {
+      try {
+        const pushTitle = replaceTemplateVariables(template.push.title, variablesStr)
+        const pushBody = replaceTemplateVariables(template.push.body, variablesStr)
+
+        const result = await sendOrderFCM({
+          userId: customerId,
+          title: pushTitle,
+          body: pushBody,
+          data: {
+            type: 'order',
+            orderNumber: variables.orderNumber,
+            isAdditionalOrder: String(isAdditionalOrder)
+          }
+        })
+        console.log('[주문 알림] 고객 푸시 발송 결과:', result)
+      } catch (error) {
+        console.error('[주문 알림] 고객 푸시 발송 실패:', error)
+      }
+    }
+  }
+}
+
+// 주문 취소 알림 발송 (파트너 + 고객) - 카카오톡 알림톡 + 푸시알림
+export interface CancellationNotificationParams {
+  partnerPhone?: string
+  customerPhone?: string
+  partnerId?: string
+  customerId?: string
+  storeName: string
+  orderNumber: string
+  cancelAmount: number
+  refundAmount: number
+  refundRate: number
+  cancelReason: string
+  isPartialCancel: boolean
+}
+
+export async function sendCancellationNotification(params: CancellationNotificationParams): Promise<void> {
+  const { partnerPhone, customerPhone, partnerId, customerId, isPartialCancel, ...variables } = params
+
+  // 템플릿 불러오기
+  const templates = require('@/config/notificationTemplates.json')
+
+  const variablesStr = {
+    storeName: variables.storeName,
+    orderNumber: variables.orderNumber,
+    cancelAmount: variables.cancelAmount.toLocaleString(),
+    refundAmount: variables.refundAmount.toLocaleString(),
+    refundRate: String(Math.floor(variables.refundRate * 100)),
+    cancelReason: variables.cancelReason,
+  }
+
+  console.log('[취소 알림] 발송 시작', { isPartialCancel })
+
+  // 파트너 알림 (카카오톡 알림톡 + 푸시)
+  if (partnerPhone || partnerId) {
+    const templateType = isPartialCancel ? 'partial' : 'full'
+    const template = templates.cancellation.partner[templateType]
+
+    // 카카오톡 알림톡 발송
+    if (partnerPhone) {
+      try {
+        const templateCode = template.templateCode
+
+        const kakaoVariables = {
+          storeName: variables.storeName,
+          orderNumber: variables.orderNumber,
+          cancelAmount: variables.cancelAmount.toLocaleString(),
+          cancelReason: variables.cancelReason,
+        }
+
+        const kakaoResult = await sendKakaoAlimtalk(partnerPhone, templateCode, kakaoVariables)
+        console.log('[취소 알림] 파트너 카카오톡 발송 결과:', kakaoResult)
+      } catch (error) {
+        console.error('[취소 알림] 파트너 카카오톡 발송 실패:', error)
       }
     }
 
@@ -259,50 +394,44 @@ export async function sendOrderNotification(params: OrderNotificationParams): Pr
         const pushTitle = replaceTemplateVariables(template.push.title, variablesStr)
         const pushBody = replaceTemplateVariables(template.push.body, variablesStr)
 
-        const response = await fetch('/api/send-order-fcm', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            userId: partnerId,
-            title: pushTitle,
-            body: pushBody,
-            data: {
-              type: 'order',
-              orderNumber: variables.orderNumber,
-              isAdditionalOrder: String(isAdditionalOrder)
-            }
-          })
+        const result = await sendCancellationFCM({
+          userId: partnerId,
+          title: pushTitle,
+          body: pushBody,
+          data: {
+            type: 'cancellation',
+            orderNumber: variables.orderNumber
+          }
         })
-        const result = await response.json()
-        console.log('[주문 알림] 파트너 푸시 발송 결과:', result.success)
+        console.log('[취소 알림] 파트너 푸시 발송 결과:', result)
       } catch (error) {
-        console.error('[주문 알림] 파트너 푸시 발송 실패:', error)
+        console.error('[취소 알림] 파트너 푸시 발송 실패:', error)
       }
     }
   }
 
-  // 고객 알림 (SMS + 푸시)
+  // 고객 알림 (카카오톡 알림톡 + 푸시)
   if (customerPhone || customerId) {
-    const templateType = isAdditionalOrder ? 'additional' : 'new'
-    const template = templates.order.customer[templateType]
+    const templateType = isPartialCancel ? 'partial' : 'full'
+    const template = templates.cancellation.customer[templateType]
 
-    // SMS 발송
+    // 카카오톡 알림톡 발송
     if (customerPhone) {
       try {
-        const smsMessage = replaceTemplateVariables(template.sms, variablesStr)
+        const templateCode = template.templateCode
 
-        const response = await fetch('/api/sms/send-notification', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            phone: customerPhone,
-            message: smsMessage
-          })
-        })
-        const result = await response.json()
-        console.log('[주문 알림] 고객 SMS 발송 결과:', result.success)
+        const kakaoVariables = {
+          storeName: variables.storeName,
+          orderNumber: variables.orderNumber,
+          refundAmount: variables.refundAmount.toLocaleString(),
+          refundRate: String(Math.floor(variables.refundRate * 100)),
+          cancelReason: variables.cancelReason,
+        }
+
+        const kakaoResult = await sendKakaoAlimtalk(customerPhone, templateCode, kakaoVariables)
+        console.log('[취소 알림] 고객 카카오톡 발송 결과:', kakaoResult)
       } catch (error) {
-        console.error('[주문 알림] 고객 SMS 발송 실패:', error)
+        console.error('[취소 알림] 고객 카카오톡 발송 실패:', error)
       }
     }
 
@@ -312,30 +441,24 @@ export async function sendOrderNotification(params: OrderNotificationParams): Pr
         const pushTitle = replaceTemplateVariables(template.push.title, variablesStr)
         const pushBody = replaceTemplateVariables(template.push.body, variablesStr)
 
-        const response = await fetch('/api/send-order-fcm', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            userId: customerId,
-            title: pushTitle,
-            body: pushBody,
-            data: {
-              type: 'order',
-              orderNumber: variables.orderNumber,
-              isAdditionalOrder: String(isAdditionalOrder)
-            }
-          })
+        const result = await sendCancellationFCM({
+          userId: customerId,
+          title: pushTitle,
+          body: pushBody,
+          data: {
+            type: 'cancellation',
+            orderNumber: variables.orderNumber
+          }
         })
-        const result = await response.json()
-        console.log('[주문 알림] 고객 푸시 발송 결과:', result.success)
+        console.log('[취소 알림] 고객 푸시 발송 결과:', result)
       } catch (error) {
-        console.error('[주문 알림] 고객 푸시 발송 실패:', error)
+        console.error('[취소 알림] 고객 푸시 발송 실패:', error)
       }
     }
   }
 }
 
-// 알리고 SMS 발송 (서버에서만 호출)
+// SMS 발송 함수는 인증번호 발송용으로만 사용 (서버에서만 호출)
 export async function sendSMS(phone: string, message: string): Promise<boolean> {
   try {
     const apiKey = process.env.ALIGO_API_KEY

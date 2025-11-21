@@ -5,7 +5,6 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { doc, getDoc, updateDoc, addDoc, collection, increment, serverTimestamp, deleteDoc, deleteField, Timestamp } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
-import { sendOrderNotification } from '@/lib/services/smsService'
 import Loading from '@/components/Loading'
 
 interface OrderItem {
@@ -283,18 +282,22 @@ export default function PaymentCompletePage() {
             additionalProductPrice = additionalItems.reduce((sum: number, item) => sum + (item.itemPrice || 0), 0)
           }
 
-          await sendOrderNotification({
-            partnerPhone: partnerPhone,
-            customerPhone: orderInfo.phone,
-            partnerId: partnerId,
-            customerId: user?.uid,
-            isAdditionalOrder,
-            storeName: storeName || '',
-            orderNumber,
-            totalQuantity,
-            totalProductPrice: finalTotalProductPrice,
-            additionalQuantity,
-            additionalProductPrice,
+          await fetch('/api/notifications/send-order', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              partnerPhone: partnerPhone,
+              customerPhone: orderInfo.phone,
+              partnerId: partnerId,
+              customerId: user?.uid,
+              isAdditionalOrder,
+              storeName: storeName || '',
+              orderNumber,
+              totalQuantity,
+              totalProductPrice: finalTotalProductPrice,
+              additionalQuantity,
+              additionalProductPrice,
+            }),
           })
         } catch (alimtalkError) {
           console.error('주문 알림 발송 실패:', alimtalkError)

@@ -118,33 +118,64 @@ export default function DeliveryInfoSection({
     }
 
     try {
-      // 중복 확인
-      const isDuplicate = await checkDuplicateAddress(orderInfo.address, orderInfo.detailAddress)
+      // 동일한 주소와 상세주소를 가진 기존 배송지 찾기
+      const existingAddress = savedAddresses.find(addr =>
+        addr.address === orderInfo.address && addr.detailAddress === orderInfo.detailAddress
+      )
 
-      if (isDuplicate) {
-        alert('이미 등록된 배송지입니다.')
-        return
+      if (existingAddress) {
+        // 기존 배송지가 있으면 수정
+        const userDocRef = doc(db, 'users', userId)
+
+        // 기본 배송지 설정 시 다른 배송지들의 defaultDelivery를 false로
+        let updatedAddresses = savedAddresses.map(addr => {
+          if (addr.id === existingAddress.id) {
+            // 현재 배송지 업데이트
+            return {
+              ...addr,
+              name: addressName,
+              orderer: recipient || orderInfo.orderer,
+              phone: orderInfo.phone,
+              email: orderInfo.email,
+              zipCode: orderInfo.zipCode,
+              defaultDelivery: isDefaultAddress
+            }
+          } else if (isDefaultAddress) {
+            // 기본 배송지로 설정하는 경우 다른 배송지들의 defaultDelivery를 false로
+            return { ...addr, defaultDelivery: false }
+          }
+          return addr
+        })
+
+        await setDoc(userDocRef, {
+          deliveryAddresses: updatedAddresses
+        }, { merge: true })
+
+        onSavedAddressesChange(updatedAddresses)
+        setIsDefaultAddress(false)
+        alert('배송지 정보가 수정되었습니다.')
+      } else {
+        // 새로운 배송지 추가
+        const newAddress = await saveAddress({
+          name: addressName,
+          orderer: recipient || orderInfo.orderer,
+          phone: orderInfo.phone,
+          email: orderInfo.email,
+          address: orderInfo.address,
+          detailAddress: orderInfo.detailAddress,
+          zipCode: orderInfo.zipCode,
+          defaultDelivery: isDefaultAddress
+        })
+
+        // 기본 배송지로 설정한 경우, 기존 배송지들의 defaultDelivery를 false로 업데이트
+        const updatedAddresses = isDefaultAddress
+          ? savedAddresses.map(addr => ({ ...addr, defaultDelivery: false }))
+          : savedAddresses
+
+        onSavedAddressesChange([...updatedAddresses, newAddress])
+        setIsDefaultAddress(false)
+        alert('배송지 정보가 저장되었습니다.')
       }
-
-      const newAddress = await saveAddress({
-        name: addressName,
-        orderer: recipient || orderInfo.orderer,
-        phone: orderInfo.phone,
-        email: orderInfo.email,
-        address: orderInfo.address,
-        detailAddress: orderInfo.detailAddress,
-        zipCode: orderInfo.zipCode,
-        defaultDelivery: isDefaultAddress
-      })
-
-      // 기본 배송지로 설정한 경우, 기존 배송지들의 defaultDelivery를 false로 업데이트
-      const updatedAddresses = isDefaultAddress
-        ? savedAddresses.map(addr => ({ ...addr, defaultDelivery: false }))
-        : savedAddresses
-
-      onSavedAddressesChange([...updatedAddresses, newAddress])
-      setIsDefaultAddress(false) // 체크박스 초기화
-      alert('배송지 정보가 저장되었습니다.')
     } catch (error) {
       console.error('배송지 정보 저장 실패:', error)
       alert('배송지 정보 저장에 실패했습니다.')

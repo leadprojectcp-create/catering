@@ -1,0 +1,133 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 32px;
+  background: #fff;
+}
+
+.loader {
+  width: 50px;
+  height: 50px;
+  border: 5px solid rgba(2, 91, 217, 0.3);
+  border-top: 5px solid #025BD9;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 24px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.message {
+  color: #333;
+  font-size: 18px;
+  font-weight: 500;
+  text-align: center;
+}
+
+/* 다운로드 카드 */
+.downloadCard {
+  background: white;
+  max-width: 400px;
+  width: 100%;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.topTitle {
+  color: #025BD9;
+  font-size: 28px;
+  font-weight: 800;
+  line-height: normal;
+  margin-bottom: 8px;
+}
+
+.title {
+  color: #333;
+  font-size: 28px;
+  font-weight: 700;
+  line-height: normal;
+  margin-bottom: 32px;
+}
+
+.appIcon {
+  margin-bottom: 32px;
+  width: 280px;
+  height: auto;
+}
+
+.appIcon img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.description {
+  color: #333;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: normal;
+  margin-bottom: 32px;
+}
+
+.downloadButton {
+  display: flex;
+  width: 100%;
+  padding: 15px 40px;
+  justify-content: center;
+  align-items: center;
+  border-radius: 50px;
+  background: #025BD9;
+  color: #FFF;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: normal;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.downloadButton:hover {
+  background: #0147a8;
+}
+
+.downloadButton:active {
+  transform: scale(0.98);
+}
+
+.hint {
+  margin-top: 24px;
+  font-size: 14px;
+  color: #999;
+  display: none;
+}
+
+/* 모바일 최적화 */
+@media (max-width: 480px) {
+  .container {
+    padding: 16px;
+  }
+
+  .downloadCard {
+    /* padding removed */
+  }
+
+  .title {
+    font-size: 28px;
+  }
+
+  .iconPlaceholder {
+    width: 80px;
+    height: 80px;
+    font-size: 40px;
+    border-radius: 18px;
+  }
+}

@@ -1,7 +1,6 @@
 import { doc, getDoc, updateDoc, addDoc, collection, increment, serverTimestamp, deleteDoc, deleteField, Timestamp } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { requestPayment } from '@/lib/services/paymentService'
-import { sendOrderNotification } from '@/lib/services/smsService'
 import { OrderData, OrderInfo, OrderItem, DeliveryAddress } from '../types'
 import { User } from 'firebase/auth'
 import { DeliveryFeeBreakdown } from '../utils/calculateDeliveryFeeBreakdown'
@@ -552,18 +551,23 @@ export async function handlePaymentProcess(params: UsePaymentHandlerParams): Pro
       additionalProductPrice = additionalItems.reduce((sum: number, item: OrderItem) => sum + (item.itemPrice || 0), 0)
     }
 
-    await sendOrderNotification({
-      partnerPhone: storeData?.phone,
-      customerPhone: orderInfo.phone,
-      partnerId: storeData?.partnerId,
-      customerId: user?.uid,
-      isAdditionalOrder,
-      storeName: orderData.storeName || '',
-      orderNumber,
-      totalQuantity,
-      totalProductPrice: finalTotalProductPrice,
-      additionalQuantity,
-      additionalProductPrice,
+    // API를 통해 주문 알림 발송 (서버 사이드에서 처리)
+    await fetch('/api/sms/send-order', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        partnerPhone: storeData?.phone,
+        customerPhone: orderInfo.phone,
+        partnerId: storeData?.partnerId,
+        customerId: user?.uid,
+        isAdditionalOrder,
+        storeName: orderData.storeName || '',
+        orderNumber,
+        totalQuantity,
+        totalProductPrice: finalTotalProductPrice,
+        additionalQuantity,
+        additionalProductPrice,
+      })
     })
   } catch (alimtalkError) {
     console.error('주문 알림 발송 실패:', alimtalkError)

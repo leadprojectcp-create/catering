@@ -22,10 +22,11 @@ export default function LayoutWrapper() {
   const isChatListPage = pathname === '/chat' && !hasRoomId
   const isChatRoomPage = pathname.startsWith('/chat/') || (pathname === '/chat' && hasRoomId)
 
-  // admin, signup, login 페이지에서는 모든 네비게이션 숨김
+  // admin, signup, login, redirect 페이지에서는 모든 네비게이션 숨김
   const hideAllNav = pathname.startsWith('/admin') ||
                      pathname.startsWith('/signup') ||
-                     pathname === '/login'
+                     pathname === '/login' ||
+                     pathname.startsWith('/redirect')
 
   if (hideAllNav) {
     return null
