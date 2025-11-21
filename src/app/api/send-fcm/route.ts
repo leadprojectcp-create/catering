@@ -229,15 +229,11 @@ export async function POST(request: NextRequest) {
     // FCM 메시지 전송
     const messaging = getAdminMessaging()
 
-    // iOS와 Android에서 다르게 처리
-    // iOS: notification 필드 필요 (FCM이 자동으로 알림 표시)
-    // Android: data만 전송 (Notifee가 알림 표시)
+    // iOS와 Android 모두 data 필드 사용
+    // iOS: data + APNS payload로 알림 표시
+    // Android: data로 Notifee가 알림 표시
     const fcmMessage = {
       token: fcmToken,
-      notification: {
-        title: senderName || '새 메시지',
-        body: notificationBody
-      },
       data: {
         roomId: roomId,
         senderId: senderId,
@@ -247,24 +243,20 @@ export async function POST(request: NextRequest) {
         title: senderName || '새 메시지',
         body: notificationBody
       },
-      // Android 설정 - notification 비활성화 (data만 사용)
+      // Android 설정
       android: {
         priority: 'high' as const,
-        notification: {
-          defaultSound: true,
-          defaultVibrateTimings: true,
-        }
       },
-      // iOS 설정 - notification 필드로 자동 알림 표시
+      // iOS 설정 - alert로 알림 표시
       apns: {
         payload: {
           aps: {
-            sound: 'default',
-            badge: unreadCount,
             alert: {
               title: senderName || '새 메시지',
               body: notificationBody
-            }
+            },
+            sound: 'default',
+            badge: unreadCount
           }
         },
         headers: {
