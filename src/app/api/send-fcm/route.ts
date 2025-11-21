@@ -199,35 +199,25 @@ export async function POST(request: NextRequest) {
       notificationBody = '🏷️ 상품을 공유했습니다'
     }
 
-    // 수신자의 읽지 않은 메시지 수 계산 (뱃지용)
+    // 수신자의 현재 채팅방의 읽지 않은 메시지 수 가져오기
     let unreadCount = 1 // 기본값
     try {
-      const userChatsRef = realtimeDb.ref(`userChats/${recipientId}`)
-      const userChatsSnapshot = await userChatsRef.once('value')
+      // 수신자의 이 채팅방에 대한 unreadCount 가져오기
+      const userChatRef = realtimeDb.ref(`userChats/${recipientId}/${roomId}`)
+      const userChatSnapshot = await userChatRef.once('value')
 
-      if (userChatsSnapshot.exists()) {
-        const userChats = userChatsSnapshot.val()
-        console.log('[FCM API] userChats 데이터:', JSON.stringify(userChats, null, 2))
-        unreadCount = 0
+      if (userChatSnapshot.exists()) {
+        const chatData = userChatSnapshot.val()
+        console.log('[FCM API] 채팅방 데이터:', chatData)
 
-        // 모든 채팅방의 읽지 않은 메시지 수 합산
-        for (const chatRoomId in userChats) {
-          const chatData = userChats[chatRoomId]
-          console.log(`[FCM API] 채팅방 ${chatRoomId}:`, chatData)
-          if (chatData.unreadCount && typeof chatData.unreadCount === 'number') {
-            console.log(`[FCM API] unreadCount 추가: ${chatData.unreadCount}`)
-            unreadCount += chatData.unreadCount
-          } else {
-            console.log(`[FCM API] unreadCount 없음 또는 타입 오류:`, typeof chatData.unreadCount, chatData.unreadCount)
-          }
-        }
+        // 현재 unreadCount + 1 (지금 보내는 메시지)
+        const currentUnreadCount = chatData.unreadCount || 0
+        unreadCount = currentUnreadCount + 1
 
-        // 현재 메시지도 포함 (아직 DB에 반영되지 않았으므로)
-        unreadCount += 1
-
+        console.log('[FCM API] 현재 unreadCount:', currentUnreadCount)
         console.log('[FCM API] 최종 계산된 읽지 않은 메시지 수:', unreadCount)
       } else {
-        console.log('[FCM API] userChats 데이터가 존재하지 않음')
+        console.log('[FCM API] 채팅방 데이터가 존재하지 않음, 기본값 1 사용')
       }
     } catch (unreadError) {
       console.log('[FCM API] 읽지 않은 메시지 수 계산 실패 (기본값 1 사용):', unreadError)

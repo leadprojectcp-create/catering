@@ -1,6 +1,7 @@
 'use client'
 
 import { usePathname, useSearchParams } from 'next/navigation'
+import { useAuth } from '@/contexts/AuthContext'
 import BottomNavigator from './BottomNavigator'
 import PartnerBottomNav from './partner/PartnerBottomNav'
 import PartnerHeader from './partner/PartnerHeader'
@@ -10,9 +11,12 @@ import Footer from './Footer'
 export default function LayoutWrapper() {
   const pathname = usePathname()
   const searchParams = useSearchParams()
+  const { userData } = useAuth()
 
   // partner 페이지인지 확인
   const isPartnerPage = pathname.startsWith('/partner')
+  // 사용자 타입 확인
+  const isPartner = userData?.type === 'partner'
   // 채팅 페이지에서 roomId가 있으면 채팅룸으로 간주
   const hasRoomId = searchParams.get('roomId') !== null
   const isChatListPage = pathname === '/chat' && !hasRoomId
@@ -32,9 +36,9 @@ export default function LayoutWrapper() {
     return null
   }
 
-  // 채팅 리스트 페이지에서는 바텀 네비게이터만 표시 (푸터는 제거)
+  // 채팅 리스트 페이지에서는 사용자 타입에 따라 바텀 네비게이터 표시
   if (isChatListPage) {
-    return <BottomNavigator />
+    return isPartner ? <PartnerBottomNav /> : <BottomNavigator />
   }
 
   // 파트너 페이지에서는 파트너 헤더, 파트너용 바텀 네비게이터와 Footer 표시
