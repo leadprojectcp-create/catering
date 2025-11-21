@@ -78,10 +78,11 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Firestore에서 사용자의 FCM 토큰 가져오기
+    // Firestore에서 사용자의 FCM 토큰 및 타입 가져오기
     console.log('[주문 FCM API] Firestore에서 사용자 FCM 토큰 조회 시작:', userId)
 
     let fcmToken = null
+    let userType = 'user'
 
     try {
       const userDoc = await adminDb.collection('users').doc(userId).get()
@@ -90,7 +91,9 @@ export async function POST(request: NextRequest) {
       if (userDoc.exists) {
         const userData = userDoc.data()
         fcmToken = userData?.fcmToken
+        userType = userData?.type || 'user'
         console.log('[주문 FCM API] Firestore에서 FCM 토큰 조회:', fcmToken ? '있음' : '없음')
+        console.log('[주문 FCM API] 사용자 타입:', userType)
       }
     } catch (firestoreError) {
       console.log('[주문 FCM API] Firestore 조회 실패:', firestoreError)
@@ -104,6 +107,12 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // 사용자 타입에 따라 경로 설정
+    const isPartner = userType === 'partner'
+    const redirectPath = isPartner ? '/partner/order/history' : '/orders'
+
+    console.log('[주문 FCM API] 리다이렉트 경로:', redirectPath)
+
     // FCM 메시지 전송
     const messaging = getAdminMessaging()
 
@@ -112,6 +121,7 @@ export async function POST(request: NextRequest) {
       data: {
         title: title,
         body: body,
+        path: redirectPath,  // 클릭 시 이동할 경로
         ...data
       },
       // Android 설정
