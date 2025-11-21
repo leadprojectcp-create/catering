@@ -109,9 +109,25 @@ export async function POST(request: NextRequest) {
 
     // 사용자 타입에 따라 경로 설정
     const isPartner = userType === 'partner'
-    const redirectPath = isPartner ? '/partner/order/history' : '/orders'
+    const isAdditionalOrder = data?.isAdditionalOrder === 'true'
+    const orderNumber = data?.orderNumber
 
-    console.log('[주문 FCM API] 리다이렉트 경로:', redirectPath)
+    // 파트너: 항상 /partner/order/history
+    // 고객: 추가주문이면 상세 페이지, 신규주문이면 목록 페이지
+    let redirectPath: string
+    if (isPartner) {
+      // 파트너: 신규/추가 상관없이 항상 목록 페이지
+      redirectPath = '/partner/order/history'
+    } else {
+      // 고객: 추가주문이면 해당 주문 상세, 신규주문이면 목록
+      if (isAdditionalOrder && orderNumber) {
+        redirectPath = `/orders?orderNumber=${orderNumber}`
+      } else {
+        redirectPath = '/orders'
+      }
+    }
+
+    console.log('[주문 FCM API] 리다이렉트 경로:', redirectPath, '(파트너:', isPartner, ', 추가주문:', isAdditionalOrder, ')')
 
     // FCM 메시지 전송
     const messaging = getAdminMessaging()

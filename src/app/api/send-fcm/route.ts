@@ -257,7 +257,8 @@ export async function POST(request: NextRequest) {
         message: notificationBody,
         type: 'chat',
         title: senderName || '새 메시지',
-        body: notificationBody
+        body: notificationBody,
+        unreadCount: String(unreadCount)
       },
       // Android 설정
       android: {

@@ -49,14 +49,37 @@ export default function NativeAuthBridge() {
 
         console.log('[NativeAuth] Firebase authentication successful')
 
+        // 네이티브 FCM 토큰 가져오기 (최대 3초 대기)
+        let nativeFcmToken: string | null = null
+        const maxWaitTime = 3000 // 3초
+        const checkInterval = 100 // 100ms마다 체크
+        const maxAttempts = maxWaitTime / checkInterval
+
+        for (let i = 0; i < maxAttempts; i++) {
+          // @ts-expect-error - nativeFcmToken은 React Native 앱에서 주입됨
+          if (typeof window !== 'undefined' && window.nativeFcmToken) {
+            // @ts-expect-error
+            nativeFcmToken = window.nativeFcmToken as string
+            console.log('[NativeAuth] Native FCM token found:', nativeFcmToken.substring(0, 30) + '...')
+            break
+          }
+          // 100ms 대기
+          await new Promise(resolve => setTimeout(resolve, checkInterval))
+        }
+
+        if (!nativeFcmToken) {
+          console.warn('[NativeAuth] Native FCM token not available after waiting')
+        }
+
         // 웹과 동일한 handleSocialUser 함수 사용
-        // FCM 토큰은 handleSocialUser 내부에서 웹으로 자동 발급
+        // FCM 토큰을 전달하여 Firestore에 저장
         const socialResult = await handleSocialUser(
           userCredential.user,
           'google',
           {
             name: result.displayName,
-            email: result.email
+            email: result.email,
+            fcmToken: nativeFcmToken
           }
         )
 
@@ -110,14 +133,37 @@ export default function NativeAuthBridge() {
 
         console.log('[NativeAuth] Firebase authentication successful')
 
+        // 네이티브 FCM 토큰 가져오기 (최대 3초 대기)
+        let nativeFcmToken: string | null = null
+        const maxWaitTime = 3000 // 3초
+        const checkInterval = 100 // 100ms마다 체크
+        const maxAttempts = maxWaitTime / checkInterval
+
+        for (let i = 0; i < maxAttempts; i++) {
+          // @ts-expect-error - nativeFcmToken은 React Native 앱에서 주입됨
+          if (typeof window !== 'undefined' && window.nativeFcmToken) {
+            // @ts-expect-error
+            nativeFcmToken = window.nativeFcmToken as string
+            console.log('[NativeAuth] Native FCM token found:', nativeFcmToken.substring(0, 30) + '...')
+            break
+          }
+          // 100ms 대기
+          await new Promise(resolve => setTimeout(resolve, checkInterval))
+        }
+
+        if (!nativeFcmToken) {
+          console.warn('[NativeAuth] Native FCM token not available after waiting')
+        }
+
         // 웹과 동일한 handleSocialUser 함수 사용
-        // FCM 토큰은 handleSocialUser 내부에서 웹으로 자동 발급
+        // FCM 토큰을 전달하여 Firestore에 저장
         const socialResult = await handleSocialUser(
           userCredential.user,
           'kakao',
           {
             name: result.displayName,
-            email: result.email
+            email: result.email,
+            fcmToken: nativeFcmToken
           }
         )
 
@@ -173,13 +219,37 @@ export default function NativeAuthBridge() {
 
         console.log('[NativeAuth] Firebase authentication successful')
 
+        // 네이티브 FCM 토큰 가져오기 (최대 3초 대기)
+        let nativeFcmToken: string | null = null
+        const maxWaitTime = 3000 // 3초
+        const checkInterval = 100 // 100ms마다 체크
+        const maxAttempts = maxWaitTime / checkInterval
+
+        for (let i = 0; i < maxAttempts; i++) {
+          // @ts-expect-error - nativeFcmToken은 React Native 앱에서 주입됨
+          if (typeof window !== 'undefined' && window.nativeFcmToken) {
+            // @ts-expect-error
+            nativeFcmToken = window.nativeFcmToken as string
+            console.log('[NativeAuth] Native FCM token found:', nativeFcmToken.substring(0, 30) + '...')
+            break
+          }
+          // 100ms 대기
+          await new Promise(resolve => setTimeout(resolve, checkInterval))
+        }
+
+        if (!nativeFcmToken) {
+          console.warn('[NativeAuth] Native FCM token not available after waiting')
+        }
+
         // 웹과 동일한 handleSocialUser 함수 사용
+        // FCM 토큰을 전달하여 Firestore에 저장
         const socialResult = await handleSocialUser(
           userCredential.user,
           'apple',
           {
             name: result.displayName,
-            email: result.email
+            email: result.email,
+            fcmToken: nativeFcmToken
           }
         )
 
