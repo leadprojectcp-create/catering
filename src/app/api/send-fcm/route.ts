@@ -199,13 +199,45 @@ export async function POST(request: NextRequest) {
       notificationBody = '🏷️ 상품을 공유했습니다'
     }
 
+    // 수신자의 읽지 않은 메시지 수 계산 (뱃지용)
+    let unreadCount = 1 // 기본값
+    try {
+      const userChatsRef = realtimeDb.ref(`userChats/${recipientId}`)
+      const userChatsSnapshot = await userChatsRef.once('value')
+
+      if (userChatsSnapshot.exists()) {
+        const userChats = userChatsSnapshot.val()
+        unreadCount = 0
+
+        // 모든 채팅방의 읽지 않은 메시지 수 합산
+        for (const chatRoomId in userChats) {
+          const chatData = userChats[chatRoomId]
+          if (chatData.unreadCount && typeof chatData.unreadCount === 'number') {
+            unreadCount += chatData.unreadCount
+          }
+        }
+
+        // 현재 메시지도 포함 (아직 DB에 반영되지 않았으므로)
+        unreadCount += 1
+
+        console.log('[FCM API] 계산된 읽지 않은 메시지 수:', unreadCount)
+      }
+    } catch (unreadError) {
+      console.log('[FCM API] 읽지 않은 메시지 수 계산 실패 (기본값 1 사용):', unreadError)
+    }
+
     // FCM 메시지 전송
     const messaging = getAdminMessaging()
 
-    // data만 전송 (Notifee가 알림 표시 처리)
-    // notification 필드를 포함하면 Android에서 시스템 알림 + Notifee 알림으로 중복 발생
+    // iOS와 Android에서 다르게 처리
+    // iOS: notification 필드 필요 (FCM이 자동으로 알림 표시)
+    // Android: data만 전송 (Notifee가 알림 표시)
     const fcmMessage = {
       token: fcmToken,
+      notification: {
+        title: senderName || '새 메시지',
+        body: notificationBody
+      },
       data: {
         roomId: roomId,
         senderId: senderId,
@@ -215,22 +247,29 @@ export async function POST(request: NextRequest) {
         title: senderName || '새 메시지',
         body: notificationBody
       },
-      // Android 설정
+      // Android 설정 - notification 비활성화 (data만 사용)
       android: {
         priority: 'high' as const,
+        notification: {
+          defaultSound: true,
+          defaultVibrateTimings: true,
+        }
       },
-      // iOS 설정 - contentAvailable로 백그라운드 처리 가능하게
+      // iOS 설정 - notification 필드로 자동 알림 표시
       apns: {
         payload: {
           aps: {
-            contentAvailable: true,
             sound: 'default',
-            badge: 1
+            badge: unreadCount,
+            alert: {
+              title: senderName || '새 메시지',
+              body: notificationBody
+            }
           }
         },
         headers: {
           'apns-priority': '10',
-          'apns-push-type': 'background'
+          'apns-push-type': 'alert'
         }
       }
     }
