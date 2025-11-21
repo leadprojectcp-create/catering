@@ -39,6 +39,11 @@ const getPageTitle = (path: string): string => {
   if (path === '/settings') return '설정'
   if (path.startsWith('/settings/password-change')) return '비밀번호 변경'
   if (path.startsWith('/settings/withdrawal')) return '회원탈퇴'
+  if (path === '/terms/service') return '서비스 이용약관'
+  if (path === '/terms/privacy') return '개인정보 처리방침'
+  if (path === '/terms/refund') return '환불 정책'
+  if (path === '/terms/marketing') return '마케팅 정보 수신 동의'
+  if (path === '/terms/third-party') return '제3자 정보제공 동의'
   return ''
 }
 
