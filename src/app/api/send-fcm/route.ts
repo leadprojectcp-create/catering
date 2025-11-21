@@ -199,25 +199,44 @@ export async function POST(request: NextRequest) {
       notificationBody = '🏷️ 상품을 공유했습니다'
     }
 
-    // 수신자의 현재 채팅방의 읽지 않은 메시지 수 가져오기
+    // 수신자의 전체 읽지 않은 메시지 수 가져오기 (모든 채팅방)
     let unreadCount = 1 // 기본값
     try {
-      // 수신자의 이 채팅방에 대한 unreadCount 가져오기
-      const userChatRef = realtimeDb.ref(`userChats/${recipientId}/${roomId}`)
-      const userChatSnapshot = await userChatRef.once('value')
+      console.log('[FCM API] 전체 채팅방의 읽지 않은 메시지 수 계산 시작')
 
-      if (userChatSnapshot.exists()) {
-        const chatData = userChatSnapshot.val()
-        console.log('[FCM API] 채팅방 데이터:', chatData)
+      // 모든 채팅방의 unreadCount 가져오기
+      const chatRoomsRef = realtimeDb.ref('chatRooms')
+      const chatRoomsSnapshot = await chatRoomsRef.once('value')
 
-        // 현재 unreadCount + 1 (지금 보내는 메시지)
-        const currentUnreadCount = chatData.unreadCount || 0
-        unreadCount = currentUnreadCount + 1
+      if (chatRoomsSnapshot.exists()) {
+        let totalUnread = 0
+        const roomDetails: Array<{
+          roomId: string
+          unreadCount: number
+        }> = []
 
-        console.log('[FCM API] 현재 unreadCount:', currentUnreadCount)
-        console.log('[FCM API] 최종 계산된 읽지 않은 메시지 수:', unreadCount)
+        chatRoomsSnapshot.forEach((childSnapshot: { val: () => { unreadCount?: { [key: string]: number } }; key: string | null }) => {
+          const roomData = childSnapshot.val()
+          const roomId = childSnapshot.key
+
+          // 이 채팅방의 수신자 읽지 않은 메시지 수
+          const roomUnreadCount = recipientId && roomData.unreadCount?.[recipientId] ? roomData.unreadCount[recipientId] : 0
+          totalUnread += roomUnreadCount
+
+          if (roomUnreadCount > 0) {
+            roomDetails.push({
+              roomId: roomId || 'unknown',
+              unreadCount: roomUnreadCount
+            })
+          }
+        })
+
+        console.log('[FCM API] 채팅방별 읽지 않은 메시지:', roomDetails)
+        console.log('[FCM API] 전체 읽지 않은 메시지 수:', totalUnread)
+
+        unreadCount = totalUnread
       } else {
-        console.log('[FCM API] 채팅방 데이터가 존재하지 않음, 기본값 1 사용')
+        console.log('[FCM API] 채팅방 데이터가 없음, 기본값 1 사용')
       }
     } catch (unreadError) {
       console.log('[FCM API] 읽지 않은 메시지 수 계산 실패 (기본값 1 사용):', unreadError)
