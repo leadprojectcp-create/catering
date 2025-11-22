@@ -76,6 +76,7 @@
   color: #495057;
   border-bottom: 2px solid #dee2e6;
   font-size: 14px;
+  white-space: nowrap;
 }
 
 .table td {
@@ -83,6 +84,7 @@
   border-bottom: 1px solid #e9ecef;
   font-size: 14px;
   color: #495057;
+  white-space: nowrap;
 }
 
 .table tbody tr:hover {
@@ -98,6 +100,40 @@
   text-align: center;
   padding: 60px 20px !important;
   color: #868e96;
+}
+
+.uidCell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.uid {
+  font-family: monospace;
+  font-size: 12px;
+  color: #6c757d;
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.copyBtn {
+  padding: 4px 8px;
+  background: #2c5282;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 11px;
+  cursor: pointer;
+  transition: background 0.2s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.copyBtn:hover {
+  background: #1e3a5f;
 }
 
 .roleSelect {

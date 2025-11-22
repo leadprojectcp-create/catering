@@ -84,6 +84,16 @@ export default function UserManagementPage() {
     return '-'
   }
 
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text)
+      alert('UID가 복사되었습니다.')
+    } catch (error) {
+      console.error('복사 실패:', error)
+      alert('복사에 실패했습니다.')
+    }
+  }
+
   const filteredUsers = users.filter(user => {
     if (filter === 'all') return true
     return user.type === filter
@@ -130,6 +140,7 @@ export default function UserManagementPage() {
           <thead>
             <tr>
               <th>이메일</th>
+              <th>UID</th>
               <th>이름</th>
               <th>전화번호</th>
               <th>역할</th>
@@ -142,7 +153,7 @@ export default function UserManagementPage() {
           <tbody>
             {filteredUsers.length === 0 ? (
               <tr>
-                <td colSpan={8} className={styles.empty}>
+                <td colSpan={9} className={styles.empty}>
                   사용자가 없습니다.
                 </td>
               </tr>
@@ -150,6 +161,16 @@ export default function UserManagementPage() {
               filteredUsers.map((user) => (
                 <tr key={user.uid} className={user.disabled ? styles.disabled : ''}>
                   <td>{user.email}</td>
+                  <td className={styles.uidCell}>
+                    <span className={styles.uid}>{user.uid}</span>
+                    <button
+                      className={styles.copyBtn}
+                      onClick={() => copyToClipboard(user.uid)}
+                      title="UID 복사"
+                    >
+                      복사
+                    </button>
+                  </td>
                   <td>{user.name || '-'}</td>
                   <td>{user.phone || '-'}</td>
                   <td>
