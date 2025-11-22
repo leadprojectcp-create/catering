@@ -220,9 +220,9 @@ export default function ProductList({ storeId }: ProductListProps) {
                 )}
 
                 {/* 주문 가능 수량 */}
-                {product.minOrderQuantity && product.maxOrderQuantity && (
+                {product.quantityRanges && product.quantityRanges.length > 0 && (
                   <div className={styles.orderQuantity}>
-                    최소 {product.minOrderQuantity}개 ~ 최대 {product.maxOrderQuantity}개 주문가능
+                    최소 {product.quantityRanges[0].minQuantity}개 ~ 최대 {product.quantityRanges[product.quantityRanges.length - 1].maxQuantity}개 주문가능
                   </div>
                 )}
 

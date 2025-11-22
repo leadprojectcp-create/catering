@@ -307,9 +307,18 @@ export default function ReviewWritePage() {
         }
       }
 
-      // 포인트 지급
-      const pointAmount = hasImages ? 1000 : 500
-      const pointReason = hasImages ? '포토 리뷰 작성' : '리뷰 작성'
+      // 포인트 지급 - 영상: 1000P, 사진: 500P, 없음: 100P
+      const hasVideo = mediaTypes.includes('video')
+      let pointAmount = 100 // 기본 포인트
+      let pointReason = '리뷰 작성'
+
+      if (hasVideo) {
+        pointAmount = 1000
+        pointReason = '동영상 리뷰 작성'
+      } else if (hasImages) {
+        pointAmount = 500
+        pointReason = '포토 리뷰 작성'
+      }
 
       try {
         // users 컬렉션의 point 필드 업데이트

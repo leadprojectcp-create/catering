@@ -7,6 +7,7 @@ import PageWrapper from "@/components/PageWrapper";
 import NativeAuthBridge from "@/components/NativeAuthBridge";
 import FcmHandler from "@/components/FcmHandler";
 import PageVisibilityHandler from "@/components/PageVisibilityHandler";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -117,15 +118,17 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <AuthProvider>
-          <NativeAuthBridge />
-          <FcmHandler />
-          <PageVisibilityHandler />
-          <PageWrapper>
-            {children}
-          </PageWrapper>
-          <LayoutWrapper />
-        </AuthProvider>
+        <ErrorBoundary>
+          <AuthProvider>
+            <NativeAuthBridge />
+            <FcmHandler />
+            <PageVisibilityHandler />
+            <PageWrapper>
+              {children}
+            </PageWrapper>
+            <LayoutWrapper />
+          </AuthProvider>
+        </ErrorBoundary>
       </body>
     </html>
   );
