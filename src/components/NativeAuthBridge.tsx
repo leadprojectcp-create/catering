@@ -118,8 +118,8 @@ export default function NativeAuthBridge() {
         console.log('[NativeAuth] Kakao login started:', result)
 
         const auth = getAuth()
-        // 웹과 동일한 provider 사용 (Firebase는 하나의 Kakao OAuth provider만 지원)
-        const provider = new OAuthProvider('oidc.kakao')
+        // 앱에서는 oidc.kakao-app 사용 (Native App Key)
+        const provider = new OAuthProvider('oidc.kakao-app')
 
         console.log('[NativeAuth] Creating credential with idToken:', result.idToken)
 
