@@ -1,11 +1,14 @@
 'use client'
 
 import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 
 export default function PageVisibilityHandler() {
+  const router = useRouter()
+
   useEffect(() => {
     let hiddenTime: number | null = null
-    const RELOAD_THRESHOLD = 30 * 1000 // 30초 (5분에서 단축)
+    const RELOAD_THRESHOLD = 30 * 1000 // 30초
 
     const handleVisibilityChange = () => {
       if (document.hidden) {
@@ -19,10 +22,11 @@ export default function PageVisibilityHandler() {
         if (hiddenTime) {
           const hiddenDuration = Date.now() - hiddenTime
 
-          // 30초 이상 백그라운드에 있었으면 새로고침
+          // 30초 이상 백그라운드에 있었으면 soft reload
           if (hiddenDuration > RELOAD_THRESHOLD) {
             console.log(`[Page Visibility] 페이지가 ${Math.round(hiddenDuration / 1000)}초 동안 백그라운드에 있었습니다. 새로고침합니다.`)
-            window.location.reload()
+            // window.location.reload() 대신 router.refresh() 사용 (soft reload)
+            router.refresh()
           } else {
             console.log(`[Page Visibility] 페이지가 다시 포그라운드로 돌아왔습니다. (${Math.round(hiddenDuration / 1000)}초)`)
             // 짧은 시간일 경우 새로고침 없이 그냥 복귀
@@ -38,8 +42,8 @@ export default function PageVisibilityHandler() {
       console.log('[Page Visibility] pageshow event, persisted:', event.persisted)
       // bfcache(back-forward cache)에서 복원된 경우
       if (event.persisted) {
-        console.log('[Page Visibility] 페이지가 bfcache에서 복원되었습니다. 새로고침합니다.')
-        window.location.reload()
+        console.log('[Page Visibility] 페이지가 bfcache에서 복원되었습니다. soft reload 합니다.')
+        router.refresh()
       }
     }
 
@@ -49,8 +53,8 @@ export default function PageVisibilityHandler() {
       if (hiddenTime) {
         const hiddenDuration = Date.now() - hiddenTime
         if (hiddenDuration > RELOAD_THRESHOLD) {
-          console.log('[Page Visibility] Resume 후 새로고침')
-          window.location.reload()
+          console.log('[Page Visibility] Resume 후 soft reload')
+          router.refresh()
         }
       }
     }
@@ -66,7 +70,7 @@ export default function PageVisibilityHandler() {
       window.removeEventListener('resume', handleResume)
       document.removeEventListener('resume', handleResume)
     }
-  }, [])
+  }, [router])
 
   return null
 }

@@ -44,7 +44,7 @@ const formatOrderDate = (date: Date | Timestamp) => {
     second: '2-digit',
     hour12: true
   })
-  return `${datePart} (${weekday}) ${timePart} 주문`
+  return `주문날짜 ${datePart} (${weekday}) ${timePart}`
 }
 
 const getPaymentDate = (order: Order, paymentId: string, groupIndex: number) => {
@@ -293,14 +293,17 @@ export default function AdditionalOrderSection({ order }: Props) {
               </div>
 
               {/* 추가주문 취소 버튼 - 각 productGroup의 마지막에만 표시 */}
-              {/* shipping, completed 상태일 때는 취소 버튼 숨김 */}
+              {/* shipping, completed, cancelled, refunded 상태일 때는 취소 버튼 숨김 */}
               {(() => {
                 const shouldShowButton = productIndex === Object.keys(groupedByProduct).length - 1 &&
                   order.orderStatus !== 'shipping' &&
-                  order.orderStatus !== 'completed'
+                  order.orderStatus !== 'completed' &&
+                  order.orderStatus !== 'cancelled' &&
+                  order.paymentStatus !== 'refunded'
 
                 console.log('[추가주문 취소버튼]', {
                   orderStatus: order.orderStatus,
+                  paymentStatus: order.paymentStatus,
                   isLastProduct: productIndex === Object.keys(groupedByProduct).length - 1,
                   shouldShowButton
                 })

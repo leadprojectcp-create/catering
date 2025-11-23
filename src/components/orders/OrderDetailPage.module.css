@@ -454,9 +454,16 @@
   gap: 16px;
 }
 
+.divider {
+  height: 1px;
+  background: #F4F4F4;
+  margin: 0;
+}
+
 .paymentDateInfo {
   color: #999;
   font-size: 14px;
+  font-weight: 500;
   font-weight: 500;
   text-align: right;
 }

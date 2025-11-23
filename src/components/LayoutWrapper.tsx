@@ -21,6 +21,8 @@ export default function LayoutWrapper() {
   const hasRoomId = searchParams.get('roomId') !== null
   const isChatListPage = pathname === '/chat' && !hasRoomId
   const isChatRoomPage = pathname.startsWith('/chat/') || (pathname === '/chat' && hasRoomId)
+  // ProductDetail 페이지인지 확인
+  const isProductDetailPage = pathname.startsWith('/productDetail/')
 
   // admin, signup, login, redirect 페이지에서는 모든 네비게이션 숨김
   const hideAllNav = pathname.startsWith('/admin') ||
@@ -47,7 +49,7 @@ export default function LayoutWrapper() {
     return (
       <>
         <PartnerHeader />
-        <Footer />
+        {!isProductDetailPage && <Footer />}
         <PartnerBottomNav />
       </>
     )
@@ -57,7 +59,7 @@ export default function LayoutWrapper() {
   return (
     <>
       <Header />
-      <Footer />
+      {!isProductDetailPage && <Footer />}
       <BottomNavigator />
     </>
   )

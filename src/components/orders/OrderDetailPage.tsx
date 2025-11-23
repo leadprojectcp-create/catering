@@ -671,6 +671,48 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
               <span className={styles.infoValue}>-{(order.usedPoint ?? 0).toLocaleString()}원</span>
             </div>
             <div className={styles.divider}></div>
+            {order.paymentInfo && order.paymentInfo.length > 0 && order.paymentInfo[0].paidAt && (
+              <div className={styles.paymentDateInfo}>
+                {(() => {
+                  const firstPayment = order.paymentInfo[0]
+                  const paidAt = firstPayment.paidAt instanceof Date
+                    ? firstPayment.paidAt
+                    : new Date(firstPayment.paidAt)
+
+                  const year = paidAt.getFullYear()
+                  const month = String(paidAt.getMonth() + 1).padStart(2, '0')
+                  const day = String(paidAt.getDate()).padStart(2, '0')
+                  const weekdays = ['일', '월', '화', '수', '목', '금', '토']
+                  const weekday = weekdays[paidAt.getDay()]
+                  const hours = paidAt.getHours()
+                  const minutes = String(paidAt.getMinutes()).padStart(2, '0')
+                  const seconds = String(paidAt.getSeconds()).padStart(2, '0')
+                  const period = hours >= 12 ? '오후' : '오전'
+                  const displayHours = hours > 12 ? hours - 12 : hours === 0 ? 12 : hours
+
+                  // 결제 방법 표시
+                  let paymentMethod = '카드'
+                  if (firstPayment.method === 'point') {
+                    paymentMethod = '포인트'
+                  } else if (typeof firstPayment.method === 'object' && firstPayment.method !== null) {
+                    const methodObj = firstPayment.method as any
+                    if (methodObj.type === 'PaymentMethodEasyPay') {
+                      paymentMethod = methodObj.provider === 'KAKAOPAY' ? '카카오페이' :
+                                     methodObj.provider === 'NAVERPAY' ? '네이버페이' :
+                                     methodObj.provider === 'TOSS' ? '토스페이' : '간편결제'
+                    } else if (methodObj.type === 'PaymentMethodCard') {
+                      paymentMethod = '카드'
+                    } else if (methodObj.type === 'PaymentMethodVirtualAccount') {
+                      paymentMethod = '가상계좌'
+                    } else if (methodObj.type === 'PaymentMethodTransfer') {
+                      paymentMethod = '계좌이체'
+                    }
+                  }
+
+                  return `${year}.${month}.${day} (${weekday}) ${period} ${displayHours}:${minutes}:${seconds} ${paymentMethod} 결제`
+                })()}
+              </div>
+            )}
             <div className={styles.infoRow}>
               <span className={styles.totalLabel}>총 결제금액</span>
               <span className={styles.totalValue}>

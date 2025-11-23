@@ -53,7 +53,7 @@ const formatOrderDate = (date: Date | Timestamp) => {
     second: '2-digit',
     hour12: true
   })
-  return `${datePart} (${weekday}) ${timePart} 주문`
+  return `주문날짜 ${datePart} (${weekday}) ${timePart}`
 }
 
 export default function RegularOrderSection({ order }: Props) {
@@ -94,10 +94,23 @@ export default function RegularOrderSection({ order }: Props) {
           paymentStatusText = '환불완료'
         }
 
-        // 포트원 결제 금액 = 전체 금액 - 사용한 포인트
-        // mainPaymentInfo에서 usedPoint 가져오기 (없으면 0)
+        // 포트원 결제 금액과 포인트 사용 금액 계산
         const usedPoint = mainPaymentInfo?.usedPoint || 0
-        const portonePaymentAmount = (mainPaymentInfo?.amount || productGroupTotal) - usedPoint
+
+        // amount가 객체일 수 있으므로 처리
+        const paymentAmount = mainPaymentInfo?.amount
+        let portonePaymentAmount: number
+
+        if (typeof paymentAmount === 'object' && paymentAmount !== null) {
+          // amount 객체에서 실제 결제 금액(paid) 가져오기
+          portonePaymentAmount = (paymentAmount as any).paid || 0
+        } else if (typeof paymentAmount === 'number') {
+          // amount가 숫자면 포인트 차감
+          portonePaymentAmount = paymentAmount - usedPoint
+        } else {
+          // amount가 없으면 상품 총액에서 포인트 차감
+          portonePaymentAmount = productGroupTotal - usedPoint
+        }
 
         return (
           <section key={`regular-${groupIndex}`} className={styles.orderDetailSection}>

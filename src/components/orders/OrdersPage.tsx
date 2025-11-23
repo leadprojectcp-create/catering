@@ -893,10 +893,31 @@ export default function OrdersPage() {
                         }`}>
                           {(() => {
                             const paymentStatus = getLatestPaymentStatus(order)
-                            if (!paymentStatus || paymentStatus === 'unpaid') return `결제 미완료 ${(order.totalPrice || order.totalProductPrice || 0).toLocaleString()}원`
-                            if (paymentStatus === 'paid') return `결제 완료 ${(order.totalPrice || order.totalProductPrice || 0).toLocaleString()}원`
-                            if (paymentStatus === 'refunded') return `환불 완료 ${(order.totalPrice || order.totalProductPrice || 0).toLocaleString()}원`
-                            if (paymentStatus === 'failed') return `결제 실패 ${(order.totalPrice || order.totalProductPrice || 0).toLocaleString()}원`
+
+                            // paymentInfo에서 실제 결제 금액 + 포인트 합산
+                            let totalAmount = 0
+                            if (order.paymentInfo && Array.isArray(order.paymentInfo) && order.paymentInfo.length > 0) {
+                              order.paymentInfo.forEach((payment: any) => {
+                                // amount가 객체인 경우 처리
+                                let paidAmount = 0
+                                if (typeof payment.amount === 'object' && payment.amount !== null) {
+                                  paidAmount = payment.amount.paid || 0
+                                } else if (typeof payment.amount === 'number') {
+                                  paidAmount = payment.amount
+                                }
+
+                                const usedPoint = payment.usedPoint || 0
+                                totalAmount += paidAmount + usedPoint
+                              })
+                            } else {
+                              // paymentInfo가 없으면 기존 totalPrice 사용
+                              totalAmount = order.totalPrice || order.totalProductPrice || 0
+                            }
+
+                            if (!paymentStatus || paymentStatus === 'unpaid') return `결제 미완료 ${totalAmount.toLocaleString()}원`
+                            if (paymentStatus === 'paid') return `결제 완료 ${totalAmount.toLocaleString()}원`
+                            if (paymentStatus === 'refunded') return `환불 완료 ${totalAmount.toLocaleString()}원`
+                            if (paymentStatus === 'failed') return `결제 실패 ${totalAmount.toLocaleString()}원`
                             return ''
                           })()}
                         </div>
