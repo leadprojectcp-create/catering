@@ -786,7 +786,7 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
           totalAmount={order.totalPrice || 0}
           paymentId={
             order.paymentInfo && order.paymentInfo.length > 0
-              ? order.paymentInfo.map(p => p.id || p.paymentId).filter(Boolean) as string[]
+              ? order.paymentInfo.map((p: any) => p.id || p.paymentId).filter(Boolean) as string[]
               : (order.paymentId || null)
           }
           onClose={() => setCancelOrderId(null)}
