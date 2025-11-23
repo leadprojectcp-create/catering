@@ -25,11 +25,7 @@ export default function PageVisibilityHandler() {
             window.location.reload()
           } else {
             console.log(`[Page Visibility] 페이지가 다시 포그라운드로 돌아왔습니다. (${Math.round(hiddenDuration / 1000)}초)`)
-            // 짧은 시간이라도 강제로 리렌더링 트리거
-            document.body.style.display = 'none'
-            setTimeout(() => {
-              document.body.style.display = ''
-            }, 0)
+            // 짧은 시간일 경우 새로고침 없이 그냥 복귀
           }
 
           hiddenTime = null

@@ -95,8 +95,9 @@ export default function RegularOrderSection({ order }: Props) {
         }
 
         // 포트원 결제 금액 = 전체 금액 - 사용한 포인트
-        const usedPoint = order.usedPoint || 0
-        const portonePaymentAmount = (order.totalPrice || 0) - usedPoint
+        // mainPaymentInfo에서 usedPoint 가져오기 (없으면 0)
+        const usedPoint = mainPaymentInfo?.usedPoint || 0
+        const portonePaymentAmount = (mainPaymentInfo?.amount || productGroupTotal) - usedPoint
 
         return (
           <section key={`regular-${groupIndex}`} className={styles.orderDetailSection}>

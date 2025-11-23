@@ -201,11 +201,29 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    return NextResponse.json(result, { status: 200 })
+    // code가 "1" 또는 "0000"이면 성공 (후다닥 API는 "1"을 성공으로 반환)
+    if (result.code === '1' || result.code === '0000') {
+      return NextResponse.json({
+        success: true,
+        data: {
+          orderNo: result.orderNo,
+          code: result.code,
+          orderInfo: result.orderInfo,
+          testing: result.testing
+        }
+      }, { status: 200 })
+    } else {
+      return NextResponse.json({
+        success: false,
+        error: result.errMsg || result.message || '퀵 배송 요청 실패',
+        errMsg: result.errMsg || result.message,
+        code: result.code
+      }, { status: 400 })
+    }
   } catch (error) {
     console.error('[QuickDelivery API] 에러:', error)
     return NextResponse.json(
-      { error: '서버 에러', details: error instanceof Error ? error.message : String(error) },
+      { success: false, error: '서버 에러', details: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     )
   }

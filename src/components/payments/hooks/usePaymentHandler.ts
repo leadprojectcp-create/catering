@@ -327,17 +327,32 @@ export async function handlePaymentProcess(params: UsePaymentHandlerParams): Pro
       : [existingOrderData.paymentId]
   }
 
-  // actualPaymentAmount가 0보다 클 때만 결제 정보 저장
+  // 결제 정보 저장
   if (actualPaymentAmount > 0 && verifyData.payment) {
+    // 일반 결제 (포트원)
     const payment = verifyData.payment as { status?: string; [key: string]: unknown }
     const normalizedPayment = {
       ...payment,
-      status: payment.status?.toLowerCase()
+      status: payment.status?.toLowerCase(),
+      usedPoint: usePoint || 0
     }
     paymentInfoArray.push(normalizedPayment)
     if (paymentResult.paymentId) {
       paymentIdArray.push(paymentResult.paymentId)
     }
+  } else if (actualPaymentAmount === 0 && usePoint > 0) {
+    // 포인트 전용 결제
+    const pointPaymentInfo = {
+      id: 'point-only',
+      paymentId: 'point-only',
+      status: 'paid',
+      amount: 0,
+      usedPoint: usePoint,
+      paidAt: new Date(),
+      method: 'point'
+    }
+    paymentInfoArray.push(pointPaymentInfo)
+    paymentIdArray.push('point-only')
   }
 
   // 장바구니에서 생성된 경우: 이미 모든 정보가 저장되어 있으므로 paymentInfo만 업데이트
@@ -353,13 +368,9 @@ export async function handlePaymentProcess(params: UsePaymentHandlerParams): Pro
 
     const updateData: Record<string, unknown> = {
       items: itemsWithPaymentId,
+      paymentInfo: paymentInfoArray,
+      paymentId: paymentIdArray,
       verifiedAt: serverTimestamp()
-    }
-
-    // actualPaymentAmount가 0보다 클 때만 paymentInfo, paymentId 저장
-    if (actualPaymentAmount > 0) {
-      updateData.paymentInfo = paymentInfoArray
-      updateData.paymentId = paymentIdArray
     }
 
     await updateDoc(orderRef, updateData)
@@ -467,13 +478,9 @@ export async function handlePaymentProcess(params: UsePaymentHandlerParams): Pro
     const updateData: Record<string, unknown> = {
       paymentStatus: 'paid',
       items: itemsWithPaymentId,
+      paymentInfo: paymentInfoArray,
+      paymentId: paymentIdArray,
       verifiedAt: serverTimestamp()
-    }
-
-    // actualPaymentAmount가 0보다 클 때만 paymentInfo, paymentId 저장
-    if (actualPaymentAmount > 0) {
-      updateData.paymentInfo = paymentInfoArray
-      updateData.paymentId = paymentIdArray
     }
 
     await updateDoc(orderRef, updateData)
@@ -571,6 +578,90 @@ export async function handlePaymentProcess(params: UsePaymentHandlerParams): Pro
     })
   } catch (alimtalkError) {
     console.error('주문 알림 발송 실패:', alimtalkError)
+  }
+
+  // 퀵업체 배송인 경우 자동으로 배송 요청
+  if (deliveryMethod === '퀵업체 배송' && storeData) {
+    try {
+      console.log('[Payment Handler] 퀵 배송 요청 시작')
+
+      const finalOrderSnapshot = await getDoc(orderRef)
+      const finalOrderData = finalOrderSnapshot.data()
+
+      const deliveryInfo = finalOrderData?.deliveryInfo || {}
+      const deliveryDatetime = deliveryInfo.deliveryDate && deliveryInfo.deliveryTime
+        ? `${deliveryInfo.deliveryDate} ${deliveryInfo.deliveryTime}:00`
+        : undefined
+
+      // hddMemo에 배송 날짜/시간 포함
+      const hddMemo = deliveryDatetime
+        ? `도착지의 ${deliveryInfo.deliveryDate}, ${deliveryInfo.deliveryTime}에 정확히 배송 부탁드립니다.`
+        : '안전한 배송 부탁드립니다.'
+
+      // storeData.address가 객체인 경우 fullAddress 추출
+      const startAddress = typeof storeData.address === 'object' && storeData.address !== null
+        ? (storeData.address as any).fullAddress || ''
+        : (storeData.address || '')
+
+      const startAddressDetail = typeof storeData.address === 'object' && storeData.address !== null
+        ? (storeData.address as any).detail || ''
+        : (storeData.addressDetail || '')
+
+      const quickDeliveryResponse = await fetch('/api/quick-delivery', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          orderId: finalOrderId,
+          serviceType: 'damas',
+          startCName: orderData.storeName || '',
+          startPhone: storeData.phone || '',
+          startAddress: startAddress,
+          startAddressDetail: startAddressDetail,
+          destCName: deliveryInfo.recipient || orderInfo.orderer,
+          destPhone: deliveryInfo.recipientPhone || orderInfo.phone,
+          destAddress: deliveryInfo.address || orderInfo.address,
+          destAddressDetail: deliveryInfo.detailAddress || orderInfo.detailAddress || '',
+          runtype: 0,
+          payType: 'contract',
+          reservDatetimeUp: deliveryDatetime,
+          hddMemo: hddMemo,
+          upWay: 'free_customer',
+          downWay: 'free_customer',
+          deliveryItem: {
+            bgBox: 1
+          }
+        }),
+      })
+
+      const quickDeliveryResult = await quickDeliveryResponse.json()
+
+      if (quickDeliveryResponse.ok && quickDeliveryResult.success) {
+        console.log('[Payment Handler] 퀵 배송 요청 성공:', quickDeliveryResult)
+
+        // 주문 문서에 퀵 배송 정보 저장
+        await updateDoc(orderRef, {
+          quickDeliveryOrderNo: quickDeliveryResult.data.orderNo,
+          quickDeliveryStatus: 'requested',
+          quickDeliveryInfo: quickDeliveryResult.data
+        })
+      } else {
+        console.error('[Payment Handler] 퀵 배송 요청 실패:', quickDeliveryResult)
+        // 실패해도 주문은 완료되므로 에러를 저장만 하고 계속 진행
+        await updateDoc(orderRef, {
+          quickDeliveryStatus: 'failed',
+          quickDeliveryError: quickDeliveryResult.errMsg || quickDeliveryResult.error
+        })
+      }
+    } catch (quickDeliveryError) {
+      console.error('[Payment Handler] 퀵 배송 요청 중 오류:', quickDeliveryError)
+      // 오류 발생해도 주문은 완료되므로 계속 진행
+      await updateDoc(orderRef, {
+        quickDeliveryStatus: 'failed',
+        quickDeliveryError: String(quickDeliveryError)
+      })
+    }
   }
 
   // PC 결제 완료 후 localStorage도 정리

@@ -149,12 +149,20 @@ export default function PaymentCompletePage() {
         const existingOrderData = orderSnapshot.data()
 
         // 결제 정보 조회
+        console.log('[Payment Complete] 결제 정보 조회 시작:', {
+          paymentId,
+          usePoint,
+          cartIdParam,
+          additionalOrderIdParam
+        })
+
         const verifyResponse2 = await fetch('/api/payments/verify', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ payment_id: paymentId }),
         })
         const verifyData2 = await verifyResponse2.json()
+        console.log('[Payment Complete] 결제 검증 응답:', verifyData2)
 
         let paymentInfoArray: unknown[] = []
         let paymentIdArray: string[] = []
@@ -171,45 +179,79 @@ export default function PaymentCompletePage() {
             : [existingOrderData.paymentId]
         }
 
+        console.log('[Payment Complete] 기존 배열:', {
+          paymentInfoArray,
+          paymentIdArray,
+          hasVerifyPayment: !!verifyData2.payment,
+          paymentIdCheck: { paymentId, isNull: !paymentId, isPointOnly: paymentId === 'point-only' }
+        })
+
         if (verifyData2.payment) {
+          console.log('[Payment Complete] 일반 결제 처리')
           const payment = verifyData2.payment as { status?: string; [key: string]: unknown }
           const normalizedPayment = {
             ...payment,
-            status: payment.status?.toLowerCase()
+            status: payment.status?.toLowerCase(),
+            usedPoint: usePoint || 0 // 사용한 포인트 추가
           }
           paymentInfoArray.push(normalizedPayment)
           paymentIdArray.push(paymentId)
+        } else if (!paymentId || paymentId === 'point-only') {
+          console.log('[Payment Complete] 포인트 전용 결제 처리')
+          // 포인트 전용 결제인 경우
+          const pointPaymentInfo = {
+            id: 'point-only',
+            paymentId: 'point-only',
+            status: 'paid',
+            amount: 0, // 실제 결제 금액은 0
+            usedPoint: usePoint || 0, // 사용한 포인트
+            paidAt: new Date(),
+            method: 'point'
+          }
+          paymentInfoArray.push(pointPaymentInfo)
+          paymentIdArray.push('point-only')
         }
+
+        console.log('[Payment Complete] 최종 배열:', {
+          paymentInfoArray,
+          paymentIdArray
+        })
 
         // 주문 업데이트 (PC와 동일)
         if (cartIdParam && !additionalOrderIdParam) {
+          console.log('[Payment Complete] 장바구니 결제 업데이트')
           const existingItems = (existingOrderData?.items as OrderItem[]) || []
+          const finalPaymentId = paymentId || 'point-only'
           const itemsWithPaymentId = existingItems.map((item) => ({
             ...item,
-            paymentId: paymentId,
+            paymentId: finalPaymentId,
             isAddItem: false
           }))
 
-          await updateDoc(orderRef, {
+          const updateData = {
             items: itemsWithPaymentId,
             paymentInfo: paymentInfoArray,
             paymentId: paymentIdArray,
             verifiedAt: serverTimestamp()
-          })
+          }
+          console.log('[Payment Complete] 장바구니 updateDoc 데이터:', updateData)
+          await updateDoc(orderRef, updateData)
         } else if (additionalOrderIdParam) {
+          console.log('[Payment Complete] 추가 주문 업데이트')
           const existingItems = (existingOrderData?.items as OrderItem[]) || []
           const newItems = (items as OrderItem[]) || []
           const currentTotalProductPrice = existingOrderData?.totalProductPrice || 0
           const currentTotalQuantity = existingOrderData?.totalQuantity || 0
           const currentTotalPrice = existingOrderData?.totalPrice || 0
 
+          const finalPaymentId = paymentId || 'point-only'
           const itemsWithPaymentId = newItems.map((item) => ({
             ...item,
-            paymentId: paymentId,
+            paymentId: finalPaymentId,
             isAddItem: true
           }))
 
-          await updateDoc(orderRef, {
+          const updateData = {
             paymentStatus: 'paid',
             items: [...existingItems, ...itemsWithPaymentId],
             totalProductPrice: currentTotalProductPrice + (totalProductPrice || 0),
@@ -221,22 +263,28 @@ export default function PaymentCompletePage() {
             updatedAt: serverTimestamp(),
             addTotalProductPrice: deleteField(),
             addTotalQuantity: deleteField()
-          })
+          }
+          console.log('[Payment Complete] 추가주문 updateDoc 데이터:', updateData)
+          await updateDoc(orderRef, updateData)
         } else {
+          console.log('[Payment Complete] 일반 주문 업데이트')
           const existingItems = (existingOrderData?.items as OrderItem[]) || []
+          const finalPaymentId = paymentId || 'point-only'
           const itemsWithPaymentId = existingItems.map((item) => ({
             ...item,
-            paymentId: paymentId,
+            paymentId: finalPaymentId,
             isAddItem: false
           }))
 
-          await updateDoc(orderRef, {
+          const updateData = {
             paymentStatus: 'paid',
             items: itemsWithPaymentId,
             paymentInfo: paymentInfoArray,
             paymentId: paymentIdArray,
             verifiedAt: serverTimestamp()
-          })
+          }
+          console.log('[Payment Complete] 일반주문 updateDoc 데이터:', updateData)
+          await updateDoc(orderRef, updateData)
         }
 
         // 포인트 사용 처리 (PC와 동일)

@@ -673,7 +673,9 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
             <div className={styles.divider}></div>
             <div className={styles.infoRow}>
               <span className={styles.totalLabel}>총 결제금액</span>
-              <span className={styles.totalValue}>{order.totalPrice.toLocaleString()}원</span>
+              <span className={styles.totalValue}>
+                {(order.totalProductPrice + getDeliveryFeeAmount(order) - (order.usedPoint ?? 0)).toLocaleString()}원
+              </span>
             </div>
           </section>
         </div>
@@ -740,7 +742,11 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
           orderId={cancelOrderId}
           deliveryDate={order.deliveryInfo?.deliveryDate || order.deliveryDate || ''}
           totalAmount={order.totalPrice || 0}
-          paymentId={order.paymentId || null}
+          paymentId={
+            order.paymentInfo && order.paymentInfo.length > 0
+              ? order.paymentInfo.map(p => p.id || p.paymentId).filter(Boolean) as string[]
+              : (order.paymentId || null)
+          }
           onClose={() => setCancelOrderId(null)}
           onCancel={() => {
             router.push('/orders')
