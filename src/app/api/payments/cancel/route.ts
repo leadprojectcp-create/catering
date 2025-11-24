@@ -220,8 +220,7 @@ export async function POST(request: NextRequest) {
           // 취소된 상품에 사용된 포인트 계산
           // paymentInfo에서 해당 paymentId의 usedPoint를 직접 가져옴
           const cancelledPaymentInfo = existingPaymentInfo.find((info: { id?: string; paymentId?: string; usedPoint?: number }) =>
-            (paymentId && (info.id === paymentId || info.paymentId === paymentId)) ||
-            (!paymentId || paymentId === '' || paymentId === 'point-only')
+            paymentId && (info.id === paymentId || info.paymentId === paymentId)
           )
 
           let refundPoint = 0
