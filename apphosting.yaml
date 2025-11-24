@@ -162,7 +162,7 @@ env:
     availability:
       - RUNTIME
   - variable: HUDADAQ_API_KEY
-    value: test_rouKAs8yPHLEFV1ofgq1x2NRRE2SPhVpqkgUqx5C
+    value: hdd_7AmUjmKuIXmXQ5jLiYAq8vXsZ4H5mvH43FC9ylau
     availability:
       - RUNTIME
   - variable: HUDADAQ_LOGIN_ID
