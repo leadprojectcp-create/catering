@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Script from 'next/script'
 import { useAuth } from '@/contexts/AuthContext'
@@ -78,13 +78,6 @@ export default function PaymentsPage() {
     setAgreeAll,
     setUsePoint
   } = usePaymentForm(user, orderId)
-
-  // 배송 정보가 변경되면 배송비 조회를 다시 해야 하므로 deliveryFeeFromAPI 초기화
-  useEffect(() => {
-    if (deliveryMethod === '퀵업체 배송' && deliveryFeeFromAPI !== null) {
-      setDeliveryFeeFromAPI(null)
-    }
-  }, [orderInfo.deliveryDate, orderInfo.deliveryTime, orderInfo.address])
 
   // usePaymentSummary hook 사용
   const {

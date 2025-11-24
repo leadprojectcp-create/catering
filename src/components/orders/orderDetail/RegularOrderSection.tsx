@@ -121,7 +121,7 @@ export default function RegularOrderSection({ order }: Props) {
               </div>
               <div className={styles.paymentStatusText}>
                 {paymentStatusText} {portonePaymentAmount.toLocaleString()}원
-                {usedPoint > 0 && ` (포인트 ${usedPoint.toLocaleString()}원 사용)`}
+                {usedPoint > 0 && ` (포인트 ${usedPoint.toLocaleString()}원 ${normalizedStatus === 'cancelled' ? '환불' : '사용'})`}
               </div>
             </div>
 

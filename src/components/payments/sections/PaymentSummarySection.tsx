@@ -131,9 +131,11 @@ export default function PaymentSummarySection({
   })
 
   // 판매자 지원 금액 계산 (조건부 지원일 때)
+  // 배송비 조회(deliveryFeeFromAPI)가 있어야만 할인 적용
   const sellerSupport = useMemo(() => {
     if (!isAdditionalOrder &&
         deliveryMethod === '퀵업체 배송' &&
+        deliveryFeeFromAPI !== null &&  // 배송비 조회가 완료된 경우에만
         quickDeliveryFeeSettings?.type === '조건부 지원' &&
         quickDeliveryFeeSettings.freeCondition &&
         quickDeliveryFeeSettings.maxSupport &&
@@ -141,7 +143,7 @@ export default function PaymentSummarySection({
       return quickDeliveryFeeSettings.maxSupport
     }
     return 0
-  }, [isAdditionalOrder, deliveryMethod, quickDeliveryFeeSettings, totalProductPrice])
+  }, [isAdditionalOrder, deliveryMethod, deliveryFeeFromAPI, quickDeliveryFeeSettings, totalProductPrice])
 
   // 실제 결제 금액 (배송비 환급 반영) - 음수 가능
   const actualPaymentAmount = useMemo(() => {

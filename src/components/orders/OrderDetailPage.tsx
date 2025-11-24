@@ -669,7 +669,15 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
             </div>
             <div className={styles.infoRow}>
               <span className={styles.infoLabel}>포인트 사용</span>
-              <span className={styles.infoValue}>-{(order.usedPoint ?? 0).toLocaleString()}원</span>
+              <span className={styles.infoValue}>
+                -{(() => {
+                  // paymentInfo 배열에서 실제 사용된 포인트 합산
+                  const totalUsedPoint = order.paymentInfo?.reduce((sum, payment) => {
+                    return sum + (payment.usedPoint || 0)
+                  }, 0) || order.usedPoint || 0
+                  return totalUsedPoint.toLocaleString()
+                })()}원
+              </span>
             </div>
             <div className={styles.divider}></div>
             {order.paymentInfo && order.paymentInfo.length > 0 && order.paymentInfo[0].paidAt && (
@@ -710,14 +718,26 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
                     }
                   }
 
-                  return `${year}.${month}.${day} (${weekday}) ${period} ${displayHours}:${minutes}:${seconds} ${paymentMethod} 결제`
+                  // 결제 상태 확인 (환불 완료 여부)
+                  const isRefunded = firstPayment.status?.toLowerCase() === 'cancelled' ||
+                                     order.paymentStatus === 'refunded' ||
+                                     order.orderStatus === 'cancelled'
+                  const statusText = isRefunded ? '환불완료' : '결제'
+
+                  return `${year}.${month}.${day} (${weekday}) ${period} ${displayHours}:${minutes}:${seconds} ${paymentMethod} ${statusText}`
                 })()}
               </div>
             )}
             <div className={styles.infoRow}>
               <span className={styles.totalLabel}>총 결제금액</span>
               <span className={styles.totalValue}>
-                {(order.totalProductPrice + getDeliveryFeeAmount(order) - (order.usedPoint ?? 0)).toLocaleString()}원
+                {(() => {
+                  // paymentInfo 배열에서 실제 사용된 포인트 합산
+                  const totalUsedPoint = order.paymentInfo?.reduce((sum, payment) => {
+                    return sum + (payment.usedPoint || 0)
+                  }, 0) || order.usedPoint || 0
+                  return (order.totalProductPrice + getDeliveryFeeAmount(order) - totalUsedPoint).toLocaleString()
+                })()}원
               </span>
             </div>
           </section>
