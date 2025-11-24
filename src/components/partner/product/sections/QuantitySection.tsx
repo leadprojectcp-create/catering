@@ -28,7 +28,7 @@ export default function QuantitySection({
     // 마지막 range의 maxQuantity + 1이 새로운 range의 minQuantity
     const newMinQuantity = quantityRanges.length > 0
       ? quantityRanges[quantityRanges.length - 1].maxQuantity + 1
-      : minOrderQuantity
+      : 1
 
     const newRange: QuantityRange = {
       minQuantity: newMinQuantity,
@@ -52,6 +52,11 @@ export default function QuantitySection({
       // 앞의 0 제거하고 숫자로 변환
       const cleanedValue = value.replace(/^0+/, '') || '0'
       numValue = parseInt(cleanedValue, 10) || 0
+    }
+
+    // minQuantity는 최소 1 이상이어야 함
+    if (field === 'minQuantity' && numValue < 1) {
+      numValue = 1
     }
 
     const updated = quantityRanges.map((range, i) => {
@@ -83,8 +88,9 @@ export default function QuantitySection({
                   <input
                     type="number"
                     value={range.minQuantity}
-                    readOnly
-                    className={`${styles.textInput} ${styles.readOnlyInput}`}
+                    onChange={(e) => handleRangeChange(index, 'minQuantity', e.target.value)}
+                    min={1}
+                    className={styles.textInput}
                   />
                   <span className={styles.inputUnit}>개</span>
                 </div>

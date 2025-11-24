@@ -211,7 +211,7 @@ export default function CartItemsSection({
 
     // quantityRanges가 있으면 그것을 사용, 없으면 기존 방식
     const minQty = product.quantityRanges && product.quantityRanges.length > 0
-      ? 10  // 하드코딩: 최소 10개
+      ? product.quantityRanges[0].minQuantity
       : (product.minOrderQuantity || 1)
 
     const maxQty = product.quantityRanges && product.quantityRanges.length > 0
@@ -347,7 +347,7 @@ export default function CartItemsSection({
 
     // quantityRanges가 있으면 그것을 사용, 없으면 기존 방식
     const minQty = product.quantityRanges && product.quantityRanges.length > 0
-      ? 10  // 하드코딩: 최소 10개
+      ? product.quantityRanges[0].minQuantity
       : (product.minOrderQuantity || 1)
 
     const maxQty = product.quantityRanges && product.quantityRanges.length > 0
@@ -467,7 +467,7 @@ export default function CartItemsSection({
 
   // 최소/최대 주문 수량 - quantityRanges가 있으면 그것을 사용
   const minQty = product.quantityRanges && product.quantityRanges.length > 0
-    ? 10  // 하드코딩: 최소 10개
+    ? product.quantityRanges[0].minQuantity
     : (product.minOrderQuantity || 1)
 
   const maxQty = product.quantityRanges && product.quantityRanges.length > 0
