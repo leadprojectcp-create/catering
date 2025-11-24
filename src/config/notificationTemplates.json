@@ -2,7 +2,7 @@
   "order": {
     "partner": {
       "new": {
-        "templateCode": "UD_0958",
+        "templateCode": "UD_7135",
         "kakao": "[단모] 신규주문이 들어왔습니다.\n\n가게명: #{storeName}\n주문번호: #{orderNumber}\n총 수량: #{totalQuantity}개\n상품금액: #{totalProductPrice}원",
         "push": {
           "title": "✅ 신규주문 접수",
@@ -10,7 +10,7 @@
         }
       },
       "additional": {
-        "templateCode": "UD_3133",
+        "templateCode": "UD_7136",
         "kakao": "[단모] 추가주문이 들어왔습니다.\n\n가게명: #{storeName}\n주문번호: #{orderNumber}\n추가 수량: #{additionalQuantity}개\n추가 금액: #{additionalProductPrice}원\n총 수량: #{totalQuantity}개\n총 금액: #{totalProductPrice}원",
         "push": {
           "title": "✅ 추가주문 접수",
@@ -20,7 +20,7 @@
     },
     "customer": {
       "new": {
-        "templateCode": "UD_3466",
+        "templateCode": "UD_7137",
         "kakao": "[단모] 주문이 접수되었습니다.\n\n가게명: #{storeName}\n주문번호: #{orderNumber}\n총 수량: #{totalQuantity}개\n상품금액: #{totalProductPrice}원",
         "push": {
           "title": "✅ 주문 접수 완료",
@@ -28,7 +28,7 @@
         }
       },
       "additional": {
-        "templateCode": "UD_3467",
+        "templateCode": "UD_7138",
         "kakao": "[단모] 추가주문이 접수되었습니다.\n\n가게명: #{storeName}\n주문번호: #{orderNumber}\n추가 수량: #{additionalQuantity}개\n추가 금액: #{additionalProductPrice}원\n총 수량: #{totalQuantity}개\n총 금액: #{totalProductPrice}원",
         "push": {
           "title": "✅ 추가주문 접수 완료",
@@ -40,7 +40,7 @@
   "cancellation": {
     "partner": {
       "full": {
-        "templateCode": "CANCEL_PARTNER_FULL_TEMP",
+        "templateCode": "UD_7140",
         "kakao": "[단모] 전체주문이 취소되었습니다.\n\n가게명: #{storeName}\n주문번호: #{orderNumber}\n취소 금액: #{cancelAmount}원\n취소 사유: #{cancelReason}\n\n주문을 확인하려면 아래 버튼을 클릭해주세요.",
         "push": {
           "title": "❌ 전체주문 취소",
@@ -48,7 +48,7 @@
         }
       },
       "partial": {
-        "templateCode": "CANCEL_PARTNER_PARTIAL_TEMP",
+        "templateCode": "UD_7141",
         "kakao": "[단모] 추가주문이 취소되었습니다.\n\n가게명: #{storeName}\n주문번호: #{orderNumber}\n취소 금액: #{cancelAmount}원\n취소 사유: #{cancelReason}\n\n주문을 확인하려면 아래 버튼을 클릭해주세요.",
         "push": {
           "title": "❌ 추가주문 취소",
@@ -58,7 +58,7 @@
     },
     "customer": {
       "full": {
-        "templateCode": "CANCEL_CUSTOMER_FULL_TEMP",
+        "templateCode": "UD_7142",
         "kakao": "[단모] 전체주문이 취소되었습니다.\n\n가게명: #{storeName}\n주문번호: #{orderNumber}\n환불 금액: #{refundAmount}원 (#{refundRate}%)\n취소 사유: #{cancelReason}\n\n주문을 확인하려면 아래 버튼을 클릭해주세요.",
         "push": {
           "title": "❌ 전체주문 취소 완료",
@@ -66,7 +66,7 @@
         }
       },
       "partial": {
-        "templateCode": "CANCEL_CUSTOMER_PARTIAL_TEMP",
+        "templateCode": "UD_7144",
         "kakao": "[단모] 추가주문이 취소되었습니다.\n\n가게명: #{storeName}\n주문번호: #{orderNumber}\n환불 금액: #{refundAmount}원 (#{refundRate}%)\n취소 사유: #{cancelReason}\n\n주문을 확인하려면 아래 버튼을 클릭해주세요.",
         "push": {
           "title": "❌ 추가주문 취소 완료",
