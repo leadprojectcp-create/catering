@@ -43,6 +43,8 @@ interface Product {
   storeLatitude?: number
   storeLongitude?: number
   distance?: number
+  storeCity?: string
+  storeDistrict?: string
   category?: string
   status?: string
   minOrderQuantity?: number
@@ -256,6 +258,8 @@ export default function CategoryProductList({ categoryName }: CategoryProductLis
                   if (storeData.address?.latitude && storeData.address?.longitude) {
                     updatedProduct.storeLatitude = storeData.address.latitude
                     updatedProduct.storeLongitude = storeData.address.longitude
+                    updatedProduct.storeCity = storeData.address.city
+                    updatedProduct.storeDistrict = storeData.address.district
 
                     console.log(`\n=== ${updatedProduct.storeName} 위치 정보 ===`)
                     console.log('판매자 위도 (latitude):', storeData.address.latitude)
@@ -569,7 +573,7 @@ export default function CategoryProductList({ categoryName }: CategoryProductLis
                   )}
 
                   {/* 거리 표시 */}
-                  {product.distance !== undefined && (
+                  {/* {product.distance !== undefined && (
                     <div className={styles.distanceWrapper}>
                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
                         <path d="M8.00065 1.3335C5.42065 1.3335 3.33398 3.42016 3.33398 6.00016C3.33398 9.50016 8.00065 14.6668 8.00065 14.6668C8.00065 14.6668 12.6673 9.50016 12.6673 6.00016C12.6673 3.42016 10.5807 1.3335 8.00065 1.3335ZM8.00065 7.66683C7.55862 7.66683 7.1347 7.49123 6.82214 7.17867C6.50958 6.86611 6.33398 6.44219 6.33398 6.00016C6.33398 5.55814 6.50958 5.13421 6.82214 4.82165C7.1347 4.50909 7.55862 4.3335 8.00065 4.3335C8.44268 4.3335 8.8666 4.50909 9.17916 4.82165C9.49172 5.13421 9.66732 5.55814 9.66732 6.00016C9.66732 6.44219 9.49172 6.86611 9.17916 7.17867C8.8666 7.49123 8.44268 7.66683 8.00065 7.66683Z" fill="#4E5968"/>
@@ -577,6 +581,15 @@ export default function CategoryProductList({ categoryName }: CategoryProductLis
                       <span className={styles.storeDistance}>
                         내 위치에서 {formatDistance(product.distance)}
                       </span>
+                    </div>
+                  )} */}
+
+                  {/* 지역 표시 (city | district) */}
+                  {(product.storeCity || product.storeDistrict) && (
+                    <div className={styles.locationInfo}>
+                      {product.storeCity && <span>{product.storeCity}</span>}
+                      {product.storeCity && product.storeDistrict && <span> | </span>}
+                      {product.storeDistrict && <span>{product.storeDistrict}</span>}
                     </div>
                   )}
 

@@ -193,6 +193,15 @@ const ProductInfoSection = memo(function ProductInfoSection({
           {/* 첫 번째 줄: 거리 + 별점 (왼쪽) | 좋아요 버튼 (오른쪽) */}
           <div className={styles.topRow}>
             <div className={styles.distanceAndRating}>
+              {/* 지역 표시 (city | district) */}
+              {(store?.address?.city || store?.address?.district) && (
+                <div className={styles.locationInfo}>
+                  {store?.address?.city && <span>{store.address.city}</span>}
+                  {store?.address?.city && store?.address?.district && <span> | </span>}
+                  {store?.address?.district && <span>{store.address.district}</span>}
+                </div>
+              )}
+
               {/* 거리 표시 */}
               {distance !== undefined && (
                 <div className={styles.distanceWrapper}>

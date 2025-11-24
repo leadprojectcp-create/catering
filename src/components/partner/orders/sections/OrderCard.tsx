@@ -6,6 +6,7 @@ import type { Timestamp, FieldValue } from 'firebase/firestore'
 import Image from 'next/image'
 import { doc, updateDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
+import AdditionalOrderInfoModal from '../modals/AdditionalOrderInfoModal'
 import styles from './OrderCard.module.css'
 
 interface OrderCardProps {
@@ -39,6 +40,7 @@ export default function OrderCard({
   const [memo, setMemo] = useState(order.partnerMemo || '')
   const [isSavingMemo, setIsSavingMemo] = useState(false)
   const [isCancelingAdditional, setIsCancelingAdditional] = useState(false)
+  const [isInfoModalOpen, setIsInfoModalOpen] = useState(false)
 
   const handleToggleAdditionalOrder = async () => {
     if (!order.id) return
@@ -524,6 +526,8 @@ export default function OrderCard({
                       alt="정보"
                       width={20}
                       height={20}
+                      onClick={() => setIsInfoModalOpen(true)}
+                      style={{ cursor: 'pointer' }}
                     />
                     <span className={styles.additionalOrderLabel}>추가주문허용</span>
                     <button
@@ -1097,6 +1101,12 @@ export default function OrderCard({
           주문서 출력
         </button>
       )}
+
+      {/* 추가 주문 허용 안내 모달 */}
+      <AdditionalOrderInfoModal
+        isOpen={isInfoModalOpen}
+        onClose={() => setIsInfoModalOpen(false)}
+      />
     </div>
   )
 }

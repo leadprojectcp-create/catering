@@ -32,6 +32,12 @@
   flex: 1;
 }
 
+.locationInfo {
+  color: #707070;
+  font-size: 15px;
+  font-weight: 600;
+}
+
 .distanceWrapper {
   display: flex;
   align-items: center;

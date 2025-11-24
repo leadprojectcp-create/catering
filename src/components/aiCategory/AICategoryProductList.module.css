@@ -285,6 +285,13 @@
   font-weight: 600;
 }
 
+.locationInfo {
+  color: #707070;
+  font-size: 13px;
+  font-weight: 600;
+  margin: 0;
+}
+
 .productName {
   color: #333;
   font-size: 14px;

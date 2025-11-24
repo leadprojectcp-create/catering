@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { collection, query, where, getDocs, deleteDoc, doc, orderBy, Timestamp } from 'firebase/firestore'
+import { collection, query, where, getDocs, deleteDoc, doc, getDoc, orderBy, Timestamp } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { useAuth } from '@/contexts/AuthContext'
 import Loading from '@/components/Loading'
@@ -14,6 +14,7 @@ import styles from './ReviewManagePage.module.css'
 interface Review {
   id: string
   productId: string
+  productName?: string
   orderId: string
   storeId: string
   storeName: string
@@ -61,14 +62,35 @@ export default function ReviewManagePage() {
         const querySnapshot = await getDocs(q)
 
         const reviewsList: Review[] = []
-        querySnapshot.forEach((doc) => {
-          reviewsList.push({
-            id: doc.id,
-            ...doc.data()
-          } as Review)
-        })
 
-        setReviews(reviewsList)
+        // 각 리뷰의 상품명 가져오기
+        const reviewsWithProductName = await Promise.all(
+          querySnapshot.docs.map(async (reviewDoc) => {
+            const reviewData = reviewDoc.data() as Review
+
+            // productId로 상품명 가져오기
+            if (reviewData.productId) {
+              try {
+                const productDocRef = doc(db, 'products', reviewData.productId)
+                const productDoc = await getDoc(productDocRef)
+
+                if (productDoc.exists()) {
+                  const productData = productDoc.data()
+                  reviewData.productName = productData.name
+                }
+              } catch (error) {
+                console.error('상품명 가져오기 실패:', error)
+              }
+            }
+
+            return {
+              ...reviewData,
+              id: reviewDoc.id
+            } as Review
+          })
+        )
+
+        setReviews(reviewsWithProductName)
       } catch (error) {
         console.error('리뷰 목록 로드 실패:', error)
         alert('리뷰 목록을 불러오는데 실패했습니다.')
@@ -226,8 +248,12 @@ export default function ReviewManagePage() {
             <div key={review.id} className={styles.reviewCard}>
               <div className={styles.reviewHeader}>
                 <div className={styles.storeInfo}>
-                  <div className={styles.storeNameRow}>
-                    <h3 className={styles.storeName}>{review.storeName}</h3>
+                  <div
+                    className={styles.storeNameRow}
+                    onClick={() => router.push(`/productDetail/${review.productId}`)}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    <h3 className={styles.storeName}>{review.productName || review.storeName}</h3>
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={styles.storeArrow}>
                       <path d="M9 18l6-6-6-6"/>
                     </svg>
