@@ -92,6 +92,7 @@ interface PaymentInfo {
   method?: string
   status?: string
   cancelledAt?: Date
+  usedPoint?: number
 }
 
 interface Order {
