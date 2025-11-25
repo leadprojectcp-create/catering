@@ -67,5 +67,6 @@ export const categories: CategoryOption[] = [
   { id: 'salad', name: '샐러드/과일', icon: '/icons/salad_fruit.png' },
   { id: 'kimbap', name: '김밥', icon: '/icons/kimbap_korean.png' },
   { id: 'lunchbox', name: '도시락', icon: '/icons/dosilak.png' },
-  { id: 'traditional', name: '떡/전통한과', icon: '/icons/ricecake_traditional.png' }
+  { id: 'traditional', name: '떡/전통한과', icon: '/icons/ricecake_traditional.png' },
+  { id: 'catering', name: '케이터링', icon: '/icons/catering.png' }
 ]

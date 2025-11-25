@@ -434,5 +434,33 @@ service cloud.firestore {
       // 관리자는 모든 취소 내역 수정 가능
       allow update: if isAdmin();
     }
+
+    // Coupons collection - 쿠폰 템플릿
+    match /coupons/{couponId} {
+      // 관리자는 모든 쿠폰 템플릿 읽기/쓰기 가능
+      allow read, write: if isAdmin();
+
+      // 로그인한 사용자는 활성화된 쿠폰 템플릿 읽기 가능 (쿠폰 발급 모달에서 사용)
+      allow read: if isSignedIn();
+    }
+
+    // UserCoupons collection - 유저별 발급된 쿠폰
+    match /userCoupons/{userCouponId} {
+      // 관리자는 모든 유저 쿠폰 읽기/쓰기 가능
+      allow read, write: if isAdmin();
+
+      // 본인의 쿠폰만 읽기 가능
+      allow read: if isSignedIn() &&
+        resource.data.userId == request.auth.uid;
+
+      // 쿼리 읽기: 로그인한 사용자가 자신의 쿠폰 쿼리 가능
+      allow list: if isSignedIn();
+
+      // 쿠폰 사용 시 status, usedAt, orderId 필드 업데이트 가능
+      allow update: if isSignedIn() &&
+        resource.data.userId == request.auth.uid &&
+        request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['status', 'usedAt', 'orderId']);
+    }
   }
 }

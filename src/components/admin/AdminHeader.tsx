@@ -11,6 +11,7 @@ import { useRouter } from 'next/navigation'
 const adminMenuItems = [
   { label: '대시보드', path: '/admin/dashboard', icon: '📊' },
   { label: '사용자 관리', path: '/admin/users', icon: '👥' },
+  { label: '쿠폰 관리', path: '/admin/coupons', icon: '🎟️' },
   { label: '업체 관리', path: '/admin/stores', icon: '🏪' },
   { label: '상품 관리', path: '/admin/products', icon: '🛍️' },
   { label: 'AI 카테고리', path: '/admin/ai-category', icon: '🤖' },

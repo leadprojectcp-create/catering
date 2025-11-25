@@ -6,12 +6,15 @@ import { getAllUsers, updateUserType, toggleUserStatus } from '@/lib/services/us
 import type { User } from '@/lib/services/userService'
 import type { FieldValue } from 'firebase/firestore'
 import Loading from '@/components/Loading'
+import CouponIssueModal from './CouponIssueModal'
 import styles from './UserManagementPage.module.css'
 
 export default function UserManagementPage() {
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | 'partner' | 'user' | 'admin'>('all')
+  const [selectedUserIds, setSelectedUserIds] = useState<Set<string>>(new Set())
+  const [isCouponModalOpen, setIsCouponModalOpen] = useState(false)
 
   useEffect(() => {
     loadUsers()
@@ -94,6 +97,33 @@ export default function UserManagementPage() {
     }
   }
 
+  // 체크박스 관련 함수들
+  const handleSelectUser = (uid: string) => {
+    const newSelected = new Set(selectedUserIds)
+    if (newSelected.has(uid)) {
+      newSelected.delete(uid)
+    } else {
+      newSelected.add(uid)
+    }
+    setSelectedUserIds(newSelected)
+  }
+
+  const handleSelectAll = () => {
+    if (selectedUserIds.size === filteredUsers.length) {
+      setSelectedUserIds(new Set())
+    } else {
+      setSelectedUserIds(new Set(filteredUsers.map(u => u.uid)))
+    }
+  }
+
+  const getSelectedUsers = () => {
+    return users.filter(u => selectedUserIds.has(u.uid))
+  }
+
+  const handleCouponIssueSuccess = () => {
+    setSelectedUserIds(new Set())
+  }
+
   const filteredUsers = users.filter(user => {
     if (filter === 'all') return true
     return user.type === filter
@@ -107,31 +137,41 @@ export default function UserManagementPage() {
     <div className={styles.container}>
       <div className={styles.header}>
         <h1 className={styles.title}>사용자 관리</h1>
-        <div className={styles.filters}>
-          <button
-            className={`${styles.filterBtn} ${filter === 'all' ? styles.active : ''}`}
-            onClick={() => setFilter('all')}
-          >
-            전체 ({users.length})
-          </button>
-          <button
-            className={`${styles.filterBtn} ${filter === 'partner' ? styles.active : ''}`}
-            onClick={() => setFilter('partner')}
-          >
-            파트너 ({users.filter(u => u.type === 'partner').length})
-          </button>
-          <button
-            className={`${styles.filterBtn} ${filter === 'user' ? styles.active : ''}`}
-            onClick={() => setFilter('user')}
-          >
-            일반회원 ({users.filter(u => u.type === 'user' || !u.type).length})
-          </button>
-          <button
-            className={`${styles.filterBtn} ${filter === 'admin' ? styles.active : ''}`}
-            onClick={() => setFilter('admin')}
-          >
-            관리자 ({users.filter(u => u.type === 'admin').length})
-          </button>
+        <div className={styles.headerActions}>
+          <div className={styles.filters}>
+            <button
+              className={`${styles.filterBtn} ${filter === 'all' ? styles.active : ''}`}
+              onClick={() => setFilter('all')}
+            >
+              전체 ({users.length})
+            </button>
+            <button
+              className={`${styles.filterBtn} ${filter === 'partner' ? styles.active : ''}`}
+              onClick={() => setFilter('partner')}
+            >
+              파트너 ({users.filter(u => u.type === 'partner').length})
+            </button>
+            <button
+              className={`${styles.filterBtn} ${filter === 'user' ? styles.active : ''}`}
+              onClick={() => setFilter('user')}
+            >
+              일반회원 ({users.filter(u => u.type === 'user' || !u.type).length})
+            </button>
+            <button
+              className={`${styles.filterBtn} ${filter === 'admin' ? styles.active : ''}`}
+              onClick={() => setFilter('admin')}
+            >
+              관리자 ({users.filter(u => u.type === 'admin').length})
+            </button>
+          </div>
+          {selectedUserIds.size > 0 && (
+            <button
+              className={styles.couponBtn}
+              onClick={() => setIsCouponModalOpen(true)}
+            >
+              선택한 {selectedUserIds.size}명에게 쿠폰 발급
+            </button>
+          )}
         </div>
       </div>
 
@@ -139,6 +179,14 @@ export default function UserManagementPage() {
         <table className={styles.table}>
           <thead>
             <tr>
+              <th className={styles.checkboxCol}>
+                <input
+                  type="checkbox"
+                  checked={filteredUsers.length > 0 && selectedUserIds.size === filteredUsers.length}
+                  onChange={handleSelectAll}
+                  className={styles.checkbox}
+                />
+              </th>
               <th>이메일</th>
               <th>UID</th>
               <th>이름</th>
@@ -153,13 +201,21 @@ export default function UserManagementPage() {
           <tbody>
             {filteredUsers.length === 0 ? (
               <tr>
-                <td colSpan={9} className={styles.empty}>
+                <td colSpan={10} className={styles.empty}>
                   사용자가 없습니다.
                 </td>
               </tr>
             ) : (
               filteredUsers.map((user) => (
-                <tr key={user.uid} className={user.disabled ? styles.disabled : ''}>
+                <tr key={user.uid} className={`${user.disabled ? styles.disabled : ''} ${selectedUserIds.has(user.uid) ? styles.selected : ''}`}>
+                  <td className={styles.checkboxCol}>
+                    <input
+                      type="checkbox"
+                      checked={selectedUserIds.has(user.uid)}
+                      onChange={() => handleSelectUser(user.uid)}
+                      className={styles.checkbox}
+                    />
+                  </td>
                   <td>{user.email}</td>
                   <td className={styles.uidCell}>
                     <span className={styles.uid}>{user.uid}</span>
@@ -205,6 +261,13 @@ export default function UserManagementPage() {
           </tbody>
         </table>
       </div>
+
+      <CouponIssueModal
+        isOpen={isCouponModalOpen}
+        onClose={() => setIsCouponModalOpen(false)}
+        selectedUsers={getSelectedUsers()}
+        onSuccess={handleCouponIssueSuccess}
+      />
     </div>
   )
 }

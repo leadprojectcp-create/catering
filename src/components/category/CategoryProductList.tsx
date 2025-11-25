@@ -20,6 +20,7 @@ const categoryIcons: { [key: string]: string } = {
   '김밥': '/icons/kimbap_korean.png',
   '도시락': '/icons/dosilak.png',
   '떡/전통한과': '/icons/ricecake_traditional.png',
+  '케이터링': '/icons/catering.png',
   '답례품': '/icons/gift.png',
   '당일배송': '/icons/delivery.png'
 }

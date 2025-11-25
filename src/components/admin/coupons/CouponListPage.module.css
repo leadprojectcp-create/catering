@@ -40,23 +40,6 @@
   gap: 10px;
 }
 
-.couponBtn {
-  padding: 10px 20px;
-  background: #025BD9;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.2s;
-  white-space: nowrap;
-}
-
-.couponBtn:hover {
-  background: #0247a8;
-}
-
 .filterBtn {
   padding: 8px 16px;
   border: 1px solid #e0e0e0;
@@ -75,6 +58,22 @@
   background: #2c5282;
   color: white;
   border-color: #2c5282;
+}
+
+.createBtn {
+  padding: 10px 20px;
+  background: #025BD9;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.createBtn:hover {
+  background: #0247a8;
 }
 
 .tableContainer {
@@ -108,35 +107,10 @@
   border-bottom: 1px solid #e9ecef;
   font-size: 14px;
   color: #495057;
-  white-space: nowrap;
 }
 
 .table tbody tr:hover {
   background: #f8f9fa;
-}
-
-.table tbody tr.disabled {
-  opacity: 0.6;
-  background: #f8f9fa;
-}
-
-.table tbody tr.selected {
-  background: #e8f4fd;
-}
-
-.table tbody tr.selected:hover {
-  background: #d6ebfa;
-}
-
-.checkboxCol {
-  width: 50px;
-  text-align: center;
-}
-
-.checkbox {
-  width: 18px;
-  height: 18px;
-  cursor: pointer;
 }
 
 .empty {
@@ -145,52 +119,25 @@
   color: #868e96;
 }
 
-.uidCell {
+.couponName {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  white-space: nowrap;
+  flex-direction: column;
+  gap: 4px;
 }
 
-.uid {
-  font-family: monospace;
+.couponName strong {
+  color: #1a1a1a;
+}
+
+.description {
   font-size: 12px;
-  color: #6c757d;
-  max-width: 150px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  color: #868e96;
 }
 
-.copyBtn {
-  padding: 4px 8px;
-  background: #2c5282;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  font-size: 11px;
-  cursor: pointer;
-  transition: background 0.2s;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-.copyBtn:hover {
-  background: #1e3a5f;
-}
-
-.roleSelect {
-  padding: 6px 12px;
-  border: 1px solid #ced4da;
-  border-radius: 4px;
-  font-size: 14px;
-  cursor: pointer;
-  background: white;
-}
-
-.roleSelect:focus {
-  outline: none;
-  border-color: #2c5282;
+.discountValue {
+  font-weight: 700;
+  color: #025BD9;
+  font-size: 16px;
 }
 
 .status {
@@ -211,9 +158,14 @@
   color: #721c24;
 }
 
-.toggleBtn {
-  padding: 6px 16px;
-  background: #6c757d;
+.actions {
+  display: flex;
+  gap: 8px;
+}
+
+.editBtn {
+  padding: 6px 12px;
+  background: #2c5282;
   color: white;
   border: none;
   border-radius: 4px;
@@ -222,14 +174,34 @@
   transition: background 0.2s;
 }
 
-.toggleBtn:hover {
-  background: #5a6268;
+.editBtn:hover {
+  background: #1e3a5f;
+}
+
+.deleteBtn {
+  padding: 6px 12px;
+  background: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.deleteBtn:hover {
+  background: #c82333;
 }
 
 @media (max-width: 768px) {
   .header {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .headerActions {
+    width: 100%;
+    flex-direction: column;
   }
 
   .filters {
@@ -239,7 +211,11 @@
 
   .filterBtn {
     flex: 1;
-    min-width: 100px;
+    min-width: 80px;
+  }
+
+  .createBtn {
+    width: 100%;
   }
 
   .tableContainer {

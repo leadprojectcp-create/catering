@@ -24,6 +24,7 @@ const getPageTitle = (path: string): string => {
   if (path === '/orders') return '주문/배송내역'
   if (path.startsWith('/orders/')) return '주문상세'
   if (path === '/points') return '포인트'
+  if (path === '/coupons') return '쿠폰함'
   if (path === '/notices') return '공지사항'
   if (path.startsWith('/notices/')) return '공지사항'
   if (path === '/faq') return '고객센터'
@@ -420,6 +421,20 @@ export default function Header({ chatRoomTitle, chatRoomPhone, chatRoomMenu }: H
               className={styles.menuIcon}
             />
             리뷰관리
+          </Link>
+          <Link
+            href="/coupons"
+            className={`${styles.drawerMenuItem} ${pathname === '/coupons' ? styles.drawerMenuItemActive : ''}`}
+            onClick={closeDrawer}
+          >
+            <OptimizedImage
+              src={pathname === '/coupons' ? '/menu-icons/coupon_active.png' : '/menu-icons/coupon.png'}
+              alt="쿠폰함"
+              width={20}
+              height={20}
+              className={styles.menuIcon}
+            />
+            쿠폰함
           </Link>
           <Link
             href="/faq"

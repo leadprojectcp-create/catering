@@ -17,6 +17,7 @@ const categories: CategoryOption[] = [
   { id: 'kimbap', name: '김밥', icon: '/icons/kimbap_korean.png' },
   { id: 'lunchbox', name: '도시락', icon: '/icons/dosilak.png' },
   { id: 'traditional', name: '떡/전통한과', icon: '/icons/ricecake_traditional.png' },
+  { id: 'catering', name: '케이터링', icon: '/icons/catering.png' },
   { id: 'gift', name: '답례품❤️', icon: '/icons/gift.png' },
   { id: 'delivery', name: '당일배송⚡', icon: '/icons/delivery.png' },
   // { id: 'ai', name: 'AI추천', icon: '/icons/ai_recommendation.png' }, // 데이터 축적 후 활성화 예정
@@ -41,8 +42,8 @@ export default function CategorySelector({
       return
     }
 
-    // 디저트, 샌드위치, 샐러드/과일, 김밥, 도시락, 떡/전통한과, 답례품, 당일배송은 카테고리 페이지 이동
-    const navigableCategories = ['dessert', 'sandwich', 'salad', 'kimbap', 'lunchbox', 'traditional', 'gift', 'delivery']
+    // 디저트, 샌드위치, 샐러드/과일, 김밥, 도시락, 떡/전통한과, 케이터링, 답례품, 당일배송은 카테고리 페이지 이동
+    const navigableCategories = ['dessert', 'sandwich', 'salad', 'kimbap', 'lunchbox', 'traditional', 'catering', 'gift', 'delivery']
 
     if (navigableCategories.includes(categoryId)) {
       // URL에 한글 카테고리명을 직접 사용
