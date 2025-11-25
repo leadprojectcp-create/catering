@@ -158,7 +158,6 @@ export default function StoreDetail({ storeId }: StoreDetailProps) {
                   className={styles.image}
                   style={{ objectFit: 'cover' }}
                   priority
-                  unoptimized
                 />
               </div>
 
@@ -211,7 +210,6 @@ export default function StoreDetail({ storeId }: StoreDetailProps) {
                         style={{ objectFit: 'cover' }}
                         priority={index === 0}
                         loading={index === 0 ? undefined : "lazy"}
-                        unoptimized
                       />
                     </div>
                   </SwiperSlide>

@@ -114,7 +114,6 @@ const ProductInfoSection = memo(function ProductInfoSection({
                     className={styles.image}
                     style={{ objectFit: 'cover' }}
                     priority
-                    unoptimized
                   />
                 </div>
 
@@ -174,7 +173,6 @@ const ProductInfoSection = memo(function ProductInfoSection({
                           style={{ objectFit: 'cover' }}
                           priority={index === 0}
                           loading={index === 0 ? undefined : "lazy"}
-                          unoptimized
                         />
                       </div>
                     </SwiperSlide>

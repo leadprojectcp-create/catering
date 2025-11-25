@@ -222,7 +222,6 @@ export default function StoreList({ selectedCategory }: StoreListProps) {
                                 style={{ objectFit: 'cover' }}
                                 priority={shouldPrioritize}
                                 loading={shouldPrioritize ? undefined : "lazy"}
-                                unoptimized
                               />
                             </div>
                           </SwiperSlide>

@@ -82,19 +82,27 @@ env:
       - RUNTIME
 
 
-  # Bunny CDN Configuration
-  - variable: BUNNY_STORAGE_ZONE_NAME
+  # Cloudflare R2 Configuration
+  - variable: CLOUDFLARE_ACCOUNT_ID
+    value: 79c8d221ad5e95b403da25b785ddeeb7
+    availability:
+      - RUNTIME
+  - variable: R2_BUCKET_NAME
     value: danmo
     availability:
       - RUNTIME
-  - variable: BUNNY_STORAGE_PASSWORD
-    value: 0d706721-8092-42be-be99d7fc3136-cf47-4105
-    availability:
-      - RUNTIME
-  - variable: BUNNY_CDN_HOSTNAME
-    value: sg.storage.bunnycdn.com
+  - variable: R2_CDN_DOMAIN
+    value: danmo-cdn.win
     availability:
       - BUILD
+      - RUNTIME
+  - variable: R2_ACCESS_KEY_ID
+    value: 여기에_Access_Key_ID_입력
+    availability:
+      - RUNTIME
+  - variable: R2_SECRET_ACCESS_KEY
+    value: 여기에_Secret_Access_Key_입력
+    availability:
       - RUNTIME
 
   # PortOne V2 Configuration

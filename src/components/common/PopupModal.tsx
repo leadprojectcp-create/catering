@@ -9,18 +9,11 @@ interface PopupModalProps {
   targetType: 'all' | 'partner' | 'user'
 }
 
-// BunnyCDN 이미지 최적화 파라미터 추가
+// Cloudflare R2 CDN 이미지 최적화
+// Cloudflare R2 기본 CDN은 이미지 변환을 지원하지 않으므로 원본 URL 반환
 const optimizePopupImage = (url: string) => {
-  if (!url.includes('danmo.b-cdn.net')) return url
-
-  // 팝업 이미지는 큰 사이즈이므로 width=1200, quality=85
-  const params = new URLSearchParams({
-    width: '1200',
-    quality: '85',
-    format: 'webp'
-  })
-
-  return `${url}?${params.toString()}`
+  // danmo-cdn.win (R2) 또는 b-cdn.net (BunnyCDN 레거시) URL인 경우 그대로 반환
+  return url
 }
 
 export default function PopupModal({ targetType }: PopupModalProps) {
@@ -121,7 +114,7 @@ export default function PopupModal({ targetType }: PopupModalProps) {
           height={1600}
           quality={85}
           priority
-          unoptimized={!currentPopup.imageUrl.includes('danmo.b-cdn.net')}
+          unoptimized={!currentPopup.imageUrl.includes('danmo-cdn.win') && !currentPopup.imageUrl.includes('danmo.b-cdn.net')}
         />
 
         <div className={styles.controls}>

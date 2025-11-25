@@ -232,7 +232,7 @@ export default function ReviewEditPage({ reviewId }: ReviewEditPageProps) {
     setExistingImages(existingImages.filter((_, i) => i !== index))
   }
 
-  const uploadImagesToBunny = async (): Promise<string[]> => {
+  const uploadImagesToR2 = async (): Promise<string[]> => {
     const uploadedUrls: string[] = []
 
     for (let i = 0; i < images.length; i++) {
@@ -278,7 +278,7 @@ export default function ReviewEditPage({ reviewId }: ReviewEditPageProps) {
       if (images.length > 0) {
         setUploading(true)
         try {
-          const newImageUrls = await uploadImagesToBunny()
+          const newImageUrls = await uploadImagesToR2()
           finalImages = [...existingImages, ...newImageUrls]
         } catch (uploadError) {
           console.error('이미지 업로드 실패:', uploadError)

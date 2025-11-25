@@ -13,37 +13,28 @@ function extractMaxWidthFromSizes(sizes?: string): number | undefined {
   return match ? parseInt(match[1], 10) : undefined
 }
 
-// Bunny CDN 이미지 최적화
-function optimizeBunnyCDN(
+// Cloudflare R2 CDN 이미지 최적화
+// 참고: Cloudflare Images 또는 Polish가 활성화된 경우 자동 최적화됨
+// 기본 R2 CDN은 이미지 변환을 지원하지 않으므로 원본 URL 반환
+function optimizeCloudflareR2(
   src: string,
   targetWidth?: number,
   targetHeight?: number,
   quality?: number
 ): string {
-  if (typeof src !== 'string' || !src.includes('b-cdn.net')) {
+  // Cloudflare R2 CDN URL인지 확인
+  if (typeof src !== 'string' || !src.includes('danmo-cdn.win')) {
+    // 기존 BunnyCDN URL도 지원 (마이그레이션 기간)
+    if (typeof src === 'string' && src.includes('b-cdn.net')) {
+      return src
+    }
     return src
   }
 
-  const url = new URL(src)
-
-  if (targetWidth) {
-    url.searchParams.set('width', targetWidth.toString())
-  }
-
-  if (targetHeight) {
-    url.searchParams.set('height', targetHeight.toString())
-  }
-
-  // 정사각형인 경우 aspect_ratio 설정으로 크롭
-  if (targetWidth && targetHeight && targetWidth === targetHeight) {
-    url.searchParams.set('aspect_ratio', '1:1')
-  }
-
-  url.searchParams.set('format', 'webp')
-  url.searchParams.set('quality', (quality || 75).toString())
-  url.searchParams.set('optimizer', 'true') // BunnyCDN 최적화 활성화
-
-  return url.toString()
+  // Cloudflare R2 기본 CDN은 이미지 변환 파라미터를 지원하지 않음
+  // Cloudflare Images 서비스를 사용하는 경우에만 변환 가능
+  // 현재는 원본 URL 반환
+  return src
 }
 
 export default function OptimizedImage({
@@ -75,8 +66,8 @@ export default function OptimizedImage({
     }
   }
 
-  // Bunny CDN 최적화 URL 생성
-  const optimizedSrc = optimizeBunnyCDN(
+  // Cloudflare R2 CDN URL 처리
+  const optimizedSrc = optimizeCloudflareR2(
     typeof src === 'string' ? src : '',
     targetWidth,
     targetHeight,

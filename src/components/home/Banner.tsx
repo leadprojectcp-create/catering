@@ -87,7 +87,6 @@ export default function Banner() {
                     quality={75}
                     style={{ objectFit: 'cover' }}
                     priority
-                    unoptimized
                   />
                 )}
               </div>

@@ -1,7 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
+
+// Cloudflare R2 클라이언트 설정
+const R2 = new S3Client({
+  region: 'auto',
+  endpoint: `https://${process.env.CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+  credentials: {
+    accessKeyId: process.env.R2_ACCESS_KEY_ID || '',
+    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY || '',
+  },
+})
 
 export async function POST(request: NextRequest) {
   console.log('Upload API called')
@@ -85,81 +96,77 @@ export async function POST(request: NextRequest) {
     // 채팅 관련 이미지는 날짜별로 저장
     if (uploadType === 'chat') {
       const date = new Date().toISOString().split('T')[0] // YYYY-MM-DD
-      fileName = `danmo/${folder}/${date}/${timestamp}_${randomId}.${extension}`
+      fileName = `${folder}/${date}/${timestamp}_${randomId}.${extension}`
     }
     // 리뷰 관련 이미지는 reviewId 구조로 저장
     else if (uploadType === 'review' && reviewId) {
-      fileName = `danmo/${folder}/${reviewId}/${timestamp}_${randomId}.${extension}`
+      fileName = `${folder}/${reviewId}/${timestamp}_${randomId}.${extension}`
     }
     // 상품 관련 이미지는 storeId/productId 구조로 저장
     else if (uploadType === 'product' && storeId && productId) {
-      fileName = `danmo/${folder}/${storeId}/${productId}/${timestamp}_${randomId}.${extension}`
+      fileName = `${folder}/${storeId}/${productId}/${timestamp}_${randomId}.${extension}`
     }
     // userId가 있으면 사용자별 폴더에 저장
     else if (userId && uploadType === 'business-registration') {
-      fileName = `danmo/${folder}/${userId}/${timestamp}_${randomId}.${extension}`
+      fileName = `${folder}/${userId}/${timestamp}_${randomId}.${extension}`
     } else if (userId) {
-      fileName = `danmo/${folder}/${userId}/${timestamp}_${randomId}.${extension}`
+      fileName = `${folder}/${userId}/${timestamp}_${randomId}.${extension}`
     }
     // 기본 경로
     else {
-      fileName = `danmo/${folder}/${timestamp}_${randomId}.${extension}`
+      fileName = `${folder}/${timestamp}_${randomId}.${extension}`
     }
 
     console.log('Generated filename:', fileName)
 
-    // BunnyCDN 업로드
-    const username = process.env.BUNNY_STORAGE_ZONE_NAME
-    const password = process.env.BUNNY_STORAGE_PASSWORD
-    const hostname = process.env.BUNNY_CDN_HOSTNAME
+    // Cloudflare R2 설정 확인
+    const accountId = process.env.CLOUDFLARE_ACCOUNT_ID
+    const accessKeyId = process.env.R2_ACCESS_KEY_ID
+    const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY
+    const bucketName = process.env.R2_BUCKET_NAME
+    const cdnDomain = process.env.R2_CDN_DOMAIN // danmo-cdn.win
 
-    console.log('BunnyCDN config:', {
-      username: username || 'NOT_SET',
-      hostname: hostname || 'NOT_SET',
-      hasPassword: !!password,
+    console.log('Cloudflare R2 config:', {
+      accountId: accountId || 'NOT_SET',
+      bucketName: bucketName || 'NOT_SET',
+      cdnDomain: cdnDomain || 'NOT_SET',
+      hasAccessKey: !!accessKeyId,
+      hasSecretKey: !!secretAccessKey,
       nodeEnv: process.env.NODE_ENV
     })
 
-    if (!username || !password || !hostname) {
-      console.log('Missing BunnyCDN config - username:', !!username, 'password:', !!password, 'hostname:', !!hostname)
+    if (!accountId || !accessKeyId || !secretAccessKey || !bucketName) {
+      console.log('Missing Cloudflare R2 config')
       return NextResponse.json({
-        error: 'BunnyCDN 설정이 없습니다.',
+        error: 'Cloudflare R2 설정이 없습니다.',
         details: {
-          username: !!username,
-          password: !!password,
-          hostname: !!hostname,
+          accountId: !!accountId,
+          accessKeyId: !!accessKeyId,
+          secretAccessKey: !!secretAccessKey,
+          bucketName: !!bucketName,
           env: process.env.NODE_ENV
         }
       }, { status: 500 })
     }
 
-    const uploadUrl = `https://${hostname}/${username}/${fileName}`
-    console.log('Upload URL:', uploadUrl)
-
     const fileBuffer = Buffer.from(await file.arrayBuffer())
     console.log('File buffer size:', fileBuffer.length)
 
-    const uploadResponse = await fetch(uploadUrl, {
-      method: 'PUT',
-      headers: {
-        'AccessKey': password,
-        'Content-Type': file.type,
-        'Content-Length': fileBuffer.length.toString(),
-      },
-      body: fileBuffer
+    // R2에 업로드
+    const uploadCommand = new PutObjectCommand({
+      Bucket: bucketName,
+      Key: fileName,
+      Body: fileBuffer,
+      ContentType: file.type,
     })
 
-    console.log('Upload response status:', uploadResponse.status, uploadResponse.statusText)
+    const uploadResponse = await R2.send(uploadCommand)
+    console.log('Upload response:', uploadResponse)
 
-    if (!uploadResponse.ok) {
-      const errorText = await uploadResponse.text()
-      console.log('Upload error response:', errorText)
-      console.log('Upload error headers:', Object.fromEntries(uploadResponse.headers.entries()))
-      throw new Error(`Upload failed: ${uploadResponse.status} ${uploadResponse.statusText} - ${errorText}`)
-    }
-
-    // BunnyCDN에서 파일에 접근할 수 있는 URL 반환
-    const fileUrl = `https://${username}.b-cdn.net/${fileName}`
+    // CDN URL 반환
+    const fileUrl = cdnDomain
+      ? `https://${cdnDomain}/${fileName}`
+      : `https://${bucketName}.${accountId}.r2.cloudflarestorage.com/${fileName}`
     console.log('File URL:', fileUrl)
 
     return NextResponse.json({

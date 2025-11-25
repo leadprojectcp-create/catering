@@ -29,7 +29,7 @@ export interface AIRecommendedCategory {
 }
 
 /**
- * 이미지를 BunnyCDN에 업로드
+ * 이미지를 Cloudflare R2에 업로드
  */
 export async function uploadCategoryImage(
   file: File,

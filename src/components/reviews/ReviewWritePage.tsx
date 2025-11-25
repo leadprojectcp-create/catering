@@ -229,7 +229,7 @@ export default function ReviewWritePage() {
     setMediaTypes(mediaTypes.filter((_, i) => i !== index))
   }
 
-  const uploadImagesToBunny = async (reviewId: string): Promise<string[]> => {
+  const uploadImagesToR2 = async (reviewId: string): Promise<string[]> => {
     const uploadedUrls: string[] = []
 
     for (let i = 0; i < images.length; i++) {
@@ -291,7 +291,7 @@ export default function ReviewWritePage() {
       if (images.length > 0) {
         setUploading(true)
         try {
-          const imageUrls = await uploadImagesToBunny(reviewRef.id)
+          const imageUrls = await uploadImagesToR2(reviewRef.id)
 
           // 리뷰 문서에 이미지 URL 추가
           await updateDoc(doc(db, 'reviews', reviewRef.id), {

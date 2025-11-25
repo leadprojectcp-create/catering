@@ -9,6 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.939.0",
     "@portone/browser-sdk": "^0.1.0",
     "@portone/server-sdk": "^0.17.0",
     "@revopush/react-native-code-push": "^1.5.0",

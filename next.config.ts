@@ -11,7 +11,11 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'danmo.b-cdn.net',
+        hostname: 'danmo-cdn.win',
+      },
+      {
+        protocol: 'https',
+        hostname: 'danmo.b-cdn.net', // 레거시 BunnyCDN 지원 (마이그레이션 기간)
       },
     ],
     minimumCacheTTL: 60 * 60 * 24 * 30, // 30일 캐싱

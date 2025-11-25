@@ -174,9 +174,9 @@ export default function RootLayout({
             `,
           }}
         />
-        {/* Bunny CDN preconnect for faster image loading */}
-        <link rel="preconnect" href="https://danmo.b-cdn.net" />
-        <link rel="dns-prefetch" href="https://danmo.b-cdn.net" />
+        {/* Cloudflare R2 CDN preconnect for faster image loading */}
+        <link rel="preconnect" href="https://danmo-cdn.win" />
+        <link rel="dns-prefetch" href="https://danmo-cdn.win" />
 
         <link
           rel="preload"
