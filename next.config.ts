@@ -18,6 +18,10 @@ const nextConfig: NextConfig = {
         hostname: 'danmo.b-cdn.net', // 레거시 BunnyCDN 지원 (마이그레이션 기간)
       },
     ],
+    // 실제 사용되는 이미지 크기만 생성 (불필요한 srcset 방지)
+    // StoreList: 130px, 배너: 640px, 상세: 390px
+    deviceSizes: [390, 640, 750],
+    imageSizes: [130, 260],
     minimumCacheTTL: 60 * 60 * 24 * 30, // 30일 캐싱
     formats: ['image/webp'],
   },
