@@ -526,8 +526,10 @@ export default function AdminEditProductPage({ productId }: { productId: string 
               ...prev,
               images: prev.images.filter((_, i) => i !== index)
             }))}
+            onExistingImagesReorder={(images) => setFormData(prev => ({ ...prev, images }))}
             onNewImagesAdd={(files) => setNewImages(prev => [...prev, ...files])}
             onNewImageRemove={(index) => setNewImages(prev => prev.filter((_, i) => i !== index))}
+            onNewImagesReorder={(files) => setNewImages(files)}
           />
 
           {/* 상품명 */}

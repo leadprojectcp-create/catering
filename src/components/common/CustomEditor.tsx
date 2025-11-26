@@ -386,8 +386,6 @@ export default function CustomEditor({ value, onChange, placeholder, storeId, pr
   return (
     <div className={styles.editorContainer}>
       <div className={styles.toolbar}>
-        {/* Text styling */}
-        <div className={styles.toolGroup}>
           <button
             type="button"
             onClick={() => execCommand('bold')}
@@ -420,10 +418,7 @@ export default function CustomEditor({ value, onChange, placeholder, storeId, pr
           >
             <s>S</s>
           </button>
-        </div>
 
-        {/* Font size */}
-        <div className={styles.toolGroup}>
           <select
             onChange={(e) => {
               const size = e.target.value
@@ -443,10 +438,7 @@ export default function CustomEditor({ value, onChange, placeholder, storeId, pr
               <option value={currentFontSize}>{currentFontSize}</option>
             )}
           </select>
-        </div>
 
-        {/* Color picker */}
-        <div className={styles.toolGroup}>
           <div className={styles.colorPickerWrapper}>
             <button
               type="button"
@@ -477,10 +469,7 @@ export default function CustomEditor({ value, onChange, placeholder, storeId, pr
               </div>
             )}
           </div>
-        </div>
 
-        {/* Alignment */}
-        <div className={styles.toolGroup}>
           <button
             type="button"
             onClick={() => execCommand('justifyLeft')}
@@ -511,10 +500,7 @@ export default function CustomEditor({ value, onChange, placeholder, storeId, pr
               <path d="M3 3h18v2H3V3zm6 4h12v2H9V7zm-6 4h18v2H3v-2zm6 4h12v2H9v-2zm-6 4h18v2H3v-2z"/>
             </svg>
           </button>
-        </div>
 
-        {/* Quote (인용구) */}
-        <div className={styles.toolGroup}>
           <div className={styles.dropdownWrapper}>
             <button
               type="button"
@@ -669,10 +655,7 @@ export default function CustomEditor({ value, onChange, placeholder, storeId, pr
               </button>
             </div>
           </div>
-        </div>
 
-        {/* Divider (구분선) */}
-        <div className={styles.toolGroup}>
           <div className={styles.dropdownWrapper}>
             <button
               type="button"
@@ -796,10 +779,7 @@ export default function CustomEditor({ value, onChange, placeholder, storeId, pr
               </button>
             </div>
           </div>
-        </div>
 
-        {/* Image upload */}
-        <div className={styles.toolGroup}>
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
@@ -816,7 +796,6 @@ export default function CustomEditor({ value, onChange, placeholder, storeId, pr
             onChange={handleImageUpload}
             style={{ display: 'none' }}
           />
-        </div>
       </div>
 
       <div

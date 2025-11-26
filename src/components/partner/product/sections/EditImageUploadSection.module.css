@@ -172,3 +172,37 @@
   border-radius: 8px;
   background: white;
 }
+
+/* 드래그 힌트 텍스트 */
+.dragHint {
+  font-size: 12px;
+  color: #6b7280;
+  margin: 0;
+}
+
+/* 드래그 핸들 */
+.dragHandle {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 24px;
+  height: 24px;
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: grab;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  touch-action: none;
+}
+
+.dragHandle:hover {
+  background: rgba(0, 0, 0, 0.8);
+}
+
+.dragHandle:active {
+  cursor: grabbing;
+}

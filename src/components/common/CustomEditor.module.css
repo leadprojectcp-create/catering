@@ -8,23 +8,12 @@
 
 .toolbar {
   display: flex;
-  gap: 8px;
+  gap: 4px;
   padding: 10px;
   background: #f8f9fa;
   border-bottom: 1px solid #ddd;
   flex-wrap: wrap;
-}
-
-.toolGroup {
-  display: flex;
-  gap: 4px;
-  padding: 0 8px;
-  border-right: 1px solid #ddd;
-  position: relative;
-}
-
-.toolGroup:last-child {
-  border-right: none;
+  align-items: center;
 }
 
 .toolButton {
