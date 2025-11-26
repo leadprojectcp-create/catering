@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { doc, getDoc, query, where, getDocs, orderBy, collection, Timestamp } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { useAuth } from '@/contexts/AuthContext'
+import { incrementProductView } from '@/lib/services/productService'
 import { useProductLike } from '@/hooks/useProductLike'
 import Loading from '@/components/Loading'
 import ProductInfoSection from './sections/ProductInfoSection'
@@ -403,6 +404,21 @@ export default function ProductDetailPage({ productId }: ProductDetailPageProps)
 
     if (productId) {
       loadReviews()
+    }
+  }, [productId])
+
+  // 조회수 증가 (페이지 진입 시 1회만)
+  useEffect(() => {
+    const incrementView = async () => {
+      try {
+        await incrementProductView(productId)
+      } catch (error) {
+        console.error('조회수 증가 실패:', error)
+      }
+    }
+
+    if (productId) {
+      incrementView()
     }
   }, [productId])
 

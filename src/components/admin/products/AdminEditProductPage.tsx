@@ -27,6 +27,8 @@ interface Store {
   id: string
   storeName: string
   companyName?: string
+  partnerId?: string
+  partnerEmail?: string
 }
 
 interface EditProductFormData extends Omit<ProductFormData, 'images'> {
@@ -409,11 +411,30 @@ export default function AdminEditProductPage({ productId }: { productId: string 
           values: option.values.filter(v => v.name.trim() !== '')
         }))
 
+      // 선택된 스토어에서 partnerId 가져오기
+      const selectedStore = stores.find(s => s.id === selectedStoreId)
+      const partnerId = selectedStore?.partnerId || null
+
+      // partnerId로 users 컬렉션에서 email 가져오기
+      let partnerEmail: string | null = null
+      if (partnerId) {
+        try {
+          const userDoc = await getDoc(doc(db, 'users', partnerId))
+          if (userDoc.exists()) {
+            partnerEmail = userDoc.data().email || null
+          }
+        } catch (error) {
+          console.error('파트너 이메일 조회 실패:', error)
+        }
+      }
+
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const submitData: any = {
         ...formData,
         images: uploadedImageUrls,
         storeId: selectedStoreId,
+        partnerId,
+        partnerEmail,
         optionsEnabled,
         options: filteredOptions,
         additionalOptionsEnabled,

@@ -7,6 +7,8 @@ interface Store {
   id: string
   storeName: string
   companyName?: string
+  partnerId?: string
+  partnerEmail?: string
 }
 
 interface SearchableStoreSelectProps {
