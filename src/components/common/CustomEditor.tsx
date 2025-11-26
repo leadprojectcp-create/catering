@@ -17,7 +17,9 @@ export default function CustomEditor({ value, onChange, placeholder, storeId, pr
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [showColorPicker, setShowColorPicker] = useState(false)
   const [selectedColor, setSelectedColor] = useState('#000000')
+  const [currentFontSize, setCurrentFontSize] = useState('')
   const [isUploading, setIsUploading] = useState(false)
+  const [isDragging, setIsDragging] = useState(false)
   const isInitialMount = useRef(true)
 
   const colors = [
@@ -49,12 +51,42 @@ export default function CustomEditor({ value, onChange, placeholder, storeId, pr
     }
   }, [onChange])
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files
-    if (!files || files.length === 0) return
+  // 선택 영역의 폰트 크기 감지
+  const detectFontSize = useCallback(() => {
+    const selection = window.getSelection()
+    if (selection && selection.rangeCount > 0) {
+      const range = selection.getRangeAt(0)
+      let node: Node | null = range.startContainer
 
-    // Convert FileList to Array to maintain order
-    const fileArray = Array.from(files)
+      // 텍스트 노드면 부모 요소로
+      if (node.nodeType === Node.TEXT_NODE) {
+        node = node.parentNode
+      }
+
+      if (node && node instanceof HTMLElement) {
+        const computedStyle = window.getComputedStyle(node)
+        const fontSize = computedStyle.fontSize
+        setCurrentFontSize(fontSize)
+      }
+    }
+  }, [])
+
+  // 선택 변경 감지
+  useEffect(() => {
+    const handleSelectionChange = () => {
+      if (editorRef.current?.contains(document.activeElement) ||
+          editorRef.current?.contains(window.getSelection()?.anchorNode || null)) {
+        detectFontSize()
+      }
+    }
+
+    document.addEventListener('selectionchange', handleSelectionChange)
+    return () => document.removeEventListener('selectionchange', handleSelectionChange)
+  }, [detectFontSize])
+
+  // 파일 배열로 이미지 업로드 처리
+  const uploadImages = useCallback(async (fileArray: File[]) => {
+    if (fileArray.length === 0) return
 
     setIsUploading(true)
 
@@ -70,6 +102,9 @@ export default function CustomEditor({ value, onChange, placeholder, storeId, pr
 
       // Upload files sequentially in the order they were selected
       for (const file of fileArray) {
+        // 이미지 파일만 처리
+        if (!file.type.startsWith('image/')) continue
+
         const formData = new FormData()
         formData.append('file', file)
         formData.append('type', uploadType)
@@ -94,7 +129,7 @@ export default function CustomEditor({ value, onChange, placeholder, storeId, pr
           if (selection && selection.rangeCount > 0) {
             try {
               document.execCommand('insertHTML', false, imgWrapper)
-            } catch (error) {
+            } catch {
               // Fallback: append to the end of content
               insertionPoint.innerHTML += imgWrapper
             }
@@ -113,6 +148,13 @@ export default function CustomEditor({ value, onChange, placeholder, storeId, pr
     } finally {
       setIsUploading(false)
     }
+  }, [uploadType, storeId, productId, handleInput])
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files
+    if (!files || files.length === 0) return
+
+    await uploadImages(Array.from(files))
 
     // Reset input
     if (fileInputRef.current) {
@@ -120,22 +162,103 @@ export default function CustomEditor({ value, onChange, placeholder, storeId, pr
     }
   }
 
+  // 드래그 앤 드롭 핸들러
+  const handleDragEnter = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(true)
+  }, [])
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    // 에디터 영역을 완전히 벗어났을 때만 드래그 상태 해제
+    if (!editorRef.current?.contains(e.relatedTarget as Node)) {
+      setIsDragging(false)
+    }
+  }, [])
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+  }, [])
+
+  const handleDrop = useCallback(async (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(false)
+
+    const files = e.dataTransfer.files
+    if (!files || files.length === 0) return
+
+    // 이미지 파일만 필터링
+    const imageFiles = Array.from(files).filter(file => file.type.startsWith('image/'))
+    if (imageFiles.length === 0) {
+      alert('이미지 파일만 업로드할 수 있습니다.')
+      return
+    }
+
+    await uploadImages(imageFiles)
+  }, [uploadImages])
+
   const handleFontSizeChange = (size: string) => {
     const selection = window.getSelection()
-    if (selection && selection.rangeCount > 0 && !selection.isCollapsed) {
+    if (selection && selection.rangeCount > 0 && !selection.isCollapsed && editorRef.current) {
       const range = selection.getRangeAt(0)
+
+      // 선택 영역의 텍스트만 추출
+      const selectedText = range.toString()
+      if (!selectedText) return
+
+      // 선택 영역 삭제
+      range.deleteContents()
+
+      // 새 span 생성 (텍스트만 포함)
       const span = document.createElement('span')
       span.style.fontSize = size
-      span.style.lineHeight = 'normal'
-      span.style.display = 'inline'
-      try {
-        range.surroundContents(span)
-      } catch {
-        // If surroundContents fails, use a different approach
-        const fragment = range.extractContents()
-        span.appendChild(fragment)
+      span.textContent = selectedText
+
+      // 현재 위치에서 font-size가 있는 부모 span을 찾아서 그 밖으로 삽입
+      let insertTarget: Node = range.startContainer
+      let insertParent: Node | null = insertTarget.parentNode
+
+      // font-size 스타일이 있는 span을 찾아 올라감
+      while (insertParent && insertParent !== editorRef.current) {
+        if (insertParent instanceof HTMLElement &&
+            insertParent.tagName === 'SPAN' &&
+            insertParent.style.fontSize) {
+          insertTarget = insertParent
+          insertParent = insertParent.parentNode
+        } else {
+          break
+        }
+      }
+
+      // font-size span 밖으로 삽입
+      if (insertTarget !== range.startContainer && insertParent) {
+        insertParent.insertBefore(span, insertTarget.nextSibling)
+      } else {
         range.insertNode(span)
       }
+
+      // 빈 span 태그들 제거
+      const cleanEmptySpans = () => {
+        const allSpans = editorRef.current!.querySelectorAll('span')
+        allSpans.forEach(s => {
+          if (s !== span && !s.textContent?.trim() && !s.querySelector('img')) {
+            s.remove()
+          }
+        })
+      }
+      cleanEmptySpans()
+
+      // 선택 영역 복원
+      selection.removeAllRanges()
+      const newRange = document.createRange()
+      newRange.selectNodeContents(span)
+      selection.addRange(newRange)
+
+      setCurrentFontSize(size)
       handleInput()
       editorRef.current?.focus()
     }
@@ -205,16 +328,19 @@ export default function CustomEditor({ value, onChange, placeholder, storeId, pr
               const size = e.target.value
               if (size) {
                 handleFontSizeChange(size)
-                e.target.value = ''
               }
             }}
             className={styles.fontSizeSelect}
-            defaultValue=""
+            value={currentFontSize || ''}
           >
             <option value="" disabled>글자 크기</option>
             {fontSizes.map(({ label, value }) => (
               <option key={value} value={value}>{label}</option>
             ))}
+            {/* 현재 선택된 폰트가 목록에 없을 때 표시 */}
+            {currentFontSize && !fontSizes.find(f => f.value === currentFontSize) && (
+              <option value={currentFontSize}>{currentFontSize}</option>
+            )}
           </select>
         </div>
 
@@ -303,9 +429,13 @@ export default function CustomEditor({ value, onChange, placeholder, storeId, pr
 
       <div
         ref={editorRef}
-        className={styles.editorContent}
+        className={`${styles.editorContent} ${isDragging ? styles.dragging : ''}`}
         contentEditable
         onInput={handleInput}
+        onDragEnter={handleDragEnter}
+        onDragLeave={handleDragLeave}
+        onDragOver={handleDragOver}
+        onDrop={handleDrop}
         data-placeholder={placeholder}
         suppressContentEditableWarning
       />
