@@ -510,7 +510,7 @@ export async function sendConfirmationNotification(params: ConfirmationNotificat
         const pushTitle = replaceTemplateVariables(template.push.title, variablesStr)
         const pushBody = replaceTemplateVariables(template.push.body, variablesStr)
 
-        const result = await sendOrderFCM({
+        const result = await sendCancellationFCM({
           userId: customerId,
           title: pushTitle,
           body: pushBody,
