@@ -64,7 +64,6 @@ export async function POST(request: NextRequest) {
     const userData = userSnap.exists() ? userSnap.data() : null
 
     const phone = orderData.phone || userData?.phone
-    const fcmToken = userData?.fcmToken
 
     // 알림톡 발송
     if (phone) {
@@ -92,30 +91,29 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 푸시 알림 발송
-    if (fcmToken) {
-      try {
-        const fcmResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || ''}/api/send-fcm`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            token: fcmToken,
-            title: '구매확정을 해주세요!',
-            body: `${orderData.storeName}에서 주문하신 상품이 배송완료 되었습니다. 구매확정을 눌러주세요.`,
-            data: {
-              type: 'ORDER_CONFIRM_REMINDER',
-              orderId
-            }
-          }),
-        })
+    // 푸시 알림 발송 (send-order-fcm API 사용)
+    try {
+      const fcmResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || ''}/api/send-order-fcm`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: orderData.uid,
+          title: '구매확정을 해주세요!',
+          body: `${orderData.storeName}에서 주문하신 상품이 배송완료 되었습니다. 구매확정을 눌러주세요.`,
+          data: {
+            type: 'ORDER_CONFIRM_REMINDER',
+            orderId,
+            orderNumber: orderData.orderNumber || orderId
+          }
+        }),
+      })
 
-        const fcmResult = await fcmResponse.json()
-        console.log('[구매확정 알림 API] 푸시 알림 발송 결과:', fcmResult)
-      } catch (error) {
-        console.error('[구매확정 알림 API] 푸시 알림 발송 실패:', error)
-      }
+      const fcmResult = await fcmResponse.json()
+      console.log('[구매확정 알림 API] 푸시 알림 발송 결과:', fcmResult)
+    } catch (error) {
+      console.error('[구매확정 알림 API] 푸시 알림 발송 실패:', error)
     }
 
     // 알림 발송 완료 표시
