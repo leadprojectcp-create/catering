@@ -140,13 +140,14 @@
 }
 
 .editorContent {
-  min-height: 300px;
-  max-height: 600px;
+  min-height: 500px;
+  max-height: none;
   overflow-y: auto;
   padding: 16px;
   font-size: 14px;
   line-height: 1.6;
   outline: none;
+  resize: vertical;
 }
 
 .editorContent:empty:before {
@@ -248,4 +249,77 @@
   100% {
     transform: rotate(360deg);
   }
+}
+
+/* 인용구/구분선 드롭다운 */
+.dropdownWrapper {
+  position: relative;
+}
+
+.quoteDropdown {
+  position: absolute;
+  top: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  min-width: 140px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.quoteOption {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px;
+  width: 100%;
+  border: none;
+  background: white;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.2s;
+  min-height: 40px;
+}
+
+.quoteOption:hover {
+  background: #f5f5f5;
+}
+
+/* 인용구 블록 선택 스타일 */
+.editorContent [data-quote-block] {
+  transition: outline 0.1s;
+  border-radius: 0 !important;
+}
+
+.editorContent [data-quote-block]:hover {
+  outline: 1px dashed #aaa;
+}
+
+/* 선택된 인용구 블록 - 초록색 테두리 */
+.editorContent :global([data-quote-block].selected) {
+  outline: 2px solid #22c55e !important;
+  outline-offset: 2px;
+}
+
+/* 구분선 블록 선택 스타일 */
+.editorContent [data-divider-block] {
+  transition: outline 0.1s;
+  border-radius: 0 !important;
+}
+
+.editorContent [data-divider-block]:hover {
+  outline: 1px dashed #aaa;
+}
+
+/* 선택된 구분선 블록 - 초록색 테두리 */
+.editorContent :global([data-divider-block].selected) {
+  outline: 2px solid #22c55e !important;
+  outline-offset: 2px;
 }
