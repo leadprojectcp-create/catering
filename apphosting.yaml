@@ -97,11 +97,11 @@ env:
       - BUILD
       - RUNTIME
   - variable: R2_ACCESS_KEY_ID
-    value: 여기에_Access_Key_ID_입력
+    value: 23756c27dab9bdaf4be01cd34b0accd9
     availability:
       - RUNTIME
   - variable: R2_SECRET_ACCESS_KEY
-    value: 여기에_Secret_Access_Key_입력
+    value: fb0eaae748853a076d12a802578aea2cc3aaf5dbf5a8ea66063eb9c80bd5226f
     availability:
       - RUNTIME
 
