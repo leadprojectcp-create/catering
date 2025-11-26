@@ -411,10 +411,10 @@ export default function CustomEditor({ value, onChange, placeholder, storeId, pr
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className={styles.toolButton}
+            className={`${styles.toolButton} ${styles.imageButton}`}
             title="이미지 삽입"
           >
-            🖼
+            사진
           </button>
           <input
             ref={fileInputRef}

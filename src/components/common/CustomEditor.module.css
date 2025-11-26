@@ -50,6 +50,12 @@
   background: #dee2e6;
 }
 
+.imageButton {
+  width: auto;
+  padding: 0 10px;
+  font-size: 13px;
+}
+
 .fontSizeSelect {
   height: 32px;
   padding: 0 8px;
