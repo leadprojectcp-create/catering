@@ -1,0 +1,144 @@
+/* AdminAddProductPage 전용 스타일 */
+.container {
+  margin: 0 auto;
+  max-width: 800px;
+}
+
+.formCard {
+  background: white;
+  padding: 0;
+  width: 100%;
+}
+
+.title {
+  font-size: 24px;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 32px;
+  text-align: left;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* 판매자 선택 섹션 (관리자 전용) */
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.sectionTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  line-height: 1;
+}
+
+.sectionNumber {
+  width: 19px;
+  height: 19px;
+  flex-shrink: 0;
+  background-color: #025BD9;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFF;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.required {
+  color: #ef4444;
+  font-size: 14px;
+}
+
+.storeSelect {
+  margin-top: 0;
+}
+
+.select {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #E0E0E0;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #1f2937;
+  background: white;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.select:focus {
+  outline: none;
+  border-color: #025BD9;
+}
+
+.select:hover {
+  border-color: #025BD9;
+}
+
+.buttonContainer {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+  justify-content: center;
+}
+
+.cancelButton {
+  padding: 14px 64px;
+  background: white;
+  border: 1px solid #E0E0E0;
+  border-radius: 10px;
+  color: #666;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cancelButton:hover {
+  background: #F5F5F5;
+}
+
+.submitButton {
+  padding: 14px 64px;
+  background: #025BD9;
+  border: none;
+  border-radius: 10px;
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.submitButton:hover:not(:disabled) {
+  background: #0249B8;
+}
+
+.submitButton:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+}
+
+/* 반응형 */
+@media (max-width: 640px) {
+  .buttonContainer {
+    flex-direction: column;
+  }
+
+  .cancelButton,
+  .submitButton {
+    padding: 14px 32px;
+  }
+}

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { collection, getDocs, query, orderBy, Timestamp } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { updateProductStatus } from '@/lib/services/productService'
@@ -14,6 +15,7 @@ interface Product extends ProductData {
 }
 
 export default function ProductManagementPage() {
+  const router = useRouter()
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | 'active' | 'inactive' | 'pending'>('all')
@@ -117,7 +119,15 @@ export default function ProductManagementPage() {
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <h1 className={styles.title}>상품 관리</h1>
+        <div className={styles.headerTop}>
+          <h1 className={styles.title}>상품 관리</h1>
+          <button
+            className={styles.addBtn}
+            onClick={() => router.push('/admin/products/add')}
+          >
+            + 상품 등록
+          </button>
+        </div>
         <div className={styles.filters}>
           <button
             className={`${styles.filterBtn} ${filter === 'all' ? styles.active : ''}`}
@@ -206,12 +216,20 @@ export default function ProductManagementPage() {
                     </select>
                   </td>
                   <td>
-                    <button
-                      className={styles.detailBtn}
-                      onClick={() => handleViewDetail(product)}
-                    >
-                      상세보기
-                    </button>
+                    <div className={styles.actionBtns}>
+                      <button
+                        className={styles.detailBtn}
+                        onClick={() => handleViewDetail(product)}
+                      >
+                        상세
+                      </button>
+                      <button
+                        className={styles.editBtn}
+                        onClick={() => router.push(`/admin/products/edit/${product.id}`)}
+                      >
+                        수정
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))

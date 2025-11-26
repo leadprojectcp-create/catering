@@ -14,6 +14,7 @@ const adminMenuItems = [
   { label: '쿠폰 관리', path: '/admin/coupons', icon: '🎟️' },
   { label: '업체 관리', path: '/admin/stores', icon: '🏪' },
   { label: '상품 관리', path: '/admin/products', icon: '🛍️' },
+  { label: '상품 등록', path: '/admin/products/add', icon: '➕' },
   { label: 'AI 카테고리', path: '/admin/ai-category', icon: '🤖' },
   { label: 'AI 카테고리 관리', path: '/admin/ai-category-manage', icon: '⚡' },
   { label: '주문 관리', path: '/admin/orders', icon: '📦' },
@@ -22,9 +23,6 @@ const adminMenuItems = [
   { label: 'FAQ 관리', path: '/admin/faqs', icon: '❓' },
   { label: '팝업 관리', path: '/admin/popups', icon: '🎨' },
   { label: '배너 관리', path: '/admin/banners', icon: '🖼️' },
-  { label: '통계', path: '/admin/analytics', icon: '📈' },
-  { label: '로그', path: '/admin/logs', icon: '📋' },
-  { label: '설정', path: '/admin/settings', icon: '⚙️' },
   { label: '사용자 페이지로', path: '/', icon: '🏠' }
 ]
 

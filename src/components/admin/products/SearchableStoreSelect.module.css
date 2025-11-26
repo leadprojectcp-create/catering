@@ -1,0 +1,168 @@
+.container {
+  position: relative;
+  width: 100%;
+}
+
+.selectBox {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border: 1px solid #E0E0E0;
+  border-radius: 8px;
+  background: white;
+  cursor: pointer;
+  transition: border-color 0.2s;
+  min-height: 48px;
+}
+
+.selectBox:hover {
+  border-color: #025BD9;
+}
+
+.selectBox.open {
+  border-color: #025BD9;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.selectedValue {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  font-size: 14px;
+  color: #1f2937;
+}
+
+.placeholder {
+  color: #9CA3AF;
+  font-size: 14px;
+}
+
+.clearBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border: none;
+  background: #E5E7EB;
+  border-radius: 50%;
+  font-size: 14px;
+  color: #6B7280;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.clearBtn:hover {
+  background: #D1D5DB;
+  color: #374151;
+}
+
+.arrow {
+  font-size: 10px;
+  color: #9CA3AF;
+  transition: transform 0.2s;
+  margin-left: 8px;
+}
+
+.arrowUp {
+  transform: rotate(180deg);
+}
+
+.dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #025BD9;
+  border-top: none;
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+  max-height: 300px;
+  display: flex;
+  flex-direction: column;
+}
+
+.searchWrapper {
+  position: relative;
+  padding: 8px;
+  border-bottom: 1px solid #E5E7EB;
+}
+
+.searchInput {
+  width: 100%;
+  padding: 10px 32px 10px 12px;
+  border: 1px solid #E5E7EB;
+  border-radius: 6px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.searchInput:focus {
+  border-color: #025BD9;
+}
+
+.searchInput::placeholder {
+  color: #9CA3AF;
+}
+
+.searchClear {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border: none;
+  background: #E5E7EB;
+  border-radius: 50%;
+  font-size: 12px;
+  color: #6B7280;
+  cursor: pointer;
+}
+
+.searchClear:hover {
+  background: #D1D5DB;
+}
+
+.optionList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  max-height: 240px;
+}
+
+.option {
+  padding: 12px 16px;
+  font-size: 14px;
+  color: #374151;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.option:hover {
+  background: #F3F4F6;
+}
+
+.option.selected {
+  background: #EBF5FF;
+  color: #025BD9;
+  font-weight: 500;
+}
+
+.noResult {
+  padding: 16px;
+  text-align: center;
+  color: #9CA3AF;
+  font-size: 14px;
+}
