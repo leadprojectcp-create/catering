@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { collection, getDocs, query, where, orderBy } from 'firebase/firestore'
+import { collection, getDocs, getDoc, doc, query, where, orderBy } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { createProduct } from '@/lib/services/productService'
 import OptionHelpModal from '@/components/partner/product/common/modals/OptionHelpModal'

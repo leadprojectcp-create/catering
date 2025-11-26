@@ -179,6 +179,16 @@ export async function updateProduct(productId: string, productData: Partial<Prod
   if (productData.images !== undefined) {
     updateData.images = productData.images
   }
+  // storeId, partnerId, partnerEmail 명시적 처리 (관리자 상품 수정 시 필요)
+  if (productData.storeId !== undefined) {
+    updateData.storeId = productData.storeId
+  }
+  if (productData.partnerId !== undefined) {
+    updateData.partnerId = productData.partnerId
+  }
+  if (productData.partnerEmail !== undefined) {
+    updateData.partnerEmail = productData.partnerEmail
+  }
 
   await updateDoc(productRef, updateData)
 }
