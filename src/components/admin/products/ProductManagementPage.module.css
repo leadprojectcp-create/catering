@@ -157,6 +157,21 @@
   gap: 0.5rem;
 }
 
+.viewBtn {
+  padding: 0.4rem 0.6rem;
+  background: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  transition: background 0.2s;
+}
+
+.viewBtn:hover {
+  background: #388E3C;
+}
+
 .detailBtn {
   padding: 0.4rem 0.6rem;
   background: #2196F3;
@@ -310,7 +325,17 @@
 .description {
   line-height: 1.6;
   color: #555;
-  white-space: pre-wrap;
+}
+
+.description img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 10px 0;
+}
+
+.description div {
+  margin: 5px 0;
 }
 
 .optionGroup {

@@ -76,36 +76,47 @@ export interface ProductData {
 }
 
 // 상품 등록
-export async function createProduct(productData: Omit<ProductData, 'partnerId' | 'partnerEmail' | 'storeId' | 'status' | 'viewCount' | 'orderCount' | 'createdAt' | 'updatedAt'>): Promise<string> {
+export async function createProduct(productData: Omit<ProductData, 'status' | 'viewCount' | 'orderCount' | 'createdAt' | 'updatedAt'>): Promise<string> {
   const user = auth.currentUser
   if (!user) {
     throw new Error('로그인이 필요합니다.')
   }
 
-  // 사용자 이메일 가져오기
-  let userEmail = user.email
+  // partnerId, partnerEmail, storeId가 전달되면 그 값을 사용 (관리자가 다른 판매자로 등록하는 경우)
+  // 전달되지 않으면 현재 로그인한 사용자의 정보 사용 (일반 파트너가 본인 상품 등록하는 경우)
+  let finalPartnerId = productData.partnerId
+  let finalPartnerEmail = productData.partnerEmail
+  let finalStoreId = productData.storeId
 
-  // 이메일이 없으면 Firestore users 컬렉션에서 가져오기
-  if (!userEmail) {
-    const userDoc = await getDoc(doc(db, 'users', user.uid))
-    if (userDoc.exists()) {
-      userEmail = userDoc.data().email
+  // partnerId가 없으면 현재 사용자 정보 사용
+  if (!finalPartnerId) {
+    finalPartnerId = user.uid
+
+    // 사용자 이메일 가져오기
+    let userEmail = user.email
+
+    // 이메일이 없으면 Firestore users 컬렉션에서 가져오기
+    if (!userEmail) {
+      const userDoc = await getDoc(doc(db, 'users', user.uid))
+      if (userDoc.exists()) {
+        userEmail = userDoc.data().email
+      }
     }
-  }
 
-  // 그래도 이메일이 없으면 빈 문자열 사용
-  if (!userEmail) {
-    userEmail = ''
-  }
+    // 그래도 이메일이 없으면 빈 문자열 사용
+    if (!userEmail) {
+      userEmail = ''
+    }
 
-  // storeId는 partnerId와 동일 (user.uid)
-  const storeId = user.uid
+    finalPartnerEmail = userEmail
+    finalStoreId = user.uid
+  }
 
   const completeProductData: ProductData = {
     ...productData,
-    partnerId: user.uid,
-    partnerEmail: userEmail,
-    storeId: storeId,
+    partnerId: finalPartnerId,
+    partnerEmail: finalPartnerEmail || '',
+    storeId: finalStoreId || finalPartnerId,
     status: 'pending',
     viewCount: 0,
     orderCount: 0,

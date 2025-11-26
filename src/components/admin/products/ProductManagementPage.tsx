@@ -218,6 +218,12 @@ export default function ProductManagementPage() {
                   <td>
                     <div className={styles.actionBtns}>
                       <button
+                        className={styles.viewBtn}
+                        onClick={() => window.open(`/productDetail/${product.id}`, '_blank')}
+                      >
+                        보기
+                      </button>
+                      <button
                         className={styles.detailBtn}
                         onClick={() => handleViewDetail(product)}
                       >
@@ -310,7 +316,14 @@ export default function ProductManagementPage() {
               {/* 상품 설명 */}
               <div className={styles.detailSection}>
                 <h3 className={styles.detailSectionTitle}>상품 설명</h3>
-                <p className={styles.description}>{selectedProduct.description || '설명이 없습니다.'}</p>
+                {selectedProduct.description ? (
+                  <div
+                    className={styles.description}
+                    dangerouslySetInnerHTML={{ __html: selectedProduct.description }}
+                  />
+                ) : (
+                  <p className={styles.description}>설명이 없습니다.</p>
+                )}
               </div>
 
               {/* 옵션 */}
