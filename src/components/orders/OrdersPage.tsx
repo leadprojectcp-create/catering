@@ -606,6 +606,51 @@ export default function OrdersPage() {
     }
   }
 
+  // 구매확정 처리
+  const [confirmingOrderId, setConfirmingOrderId] = useState<string | null>(null)
+
+  const handleConfirmOrder = async (orderId: string, e: React.MouseEvent) => {
+    e.stopPropagation()
+
+    if (!user) {
+      alert('로그인이 필요합니다.')
+      router.push('/login')
+      return
+    }
+
+    if (!confirm('구매를 확정하시겠습니까?\n확정 후에는 취소가 불가능합니다.')) {
+      return
+    }
+
+    setConfirmingOrderId(orderId)
+
+    try {
+      const response = await fetch('/api/orders/confirm', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          orderId,
+          uid: user.uid,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!data.success) {
+        throw new Error(data.error || '구매확정에 실패했습니다.')
+      }
+
+      alert('구매가 확정되었습니다. 감사합니다!')
+    } catch (error) {
+      console.error('구매확정 실패:', error)
+      alert(error instanceof Error ? error.message : '구매확정에 실패했습니다.')
+    } finally {
+      setConfirmingOrderId(null)
+    }
+  }
+
   if (authLoading || loading) {
     return <Loading />
   }
@@ -1008,6 +1053,16 @@ export default function OrdersPage() {
                           }}
                         >
                           추가주문하기
+                        </button>
+                      )}
+                      {/* 배송·픽업중 상태에서 구매확정 버튼 */}
+                      {order.orderStatus === 'shipping' && (
+                        <button
+                          className={styles.confirmButton}
+                          onClick={(e) => handleConfirmOrder(order.id, e)}
+                          disabled={confirmingOrderId === order.id}
+                        >
+                          {confirmingOrderId === order.id ? '처리중...' : '구매확정'}
                         </button>
                       )}
                     </>

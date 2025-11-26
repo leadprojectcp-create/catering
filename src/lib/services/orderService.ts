@@ -98,6 +98,13 @@ export interface Order {
   settlementStatus?: 'pending' | 'completed'
   settlementDate?: Date | Timestamp | FieldValue
   settlementId?: string
+  // 구매확정 관련 필드
+  confirmedAt?: Date | Timestamp | FieldValue  // 구매확정 완료 시간
+  confirmationType?: 'manual' | 'auto'  // 수동(소비자) 또는 자동(시스템)
+  shippingCompletedAt?: Date | Timestamp | FieldValue  // 배송완료 시간 (shipping 상태로 변경된 시간)
+  notificationTaskId?: string  // Cloud Tasks 알림 발송 작업 ID
+  autoCompleteTaskId?: string  // Cloud Tasks 자동완료 작업 ID
+  notificationSent?: boolean  // 구매확정 안내 알림 발송 여부
   deliveryFeeSettings?: {
     type: '무료' | '조건부 무료' | '유료' | '수량별'
     baseFee?: number

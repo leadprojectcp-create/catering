@@ -179,7 +179,24 @@ export default function OrderManagementPage() {
     }
 
     try {
-      await updateOrderStatus(orderId, newStatus)
+      // API를 통해 상태 업데이트 (shipping 상태로 변경 시 Cloud Tasks 생성 포함)
+      const response = await fetch('/api/orders/update-status', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          orderId,
+          status: newStatus,
+        }),
+      })
+
+      const result = await response.json()
+
+      if (!result.success) {
+        throw new Error(result.error || '상태 변경에 실패했습니다.')
+      }
+
       setOrders(orders.map(o => o.id === orderId ? { ...o, orderStatus: newStatus } : o))
       alert('주문 상태가 변경되었습니다.')
 
@@ -187,7 +204,7 @@ export default function OrderManagementPage() {
       handleFilterChange(newStatus as FilterStatus)
     } catch (error) {
       console.error('상태 변경 실패:', error)
-      alert('상태 변경에 실패했습니다.')
+      alert(error instanceof Error ? error.message : '상태 변경에 실패했습니다.')
     }
   }
 
@@ -363,7 +380,24 @@ export default function OrderManagementPage() {
         trackingNumber
       }
 
-      await updateOrderStatus(trackingOrderId, 'shipping', undefined, trackingInfo)
+      // API를 통해 상태 업데이트 (Cloud Tasks 생성 포함)
+      const response = await fetch('/api/orders/update-status', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          orderId: trackingOrderId,
+          status: 'shipping',
+          trackingInfo,
+        }),
+      })
+
+      const result = await response.json()
+
+      if (!result.success) {
+        throw new Error(result.error || '상태 변경에 실패했습니다.')
+      }
 
       console.log('상태 업데이트 완료, 로컬 state 업데이트 시작')
       setOrders(orders.map(o => o.id === trackingOrderId ? { ...o, orderStatus: 'shipping', trackingInfo } : o))
@@ -378,7 +412,7 @@ export default function OrderManagementPage() {
       console.log('=== 택배 정보 저장 완료 ===')
     } catch (error) {
       console.error('택배 정보 저장 실패:', error)
-      alert('택배 정보 저장에 실패했습니다.')
+      alert(error instanceof Error ? error.message : '택배 정보 저장에 실패했습니다.')
     }
   }
 

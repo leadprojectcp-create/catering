@@ -189,6 +189,31 @@ env:
       - BUILD
       - RUNTIME
 
+  # Base URL for API callbacks (Cloud Tasks, etc.)
+  - variable: NEXT_PUBLIC_BASE_URL
+    value: https://danchemoim.com
+    availability:
+      - BUILD
+      - RUNTIME
+
+  # Cloud Tasks Configuration
+  - variable: USE_CLOUD_TASKS
+    value: "true"
+    availability:
+      - RUNTIME
+  - variable: GOOGLE_CLOUD_PROJECT
+    value: catering-26952
+    availability:
+      - RUNTIME
+  - variable: CLOUD_TASKS_LOCATION
+    value: asia-northeast3
+    availability:
+      - RUNTIME
+  - variable: CLOUD_TASKS_QUEUE
+    value: order-completion-queue-v2
+    availability:
+      - RUNTIME
+
   # OpenAI Configuration (using Secret Manager)
   - variable: OPENAI_API_KEY
     secret: OPENAI_API_KEY

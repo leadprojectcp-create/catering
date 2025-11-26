@@ -27,6 +27,7 @@ service cloud.firestore {
     }
 
     // 일반 사용자 확인 함수 (type이 user)
+    
     function isUser() {
       return isSignedIn() &&
         exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
@@ -74,6 +75,9 @@ service cloud.firestore {
       // likeCount 업데이트는 로그인한 사용자만 가능
       allow update: if isSignedIn() &&
         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likeCount']);
+
+      // viewCount 업데이트는 모든 사용자 가능 (인증 불필요)
+      allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['viewCount']);
 
       // 관리자는 모든 상품 수정/삭제 가능
       allow update, delete: if isAdmin();
@@ -190,7 +194,9 @@ service cloud.firestore {
         .hasOnly(['paymentStatus', 'orderStatus', 'paymentId', 'transactionId', 'paidAt', 'paymentInfo', 'items', 'verifiedAt',
                   'quickDeliveryOrderNo', 'quickDeliveryStatus', 'quickDeliveryError', 'quickDeliveryInfo',
                   'partnerNotified', 'partnerNotifiedAt', 'totalPrice', 'totalProductPrice', 'totalQuantity',
-                  'updatedAt', 'addTotalProductPrice', 'addTotalQuantity', 'orderDates', 'usedPoint']);
+                  'updatedAt', 'addTotalProductPrice', 'addTotalQuantity', 'orderDates', 'usedPoint',
+                  'shippingCompletedAt', 'notificationTaskId', 'autoCompleteTaskId', 'notificationSent', 'notificationSentAt',
+                  'confirmedAt', 'confirmationType', 'settlementStatus']);
 
       // 웹훅이 주문 정보를 읽을 수 있도록 허용
       allow read: if true;

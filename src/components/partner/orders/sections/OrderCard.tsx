@@ -481,14 +481,7 @@ export default function OrderCard({
                   </button>
                 </>
               )}
-              {order.orderStatus === 'shipping' && (
-                <button
-                  className={`${styles.actionBtn} ${styles.acceptBtn}`}
-                  onClick={() => onStatusUpdate(order.id!, 'completed')}
-                >
-                  완료
-                </button>
-              )}
+              {/* 파트너는 shipping 상태에서 직접 완료 처리 불가 - 소비자 구매확정 또는 자동완료만 가능 */}
             </div>
           )}
         </div>
