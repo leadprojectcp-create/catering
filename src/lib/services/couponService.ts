@@ -93,8 +93,13 @@ export async function getCouponTemplate(id: string): Promise<CouponTemplate | nu
 
 // 쿠폰 템플릿 생성
 export async function createCouponTemplate(data: Omit<CouponTemplate, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> {
+  // undefined 값 제거 (Firestore는 undefined를 허용하지 않음)
+  const cleanData = Object.fromEntries(
+    Object.entries(data).filter(([, value]) => value !== undefined)
+  )
+
   const docRef = await addDoc(couponsCollection, {
-    ...data,
+    ...cleanData,
     createdAt: Timestamp.now(),
     updatedAt: Timestamp.now()
   })
@@ -103,9 +108,14 @@ export async function createCouponTemplate(data: Omit<CouponTemplate, 'id' | 'cr
 
 // 쿠폰 템플릿 수정
 export async function updateCouponTemplate(id: string, data: Partial<CouponTemplate>): Promise<void> {
+  // undefined 값 제거 (Firestore는 undefined를 허용하지 않음)
+  const cleanData = Object.fromEntries(
+    Object.entries(data).filter(([, value]) => value !== undefined)
+  )
+
   const docRef = doc(db, 'coupons', id)
   await updateDoc(docRef, {
-    ...data,
+    ...cleanData,
     updatedAt: Timestamp.now()
   })
 }
@@ -130,17 +140,13 @@ export async function issueCouponToUser(
     new Date(now.toDate().getTime() + couponTemplate.validDays * 24 * 60 * 60 * 1000)
   )
 
-  const userCoupon: Omit<UserCoupon, 'id'> = {
+  const userCouponData: Record<string, unknown> = {
     couponId: couponTemplate.id!,
     couponName: couponTemplate.name,
-    description: couponTemplate.description,
     userId,
-    userName,
-    userEmail,
     type: couponTemplate.type,
     value: couponTemplate.value,
     minOrderAmount: couponTemplate.minOrderAmount,
-    maxDiscountAmount: couponTemplate.maxDiscountAmount,
     issuedAt: now,
     expiresAt,
     usedAt: null,
@@ -148,7 +154,15 @@ export async function issueCouponToUser(
     status: 'available'
   }
 
-  const docRef = await addDoc(userCouponsCollection, userCoupon)
+  // 선택적 필드 (undefined 방지)
+  if (couponTemplate.description) userCouponData.description = couponTemplate.description
+  if (userName) userCouponData.userName = userName
+  if (userEmail) userCouponData.userEmail = userEmail
+  if (couponTemplate.maxDiscountAmount !== undefined) {
+    userCouponData.maxDiscountAmount = couponTemplate.maxDiscountAmount
+  }
+
+  const docRef = await addDoc(userCouponsCollection, userCouponData)
   return docRef.id
 }
 
@@ -166,23 +180,30 @@ export async function issueCouponToUsers(
   let count = 0
   for (const user of users) {
     const userCouponRef = doc(userCouponsCollection)
-    batch.set(userCouponRef, {
+
+    const userCouponData: Record<string, unknown> = {
       couponId: couponTemplate.id,
       couponName: couponTemplate.name,
-      description: couponTemplate.description,
       userId: user.uid,
-      userName: user.name,
-      userEmail: user.email,
       type: couponTemplate.type,
       value: couponTemplate.value,
       minOrderAmount: couponTemplate.minOrderAmount,
-      maxDiscountAmount: couponTemplate.maxDiscountAmount,
       issuedAt: now,
       expiresAt,
       usedAt: null,
       orderId: null,
       status: 'available'
-    })
+    }
+
+    // 선택적 필드 (undefined 방지)
+    if (couponTemplate.description) userCouponData.description = couponTemplate.description
+    if (user.name) userCouponData.userName = user.name
+    if (user.email) userCouponData.userEmail = user.email
+    if (couponTemplate.maxDiscountAmount !== undefined) {
+      userCouponData.maxDiscountAmount = couponTemplate.maxDiscountAmount
+    }
+
+    batch.set(userCouponRef, userCouponData)
     count++
   }
 

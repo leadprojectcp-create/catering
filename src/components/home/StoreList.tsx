@@ -2,9 +2,8 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { collection, getDocs, query, where, limit } from 'firebase/firestore'
+import { collection, getDocs, query, where, orderBy, limit, startAfter, QueryDocumentSnapshot, DocumentData } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
-import OptimizedImage from '@/components/common/OptimizedImage'
 import { Swiper, SwiperSlide } from 'swiper/react'
 import { Navigation } from 'swiper/modules'
 import { generateStoreSlug } from '@/lib/utils/slug'
@@ -14,6 +13,8 @@ import 'swiper/css'
 import 'swiper/css/navigation'
 import 'swiper/css/pagination'
 import styles from './StoreList.module.css'
+
+const PAGE_SIZE = 24
 
 interface Store {
   id: string
@@ -33,8 +34,6 @@ interface Store {
   rating?: number
   reviewCount?: number
   businessHours?: string
-  createdAt?: { toDate?: () => Date } | Date | string
-  updatedAt?: { toDate?: () => Date } | Date | string
 }
 
 interface StoreListProps {
@@ -43,78 +42,115 @@ interface StoreListProps {
 
 export default function StoreList({ selectedCategory }: StoreListProps) {
   const router = useRouter()
-  const [allStores, setAllStores] = useState<Store[]>([]) // 전체 스토어 (60개)
-  const [displayedStores, setDisplayedStores] = useState<Store[]>([]) // 화면에 표시할 스토어 (30개)
-  const [displayCount, setDisplayCount] = useState(30) // 현재 표시 개수
+  const [stores, setStores] = useState<Store[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [isLoadingMore, setIsLoadingMore] = useState(false)
+  const [hasMore, setHasMore] = useState(true)
+  const [lastDoc, setLastDoc] = useState<QueryDocumentSnapshot<DocumentData> | null>(null)
   const observerRef = useRef<IntersectionObserver | null>(null)
   const loadMoreRef = useRef<HTMLDivElement>(null)
 
-  useEffect(() => {
-    const fetchStores = async () => {
-      try {
-        const q = query(
-          collection(db, 'stores'),
-          where('status', '==', 'active'),
-          limit(60) // 60개를 미리 로드
-        )
-        const querySnapshot = await getDocs(q)
-        const storeData = querySnapshot.docs.map(doc => {
-          const data = doc.data()
-          return {
-            id: doc.id,
-            storeName: data.storeName,
-            companyName: data.companyName,
-            businessCategory: data.businessCategory,
-            businessAddress: typeof data.businessAddress === 'object'
-              ? data.businessAddress.fullAddress || `${data.businessAddress.city || ''} ${data.businessAddress.district || ''} ${data.businessAddress.dong || ''} ${data.businessAddress.detail || ''}`.trim()
-              : data.businessAddress,
-            address: data.address || {},
-            categories: data.categories || [],
-            phone: data.phone,
-            website: data.website,
-            imageUrl: data.imageUrl,
-            storeImages: data.storeImages || [],
-            rating: data.rating || 0,
-            reviewCount: data.reviewCount || 0,
-            businessHours: data.businessHours
-          } as Store
-        })
-
-        // 랜덤 셔플
-        const shuffledStores = storeData.sort(() => Math.random() - 0.5)
-        setAllStores(shuffledStores)
-        setDisplayedStores(shuffledStores.slice(0, 30)) // 처음 30개만 표시
-      } catch (error) {
-        console.error('스토어 데이터 가져오기 실패:', error)
-        setAllStores([])
-        setDisplayedStores([])
-      } finally {
-        setIsLoading(false)
-      }
+  // 스토어 데이터 변환 함수
+  const parseStoreDoc = (doc: QueryDocumentSnapshot<DocumentData>): Store => {
+    const data = doc.data()
+    return {
+      id: doc.id,
+      storeName: data.storeName,
+      companyName: data.companyName,
+      businessCategory: data.businessCategory,
+      businessAddress: typeof data.businessAddress === 'object'
+        ? data.businessAddress.fullAddress || `${data.businessAddress.city || ''} ${data.businessAddress.district || ''} ${data.businessAddress.dong || ''} ${data.businessAddress.detail || ''}`.trim()
+        : data.businessAddress,
+      address: data.address || {},
+      categories: data.categories || [],
+      phone: data.phone,
+      website: data.website,
+      imageUrl: data.imageUrl,
+      storeImages: data.storeImages || [],
+      rating: data.rating || 0,
+      reviewCount: data.reviewCount || 0,
+      businessHours: data.businessHours
     }
+  }
 
-    fetchStores()
-  }, [])
+  // 초기 로드
+  const fetchInitialStores = useCallback(async () => {
+    setIsLoading(true)
+    try {
+      const q = selectedCategory === '전체'
+        ? query(
+            collection(db, 'stores'),
+            where('status', '==', 'active'),
+            orderBy('createdAt', 'desc'),
+            limit(PAGE_SIZE)
+          )
+        : query(
+            collection(db, 'stores'),
+            where('status', '==', 'active'),
+            where('businessCategory', '==', selectedCategory),
+            orderBy('createdAt', 'desc'),
+            limit(PAGE_SIZE)
+          )
 
-  // 카테고리 변경 시 필터링
-  const filteredAllStores = selectedCategory === '전체'
-    ? allStores
-    : allStores.filter(store => store.businessCategory === selectedCategory)
+      const snapshot = await getDocs(q)
+      const storeData = snapshot.docs.map(parseStoreDoc)
 
-  const filteredDisplayedStores = selectedCategory === '전체'
-    ? displayedStores
-    : displayedStores.filter(store => store.businessCategory === selectedCategory)
+      setStores(storeData)
+      setLastDoc(snapshot.docs[snapshot.docs.length - 1] || null)
+      setHasMore(snapshot.docs.length === PAGE_SIZE)
+    } catch (error) {
+      console.error('스토어 데이터 가져오기 실패:', error)
+      setStores([])
+    } finally {
+      setIsLoading(false)
+    }
+  }, [selectedCategory])
 
-  // 다음 30개 로드
-  const loadMore = useCallback(() => {
-    const nextCount = displayCount + 30
-    const newDisplayedStores = filteredAllStores.slice(0, nextCount)
-    setDisplayedStores(newDisplayedStores)
-    setDisplayCount(nextCount)
-  }, [displayCount, filteredAllStores])
+  // 추가 로드
+  const fetchMoreStores = useCallback(async () => {
+    if (!lastDoc || isLoadingMore || !hasMore) return
 
-  // Intersection Observer로 스크롤 감지
+    setIsLoadingMore(true)
+    try {
+      const q = selectedCategory === '전체'
+        ? query(
+            collection(db, 'stores'),
+            where('status', '==', 'active'),
+            orderBy('createdAt', 'desc'),
+            startAfter(lastDoc),
+            limit(PAGE_SIZE)
+          )
+        : query(
+            collection(db, 'stores'),
+            where('status', '==', 'active'),
+            where('businessCategory', '==', selectedCategory),
+            orderBy('createdAt', 'desc'),
+            startAfter(lastDoc),
+            limit(PAGE_SIZE)
+          )
+
+      const snapshot = await getDocs(q)
+      const newStores = snapshot.docs.map(parseStoreDoc)
+
+      setStores(prev => [...prev, ...newStores])
+      setLastDoc(snapshot.docs[snapshot.docs.length - 1] || null)
+      setHasMore(snapshot.docs.length === PAGE_SIZE)
+    } catch (error) {
+      console.error('추가 스토어 로드 실패:', error)
+    } finally {
+      setIsLoadingMore(false)
+    }
+  }, [lastDoc, isLoadingMore, hasMore, selectedCategory])
+
+  // 카테고리 변경 또는 초기 로드
+  useEffect(() => {
+    setStores([])
+    setLastDoc(null)
+    setHasMore(true)
+    fetchInitialStores()
+  }, [fetchInitialStores])
+
+  // Intersection Observer
   useEffect(() => {
     if (observerRef.current) {
       observerRef.current.disconnect()
@@ -122,8 +158,8 @@ export default function StoreList({ selectedCategory }: StoreListProps) {
 
     observerRef.current = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && displayCount < filteredAllStores.length) {
-          loadMore()
+        if (entries[0].isIntersecting && hasMore && !isLoadingMore) {
+          fetchMoreStores()
         }
       },
       { threshold: 0.1 }
@@ -138,9 +174,7 @@ export default function StoreList({ selectedCategory }: StoreListProps) {
         observerRef.current.disconnect()
       }
     }
-  }, [loadMore, displayCount, filteredAllStores.length])
-
-  const filteredStores = filteredDisplayedStores
+  }, [fetchMoreStores, hasMore, isLoadingMore])
 
   if (isLoading) {
     return <Loading />
@@ -150,112 +184,105 @@ export default function StoreList({ selectedCategory }: StoreListProps) {
     <div className={styles.container}>
       <div className={styles.header}>
         <h2 className={styles.title}>단모 제휴업체</h2>
-        <p className={styles.subtitle}>총 {filteredAllStores.length}개</p>
+        <p className={styles.subtitle}>{stores.length}개+</p>
       </div>
       <div className={styles.storeGrid}>
-        {filteredStores.length === 0 ? (
+        {stores.length === 0 ? (
           <div className={styles.emptyState}>
             {selectedCategory === '전체' ? '등록된 업체가 없습니다.' : `${selectedCategory} 카테고리에 등록된 업체가 없습니다.`}
           </div>
         ) : (
           <>
-            {filteredStores.map((store, storeIndex) => {
-            const images = store.storeImages && store.storeImages.length > 0 ? store.storeImages : []
+            {stores.map((store: Store) => {
+              const images = store.storeImages && store.storeImages.length > 0 ? store.storeImages : []
 
-            // URL 슬러그 생성
-            const slug = generateStoreSlug(
-              store.address?.city || '',
-              store.address?.district || '',
-              store.storeName,
-              store.categories?.[0] || '',
-              store.id
-            )
+              const slug = generateStoreSlug(
+                store.address?.city || '',
+                store.address?.district || '',
+                store.storeName,
+                store.categories?.[0] || '',
+                store.id
+              )
 
-            return (
-              <div
-                key={store.id}
-                className={styles.card}
-                onClick={async () => {
-                  // 조회수 증가
-                  await incrementStoreView(store.id)
-                  // 페이지 이동
-                  router.push(`/store/${slug}`)
-                }}
-              >
-                {/* 이미지 슬라이더 */}
+              return (
                 <div
-                  className={styles.imageSlider}
-                  onClick={(e) => {
-                    // 화살표 버튼을 클릭한 경우 이벤트 전파 중지
-                    const target = e.target as HTMLElement
-                    if (target.classList.contains('swiper-button-prev') ||
-                        target.classList.contains('swiper-button-next') ||
-                        target.closest('.swiper-button-prev') ||
-                        target.closest('.swiper-button-next')) {
-                      e.stopPropagation()
-                    }
+                  key={store.id}
+                  className={styles.card}
+                  onClick={async () => {
+                    await incrementStoreView(store.id)
+                    router.push(`/store/${slug}`)
                   }}
                 >
-                  {images.length > 0 ? (
-                    <Swiper
-                      modules={[Navigation]}
-                      slidesPerView={3}
-                      spaceBetween={5}
-                      navigation
-                      watchSlidesProgress={true}
-                      className={styles.storeSwiper}
-                    >
-                      {images.map((image, index) => {
-                        // 상위 10개 스토어의 첫 번째 이미지만 priority
-                        const shouldPrioritize = storeIndex < 10 && index === 0
+                  <div
+                    className={styles.imageSlider}
+                    onClick={(e) => {
+                      const target = e.target as HTMLElement
+                      if (target.classList.contains('swiper-button-prev') ||
+                          target.classList.contains('swiper-button-next') ||
+                          target.closest('.swiper-button-prev') ||
+                          target.closest('.swiper-button-next')) {
+                        e.stopPropagation()
+                      }
+                    }}
+                  >
+                    {images.length > 0 ? (
+                      <Swiper
+                        modules={[Navigation]}
+                        slidesPerView={3}
+                        spaceBetween={5}
+                        navigation
+                        watchSlidesProgress={true}
+                        className={styles.storeSwiper}
+                      >
+                        {images.slice(0, 3).map((image: string, index: number) => {
+                          // 썸네일용 작은 이미지 URL 생성 (width=200, quality=80)
+                          const thumbnailUrl = image.includes('danmo-cdn.win')
+                            ? image.replace('danmo-cdn.win', 'danmo-cdn.win/cdn-cgi/image/width=200,quality=80,format=webp')
+                            : image
 
-                        return (
-                          <SwiperSlide key={index}>
-                            <div className={styles.imageWrapper}>
-                              <OptimizedImage
-                                src={image}
-                                alt={`${store.storeName || '판매자'} 이미지 ${index + 1}`}
-                                fill
-                                sizes="260px"
-                                quality={75}
-                                className={styles.cardImage}
-                                style={{ objectFit: 'cover' }}
-                                priority={shouldPrioritize}
-                                loading={shouldPrioritize ? undefined : "lazy"}
-                              />
-                            </div>
-                          </SwiperSlide>
-                        )
-                      })}
-                    </Swiper>
-                  ) : (
-                    <div className={styles.placeholderImage}>
-                      <span>🍽️</span>
+                          return (
+                            <SwiperSlide key={index}>
+                              <div className={styles.imageWrapper}>
+                                <img
+                                  src={thumbnailUrl}
+                                  alt={`${store.storeName || '판매자'} 이미지 ${index + 1}`}
+                                  className={styles.cardImage}
+                                  loading="lazy"
+                                  decoding="async"
+                                  style={{ objectFit: 'cover', width: '100%', height: '100%', position: 'absolute', top: 0, left: 0 }}
+                                />
+                              </div>
+                            </SwiperSlide>
+                          )
+                        })}
+                      </Swiper>
+                    ) : (
+                      <div className={styles.placeholderImage}>
+                        <span>🍽️</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className={styles.cardInfo}>
+                    <div className={styles.titleRow}>
+                      <h3 className={styles.cardTitle}>{store.storeName}</h3>
+                      <span className={styles.district}>
+                        {store.address?.city && store.address?.district
+                          ? `${store.address.city}/${store.address.district}`
+                          : store.address?.city || store.address?.district || ''}
+                      </span>
                     </div>
-                  )}
-                </div>
-
-                {/* 카드 정보 */}
-                <div className={styles.cardInfo}>
-                  <div className={styles.titleRow}>
-                    <h3 className={styles.cardTitle}>{store.storeName}</h3>
-                    <span className={styles.district}>
-                      {store.address?.city && store.address?.district
-                        ? `${store.address.city}/${store.address.district}`
-                        : store.address?.city || store.address?.district || ''}
-                    </span>
                   </div>
                 </div>
-              </div>
-            )
-          })}
+              )
+            })}
 
-          {/* Intersection Observer 타겟 */}
-          {filteredStores.length < filteredAllStores.length && (
-            <div ref={loadMoreRef} className={styles.loadMoreTrigger}>
-              {/* 스크롤 감지용 요소 */}
-            </div>
-          )}
+            {/* 더 로드할 게 있으면 트리거 */}
+            {hasMore && (
+              <div ref={loadMoreRef} className={styles.loadMoreTrigger}>
+                {isLoadingMore && <Loading />}
+              </div>
+            )}
           </>
         )}
       </div>
