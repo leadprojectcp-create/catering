@@ -458,6 +458,75 @@ export async function sendCancellationNotification(params: CancellationNotificat
   }
 }
 
+// 구매확정 알림 발송 (고객에게만) - 카카오톡 알림톡 + 푸시알림
+export interface ConfirmationNotificationParams {
+  customerPhone?: string
+  customerId?: string
+  storeName: string
+  orderNumber: string
+  productName: string
+  type: 'reminder' | 'autoConfirmed'
+}
+
+export async function sendConfirmationNotification(params: ConfirmationNotificationParams): Promise<void> {
+  const { customerPhone, customerId, type, ...variables } = params
+
+  // 템플릿 불러오기
+  const templates = require('@/config/notificationTemplates.json')
+
+  const variablesStr = {
+    storeName: variables.storeName,
+    orderNumber: variables.orderNumber,
+    productName: variables.productName,
+  }
+
+  console.log('[구매확정 알림] 발송 시작', { type })
+
+  // 고객 알림 (카카오톡 알림톡 + 푸시)
+  if (customerPhone || customerId) {
+    const template = templates.confirmation.customer[type]
+
+    // 카카오톡 알림톡 발송
+    if (customerPhone) {
+      try {
+        const templateCode = template.templateCode
+
+        const kakaoVariables = {
+          storeName: variables.storeName,
+          orderNumber: variables.orderNumber,
+          productName: variables.productName,
+        }
+
+        const kakaoResult = await sendKakaoAlimtalk(customerPhone, templateCode, kakaoVariables)
+        console.log('[구매확정 알림] 고객 카카오톡 발송 결과:', kakaoResult)
+      } catch (error) {
+        console.error('[구매확정 알림] 고객 카카오톡 발송 실패:', error)
+      }
+    }
+
+    // 푸시 알림 발송
+    if (customerId) {
+      try {
+        const pushTitle = replaceTemplateVariables(template.push.title, variablesStr)
+        const pushBody = replaceTemplateVariables(template.push.body, variablesStr)
+
+        const result = await sendOrderFCM({
+          userId: customerId,
+          title: pushTitle,
+          body: pushBody,
+          data: {
+            type: type === 'reminder' ? 'ORDER_CONFIRM_REMINDER' : 'ORDER_AUTO_CONFIRMED',
+            orderNumber: variables.orderNumber
+          }
+        })
+        console.log('[구매확정 알림] 고객 푸시 발송 결과:', result)
+      } catch (error) {
+        console.error('[구매확정 알림] 고객 푸시 발송 실패:', error)
+      }
+    }
+  }
+}
+
 // SMS 발송 함수는 인증번호 발송용으로만 사용 (서버에서만 호출)
 export async function sendSMS(phone: string, message: string): Promise<boolean> {
   try {

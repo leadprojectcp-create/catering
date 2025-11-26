@@ -37,6 +37,26 @@
       }
     }
   },
+  "confirmation": {
+    "customer": {
+      "reminder": {
+        "templateCode": "UD_CONFIRM_REMINDER",
+        "kakao": "[단모] 구매확정을 해주세요!\n\n가게명: #{storeName}\n주문번호: #{orderNumber}\n상품명: #{productName}\n\n만족스러우셨다면 구매확정 버튼을 눌러주세요.",
+        "push": {
+          "title": "구매확정을 해주세요!",
+          "body": "[{{storeName}}] 주문하신 상품이 배송완료 되었습니다. 구매확정을 눌러주세요."
+        }
+      },
+      "autoConfirmed": {
+        "templateCode": "UD_AUTO_CONFIRMED",
+        "kakao": "[단모] 구매가 자동 확정되었습니다.\n\n가게명: #{storeName}\n주문번호: #{orderNumber}\n상품명: #{productName}\n\n이용해 주셔서 감사합니다.",
+        "push": {
+          "title": "구매가 자동 확정되었습니다",
+          "body": "[{{storeName}}] 주문하신 상품이 자동으로 구매확정 되었습니다."
+        }
+      }
+    }
+  },
   "cancellation": {
     "partner": {
       "full": {
@@ -144,6 +164,24 @@
             "name": "주문 내역 확인",
             "linkType": "WL",
             "linkMo": "https://danchemoim.com/redirect/customer/partial-cancelled-order"
+          }
+        ]
+      },
+      "confirmation": {
+        "reminder": [
+          {
+            "ordering": "1",
+            "name": "구매확정 하기",
+            "linkType": "WL",
+            "linkMo": "https://danchemoim.com/redirect/customer/confirm-reminder"
+          }
+        ],
+        "autoConfirmed": [
+          {
+            "ordering": "1",
+            "name": "주문 내역 확인",
+            "linkType": "WL",
+            "linkMo": "https://danchemoim.com/redirect/customer/auto-confirmed"
           }
         ]
       }
