@@ -88,9 +88,61 @@ export default function CustomEditor({ value, onChange, placeholder, storeId, pr
     return () => document.removeEventListener('selectionchange', handleSelectionChange)
   }, [detectFontSize])
 
-  // 파일 배열로 이미지 업로드 처리
+  // 단일 파일 업로드 (타임아웃 + 재시도)
+  const uploadSingleFile = useCallback(async (file: File, retryCount = 0): Promise<string | null> => {
+    const MAX_RETRIES = 2
+    const TIMEOUT_MS = 30000 // 30초 타임아웃
+
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('type', uploadType)
+    if (storeId) formData.append('storeId', storeId)
+    if (productId) formData.append('productId', productId)
+
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS)
+
+    try {
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+        signal: controller.signal
+      })
+
+      clearTimeout(timeoutId)
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`)
+      }
+
+      const result = await response.json()
+      return result.url
+    } catch (error) {
+      clearTimeout(timeoutId)
+
+      const isTimeout = error instanceof Error && error.name === 'AbortError'
+      const errorMsg = isTimeout ? '타임아웃' : (error instanceof Error ? error.message : '알 수 없는 오류')
+
+      console.error(`이미지 업로드 실패 (시도 ${retryCount + 1}/${MAX_RETRIES + 1}):`, errorMsg)
+
+      // 재시도
+      if (retryCount < MAX_RETRIES) {
+        console.log(`재시도 중... (${retryCount + 2}/${MAX_RETRIES + 1})`)
+        await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1))) // 점진적 대기
+        return uploadSingleFile(file, retryCount + 1)
+      }
+
+      return null
+    }
+  }, [uploadType, storeId, productId])
+
+  // 파일 배열로 이미지 업로드 처리 (병렬 업로드)
   const uploadImages = useCallback(async (fileArray: File[]) => {
     if (fileArray.length === 0) return
+
+    // 이미지 파일만 필터링
+    const imageFiles = fileArray.filter(file => file.type.startsWith('image/'))
+    if (imageFiles.length === 0) return
 
     setIsUploading(true)
 
@@ -100,59 +152,46 @@ export default function CustomEditor({ value, onChange, placeholder, storeId, pr
         editorRef.current.focus()
       }
 
-      // Get the current selection position
-      const selection = window.getSelection()
       const insertionPoint = editorRef.current
 
-      // Upload files sequentially in the order they were selected
-      for (const file of fileArray) {
-        // 이미지 파일만 처리
-        if (!file.type.startsWith('image/')) continue
+      // 병렬 업로드 (최대 3개씩)
+      const BATCH_SIZE = 3
+      const uploadedUrls: (string | null)[] = []
 
-        const formData = new FormData()
-        formData.append('file', file)
-        formData.append('type', uploadType)
-        if (storeId) formData.append('storeId', storeId)
-        if (productId) formData.append('productId', productId)
+      for (let i = 0; i < imageFiles.length; i += BATCH_SIZE) {
+        const batch = imageFiles.slice(i, i + BATCH_SIZE)
+        const batchResults = await Promise.all(batch.map(file => uploadSingleFile(file)))
+        uploadedUrls.push(...batchResults)
+      }
 
-        const response = await fetch('/api/upload', {
-          method: 'POST',
-          body: formData
-        })
+      // 성공한 업로드만 에디터에 삽입
+      const successUrls = uploadedUrls.filter((url): url is string => url !== null)
+      const failedCount = uploadedUrls.length - successUrls.length
 
-        if (!response.ok) throw new Error('이미지 업로드 실패')
+      if (insertionPoint && successUrls.length > 0) {
+        // 모든 이미지를 한번에 삽입
+        const imagesHtml = successUrls.map(url =>
+          `<div style="margin: 10px 0;"><img src="${url}" alt="상품 이미지" style="max-width: 100%; height: auto; display: inline-block; border-radius: 4px; cursor: move;" draggable="true" /></div>`
+        ).join('')
 
-        const result = await response.json()
-
-        // Insert image directly into editor content
-        if (insertionPoint) {
-          // Wrap image in a div without default alignment (draggable for layout)
-          const imgWrapper = `<div style="margin: 10px 0;"><img src="${result.url}" alt="상품 이미지" style="max-width: 100%; height: auto; display: inline-block; border-radius: 4px; cursor: move;" draggable="true" /></div>`
-
-          // Try to use execCommand if selection exists, otherwise append to end
-          if (selection && selection.rangeCount > 0) {
-            try {
-              document.execCommand('insertHTML', false, imgWrapper)
-            } catch {
-              // Fallback: append to the end of content
-              insertionPoint.innerHTML += imgWrapper
-            }
-          } else {
-            // No selection, append to end
-            insertionPoint.innerHTML += imgWrapper
-          }
-        }
+        // Append to the end of content
+        insertionPoint.innerHTML += imagesHtml
       }
 
       // Update the value after all images are inserted
       handleInput()
+
+      // 실패한 이미지가 있으면 알림
+      if (failedCount > 0) {
+        alert(`${successUrls.length}개 업로드 성공, ${failedCount}개 실패`)
+      }
     } catch (error) {
       console.error('이미지 업로드 오류:', error)
       alert('이미지 업로드 중 오류가 발생했습니다.')
     } finally {
       setIsUploading(false)
     }
-  }, [uploadType, storeId, productId, handleInput])
+  }, [uploadSingleFile, handleInput])
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files
