@@ -118,8 +118,8 @@ export default function SocialLogin({ onError }: SocialLoginProps) {
           카카오톡으로 로그인
         </button>
 
-        {/* Apple 로그인 - Apple 기기에서만 표시 */}
-        {isAppleDevice && (
+        {/* Apple 로그인 - 임시로 숨김 (나중에 다시 켜려면 false를 isAppleDevice로 변경) */}
+        {false && (
           <button
             type="button"
             onClick={() => handleSocialLogin('apple')}

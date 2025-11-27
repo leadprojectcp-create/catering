@@ -160,28 +160,28 @@ export async function createOrderCompletionTasks(
   // 1. 알림 발송 시간 계산
   // - 매장픽업/퀵: 1시간 후
   // - 택배: 24시간 후
-  // TODO: 테스트 후 원래 시간으로 복구 필요
   let notificationDelay: number
-  // if (deliveryMethod === '택배 배송') {
-  //   notificationDelay = 24 * 60 * 60 * 1000  // 24시간
-  // } else {
-  //   notificationDelay = 1 * 60 * 60 * 1000  // 1시간
-  // }
-  notificationDelay = 10 * 1000  // 테스트용: 10초
+  if (deliveryMethod === '택배 배송') {
+    notificationDelay = 24 * 60 * 60 * 1000  // 24시간
+  } else {
+    notificationDelay = 1 * 60 * 60 * 1000  // 1시간
+  }
+  // 테스트용 (필요시 주석 해제)
+  // notificationDelay = 10 * 1000  // 테스트용: 10초
   const notificationTime = new Date(now.getTime() + notificationDelay)
 
   // 2. 자동완료 시간 계산
   // - 예약일시 + 3일
-  // TODO: 테스트 후 원래 시간으로 복구 필요
-  // const reservationDate = new Date(deliveryDate)
-  // if (deliveryTime) {
-  //   const [hours, minutes] = deliveryTime.split(':').map(Number)
-  //   reservationDate.setHours(hours, minutes, 0, 0)
-  // } else {
-  //   reservationDate.setHours(23, 59, 59, 999)  // 예약일 끝
-  // }
-  // const autoCompleteTime = new Date(reservationDate.getTime() + 3 * 24 * 60 * 60 * 1000)  // +3일
-  const autoCompleteTime = new Date(now.getTime() + 15 * 1000)  // 테스트용: 15초
+  const reservationDate = new Date(deliveryDate)
+  if (deliveryTime) {
+    const [hours, minutes] = deliveryTime.split(':').map(Number)
+    reservationDate.setHours(hours, minutes, 0, 0)
+  } else {
+    reservationDate.setHours(23, 59, 59, 999)  // 예약일 끝
+  }
+  const autoCompleteTime = new Date(reservationDate.getTime() + 3 * 24 * 60 * 60 * 1000)  // +3일
+  // 테스트용 (필요시 주석 해제)
+  // const autoCompleteTime = new Date(now.getTime() + 15 * 1000)  // 테스트용: 15초
 
   console.log(`[CloudTasks] 주문 ${orderId} 스케줄링:`)
   console.log(`  - 알림 발송: ${notificationTime.toISOString()}`)

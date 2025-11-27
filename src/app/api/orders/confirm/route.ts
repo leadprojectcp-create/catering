@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic'
  * 소비자 수동 구매확정 API
  * - shipping 상태인 주문만 구매확정 가능
  * - 구매확정 시 orderStatus를 completed로 변경
- * - Cloud Tasks 알림/자동완료 작업 취소 (TODO: Cloud Tasks 연동 후 구현)
+ * - Cloud Tasks 작업 취소 불필요 (알림/자동완료 API에서 completed 상태 체크하여 스킵)
  */
 export async function POST(request: NextRequest) {
   try {
@@ -60,19 +60,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Cloud Tasks 알림 작업 취소 (알림 발송 전 구매확정한 경우)
-    // TODO: Cloud Tasks 연동 후 구현
-    // if (orderData.notificationTaskId) {
-    //   await cancelCloudTask(orderData.notificationTaskId)
-    // }
-
-    // Cloud Tasks 자동완료 작업 취소
-    // TODO: Cloud Tasks 연동 후 구현
-    // if (orderData.autoCompleteTaskId) {
-    //   await cancelCloudTask(orderData.autoCompleteTaskId)
-    // }
-
     // 구매확정 처리
+    // Note: Cloud Tasks 작업 취소 불필요
+    // - send-confirmation-reminder API: completed 상태면 알림 발송 스킵
+    // - auto-complete API: completed 상태면 자동완료 스킵
     await updateDoc(orderRef, {
       orderStatus: 'completed',
       confirmedAt: serverTimestamp(),
