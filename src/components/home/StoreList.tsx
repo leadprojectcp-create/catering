@@ -16,6 +16,16 @@ import styles from './StoreList.module.css'
 
 const PAGE_SIZE = 24
 
+// Fisher-Yates 셔플 알고리즘
+const shuffleArray = <T,>(array: T[]): T[] => {
+  const shuffled = [...array]
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
+  }
+  return shuffled
+}
+
 interface Store {
   id: string
   storeName: string
@@ -95,7 +105,8 @@ export default function StoreList({ selectedCategory }: StoreListProps) {
       const snapshot = await getDocs(q)
       const storeData = snapshot.docs.map(parseStoreDoc)
 
-      setStores(storeData)
+      // 랜덤 정렬
+      setStores(shuffleArray(storeData))
       setLastDoc(snapshot.docs[snapshot.docs.length - 1] || null)
       setHasMore(snapshot.docs.length === PAGE_SIZE)
     } catch (error) {
@@ -132,7 +143,8 @@ export default function StoreList({ selectedCategory }: StoreListProps) {
       const snapshot = await getDocs(q)
       const newStores = snapshot.docs.map(parseStoreDoc)
 
-      setStores(prev => [...prev, ...newStores])
+      // 추가 로드된 데이터도 랜덤 정렬
+      setStores(prev => [...prev, ...shuffleArray(newStores)])
       setLastDoc(snapshot.docs[snapshot.docs.length - 1] || null)
       setHasMore(snapshot.docs.length === PAGE_SIZE)
     } catch (error) {
