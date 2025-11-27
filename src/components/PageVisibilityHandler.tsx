@@ -7,6 +7,13 @@ export default function PageVisibilityHandler() {
   const router = useRouter()
 
   useEffect(() => {
+    // 네이티브 앱에서는 React Native가 앱 상태를 관리하므로 이 핸들러 비활성화
+    // @ts-expect-error - isNativeApp은 React Native 앱에서 주입됨
+    if (typeof window !== 'undefined' && window.isNativeApp) {
+      console.log('[Page Visibility] 네이티브 앱에서는 비활성화됨')
+      return
+    }
+
     let hiddenTime: number | null = null
     let lastActivityTime = Date.now()
     const RELOAD_THRESHOLD = 30 * 1000 // 30초
