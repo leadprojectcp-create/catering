@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react'
 import { doc, setDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import DeliveryAddressModal from './DeliveryAddressModal'
-import { DeliveryAddress, OrderInfo, DaumPostcodeData } from '../types'
+import AddressSearchModal from '@/components/common/AddressSearchModal'
+import { DeliveryAddress, OrderInfo } from '../types'
 import { useDeliveryAddress } from '../hooks/useDeliveryAddress'
 import styles from './DeliveryInfoSection.module.css'
 
@@ -32,6 +33,7 @@ export default function DeliveryInfoSection({
   onSavedAddressesChange
 }: DeliveryInfoSectionProps) {
   const [showAddressList, setShowAddressList] = useState(false)
+  const [showAddressSearch, setShowAddressSearch] = useState(false)
   const [isDefaultAddress, setIsDefaultAddress] = useState(false)
 
   // 배송지 관리 hook
@@ -47,22 +49,18 @@ export default function DeliveryInfoSection({
     }
   }, [savedAddresses])
 
-  // 주소 검색
-  const handleAddressSearch = () => {
-    if (typeof window !== 'undefined' && window.daum && window.daum.Postcode) {
-      new window.daum.Postcode({
-        oncomplete: function(data: DaumPostcodeData) {
-          const addr = data.userSelectedType === 'R' ? data.roadAddress : data.jibunAddress
-          onOrderInfoChange({
-            ...orderInfo,
-            address: addr,
-            zipCode: data.zonecode
-          })
-        }
-      }).open()
-    } else {
-      alert('주소 검색 서비스를 로딩 중입니다. 잠시 후 다시 시도해주세요.')
-    }
+  // 주소 검색 완료 핸들러
+  const handleAddressComplete = (data: {
+    address: string
+    roadAddress: string
+    jibunAddress: string
+    zonecode: string
+  }) => {
+    onOrderInfoChange({
+      ...orderInfo,
+      address: data.address,
+      zipCode: data.zonecode
+    })
   }
 
   // 저장된 배송지 불러오기
@@ -218,11 +216,18 @@ export default function DeliveryInfoSection({
         onDeleteAddress={handleDeleteAddress}
       />
 
+      {/* 주소 검색 모달 */}
+      <AddressSearchModal
+        isOpen={showAddressSearch}
+        onClose={() => setShowAddressSearch(false)}
+        onComplete={handleAddressComplete}
+      />
+
       <div className={styles.deliveryContainer}>
         <div className={styles.formGroup}>
           <div className={styles.formRow}>
             <label className={styles.label}>주소</label>
-            <div className={styles.addressInputWrapper} onClick={handleAddressSearch}>
+            <div className={styles.addressInputWrapper} onClick={() => setShowAddressSearch(true)}>
               <input
                 type="text"
                 className={styles.addressInput}

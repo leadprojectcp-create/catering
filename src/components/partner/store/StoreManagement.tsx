@@ -3,11 +3,10 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
-import Script from 'next/script'
 import { useAuth } from '@/contexts/AuthContext'
 import { doc, getDoc, setDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
-import { DaumPostcodeData } from '@/components/payments/types'
+import AddressSearchModal from '@/components/common/AddressSearchModal'
 import styles from './StoreManagement.module.css'
 
 interface StoreInfo {
@@ -44,7 +43,7 @@ export default function StoreManagement() {
   const [tempImages, setTempImages] = useState<File[]>([])
   const [previewUrls, setPreviewUrls] = useState<string[]>([])
   const [, setHasChanges] = useState(false)
-  const [isPostcodeLoaded, setIsPostcodeLoaded] = useState(false)
+  const [showAddressModal, setShowAddressModal] = useState(false)
   const [showPreviewModal, setShowPreviewModal] = useState(false)
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [modalImageIndex, setModalImageIndex] = useState(0)
@@ -85,19 +84,6 @@ export default function StoreManagement() {
     loadStoreInfo()
   }, [user, authLoading, router, loadStoreInfo])
 
-  useEffect(() => {
-    // 카카오 API가 이미 로드되어 있는지 확인
-    const checkKakaoAPI = () => {
-      if (typeof window !== 'undefined' && window.daum && window.daum.Postcode) {
-        setIsPostcodeLoaded(true)
-      }
-    }
-
-    checkKakaoAPI()
-    const timer = setTimeout(checkKakaoAPI, 1000)
-
-    return () => clearTimeout(timer)
-  }, [])
 
   // 필드 값 변경 (임시 저장)
   const handleFieldChange = (field: string, value: string) => {
@@ -344,34 +330,26 @@ export default function StoreManagement() {
     }
   }
 
-  const handleAddressSearch = () => {
-    if (typeof window !== 'undefined' && window.daum && window.daum.Postcode) {
-      new window.daum.Postcode({
-        oncomplete: function(data: DaumPostcodeData) {
-          const addr = data.userSelectedType === 'R' ? data.roadAddress : data.jibunAddress
-
-          if (storeInfo) {
-            setStoreInfo({
-              ...storeInfo,
-              address: {
-                ...storeInfo.address,
-                fullAddress: addr,
-                city: addr.split(' ')[0] || '',
-                district: addr.split(' ')[1] || '',
-                dong: addr.split(' ')[2] || ''
-              }
-            })
-            setHasChanges(true)
-          }
+  const handleAddressComplete = (data: {
+    address: string
+    roadAddress: string
+    jibunAddress: string
+    zonecode: string
+  }) => {
+    if (storeInfo) {
+      const addr = data.address
+      setStoreInfo({
+        ...storeInfo,
+        address: {
+          ...storeInfo.address,
+          fullAddress: addr,
+          city: addr.split(' ')[0] || '',
+          district: addr.split(' ')[1] || '',
+          dong: addr.split(' ')[2] || ''
         }
-      }).open()
-    } else {
-      alert('주소 검색 서비스를 로딩 중입니다. 잠시 후 다시 시도해주세요.')
+      })
+      setHasChanges(true)
     }
-  }
-
-  const handlePostcodeLoad = () => {
-    setIsPostcodeLoaded(true)
   }
 
   if (authLoading || loading) {
@@ -400,10 +378,11 @@ export default function StoreManagement() {
 
   return (
     <div className={styles.container}>
-      <Script
-        src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"
-        strategy="afterInteractive"
-        onLoad={handlePostcodeLoad}
+      {/* 주소 검색 모달 */}
+      <AddressSearchModal
+        isOpen={showAddressModal}
+        onClose={() => setShowAddressModal(false)}
+        onComplete={handleAddressComplete}
       />
 
       <div className={styles.header}>
@@ -632,11 +611,10 @@ export default function StoreManagement() {
               />
               <button
                 type="button"
-                onClick={handleAddressSearch}
+                onClick={() => setShowAddressModal(true)}
                 className={styles.addressSearchButton}
-                disabled={!isPostcodeLoaded}
               >
-                {isPostcodeLoaded ? '주소 검색' : '로딩 중...'}
+                주소 검색
               </button>
             </div>
             <input

@@ -4,14 +4,13 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import Script from 'next/script'
 import { signOut } from 'firebase/auth'
 import { serverTimestamp } from 'firebase/firestore'
 import { auth } from '@/lib/firebase'
 import { useAuth } from '@/contexts/AuthContext'
 import AuthGuard from './AuthGuard'
 import Loading from '@/components/Loading'
-import { DaumPostcodeData } from '@/components/payments/types'
+import AddressSearchModal from '@/components/common/AddressSearchModal'
 import styles from './SignupPage.module.css'
 
 interface Step1Data {
@@ -40,10 +39,10 @@ export default function PartnerSignupStep2() {
     detailAddress: ''
   })
   const [error, setError] = useState('')
-  const [isPostcodeLoaded, setIsPostcodeLoaded] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [uploadedFileName, setUploadedFileName] = useState<string>('')
   const [isUploading, setIsUploading] = useState(false)
+  const [showAddressModal, setShowAddressModal] = useState(false)
 
   useEffect(() => {
     // Step 1 데이터 확인
@@ -55,23 +54,6 @@ export default function PartnerSignupStep2() {
     setStep1Data(JSON.parse(savedData))
   }, [router])
 
-  useEffect(() => {
-    // 카카오 API가 이미 로드되어 있는지 확인
-    const checkKakaoAPI = () => {
-      if (typeof window !== 'undefined' && window.daum && window.daum.Postcode) {
-        setIsPostcodeLoaded(true);
-        console.log('Kakao Postcode API already loaded');
-      }
-    };
-
-    // 페이지 로드 후 체크
-    checkKakaoAPI();
-
-    // 일정 시간 후에도 체크 (스크립트 로딩 지연 대비)
-    const timer = setTimeout(checkKakaoAPI, 1000);
-
-    return () => clearTimeout(timer);
-  }, [])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({
@@ -81,27 +63,16 @@ export default function PartnerSignupStep2() {
   }
 
 
-  const handleAddressSearch = () => {
-    if (typeof window !== 'undefined' && window.daum && window.daum.Postcode) {
-      new window.daum.Postcode({
-        oncomplete: function(data: DaumPostcodeData) {
-          const addr = data.userSelectedType === 'R' ? data.roadAddress : data.jibunAddress;
-
-          setFormData({
-            ...formData,
-            address: addr
-          });
-        }
-      }).open();
-    } else {
-      console.log('Kakao Postcode API not loaded yet');
-      alert('주소 검색 서비스를 로딩 중입니다. 잠시 후 다시 시도해주세요.');
-    }
-  }
-
-  const handlePostcodeLoad = () => {
-    setIsPostcodeLoaded(true);
-    console.log('Kakao Postcode API loaded successfully');
+  const handleAddressComplete = (data: {
+    address: string
+    roadAddress: string
+    jibunAddress: string
+    zonecode: string
+  }) => {
+    setFormData({
+      ...formData,
+      address: data.address
+    })
   }
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -305,13 +276,10 @@ export default function PartnerSignupStep2() {
 
   return (
     <AuthGuard requireAuth={true} requireCompleteRegistration={false}>
-      <Script
-        src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"
-        strategy="afterInteractive"
-        onLoad={handlePostcodeLoad}
-        onError={(e) => {
-          console.error('Failed to load Kakao Postcode API:', e);
-        }}
+      <AddressSearchModal
+        isOpen={showAddressModal}
+        onClose={() => setShowAddressModal(false)}
+        onComplete={handleAddressComplete}
       />
       <div className={styles.container}>
         <div className={styles.formCard}>
@@ -460,11 +428,10 @@ export default function PartnerSignupStep2() {
                   />
                   <button
                     type="button"
-                    onClick={handleAddressSearch}
+                    onClick={() => setShowAddressModal(true)}
                     className={styles.addressSearchButton}
-                    disabled={!isPostcodeLoaded}
                   >
-                    {isPostcodeLoaded ? '주소 검색' : '로딩 중...'}
+                    주소 검색
                   </button>
                 </div>
                 <input

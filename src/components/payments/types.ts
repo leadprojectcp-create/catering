@@ -75,7 +75,15 @@ export interface DaumPostcodeData {
 }
 
 export interface DaumPostcode {
-  new(options: { oncomplete: (data: DaumPostcodeData) => void }): { open: () => void }
+  new(options: {
+    oncomplete: (data: DaumPostcodeData) => void
+    onclose?: () => void
+    width?: string | number
+    height?: string | number
+  }): {
+    open: () => void
+    embed: (element: HTMLElement) => void
+  }
 }
 
 declare global {
