@@ -22,6 +22,8 @@ export default function CustomEditor({ value, onChange, placeholder, storeId, pr
   const [isDragging, setIsDragging] = useState(false)
   const [selectedQuoteBlock, setSelectedQuoteBlock] = useState<HTMLElement | null>(null)
   const [selectedDividerBlock, setSelectedDividerBlock] = useState<HTMLElement | null>(null)
+  const [selectedImage, setSelectedImage] = useState<HTMLImageElement | null>(null)
+  const draggedImageRef = useRef<HTMLImageElement | null>(null)
   const isInitialMount = useRef(true)
 
   const colors = [
@@ -124,8 +126,8 @@ export default function CustomEditor({ value, onChange, placeholder, storeId, pr
 
         // Insert image directly into editor content
         if (insertionPoint) {
-          // Wrap image in a div without default alignment
-          const imgWrapper = `<div><img src="${result.url}" alt="상품 이미지" style="max-width: 100%; height: auto; display: inline-block;" /></div>`
+          // Wrap image in a div without default alignment (draggable for layout)
+          const imgWrapper = `<div style="margin: 10px 0;"><img src="${result.url}" alt="상품 이미지" style="max-width: 100%; height: auto; display: inline-block; border-radius: 4px; cursor: move;" draggable="true" /></div>`
 
           // Try to use execCommand if selection exists, otherwise append to end
           if (selection && selection.rangeCount > 0) {
@@ -164,16 +166,23 @@ export default function CustomEditor({ value, onChange, placeholder, storeId, pr
     }
   }
 
-  // 드래그 앤 드롭 핸들러
+  // 드래그 앤 드롭 핸들러 (외부 파일 드래그용)
   const handleDragEnter = useCallback((e: React.DragEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    setIsDragging(true)
+    // 내부 이미지 드래그 중이면 파일 드래그 상태 활성화하지 않음
+    if (draggedImageRef.current) return
+    // 외부에서 파일을 드래그해 올 때만 활성화
+    if (e.dataTransfer.types.includes('Files')) {
+      setIsDragging(true)
+    }
   }, [])
 
   const handleDragLeave = useCallback((e: React.DragEvent) => {
     e.preventDefault()
     e.stopPropagation()
+    // 내부 이미지 드래그 중이면 무시
+    if (draggedImageRef.current) return
     // 에디터 영역을 완전히 벗어났을 때만 드래그 상태 해제
     if (!editorRef.current?.contains(e.relatedTarget as Node)) {
       setIsDragging(false)
@@ -183,12 +192,21 @@ export default function CustomEditor({ value, onChange, placeholder, storeId, pr
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault()
     e.stopPropagation()
+    // 내부 이미지 드래그 중이면 파일 드래그 상태 활성화하지 않음
+    if (draggedImageRef.current) return
+    // 외부에서 파일을 드래그해 올 때만 활성화
+    if (e.dataTransfer.types.includes('Files')) {
+      setIsDragging(true)
+    }
   }, [])
 
   const handleDrop = useCallback(async (e: React.DragEvent) => {
     e.preventDefault()
     e.stopPropagation()
     setIsDragging(false)
+
+    // 내부 이미지 드래그 중이면 여기서 처리하지 않음 (useEffect의 handleDrop에서 처리)
+    if (draggedImageRef.current) return
 
     const files = e.dataTransfer.files
     if (!files || files.length === 0) return
@@ -284,9 +302,112 @@ export default function CustomEditor({ value, onChange, placeholder, storeId, pr
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // 이미지를 그리드 컨테이너에 추가하는 함수
+  const addImageToGrid = useCallback((sourceImg: HTMLImageElement, targetImg: HTMLImageElement, position: 'left' | 'right' | 'top' | 'bottom') => {
+    const sourceWrapper = sourceImg.closest('div')
+    const targetWrapper = targetImg.closest('[data-image-grid]') || targetImg.closest('div')
+
+    if (!sourceWrapper || !targetWrapper) return
+
+    // 타겟이 이미 그리드인 경우
+    const existingGrid = targetImg.closest('[data-image-grid]') as HTMLElement | null
+
+    if (existingGrid) {
+      // 기존 그리드에 이미지 추가
+      const gridDirection = existingGrid.getAttribute('data-grid-direction')
+      const newImgWrapper = document.createElement('div')
+      newImgWrapper.style.cssText = 'flex: 1; min-width: 0;'
+      newImgWrapper.innerHTML = `<img src="${sourceImg.src}" alt="상품 이미지" style="width: 100%; height: 100%; object-fit: cover; border-radius: 4px; cursor: move;" draggable="true" />`
+
+      if (gridDirection === 'row' && (position === 'left' || position === 'right')) {
+        // 가로 그리드에 가로로 추가
+        if (position === 'left') {
+          const targetImgWrapper = targetImg.closest('div')
+          if (targetImgWrapper) existingGrid.insertBefore(newImgWrapper, targetImgWrapper)
+        } else {
+          const targetImgWrapper = targetImg.closest('div')
+          if (targetImgWrapper) existingGrid.insertBefore(newImgWrapper, targetImgWrapper.nextSibling)
+        }
+      } else if (gridDirection === 'column' && (position === 'top' || position === 'bottom')) {
+        // 세로 그리드에 세로로 추가
+        if (position === 'top') {
+          const targetImgWrapper = targetImg.closest('div')
+          if (targetImgWrapper) existingGrid.insertBefore(newImgWrapper, targetImgWrapper)
+        } else {
+          const targetImgWrapper = targetImg.closest('div')
+          if (targetImgWrapper) existingGrid.insertBefore(newImgWrapper, targetImgWrapper.nextSibling)
+        }
+      } else {
+        // 방향이 다른 경우 새 그리드로 감싸기
+        const targetImgWrapper = targetImg.closest('div') as HTMLElement
+        if (!targetImgWrapper) return
+
+        const newDirection = (position === 'left' || position === 'right') ? 'row' : 'column'
+        const newGrid = document.createElement('div')
+        newGrid.setAttribute('data-image-grid', 'true')
+        newGrid.setAttribute('data-grid-direction', newDirection)
+        newGrid.style.cssText = `display: flex; flex-direction: ${newDirection}; gap: 8px; margin: 10px 0;`
+
+        const clonedTarget = targetImgWrapper.cloneNode(true) as HTMLElement
+
+        if (position === 'left' || position === 'top') {
+          newGrid.appendChild(newImgWrapper)
+          newGrid.appendChild(clonedTarget)
+        } else {
+          newGrid.appendChild(clonedTarget)
+          newGrid.appendChild(newImgWrapper)
+        }
+
+        targetImgWrapper.replaceWith(newGrid)
+      }
+    } else {
+      // 새 그리드 생성
+      const direction = (position === 'left' || position === 'right') ? 'row' : 'column'
+      const grid = document.createElement('div')
+      grid.setAttribute('data-image-grid', 'true')
+      grid.setAttribute('data-grid-direction', direction)
+      grid.style.cssText = `display: flex; flex-direction: ${direction}; gap: 8px; margin: 10px 0;`
+
+      const sourceImgWrapper = document.createElement('div')
+      sourceImgWrapper.style.cssText = 'flex: 1; min-width: 0;'
+      sourceImgWrapper.innerHTML = `<img src="${sourceImg.src}" alt="상품 이미지" style="width: 100%; height: 100%; object-fit: cover; border-radius: 4px; cursor: move;" draggable="true" />`
+
+      const targetImgWrapper = document.createElement('div')
+      targetImgWrapper.style.cssText = 'flex: 1; min-width: 0;'
+      targetImgWrapper.innerHTML = `<img src="${targetImg.src}" alt="상품 이미지" style="width: 100%; height: 100%; object-fit: cover; border-radius: 4px; cursor: move;" draggable="true" />`
+
+      if (position === 'left' || position === 'top') {
+        grid.appendChild(sourceImgWrapper)
+        grid.appendChild(targetImgWrapper)
+      } else {
+        grid.appendChild(targetImgWrapper)
+        grid.appendChild(sourceImgWrapper)
+      }
+
+      targetWrapper.replaceWith(grid)
+    }
+
+    // 소스 이미지 원본 제거
+    sourceWrapper.remove()
+
+    handleInput()
+  }, [handleInput])
+
   // 인용구/구분선 블록 클릭 핸들러
   const handleEditorClick = useCallback((e: React.MouseEvent) => {
     const target = e.target as HTMLElement
+
+    // 이미지 클릭 처리
+    if (target.tagName === 'IMG') {
+      const img = target as HTMLImageElement
+      // 이전 선택 해제
+      editorRef.current?.querySelectorAll('img.selected').forEach(el => el.classList.remove('selected'))
+      img.classList.add('selected')
+      setSelectedImage(img)
+      setSelectedQuoteBlock(null)
+      setSelectedDividerBlock(null)
+      return
+    }
 
     // 인용구 블록 찾기
     const quoteBlock = target.closest('[data-quote-block]') as HTMLElement | null
@@ -301,6 +422,9 @@ export default function CustomEditor({ value, onChange, placeholder, storeId, pr
     if (selectedDividerBlock && selectedDividerBlock !== dividerBlock) {
       selectedDividerBlock.classList.remove('selected')
     }
+    // 이전 이미지 선택 해제
+    editorRef.current?.querySelectorAll('img.selected').forEach(el => el.classList.remove('selected'))
+    setSelectedImage(null)
 
     if (quoteBlock) {
       // 구분선 선택 해제
@@ -347,6 +471,141 @@ export default function CustomEditor({ value, onChange, placeholder, storeId, pr
     }
   }, [selectedQuoteBlock, selectedDividerBlock, handleInput])
 
+  // 이미지 드래그 이벤트 위임 처리
+  useEffect(() => {
+    const editor = editorRef.current
+    if (!editor) return
+
+    let currentDraggedImage: HTMLImageElement | null = null
+
+    const handleDragStart = (e: DragEvent) => {
+      const target = e.target as HTMLElement
+      if (target.tagName === 'IMG') {
+        currentDraggedImage = target as HTMLImageElement
+        draggedImageRef.current = currentDraggedImage
+        e.dataTransfer!.effectAllowed = 'move'
+        e.dataTransfer!.setData('text/plain', currentDraggedImage.src)
+        currentDraggedImage.style.opacity = '0.5'
+      }
+    }
+
+    const handleDragEnd = (e: DragEvent) => {
+      const target = e.target as HTMLElement
+      if (target.tagName === 'IMG') {
+        (target as HTMLImageElement).style.opacity = '1'
+      }
+      currentDraggedImage = null
+      draggedImageRef.current = null
+      editor.querySelectorAll('.drop-indicator').forEach(el => el.remove())
+    }
+
+    const handleDragOver = (e: DragEvent) => {
+      if (!currentDraggedImage) return
+
+      const target = e.target as HTMLElement
+      if (target.tagName !== 'IMG' || target === currentDraggedImage) return
+
+      e.preventDefault()
+      e.stopPropagation()
+
+      const targetImg = target as HTMLImageElement
+      const rect = targetImg.getBoundingClientRect()
+      const x = e.clientX - rect.left
+      const y = e.clientY - rect.top
+      const width = rect.width
+      const height = rect.height
+
+      let position: 'left' | 'right' | 'top' | 'bottom' | null = null
+
+      if (x < width * 0.3) {
+        position = 'left'
+      } else if (x > width * 0.7) {
+        position = 'right'
+      } else if (y < height * 0.3) {
+        position = 'top'
+      } else if (y > height * 0.7) {
+        position = 'bottom'
+      }
+
+      if (position) {
+        const wrapper = targetImg.closest('div')
+        if (wrapper) {
+          wrapper.querySelectorAll('.drop-indicator').forEach(el => el.remove())
+
+          const indicator = document.createElement('div')
+          indicator.className = 'drop-indicator'
+          indicator.style.cssText = `
+            position: absolute;
+            background: #2196F3;
+            pointer-events: none;
+            z-index: 100;
+            ${position === 'left' ? 'left: 0; top: 0; width: 4px; height: 100%;' : ''}
+            ${position === 'right' ? 'right: 0; top: 0; width: 4px; height: 100%;' : ''}
+            ${position === 'top' ? 'left: 0; top: 0; width: 100%; height: 4px;' : ''}
+            ${position === 'bottom' ? 'left: 0; bottom: 0; width: 100%; height: 4px;' : ''}
+          `
+          wrapper.style.position = 'relative'
+          wrapper.appendChild(indicator)
+        }
+      }
+    }
+
+    const handleDrop = (e: DragEvent) => {
+      const target = e.target as HTMLElement
+      if (target.tagName !== 'IMG' || !currentDraggedImage) return
+
+      e.preventDefault()
+      e.stopPropagation()
+
+      const targetImg = target as HTMLImageElement
+
+      if (targetImg === currentDraggedImage) {
+        currentDraggedImage = null
+        draggedImageRef.current = null
+        return
+      }
+
+      // 드롭 위치 다시 계산
+      const rect = targetImg.getBoundingClientRect()
+      const x = e.clientX - rect.left
+      const y = e.clientY - rect.top
+      const width = rect.width
+      const height = rect.height
+
+      let position: 'left' | 'right' | 'top' | 'bottom' | null = null
+
+      if (x < width * 0.3) {
+        position = 'left'
+      } else if (x > width * 0.7) {
+        position = 'right'
+      } else if (y < height * 0.3) {
+        position = 'top'
+      } else if (y > height * 0.7) {
+        position = 'bottom'
+      }
+
+      if (position && currentDraggedImage) {
+        addImageToGrid(currentDraggedImage, targetImg, position)
+      }
+
+      currentDraggedImage = null
+      draggedImageRef.current = null
+      editor.querySelectorAll('.drop-indicator').forEach(el => el.remove())
+    }
+
+    editor.addEventListener('dragstart', handleDragStart)
+    editor.addEventListener('dragend', handleDragEnd)
+    editor.addEventListener('dragover', handleDragOver)
+    editor.addEventListener('drop', handleDrop)
+
+    return () => {
+      editor.removeEventListener('dragstart', handleDragStart)
+      editor.removeEventListener('dragend', handleDragEnd)
+      editor.removeEventListener('dragover', handleDragOver)
+      editor.removeEventListener('drop', handleDrop)
+    }
+  }, [addImageToGrid])
+
   // 외부 클릭 시 드롭다운 닫기 및 인용구 선택 해제
   useEffect(() => {
     const handleOutsideClick = (e: MouseEvent) => {
@@ -366,7 +625,7 @@ export default function CustomEditor({ value, onChange, placeholder, storeId, pr
         dividerDropdown.style.display = 'none'
       }
 
-      // 에디터 외부 클릭 시 인용구/구분선 선택 해제
+      // 에디터 외부 클릭 시 인용구/구분선/이미지 선택 해제
       if (editorRef.current && !editorRef.current.contains(target)) {
         if (selectedQuoteBlock) {
           selectedQuoteBlock.classList.remove('selected')
@@ -376,6 +635,8 @@ export default function CustomEditor({ value, onChange, placeholder, storeId, pr
           selectedDividerBlock.classList.remove('selected')
           setSelectedDividerBlock(null)
         }
+        editorRef.current.querySelectorAll('img.selected').forEach(el => el.classList.remove('selected'))
+        setSelectedImage(null)
       }
     }
 
