@@ -455,9 +455,9 @@ export default function CustomEditor({ value, onChange, placeholder, storeId, pr
     }
   }, [selectedQuoteBlock, selectedDividerBlock])
 
-  // 키보드 이벤트 핸들러 (Delete/Backspace로 인용구/구분선 삭제)
+  // 키보드 이벤트 핸들러 (Delete/Backspace로 인용구/구분선/이미지 삭제)
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if ((selectedQuoteBlock || selectedDividerBlock) && (e.key === 'Delete' || e.key === 'Backspace')) {
+    if ((selectedQuoteBlock || selectedDividerBlock || selectedImage) && (e.key === 'Delete' || e.key === 'Backspace')) {
       e.preventDefault()
       if (selectedQuoteBlock) {
         selectedQuoteBlock.remove()
@@ -467,9 +467,40 @@ export default function CustomEditor({ value, onChange, placeholder, storeId, pr
         selectedDividerBlock.remove()
         setSelectedDividerBlock(null)
       }
+      if (selectedImage) {
+        // 이미지가 그리드 안에 있는지 확인
+        const imageGrid = selectedImage.closest('[data-image-grid]') as HTMLElement | null
+        const imageWrapper = selectedImage.closest('div')
+
+        if (imageGrid && imageWrapper) {
+          // 그리드 안의 이미지인 경우
+          const remainingImages = imageGrid.querySelectorAll('img')
+          if (remainingImages.length <= 2) {
+            // 2개 이하면 그리드 해제하고 남은 이미지만 유지
+            const otherImages = Array.from(remainingImages).filter(img => img !== selectedImage)
+            if (otherImages.length === 1) {
+              // 1개 남으면 그리드 해제
+              const newWrapper = document.createElement('div')
+              newWrapper.style.cssText = 'margin: 10px 0;'
+              newWrapper.innerHTML = `<img src="${otherImages[0].src}" alt="상품 이미지" style="max-width: 100%; height: auto; display: inline-block; border-radius: 4px; cursor: move;" draggable="true" />`
+              imageGrid.replaceWith(newWrapper)
+            } else {
+              // 0개 남으면 그리드 전체 삭제
+              imageGrid.remove()
+            }
+          } else {
+            // 3개 이상이면 해당 이미지 wrapper만 삭제
+            imageWrapper.remove()
+          }
+        } else if (imageWrapper) {
+          // 일반 이미지인 경우 wrapper 전체 삭제
+          imageWrapper.remove()
+        }
+        setSelectedImage(null)
+      }
       handleInput()
     }
-  }, [selectedQuoteBlock, selectedDividerBlock, handleInput])
+  }, [selectedQuoteBlock, selectedDividerBlock, selectedImage, handleInput])
 
   // 이미지 드래그 이벤트 위임 처리
   useEffect(() => {
