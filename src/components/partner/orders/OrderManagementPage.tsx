@@ -15,6 +15,7 @@ import OrderList from './sections/OrderList'
 import OrderCancelModal from './modals/OrderCancelModal'
 import TrackingNumberModal from './modals/TrackingNumberModal'
 import PrintOrderSheet from './components/PrintOrderSheet'
+import { printOrder } from '@/utils/printOrder'
 import styles from './OrderManagementPage.module.css'
 
 type FilterStatus = 'all' | 'pending' | 'cancelled_rejected' | 'preparing' | 'shipping' | 'completed'
@@ -640,7 +641,34 @@ export default function OrderManagementPage() {
         onOpenCancelModal={(orderId) => handleCancelClick(orderId)}
         onOpenTrackingModal={(orderId) => { setTrackingOrderId(orderId); setShowTrackingModal(true) }}
         onOpenChat={handleChatClick}
-        onPrint={() => window.print()}
+        onPrint={async (order) => {
+          const result = await printOrder({
+            orderNumber: order.orderNumber,
+            storeName: order.storeName,
+            buyerInfo: {
+              name: order.recipient,
+              phone: order.phone,
+              address: order.address,
+              detailAddress: order.detailAddress
+            },
+            deliveryMethod: order.deliveryMethod,
+            deliveryDate: order.deliveryDate,
+            deliveryTime: order.deliveryTime,
+            items: order.items?.map(item => ({
+              name: item.productName,
+              quantity: item.quantity,
+              price: item.price,
+              options: item.options ? Object.entries(item.options).map(([key, value]) => ({ name: key, value })) : undefined
+            })),
+            totalAmount: order.totalAmount,
+            deliveryFee: order.deliveryFee,
+            memo: order.request
+          })
+
+          if (!result.success) {
+            alert(result.message)
+          }
+        }}
         onCancelAdditionalOrder={handleCancelAdditionalOrderClick}
       />
 
