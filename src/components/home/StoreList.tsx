@@ -220,9 +220,9 @@ export default function StoreList({ selectedCategory }: StoreListProps) {
                 <div
                   key={store.id}
                   className={styles.card}
-                  onClick={async () => {
-                    await incrementStoreView(store.id)
-                    router.push(`/store/${slug}`)
+                  onClick={() => {
+                    incrementStoreView(store.id)  // 백그라운드에서 실행
+                    router.push(`/store/${slug}`)  // 즉시 페이지 이동
                   }}
                 >
                   <div
