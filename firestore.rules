@@ -450,6 +450,15 @@ service cloud.firestore {
       allow read: if isSignedIn();
     }
 
+    // PickToEat collection - 개선사항 피드백
+    match /picktoeat/{feedbackId} {
+      // 모든 사용자 생성 가능 (인증 불필요)
+      allow create: if true;
+
+      // 관리자만 읽기/수정/삭제 가능
+      allow read, update, delete: if isAdmin();
+    }
+
     // UserCoupons collection - 유저별 발급된 쿠폰
     match /userCoupons/{userCouponId} {
       // 관리자는 모든 유저 쿠폰 읽기/쓰기 가능

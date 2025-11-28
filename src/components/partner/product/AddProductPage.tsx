@@ -372,7 +372,7 @@ export default function AddProductPage() {
         uploadedImageUrls.push(uploadResult.url)
       }
 
-      // 옵션 필터링 (비활성화되어도 기존 데이터 유지)
+      // 옵션 필터링 및 trim 적용 (비활성화되어도 기존 데이터 유지)
       const filteredOptions = formData.options
         .filter(option =>
           option.groupName.trim() !== '' &&
@@ -380,10 +380,13 @@ export default function AddProductPage() {
         )
         .map(option => ({
           ...option,
-          values: option.values.filter(v => v.name.trim() !== '')
+          groupName: option.groupName.trim(),
+          values: option.values
+            .filter(v => v.name.trim() !== '')
+            .map(v => ({ ...v, name: v.name.trim() }))
         }))
 
-      // 추가상품 옵션 필터링 (비활성화되어도 기존 데이터 유지)
+      // 추가상품 옵션 필터링 및 trim 적용 (비활성화되어도 기존 데이터 유지)
       const filteredAdditionalOptions = formData.additionalOptions
         .filter(option =>
           option.groupName.trim() !== '' &&
@@ -391,7 +394,10 @@ export default function AddProductPage() {
         )
         .map(option => ({
           ...option,
-          values: option.values.filter(v => v.name.trim() !== '')
+          groupName: option.groupName.trim(),
+          values: option.values
+            .filter(v => v.name.trim() !== '')
+            .map(v => ({ ...v, name: v.name.trim() }))
         }))
 
       // orderType을 'single'로 고정하여 전송

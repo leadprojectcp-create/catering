@@ -1,0 +1,83 @@
+.container {
+  max-width: 1280px;
+  margin-left: 300px;
+}
+
+.header {
+  margin-bottom: 30px;
+}
+
+.title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0 0 20px 0;
+}
+
+.filtersWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.additionalFilters {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.storeSelect {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 14px;
+  background: white;
+  cursor: pointer;
+  min-width: 150px;
+}
+
+.storeSelect:focus {
+  outline: none;
+  border-color: #FF7A00;
+}
+
+.orderListHeader {
+  color: #333;
+  font-size: 16px;
+  font-weight: 700;
+  margin-top: 30px;
+  margin-bottom: 20px;
+}
+
+@media (max-width: 1024px) {
+  .container {
+    max-width: 980px;
+  }
+}
+
+@media (max-width: 768px) {
+  .title {
+    font-size: 24px;
+  }
+
+  .additionalFilters {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .storeSelect {
+    width: 100%;
+  }
+
+  .orderListHeader {
+    font-size: 14px;
+  }
+}
+
+/* 인쇄 시 주문 관리 페이지 숨기기 */
+@media print {
+  .container {
+    display: none !important;
+  }
+}

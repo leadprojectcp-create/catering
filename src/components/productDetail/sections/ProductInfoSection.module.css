@@ -486,7 +486,7 @@
   line-height: normal;
   margin: 0 0 12px 0;
   white-space: pre-wrap;
-  max-height: 300px;
+  max-height: 500px;
   overflow: hidden;
   position: relative;
 }

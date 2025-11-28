@@ -21,6 +21,7 @@ interface OrderListProps {
   onOpenChat: (order: Order) => void
   onPrint: (order: Order) => void
   onCancelAdditionalOrder?: (paymentId: string) => void
+  showStoreName?: boolean
 }
 
 export default function OrderList({
@@ -37,6 +38,7 @@ export default function OrderList({
   onOpenChat,
   onPrint,
   onCancelAdditionalOrder,
+  showStoreName = false,
 }: OrderListProps) {
   const filterOrders = (orders: Order[]) => {
     return orders.filter(order => {
@@ -102,6 +104,7 @@ export default function OrderList({
           onOpenChat={onOpenChat}
           onPrint={() => onPrint(order)}
           onCancelAdditionalOrder={onCancelAdditionalOrder}
+          showStoreName={showStoreName}
         />
       ))}
     </div>

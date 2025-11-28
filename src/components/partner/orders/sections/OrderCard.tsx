@@ -21,6 +21,7 @@ interface OrderCardProps {
   onPrint: () => void
   onRefresh?: () => void
   onCancelAdditionalOrder?: (paymentId: string) => void
+  showStoreName?: boolean
 }
 
 export default function OrderCard({
@@ -35,6 +36,7 @@ export default function OrderCard({
   onPrint,
   onRefresh,
   onCancelAdditionalOrder,
+  showStoreName = false,
 }: OrderCardProps) {
   const [allowAdditionalOrder, setAllowAdditionalOrder] = useState(order.allowAdditionalOrder ?? false)
   const [memo, setMemo] = useState(order.partnerMemo || '')
@@ -390,6 +392,9 @@ export default function OrderCard({
             <div className={styles.dDay}>{dDay}</div>
             <span className={styles.orderNumberText}>주문번호 {order.orderNumber || order.id}</span>
           </div>
+          {showStoreName && order.storeName && (
+            <div className={styles.storeName}>[{order.storeName}]</div>
+          )}
           <div className={styles.productName}>{productSummary}</div>
           <div className={styles.orderInfo}>예약날짜 {formattedReservation}</div>
           <div className={styles.orderInfo}>

@@ -18,6 +18,7 @@ const adminMenuItems = [
   { label: 'AI 카테고리', path: '/admin/ai-category', icon: '🤖' },
   { label: 'AI 카테고리 관리', path: '/admin/ai-category-manage', icon: '⚡' },
   { label: '주문 관리', path: '/admin/orders', icon: '📦' },
+  { label: '설문조사', path: '/admin/surveys', icon: '📋' },
   { label: '매거진 관리', path: '/admin/magazine', icon: '📝' },
   { label: '공지사항 관리', path: '/admin/notices', icon: '📢' },
   { label: 'FAQ 관리', path: '/admin/faqs', icon: '❓' },

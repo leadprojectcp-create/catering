@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { collection, getDocs, query, orderBy, Timestamp } from 'firebase/firestore'
+import { collection, getDocs, query, orderBy, Timestamp, doc, getDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { updateProductStatus } from '@/lib/services/productService'
 import type { ProductData } from '@/lib/services/productService'
@@ -21,6 +21,7 @@ export default function ProductManagementPage() {
   const [filter, setFilter] = useState<'all' | 'active' | 'inactive' | 'pending'>('all')
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
   const [showDetailModal, setShowDetailModal] = useState(false)
+  const [storeNameMap, setStoreNameMap] = useState<Record<string, string>>({})
 
   useEffect(() => {
     loadProducts()
@@ -36,14 +37,31 @@ export default function ProductManagementPage() {
       const querySnapshot = await getDocs(q)
       const productsData: Product[] = []
 
-      querySnapshot.forEach((doc) => {
+      querySnapshot.forEach((docSnap) => {
         productsData.push({
-          id: doc.id,
-          ...doc.data() as ProductData
+          id: docSnap.id,
+          ...docSnap.data() as ProductData
         })
       })
 
       setProducts(productsData)
+
+      // storeId 목록 추출하여 storeName 가져오기
+      const storeIds = [...new Set(productsData.map(p => p.storeId).filter(Boolean))]
+      const newStoreNameMap: Record<string, string> = {}
+
+      await Promise.all(
+        storeIds.map(async (storeId) => {
+          if (storeId && !storeNameMap[storeId]) {
+            const storeDoc = await getDoc(doc(db, 'stores', storeId))
+            if (storeDoc.exists()) {
+              newStoreNameMap[storeId] = storeDoc.data().storeName || '-'
+            }
+          }
+        })
+      )
+
+      setStoreNameMap(prev => ({ ...prev, ...newStoreNameMap }))
     } catch (error) {
       console.error('상품 목록 로드 실패:', error)
       alert('상품 목록을 불러오는데 실패했습니다.')
@@ -163,7 +181,7 @@ export default function ProductManagementPage() {
               <th>이미지</th>
               <th>상품명</th>
               <th>가격</th>
-              <th>파트너</th>
+              <th>가게명</th>
               <th>카테고리</th>
               <th>조회수</th>
               <th>주문수</th>
@@ -199,8 +217,8 @@ export default function ProductManagementPage() {
                   </td>
                   <td>{product.name}</td>
                   <td>{formatNumber(product.discountedPrice || product.price)}원</td>
-                  <td>{product.partnerEmail || '-'}</td>
-                  <td>{product.category || '-'}</td>
+                  <td>{product.storeId ? (storeNameMap[product.storeId] || '-') : '-'}</td>
+                  <td>{Array.isArray(product.category) ? product.category.join(' | ') : (product.category || '-')}</td>
                   <td>{formatNumber(product.viewCount)}</td>
                   <td>{formatNumber(product.orderCount)}</td>
                   <td>{formatDate(product.createdAt)}</td>
@@ -384,8 +402,8 @@ export default function ProductManagementPage() {
                 <h3 className={styles.detailSectionTitle}>파트너 정보</h3>
                 <div className={styles.detailGrid}>
                   <div className={styles.detailItem}>
-                    <span className={styles.detailLabel}>파트너 이메일:</span>
-                    <span className={styles.detailValue}>{selectedProduct.partnerEmail || '-'}</span>
+                    <span className={styles.detailLabel}>가게명:</span>
+                    <span className={styles.detailValue}>{selectedProduct.storeId ? (storeNameMap[selectedProduct.storeId] || '-') : '-'}</span>
                   </div>
                   <div className={styles.detailItem}>
                     <span className={styles.detailLabel}>등록일:</span>

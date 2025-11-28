@@ -33,7 +33,7 @@ export default function OptionSection({ options, onChange, onShowHelpModal, enab
 
   const updateOptionGroup = (index: number, groupName: string) => {
     onChange(options.map((option, i) =>
-      i === index ? { ...option, groupName: groupName.trim() } : option
+      i === index ? { ...option, groupName } : option
     ))
   }
 
@@ -52,7 +52,7 @@ export default function OptionSection({ options, onChange, onShowHelpModal, enab
             ...option,
             values: option.values.map((val, j) =>
               j === valueIndex
-                ? { ...val, [field]: field === 'price' ? Number(value) : (field === 'name' ? (value as string).trim() : value) }
+                ? { ...val, [field]: field === 'price' ? Number(value) : value }
                 : val
             )
           }

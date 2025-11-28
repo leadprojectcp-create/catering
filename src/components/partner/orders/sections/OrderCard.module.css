@@ -145,6 +145,14 @@
   font-weight: 500;
 }
 
+.storeName {
+  color: #FF7A00;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 4px;
+  text-align: left;
+}
+
 .productName {
   color: #333;
   font-size: 16px;
