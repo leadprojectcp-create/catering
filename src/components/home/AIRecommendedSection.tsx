@@ -2,33 +2,32 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import useSWR from 'swr'
 import { getActiveAICategories } from '@/lib/services/aiCategoryService'
 import type { AIRecommendedCategory } from '@/lib/services/aiCategoryService'
 import OptimizedImage from '@/components/common/OptimizedImage'
 import styles from './AIRecommendedSection.module.css'
 
+// SWR fetcher 함수
+const fetchCategories = async (): Promise<AIRecommendedCategory[]> => {
+  return await getActiveAICategories()
+}
+
 export default function AIRecommendedSection() {
   const router = useRouter()
-  const [categories, setCategories] = useState<AIRecommendedCategory[]>([])
-  const [isLoading, setIsLoading] = useState(true)
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isMobile, setIsMobile] = useState(false)
   const sliderRef = useRef<HTMLDivElement>(null)
 
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const data = await getActiveAICategories()
-        setCategories(data)
-      } catch (error) {
-        console.error('AI 카테고리 로딩 에러:', error)
-      } finally {
-        setIsLoading(false)
-      }
+  // SWR로 AI 카테고리 데이터 관리
+  const { data: categories = [], isLoading } = useSWR<AIRecommendedCategory[]>(
+    'home-ai-categories',
+    fetchCategories,
+    {
+      revalidateOnFocus: false,
+      dedupingInterval: 5000,
     }
-
-    fetchCategories()
-  }, [])
+  )
 
   useEffect(() => {
     const checkMobile = () => {

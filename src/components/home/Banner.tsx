@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
+import useSWR from 'swr'
 import { Swiper, SwiperSlide } from 'swiper/react'
 import { Autoplay } from 'swiper/modules'
 import type { Swiper as SwiperType } from 'swiper'
@@ -10,26 +11,23 @@ import 'swiper/css'
 import 'swiper/css/pagination'
 import styles from './Banner.module.css'
 
-export default function Banner() {
-  const [banners, setBanners] = useState<Banner[]>([])
+// SWR fetcher 함수
+const fetchBanners = async (): Promise<Banner[]> => {
+  return await getActiveBanners()
+}
+
+export default function BannerComponent() {
   const [currentIndex, setCurrentIndex] = useState(1)
-  const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    fetchBanners()
-  }, [])
-
-  const fetchBanners = async () => {
-    try {
-      setLoading(true)
-      const data = await getActiveBanners()
-      setBanners(data)
-    } catch (error) {
-      console.error('배너 로드 실패:', error)
-    } finally {
-      setLoading(false)
+  // SWR로 배너 데이터 관리
+  const { data: banners = [], isLoading } = useSWR<Banner[]>(
+    'home-banners',
+    fetchBanners,
+    {
+      revalidateOnFocus: false,
+      dedupingInterval: 5000,
     }
-  }
+  )
 
   const handleSlideChange = (swiper: SwiperType) => {
     setCurrentIndex(swiper.realIndex + 1)
@@ -41,7 +39,7 @@ export default function Banner() {
     }
   }
 
-  if (loading || banners.length === 0) {
+  if (isLoading || banners.length === 0) {
     return null
   }
 
