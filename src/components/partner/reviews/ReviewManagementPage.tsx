@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import useSWR from 'swr'
 import { getPartnerReviews, addReplyToReview, deleteReplyFromReview, updateReplyInReview } from '@/lib/services/reviewService'
 import { useAuth } from '@/contexts/AuthContext'
 import type { Review } from '@/lib/services/reviewService'
@@ -19,12 +20,36 @@ interface Product {
   name: string
 }
 
+interface ReviewData {
+  reviews: Review[]
+  products: Product[]
+}
+
+// SWR fetcher 함수
+const fetchReviewData = async (userId: string): Promise<ReviewData> => {
+  // 리뷰 데이터 가져오기
+  const reviewsData = await getPartnerReviews(userId)
+
+  // 상품 목록 가져오기
+  const productsQuery = query(
+    collection(db, 'products'),
+    where('partnerId', '==', userId)
+  )
+  const productsSnapshot = await getDocs(productsQuery)
+  const productsData = productsSnapshot.docs.map(doc => ({
+    id: doc.id,
+    name: doc.data().name
+  }))
+
+  return {
+    reviews: reviewsData,
+    products: productsData
+  }
+}
+
 export default function ReviewManagementPage() {
   const router = useRouter()
   const { user } = useAuth()
-  const [reviews, setReviews] = useState<Review[]>([])
-  const [products, setProducts] = useState<Product[]>([])
-  const [loading, setLoading] = useState(true)
   const [sortOrder, setSortOrder] = useState('latest') // 최신순, 미답변순, 별점높은순, 별점낮은순
   const [selectedProduct, setSelectedProduct] = useState('all')
   const [startDate, setStartDate] = useState('')
@@ -41,50 +66,22 @@ export default function ReviewManagementPage() {
   const [touchStart, setTouchStart] = useState(0)
   const [touchEnd, setTouchEnd] = useState(0)
 
-  useEffect(() => {
-    if (user) {
-      fetchReviews()
-      fetchProducts()
+  // SWR로 리뷰 및 상품 데이터 관리
+  const { data, error, isLoading, mutate } = useSWR<ReviewData>(
+    user ? `reviews-${user.uid}` : null,
+    () => fetchReviewData(user!.uid),
+    {
+      revalidateOnFocus: false,
+      dedupingInterval: 5000,
     }
-  }, [user])
+  )
+
+  const reviews = data?.reviews || []
+  const products = data?.products || []
 
   useEffect(() => {
     applyFilters()
   }, [reviews, sortOrder, selectedProduct, startDate, endDate])
-
-  const fetchReviews = async () => {
-    if (!user) return
-
-    try {
-      setLoading(true)
-      const data = await getPartnerReviews(user.uid)
-      setReviews(data)
-    } catch (error) {
-      console.error('리뷰 로드 실패:', error)
-      alert('리뷰를 불러오는데 실패했습니다.')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const fetchProducts = async () => {
-    if (!user) return
-
-    try {
-      const productsQuery = query(
-        collection(db, 'products'),
-        where('partnerId', '==', user.uid)
-      )
-      const productsSnapshot = await getDocs(productsQuery)
-      const productsData = productsSnapshot.docs.map(doc => ({
-        id: doc.id,
-        name: doc.data().name
-      }))
-      setProducts(productsData)
-    } catch (error) {
-      console.error('상품 로드 실패:', error)
-    }
-  }
 
   const applyFilters = () => {
     let filtered = [...reviews]
@@ -193,8 +190,8 @@ export default function ReviewManagementPage() {
       await addReplyToReview(reviewId, replyText.trim(), user.uid, replyIsPrivate)
       alert('답글이 저장되었습니다.')
 
-      // 리뷰 목록 새로고침
-      await fetchReviews()
+      // SWR 캐시 갱신
+      mutate()
 
       setReplyingTo(null)
       setReplyText('')
@@ -221,8 +218,8 @@ export default function ReviewManagementPage() {
       await updateReplyInReview(reviewId, editReplyText.trim(), editReplyIsPrivate)
       alert('답글이 수정되었습니다.')
 
-      // 리뷰 목록 새로고침
-      await fetchReviews()
+      // SWR 캐시 갱신
+      mutate()
 
       setEditingReplyId(null)
       setEditReplyText('')
@@ -240,8 +237,8 @@ export default function ReviewManagementPage() {
       await deleteReplyFromReview(reviewId)
       alert('답글이 삭제되었습니다.')
 
-      // 리뷰 목록 새로고침
-      await fetchReviews()
+      // SWR 캐시 갱신
+      mutate()
     } catch (error) {
       console.error('답글 삭제 실패:', error)
       alert('답글 삭제에 실패했습니다.')
@@ -299,7 +296,7 @@ export default function ReviewManagementPage() {
     setTouchEnd(0)
   }
 
-  if (loading) return <Loading />
+  if (isLoading) return <Loading />
 
   return (
     <div className={styles.container}>

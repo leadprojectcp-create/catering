@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
+import useSWR from 'swr'
 import { Timestamp } from 'firebase/firestore'
 import { getAllUsers, updateUserType, toggleUserStatus } from '@/lib/services/userService'
 import type { User } from '@/lib/services/userService'
@@ -9,29 +10,25 @@ import Loading from '@/components/Loading'
 import CouponIssueModal from './CouponIssueModal'
 import styles from './UserManagementPage.module.css'
 
+// SWR fetcher 함수
+const fetchUsers = async (): Promise<User[]> => {
+  return await getAllUsers()
+}
+
 export default function UserManagementPage() {
-  const [users, setUsers] = useState<User[]>([])
-  const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | 'partner' | 'user' | 'admin'>('all')
   const [selectedUserIds, setSelectedUserIds] = useState<Set<string>>(new Set())
   const [isCouponModalOpen, setIsCouponModalOpen] = useState(false)
 
-  useEffect(() => {
-    loadUsers()
-  }, [])
-
-  const loadUsers = async () => {
-    try {
-      setLoading(true)
-      const data = await getAllUsers()
-      setUsers(data)
-    } catch (error) {
-      console.error('사용자 목록 로드 실패:', error)
-      alert('사용자 목록을 불러오는데 실패했습니다.')
-    } finally {
-      setLoading(false)
+  // SWR로 사용자 데이터 관리
+  const { data: users = [], error, isLoading, mutate } = useSWR<User[]>(
+    'admin-users',
+    fetchUsers,
+    {
+      revalidateOnFocus: false,
+      dedupingInterval: 5000,
     }
-  }
+  )
 
   const getTypeLabel = (type?: 'partner' | 'user' | 'admin') => {
     switch (type) {
@@ -49,7 +46,11 @@ export default function UserManagementPage() {
 
     try {
       await updateUserType(uid, newType)
-      setUsers(users.map(u => u.uid === uid ? { ...u, type: newType } : u))
+      // SWR 캐시 업데이트
+      mutate(
+        (prev) => prev?.map(u => u.uid === uid ? { ...u, type: newType } : u),
+        false
+      )
       alert('유형이 변경되었습니다.')
     } catch (error) {
       console.error('유형 변경 실패:', error)
@@ -65,7 +66,11 @@ export default function UserManagementPage() {
 
     try {
       await toggleUserStatus(uid, newStatus)
-      setUsers(users.map(u => u.uid === uid ? { ...u, disabled: newStatus } : u))
+      // SWR 캐시 업데이트
+      mutate(
+        (prev) => prev?.map(u => u.uid === uid ? { ...u, disabled: newStatus } : u),
+        false
+      )
       alert(`사용자가 ${newStatus ? '비활성화' : '활성화'}되었습니다.`)
     } catch (error) {
       console.error('상태 변경 실패:', error)
@@ -129,7 +134,7 @@ export default function UserManagementPage() {
     return user.type === filter
   })
 
-  if (loading) {
+  if (isLoading) {
     return <Loading />
   }
 

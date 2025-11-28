@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useMemo, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import useSWR from 'swr'
 import { collection, getDocs, query, where, doc, getDoc, Timestamp } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import Image from 'next/image'
@@ -65,11 +66,149 @@ interface CategoryProductListProps {
   categoryName: string
 }
 
+// SWR fetcher 함수
+const fetchCategoryProducts = async (
+  categoryName: string,
+  userLocationData: { latitude: number; longitude: number } | null
+): Promise<Product[]> => {
+  // 이모지 제거한 카테고리 이름
+  const cleanCategoryName = categoryName.replace(/[❤️⚡]/g, '')
+
+  // 모든 카테고리를 동일하게 처리: products의 category 배열에서 조회
+  const productsQuery = query(
+    collection(db, 'products'),
+    where('category', 'array-contains', cleanCategoryName),
+    where('status', '==', 'active')
+  )
+  const productsSnapshot = await getDocs(productsQuery)
+
+  let productData: Product[] = productsSnapshot.docs.map(docSnap => {
+    const data = docSnap.data()
+    return {
+      id: docSnap.id,
+      ...data
+    } as Product
+  })
+
+  // 사용자 위치 가져오기 - 전달받은 위치 또는 로컬 스토리지
+  let userLocation = userLocationData
+
+  if (!userLocation) {
+    userLocation = getUserLocation()
+  }
+
+  // 모바일 기기인지 확인
+  const isMobile = typeof navigator !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
+
+  // DB나 앱에서 위치를 못 가져왔고, 모바일 기기이고, 브라우저 Geolocation API가 지원되는 경우
+  if (!userLocation && isMobile && typeof window !== 'undefined' && navigator.geolocation) {
+    try {
+      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(
+          resolve,
+          reject,
+          {
+            enableHighAccuracy: true,
+            timeout: 15000,
+            maximumAge: 300000,
+          }
+        )
+      })
+
+      userLocation = {
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude,
+      }
+
+      try {
+        localStorage.setItem('userLocation', JSON.stringify(userLocation))
+      } catch (e) {
+        console.error('[Browser] localStorage 저장 실패:', e)
+      }
+    } catch (error) {
+      console.error('[Browser] 위치 정보 가져오기 실패:', error)
+    }
+  }
+
+  // 각 상품의 storeId로 storeName, 위치 정보, 리뷰 정보 가져오기
+  const productsWithStoreNameAndReviews = await Promise.all(
+    productData.map(async (product) => {
+      const updatedProduct = { ...product }
+
+      // storeName 및 위치 정보 가져오기
+      if (product.storeId && !product.storeName) {
+        try {
+          const storeDoc = await getDoc(doc(db, 'stores', product.storeId))
+          if (storeDoc.exists()) {
+            const storeData = storeDoc.data()
+            updatedProduct.storeName = storeData.storeName || storeData.name
+
+            // 위치 정보가 있으면 저장
+            if (storeData.address?.latitude && storeData.address?.longitude) {
+              updatedProduct.storeLatitude = storeData.address.latitude
+              updatedProduct.storeLongitude = storeData.address.longitude
+              updatedProduct.storeCity = storeData.address.city
+              updatedProduct.storeDistrict = storeData.address.district
+
+              // 사용자 위치가 있으면 거리 계산
+              if (userLocation) {
+                updatedProduct.distance = calculateDistance(
+                  userLocation.latitude,
+                  userLocation.longitude,
+                  storeData.address.latitude,
+                  storeData.address.longitude
+                )
+              }
+            }
+          }
+        } catch (error) {
+          console.error('판매자 정보 가져오기 실패:', error)
+        }
+      }
+
+      // 리뷰 정보 가져오기
+      try {
+        const reviewsQuery = query(
+          collection(db, 'reviews'),
+          where('productId', '==', product.id)
+        )
+        const reviewsSnapshot = await getDocs(reviewsQuery)
+        const reviews = reviewsSnapshot.docs.map(doc => doc.data())
+
+        if (reviews.length > 0) {
+          const totalRating = reviews.reduce((sum, review) => sum + (review.rating || 0), 0)
+          updatedProduct.averageRating = totalRating / reviews.length
+          updatedProduct.reviewCount = reviews.length
+        } else {
+          updatedProduct.averageRating = 0
+          updatedProduct.reviewCount = 0
+        }
+      } catch (error) {
+        console.error('리뷰 정보 가져오기 실패:', error)
+        updatedProduct.averageRating = 0
+        updatedProduct.reviewCount = 0
+      }
+
+      return updatedProduct
+    })
+  )
+
+  // 거리순으로 정렬
+  const sortedProducts = productsWithStoreNameAndReviews.sort((a, b) => {
+    if (a.distance !== undefined && b.distance === undefined) return -1
+    if (a.distance === undefined && b.distance !== undefined) return 1
+    if (a.distance !== undefined && b.distance !== undefined) {
+      return a.distance - b.distance
+    }
+    return 0
+  })
+
+  return sortedProducts
+}
+
 export default function CategoryProductList({ categoryName }: CategoryProductListProps) {
   const router = useRouter()
   const { user, userData } = useAuth()
-  const [products, setProducts] = useState<Product[]>([])
-  const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [searchInput, setSearchInput] = useState('')
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false)
@@ -92,35 +231,15 @@ export default function CategoryProductList({ categoryName }: CategoryProductLis
     }
   }, [userData])
 
-  // 사용자 위치가 변경되면 상품 거리 재계산
-  useEffect(() => {
-    if (userCoordinates && products.length > 0) {
-      const updatedProducts = products.map(product => {
-        if (product.storeLatitude && product.storeLongitude) {
-          const distance = calculateDistance(
-            userCoordinates.latitude,
-            userCoordinates.longitude,
-            product.storeLatitude,
-            product.storeLongitude
-          )
-          return { ...product, distance }
-        }
-        return product
-      })
-
-      // 거리순으로 재정렬
-      const sortedProducts = updatedProducts.sort((a, b) => {
-        if (a.distance !== undefined && b.distance === undefined) return -1
-        if (a.distance === undefined && b.distance !== undefined) return 1
-        if (a.distance !== undefined && b.distance !== undefined) {
-          return a.distance - b.distance
-        }
-        return 0
-      })
-
-      setProducts(sortedProducts)
+  // SWR로 상품 데이터 관리
+  const { data: products = [], error, isLoading, mutate } = useSWR<Product[]>(
+    categoryName ? `category-products-${categoryName}-${userCoordinates?.latitude || 'no-loc'}` : null,
+    () => fetchCategoryProducts(categoryName, userCoordinates),
+    {
+      revalidateOnFocus: false,
+      dedupingInterval: 5000,
     }
-  }, [userCoordinates])
+  )
 
   // 할인 기간이 유효한지 체크하는 함수
   const isDiscountValid = (product: Product) => {
@@ -144,198 +263,6 @@ export default function CategoryProductList({ categoryName }: CategoryProductLis
     // 현재 시간이 시작일과 종료일 사이에 있는지 체크
     return now >= startDate && now <= endDate
   }
-
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        // 이모지 제거한 카테고리 이름
-        const cleanCategoryName = categoryName.replace(/[❤️⚡]/g, '')
-        console.log('카테고리:', categoryName, '/ 정제된 이름:', cleanCategoryName)
-
-        let productData: Product[] = []
-
-        // 모든 카테고리를 동일하게 처리: products의 category 배열에서 조회
-        const productsQuery = query(
-          collection(db, 'products'),
-          where('category', 'array-contains', cleanCategoryName),
-          where('status', '==', 'active')
-        )
-        const productsSnapshot = await getDocs(productsQuery)
-        console.log('해당 카테고리 전체 상품 수:', productsSnapshot.docs.length)
-
-        productData = productsSnapshot.docs.map(docSnap => {
-          const data = docSnap.data()
-          console.log('상품 데이터:', data)
-          console.log('minOrderDays 값:', data.minOrderDays)
-          return {
-            id: docSnap.id,
-            ...data
-          } as Product
-        })
-
-        console.log('active 상품 수:', productData.length)
-
-        // 사용자 위치 가져오기 - DB 우선
-        let userLocation: { latitude: number; longitude: number } | null = null
-
-        // 1순위: DB에 저장된 위치 (userData)
-        if (userData?.location?.latitude && userData?.location?.longitude) {
-          userLocation = {
-            latitude: userData.location.latitude,
-            longitude: userData.location.longitude,
-          }
-          console.log('[DB] DB에서 위치 정보 가져오기 성공:', userLocation)
-        }
-        // 2순위: 로컬/앱에 저장된 위치
-        else {
-          userLocation = getUserLocation()
-        }
-
-        console.log('=== 사용자 위치 정보 ===')
-        console.log('사용자 위치:', userLocation)
-
-        // 모바일 기기인지 확인
-        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
-        console.log('[Device] 모바일 기기:', isMobile)
-
-        // DB나 앱에서 위치를 못 가져왔고, 모바일 기기이고, 브라우저 Geolocation API가 지원되는 경우 (모바일 웹만)
-        if (!userLocation && isMobile && typeof window !== 'undefined' && navigator.geolocation) {
-          console.log('[Browser] 모바일 웹 - 브라우저 위치 정보 요청 중...')
-          try {
-            const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-              navigator.geolocation.getCurrentPosition(
-                resolve,
-                reject,
-                {
-                  enableHighAccuracy: true, // GPS 우선
-                  timeout: 15000,
-                  maximumAge: 300000, // 5분 캐시
-                }
-              )
-            })
-
-            userLocation = {
-              latitude: position.coords.latitude,
-              longitude: position.coords.longitude,
-            }
-            console.log('[Browser] 위치 정보 가져오기 성공:', userLocation)
-
-            // 로컬 스토리지에 저장
-            try {
-              localStorage.setItem('userLocation', JSON.stringify(userLocation))
-            } catch (e) {
-              console.error('[Browser] localStorage 저장 실패:', e)
-            }
-          } catch (error) {
-            console.error('[Browser] 위치 정보 가져오기 실패:', error)
-          }
-        } else if (!userLocation && !isMobile) {
-          console.log('[Browser] PC 웹 - 위치 기반 사용 안 함 (랜덤 정렬)')
-        }
-
-        if (userLocation) {
-          console.log('사용자 위도 (latitude):', userLocation.latitude)
-          console.log('사용자 경도 (longitude):', userLocation.longitude)
-        }
-        const windowWithLocation = window as Window & { nativeLocation?: { latitude: number; longitude: number } }
-        console.log('window.nativeLocation:', windowWithLocation.nativeLocation)
-        console.log('localStorage.userLocation:', localStorage.getItem('userLocation'))
-        console.log('========================\n')
-
-        // 각 상품의 storeId로 storeName, 위치 정보, 리뷰 정보 가져오기
-        const productsWithStoreNameAndReviews = await Promise.all(
-          productData.map(async (product) => {
-            const updatedProduct = { ...product }
-
-            // storeName 및 위치 정보 가져오기
-            if (product.storeId && !product.storeName) {
-              try {
-                const storeDoc = await getDoc(doc(db, 'stores', product.storeId))
-                if (storeDoc.exists()) {
-                  const storeData = storeDoc.data()
-                  updatedProduct.storeName = storeData.storeName || storeData.name
-
-                  // 위치 정보가 있으면 저장 (address 객체 내부에 있음)
-                  if (storeData.address?.latitude && storeData.address?.longitude) {
-                    updatedProduct.storeLatitude = storeData.address.latitude
-                    updatedProduct.storeLongitude = storeData.address.longitude
-                    updatedProduct.storeCity = storeData.address.city
-                    updatedProduct.storeDistrict = storeData.address.district
-
-                    console.log(`\n=== ${updatedProduct.storeName} 위치 정보 ===`)
-                    console.log('판매자 위도 (latitude):', storeData.address.latitude)
-                    console.log('판매자 경도 (longitude):', storeData.address.longitude)
-
-                    // 사용자 위치가 있으면 거리 계산
-                    if (userLocation) {
-                      updatedProduct.distance = calculateDistance(
-                        userLocation.latitude,
-                        userLocation.longitude,
-                        storeData.address.latitude,
-                        storeData.address.longitude
-                      )
-                      console.log(`${updatedProduct.storeName} 최종 거리:`, updatedProduct.distance?.toFixed(2), 'km', `(${Math.round(updatedProduct.distance * 1000)}m)`)
-                    }
-                  }
-                }
-              } catch (error) {
-                console.error('판매자 정보 가져오기 실패:', error)
-              }
-            }
-
-            // 리뷰 정보 가져오기
-            try {
-              const reviewsQuery = query(
-                collection(db, 'reviews'),
-                where('productId', '==', product.id)
-              )
-              const reviewsSnapshot = await getDocs(reviewsQuery)
-              const reviews = reviewsSnapshot.docs.map(doc => doc.data())
-
-              if (reviews.length > 0) {
-                const totalRating = reviews.reduce((sum, review) => sum + (review.rating || 0), 0)
-                updatedProduct.averageRating = totalRating / reviews.length
-                updatedProduct.reviewCount = reviews.length
-              } else {
-                updatedProduct.averageRating = 0
-                updatedProduct.reviewCount = 0
-              }
-            } catch (error) {
-              console.error('리뷰 정보 가져오기 실패:', error)
-              updatedProduct.averageRating = 0
-              updatedProduct.reviewCount = 0
-            }
-
-            return updatedProduct
-          })
-        )
-
-        // 거리순으로 정렬 (거리 정보가 있는 경우)
-        const sortedProducts = productsWithStoreNameAndReviews.sort((a, b) => {
-          // 거리 정보가 있는 상품을 우선
-          if (a.distance !== undefined && b.distance === undefined) return -1
-          if (a.distance === undefined && b.distance !== undefined) return 1
-
-          // 둘 다 거리 정보가 있으면 가까운 순으로
-          if (a.distance !== undefined && b.distance !== undefined) {
-            return a.distance - b.distance
-          }
-
-          // 둘 다 거리 정보가 없으면 원래 순서 유지
-          return 0
-        })
-
-        setProducts(sortedProducts)
-      } catch (error) {
-        console.error('상품 데이터 가져오기 실패:', error)
-        setProducts([])
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    fetchProducts()
-  }, [categoryName, userData])
 
   // 카테고리 아이콘 가져오기 (❤️, ⚡ 제거한 이름으로)
   const cleanCategoryName = categoryName.replace(/[❤️⚡]/g, '')

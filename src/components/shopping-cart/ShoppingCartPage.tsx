@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import useSWR from 'swr'
 import OptimizedImage from '@/components/common/OptimizedImage'
 import { useAuth } from '@/contexts/AuthContext'
 import { getCartItems, deleteCartItem, updateCartItem, type CartItem, type CartItemOption } from '@/lib/services/cartService'
@@ -19,68 +20,80 @@ interface Product {
   }[]
 }
 
+interface CartData {
+  cartItems: CartItem[]
+  products: { [key: string]: Product }
+}
+
+// SWR fetcher 함수
+const fetchCartData = async (userId: string): Promise<CartData> => {
+  const items = await getCartItems(userId)
+
+  // 각 상품의 옵션 정보를 가져오기
+  const productIds = [...new Set(items.map(item => item.productId))]
+  const productData: { [key: string]: Product } = {}
+  const validItemIds = new Set<string>()
+
+  for (const productId of productIds) {
+    try {
+      const productDoc = await getDoc(doc(db, 'products', productId))
+      if (productDoc.exists()) {
+        productData[productId] = productDoc.data() as Product
+        // 이 productId를 가진 아이템들을 유효한 것으로 표시
+        items.forEach(item => {
+          if (item.productId === productId) {
+            validItemIds.add(item.id!)
+          }
+        })
+      } else {
+        console.warn(`상품을 찾을 수 없습니다: ${productId}`)
+      }
+    } catch (error) {
+      console.error(`상품 로드 실패 (${productId}):`, error)
+    }
+  }
+
+  // 유효한 상품만 필터링
+  const validItems = items.filter(item => validItemIds.has(item.id!))
+
+  return {
+    cartItems: validItems,
+    products: productData
+  }
+}
+
 export default function ShoppingCartPage() {
   const router = useRouter()
   const { user } = useAuth()
-  const [loading, setLoading] = useState(true)
-  const [cartItems, setCartItems] = useState<CartItem[]>([])
   const [selectedItems, setSelectedItems] = useState<string[]>([])
-  const [products, setProducts] = useState<{ [key: string]: Product }>({})
   const [quoteItem, setQuoteItem] = useState<CartItem | null>(null)
+
+  // SWR로 장바구니 데이터 관리
+  const { data, error, isLoading, mutate } = useSWR<CartData>(
+    user ? `cart-${user.uid}` : null,
+    () => fetchCartData(user!.uid),
+    {
+      revalidateOnFocus: false,
+      dedupingInterval: 5000,
+    }
+  )
+
+  const cartItems = data?.cartItems || []
+  const products = data?.products || {}
+
+  // 선택 항목 초기화
+  useEffect(() => {
+    if (cartItems.length > 0 && selectedItems.length === 0) {
+      setSelectedItems(cartItems.map(item => item.id!))
+    }
+  }, [cartItems])
 
   useEffect(() => {
     if (!user) {
       alert('로그인이 필요합니다.')
       router.push('/login')
-      return
     }
-
-    loadCartItems()
-  }, [user])
-
-  const loadCartItems = async () => {
-    if (!user) return
-
-    try {
-      const items = await getCartItems(user.uid)
-
-      // 각 상품의 옵션 정보를 가져오기
-      const productIds = [...new Set(items.map(item => item.productId))]
-      const productData: { [key: string]: Product } = {}
-      const validItemIds = new Set<string>()
-
-      for (const productId of productIds) {
-        try {
-          const productDoc = await getDoc(doc(db, 'products', productId))
-          if (productDoc.exists()) {
-            productData[productId] = productDoc.data() as Product
-            // 이 productId를 가진 아이템들을 유효한 것으로 표시
-            items.forEach(item => {
-              if (item.productId === productId) {
-                validItemIds.add(item.id!)
-              }
-            })
-          } else {
-            console.warn(`상품을 찾을 수 없습니다: ${productId}`)
-          }
-        } catch (error) {
-          console.error(`상품 로드 실패 (${productId}):`, error)
-        }
-      }
-
-      // 유효한 상품만 필터링
-      const validItems = items.filter(item => validItemIds.has(item.id!))
-
-      setCartItems(validItems)
-      setSelectedItems(validItems.map(item => item.id!))
-      setProducts(productData)
-    } catch (error) {
-      console.error('장바구니 로드 실패:', error)
-      alert('장바구니를 불러오는데 실패했습니다.')
-    } finally {
-      setLoading(false)
-    }
-  }
+  }, [user, router])
 
   const handleSelectItem = (itemId: string) => {
     if (selectedItems.includes(itemId)) {
@@ -122,7 +135,14 @@ export default function ShoppingCartPage() {
 
     try {
       await deleteCartItem(itemId)
-      setCartItems(cartItems.filter(item => item.id !== itemId))
+      // SWR 캐시 업데이트
+      mutate(
+        (prev) => prev ? {
+          ...prev,
+          cartItems: prev.cartItems.filter(item => item.id !== itemId)
+        } : undefined,
+        false
+      )
       setSelectedItems(selectedItems.filter(id => id !== itemId))
     } catch (error) {
       console.error('삭제 실패:', error)
@@ -140,7 +160,14 @@ export default function ShoppingCartPage() {
 
     try {
       await Promise.all(selectedItems.map(id => deleteCartItem(id)))
-      setCartItems(cartItems.filter(item => !selectedItems.includes(item.id!)))
+      // SWR 캐시 업데이트
+      mutate(
+        (prev) => prev ? {
+          ...prev,
+          cartItems: prev.cartItems.filter(item => !selectedItems.includes(item.id!))
+        } : undefined,
+        false
+      )
       setSelectedItems([])
     } catch (error) {
       console.error('삭제 실패:', error)
@@ -224,7 +251,7 @@ export default function ShoppingCartPage() {
     router.push(`/payments?cartId=${firstItem.id}`)
   }
 
-  if (loading) {
+  if (isLoading) {
     return <Loading />
   }
 

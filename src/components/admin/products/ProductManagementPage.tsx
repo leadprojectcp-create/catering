@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import useSWR from 'swr'
 import { collection, getDocs, query, orderBy, Timestamp, doc, getDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { updateProductStatus } from '@/lib/services/productService'
@@ -14,61 +15,66 @@ interface Product extends ProductData {
   id: string
 }
 
+interface ProductListData {
+  products: Product[]
+  storeNameMap: Record<string, string>
+}
+
+// SWR fetcher 함수
+const fetchProducts = async (): Promise<ProductListData> => {
+  const q = query(
+    collection(db, 'products'),
+    orderBy('createdAt', 'desc')
+  )
+  const querySnapshot = await getDocs(q)
+  const productsData: Product[] = []
+
+  querySnapshot.forEach((docSnap) => {
+    productsData.push({
+      id: docSnap.id,
+      ...docSnap.data() as ProductData
+    })
+  })
+
+  // storeId 목록 추출하여 storeName 가져오기
+  const storeIds = [...new Set(productsData.map(p => p.storeId).filter(Boolean))]
+  const newStoreNameMap: Record<string, string> = {}
+
+  await Promise.all(
+    storeIds.map(async (storeId) => {
+      if (storeId) {
+        const storeDoc = await getDoc(doc(db, 'stores', storeId))
+        if (storeDoc.exists()) {
+          newStoreNameMap[storeId] = storeDoc.data().storeName || '-'
+        }
+      }
+    })
+  )
+
+  return {
+    products: productsData,
+    storeNameMap: newStoreNameMap
+  }
+}
+
 export default function ProductManagementPage() {
   const router = useRouter()
-  const [products, setProducts] = useState<Product[]>([])
-  const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | 'active' | 'inactive' | 'pending'>('all')
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
   const [showDetailModal, setShowDetailModal] = useState(false)
-  const [storeNameMap, setStoreNameMap] = useState<Record<string, string>>({})
 
-  useEffect(() => {
-    loadProducts()
-  }, [])
-
-  const loadProducts = async () => {
-    try {
-      setLoading(true)
-      const q = query(
-        collection(db, 'products'),
-        orderBy('createdAt', 'desc')
-      )
-      const querySnapshot = await getDocs(q)
-      const productsData: Product[] = []
-
-      querySnapshot.forEach((docSnap) => {
-        productsData.push({
-          id: docSnap.id,
-          ...docSnap.data() as ProductData
-        })
-      })
-
-      setProducts(productsData)
-
-      // storeId 목록 추출하여 storeName 가져오기
-      const storeIds = [...new Set(productsData.map(p => p.storeId).filter(Boolean))]
-      const newStoreNameMap: Record<string, string> = {}
-
-      await Promise.all(
-        storeIds.map(async (storeId) => {
-          if (storeId && !storeNameMap[storeId]) {
-            const storeDoc = await getDoc(doc(db, 'stores', storeId))
-            if (storeDoc.exists()) {
-              newStoreNameMap[storeId] = storeDoc.data().storeName || '-'
-            }
-          }
-        })
-      )
-
-      setStoreNameMap(prev => ({ ...prev, ...newStoreNameMap }))
-    } catch (error) {
-      console.error('상품 목록 로드 실패:', error)
-      alert('상품 목록을 불러오는데 실패했습니다.')
-    } finally {
-      setLoading(false)
+  // SWR로 상품 데이터 관리
+  const { data, error, isLoading, mutate } = useSWR<ProductListData>(
+    'admin-products',
+    fetchProducts,
+    {
+      revalidateOnFocus: false,
+      dedupingInterval: 5000,
     }
-  }
+  )
+
+  const products = data?.products || []
+  const storeNameMap = data?.storeNameMap || {}
 
   const handleStatusChange = async (productId: string, newStatus: 'active' | 'inactive' | 'pending') => {
     if (!confirm(`이 상품의 상태를 ${getStatusLabel(newStatus)}(으)로 변경하시겠습니까?`)) {
@@ -77,9 +83,14 @@ export default function ProductManagementPage() {
 
     try {
       await updateProductStatus(productId, newStatus)
-      setProducts(products.map(p =>
-        p.id === productId ? { ...p, status: newStatus } : p
-      ))
+      // SWR 캐시 업데이트
+      mutate(
+        (prev) => prev ? {
+          ...prev,
+          products: prev.products.map(p => p.id === productId ? { ...p, status: newStatus } : p)
+        } : undefined,
+        false
+      )
       alert('상태가 변경되었습니다.')
     } catch (error) {
       console.error('상태 변경 실패:', error)
@@ -130,7 +141,7 @@ export default function ProductManagementPage() {
     return product.status === filter
   })
 
-  if (loading) {
+  if (isLoading) {
     return <Loading />
   }
 

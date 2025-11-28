@@ -1,7 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import useSWR from 'swr'
 import { useAuth } from '@/contexts/AuthContext'
 import { getUserChatRooms, ChatRoom } from '@/lib/services/chatService'
 import { doc, getDoc } from 'firebase/firestore'
@@ -12,81 +13,78 @@ interface ChatRoomWithName extends ChatRoom {
   otherUserName?: string
 }
 
+// SWR fetcher 함수
+const fetchChatRooms = async (userId: string): Promise<ChatRoomWithName[]> => {
+  const rooms = await getUserChatRooms(userId)
+
+  // 현재 사용자 정보 가져오기
+  const currentUserDoc = await getDoc(doc(db, 'users', userId))
+  const currentUserType = currentUserDoc.exists() ? currentUserDoc.data().type : 'user'
+
+  // 각 채팅방의 상대방 이름 가져오기
+  const roomsWithNames = await Promise.all(
+    rooms.map(async (room) => {
+      // 상대방 ID 찾기
+      const otherUserId = room.participants.find(id => id !== userId)
+
+      if (otherUserId) {
+        try {
+          const otherUserDoc = await getDoc(doc(db, 'users', otherUserId))
+          if (otherUserDoc.exists()) {
+            const otherUserData = otherUserDoc.data()
+
+            // 상대방이 파트너면 companyName, 일반 사용자면 name
+            const otherUserType = otherUserData.type || 'user'
+            const displayName = otherUserType === 'partner'
+              ? (otherUserData.companyName || otherUserData.storeName || '가게')
+              : (otherUserData.name || '사용자')
+
+            console.log('채팅방 표시 이름:', {
+              currentUserType,
+              otherUserType,
+              displayName,
+              otherUserData: { name: otherUserData.name, companyName: otherUserData.companyName }
+            })
+
+            return {
+              ...room,
+              otherUserName: displayName
+            }
+          }
+        } catch (error) {
+          console.error('사용자 정보 로드 실패:', error)
+        }
+      }
+
+      return {
+        ...room,
+        otherUserName: '사용자'
+      }
+    })
+  )
+
+  return roomsWithNames
+}
+
 export default function ChatRoomList() {
   const router = useRouter()
   const { user } = useAuth()
-  const [chatRooms, setChatRooms] = useState<ChatRoomWithName[]>([])
-  const [loading, setLoading] = useState(true)
+
+  // SWR로 채팅방 목록 관리
+  const { data: chatRooms = [], error, isLoading } = useSWR<ChatRoomWithName[]>(
+    user ? `chatrooms-${user.uid}` : null,
+    () => fetchChatRooms(user!.uid),
+    {
+      revalidateOnFocus: false,
+      dedupingInterval: 5000,
+    }
+  )
 
   useEffect(() => {
     if (!user) {
       router.push('/login')
-      return
     }
-
-    loadChatRooms()
   }, [user, router])
-
-  const loadChatRooms = async () => {
-    if (!user) return
-
-    try {
-      setLoading(true)
-      const rooms = await getUserChatRooms(user.uid)
-
-      // 현재 사용자 정보 가져오기
-      const currentUserDoc = await getDoc(doc(db, 'users', user.uid))
-      const currentUserType = currentUserDoc.exists() ? currentUserDoc.data().type : 'user'
-
-      // 각 채팅방의 상대방 이름 가져오기
-      const roomsWithNames = await Promise.all(
-        rooms.map(async (room) => {
-          // 상대방 ID 찾기
-          const otherUserId = room.participants.find(id => id !== user.uid)
-
-          if (otherUserId) {
-            try {
-              const otherUserDoc = await getDoc(doc(db, 'users', otherUserId))
-              if (otherUserDoc.exists()) {
-                const otherUserData = otherUserDoc.data()
-
-                // 상대방이 파트너면 companyName, 일반 사용자면 name
-                const otherUserType = otherUserData.type || 'user'
-                const displayName = otherUserType === 'partner'
-                  ? (otherUserData.companyName || otherUserData.storeName || '가게')
-                  : (otherUserData.name || '사용자')
-
-                console.log('채팅방 표시 이름:', {
-                  currentUserType,
-                  otherUserType,
-                  displayName,
-                  otherUserData: { name: otherUserData.name, companyName: otherUserData.companyName }
-                })
-
-                return {
-                  ...room,
-                  otherUserName: displayName
-                }
-              }
-            } catch (error) {
-              console.error('사용자 정보 로드 실패:', error)
-            }
-          }
-
-          return {
-            ...room,
-            otherUserName: '사용자'
-          }
-        })
-      )
-
-      setChatRooms(roomsWithNames)
-    } catch (error) {
-      console.error('채팅방 목록 로드 실패:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const handleRoomClick = (roomId: string) => {
     router.push(`/chat/${roomId}`)
@@ -115,7 +113,7 @@ export default function ChatRoomList() {
     }
   }
 
-  if (loading) {
+  if (isLoading) {
     return <div className={styles.loading}>채팅방 목록을 불러오는 중...</div>
   }
 

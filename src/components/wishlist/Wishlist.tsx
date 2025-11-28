@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import useSWR from 'swr'
 import { useAuth } from '@/contexts/AuthContext'
 import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
@@ -49,111 +50,117 @@ interface LikedProduct {
   productReviewCount?: number
 }
 
+interface WishlistData {
+  stores: LikedStore[]
+  products: LikedProduct[]
+}
+
+// SWR fetcher 함수
+const fetchWishlistData = async (userId: string): Promise<WishlistData> => {
+  const likesQuery = query(
+    collection(db, 'likes'),
+    where('userId', '==', userId)
+  )
+  const likesSnapshot = await getDocs(likesQuery)
+
+  const stores: LikedStore[] = []
+  const products: LikedProduct[] = []
+
+  // 각 likes 문서를 순회하며 실제 store/product 데이터 가져오기
+  await Promise.all(likesSnapshot.docs.map(async (likeDoc) => {
+    const data = likeDoc.data()
+
+    if (data.storeId) {
+      // store 데이터 가져오기
+      const storeDoc = await getDoc(doc(db, 'stores', data.storeId))
+      if (storeDoc.exists()) {
+        const storeData = storeDoc.data()
+        stores.push({
+          id: likeDoc.id,
+          storeId: data.storeId,
+          storeName: storeData.storeName,
+          storeImage: data.storeImage,
+          storeImages: storeData.storeImages || [],
+          address: storeData.address || {},
+          categories: storeData.categories || [],
+          rating: storeData.rating || 0,
+          reviewCount: storeData.reviewCount || 0
+        })
+      }
+    } else if (data.productId) {
+      // product 데이터 가져오기
+      const productDoc = await getDoc(doc(db, 'products', data.productId))
+      if (productDoc.exists()) {
+        const productData = productDoc.data()
+
+        // storeName 가져오기
+        let storeName = ''
+        if (productData.storeId) {
+          const storeDoc = await getDoc(doc(db, 'stores', productData.storeId))
+          if (storeDoc.exists()) {
+            storeName = storeDoc.data().storeName || ''
+          }
+        }
+
+        // 리뷰 정보 가져오기
+        const reviewsQuery = query(
+          collection(db, 'reviews'),
+          where('productId', '==', data.productId)
+        )
+        const reviewsSnapshot = await getDocs(reviewsQuery)
+        const reviews = reviewsSnapshot.docs.map(d => d.data())
+        const averageRating = reviews.length > 0
+          ? reviews.reduce((sum, review) => sum + (review.rating || 0), 0) / reviews.length
+          : 0
+
+        products.push({
+          id: likeDoc.id,
+          productId: data.productId,
+          productName: productData.name,
+          productImage: data.productImage,
+          price: productData.price,
+          discountedPrice: productData.discountedPrice,
+          discount: productData.discount,
+          storeName,
+          minOrderQuantity: productData.minOrderQuantity,
+          maxOrderQuantity: productData.maxOrderQuantity,
+          minOrderDays: productData.minOrderDays,
+          additionalSettings: productData.additionalSettings || [],
+          averageRating,
+          productReviewCount: reviews.length
+        })
+      }
+    }
+  }))
+
+  return { stores, products }
+}
+
 export default function Wishlist() {
   const router = useRouter()
   const { user } = useAuth()
   const [activeTab, setActiveTab] = useState<'stores' | 'products'>('products')
-  const [likedStores, setLikedStores] = useState<LikedStore[]>([])
-  const [likedProducts, setLikedProducts] = useState<LikedProduct[]>([])
-  const [loading, setLoading] = useState(true)
+
+  // SWR로 찜 목록 데이터 관리
+  const { data, error, isLoading } = useSWR<WishlistData>(
+    user ? `wishlist-${user.uid}` : null,
+    () => fetchWishlistData(user!.uid),
+    {
+      revalidateOnFocus: false,
+      dedupingInterval: 5000,
+    }
+  )
+
+  const likedStores = data?.stores || []
+  const likedProducts = data?.products || []
 
   useEffect(() => {
     if (!user) {
       router.push('/login')
-      return
     }
-
-    const loadLikes = async () => {
-      try {
-        const likesQuery = query(
-          collection(db, 'likes'),
-          where('userId', '==', user.uid)
-        )
-        const likesSnapshot = await getDocs(likesQuery)
-
-        const stores: LikedStore[] = []
-        const products: LikedProduct[] = []
-
-        // 각 likes 문서를 순회하며 실제 store/product 데이터 가져오기
-        await Promise.all(likesSnapshot.docs.map(async (likeDoc) => {
-          const data = likeDoc.data()
-
-          if (data.storeId) {
-            // store 데이터 가져오기
-            const storeDoc = await getDoc(doc(db, 'stores', data.storeId))
-            if (storeDoc.exists()) {
-              const storeData = storeDoc.data()
-              stores.push({
-                id: likeDoc.id,
-                storeId: data.storeId,
-                storeName: storeData.storeName,
-                storeImage: data.storeImage,
-                storeImages: storeData.storeImages || [],
-                address: storeData.address || {},
-                categories: storeData.categories || [],
-                rating: storeData.rating || 0,
-                reviewCount: storeData.reviewCount || 0
-              })
-            }
-          } else if (data.productId) {
-            // product 데이터 가져오기
-            const productDoc = await getDoc(doc(db, 'products', data.productId))
-            if (productDoc.exists()) {
-              const productData = productDoc.data()
-
-              // storeName 가져오기
-              let storeName = ''
-              if (productData.storeId) {
-                const storeDoc = await getDoc(doc(db, 'stores', productData.storeId))
-                if (storeDoc.exists()) {
-                  storeName = storeDoc.data().storeName || ''
-                }
-              }
-
-              // 리뷰 정보 가져오기
-              const reviewsQuery = query(
-                collection(db, 'reviews'),
-                where('productId', '==', data.productId)
-              )
-              const reviewsSnapshot = await getDocs(reviewsQuery)
-              const reviews = reviewsSnapshot.docs.map(d => d.data())
-              const averageRating = reviews.length > 0
-                ? reviews.reduce((sum, review) => sum + (review.rating || 0), 0) / reviews.length
-                : 0
-
-              products.push({
-                id: likeDoc.id,
-                productId: data.productId,
-                productName: productData.name,
-                productImage: data.productImage,
-                price: productData.price,
-                discountedPrice: productData.discountedPrice,
-                discount: productData.discount,
-                storeName,
-                minOrderQuantity: productData.minOrderQuantity,
-                maxOrderQuantity: productData.maxOrderQuantity,
-                minOrderDays: productData.minOrderDays,
-                additionalSettings: productData.additionalSettings || [],
-                averageRating,
-                productReviewCount: reviews.length
-              })
-            }
-          }
-        }))
-
-        setLikedStores(stores)
-        setLikedProducts(products)
-      } catch (error) {
-        console.error('찜 목록 로드 실패:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    loadLikes()
   }, [user, router])
 
-  if (!user || loading) {
+  if (!user || isLoading) {
     return <Loading />
   }
 

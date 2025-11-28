@@ -29,6 +29,7 @@ const nextConfig: NextConfig = {
   reactStrictMode: false, // Strict mode 비활성화 (이중 렌더링 방지)
   experimental: {
     optimizePackageImports: ['firebase/app', 'firebase/auth', 'firebase/firestore'],
+    scrollRestoration: true, // 뒤로가기 시 스크롤 위치 복원
   },
   async headers() {
     return [

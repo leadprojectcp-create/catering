@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
+import useSWR from 'swr'
 import { collection, getDocs, query, orderBy, updateDoc, doc, Timestamp } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import type { FieldValue } from 'firebase/firestore'
@@ -36,42 +37,39 @@ interface Store {
   lastViewedAt?: Date | Timestamp | FieldValue
 }
 
+// SWR fetcher 함수
+const fetchStores = async (): Promise<Store[]> => {
+  const q = query(
+    collection(db, 'stores'),
+    orderBy('createdAt', 'desc')
+  )
+  const querySnapshot = await getDocs(q)
+  const storesData: Store[] = []
+
+  querySnapshot.forEach((docSnap) => {
+    storesData.push({
+      uid: docSnap.id,
+      ...docSnap.data() as Omit<Store, 'uid'>
+    })
+  })
+
+  return storesData
+}
+
 export default function StoreManagementPage() {
-  const [stores, setStores] = useState<Store[]>([])
-  const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | 'active' | 'inactive' | 'pending'>('all')
   const [selectedStore, setSelectedStore] = useState<Store | null>(null)
   const [showDetailModal, setShowDetailModal] = useState(false)
 
-  useEffect(() => {
-    loadStores()
-  }, [])
-
-  const loadStores = async () => {
-    try {
-      setLoading(true)
-      const q = query(
-        collection(db, 'stores'),
-        orderBy('createdAt', 'desc')
-      )
-      const querySnapshot = await getDocs(q)
-      const storesData: Store[] = []
-
-      querySnapshot.forEach((doc) => {
-        storesData.push({
-          uid: doc.id,
-          ...doc.data() as Omit<Store, 'uid'>
-        })
-      })
-
-      setStores(storesData)
-    } catch (error) {
-      console.error('업체 목록 로드 실패:', error)
-      alert('업체 목록을 불러오는데 실패했습니다.')
-    } finally {
-      setLoading(false)
+  // SWR로 업체 데이터 관리
+  const { data: stores = [], error, isLoading, mutate } = useSWR<Store[]>(
+    'admin-stores',
+    fetchStores,
+    {
+      revalidateOnFocus: false,
+      dedupingInterval: 5000,
     }
-  }
+  )
 
   const handleStatusChange = async (uid: string, newStatus: 'active' | 'inactive' | 'pending') => {
     if (!confirm(`이 업체의 상태를 ${getStatusLabel(newStatus)}(으)로 변경하시겠습니까?`)) {
@@ -81,9 +79,11 @@ export default function StoreManagementPage() {
     try {
       const storeRef = doc(db, 'stores', uid)
       await updateDoc(storeRef, { status: newStatus })
-      setStores(stores.map(s =>
-        s.uid === uid ? { ...s, status: newStatus } : s
-      ))
+      // SWR 캐시 업데이트
+      mutate(
+        (prev) => prev?.map(s => s.uid === uid ? { ...s, status: newStatus } : s),
+        false
+      )
       alert('상태가 변경되었습니다.')
     } catch (error) {
       console.error('상태 변경 실패:', error)
@@ -100,9 +100,11 @@ export default function StoreManagementPage() {
     try {
       const storeRef = doc(db, 'stores', uid)
       await updateDoc(storeRef, { status: newStatus })
-      setStores(stores.map(s =>
-        s.uid === uid ? { ...s, status: newStatus } : s
-      ))
+      // SWR 캐시 업데이트
+      mutate(
+        (prev) => prev?.map(s => s.uid === uid ? { ...s, status: newStatus } : s),
+        false
+      )
       alert(`업체가 ${newStatus === 'inactive' ? '비활성화' : '활성화'}되었습니다.`)
     } catch (error) {
       console.error('상태 변경 실패:', error)
@@ -148,7 +150,7 @@ export default function StoreManagementPage() {
     return store.status === filter
   })
 
-  if (loading) {
+  if (isLoading) {
     return <Loading />
   }
 
