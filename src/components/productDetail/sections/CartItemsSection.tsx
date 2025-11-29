@@ -524,11 +524,6 @@ export default function CartItemsSection({
                       <div key={groupName}>
                         {optionNames.map((optionName, idx) => {
                           const optionPrice = getOptionPrice(product, groupName, optionName)
-                          // 상품 기본 가격 (할인가가 있으면 할인가, 없으면 원가)
-                          const basePrice = (isDiscountValid(product) && product.discountedPrice)
-                            ? product.discountedPrice
-                            : product.price
-                          const totalPrice = basePrice + optionPrice
 
                           return (
                             <div key={`${groupName}-${idx}`} className={styles.selectedOption}>
@@ -536,7 +531,7 @@ export default function CartItemsSection({
                                 <span className={styles.optionGroupName}>[{groupName}]</span>
                                 <span>{optionName}</span>
                               </div>
-                              <span className={styles.optionPrice}>{totalPrice.toLocaleString()}원</span>
+                              <span className={styles.optionPrice}>+{optionPrice.toLocaleString()}원</span>
                             </div>
                           )
                         })}
