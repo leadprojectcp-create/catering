@@ -11,8 +11,7 @@ import { useEffect } from 'react'
 export default function PageVisibilityHandler() {
   useEffect(() => {
     // 네이티브 앱에서는 React Native가 앱 상태를 관리하므로 비활성화
-    // @ts-expect-error - isNativeApp은 React Native 앱에서 주입됨
-    if (typeof window !== 'undefined' && window.isNativeApp) {
+    if (typeof window !== 'undefined' && (window as Window & { isNativeApp?: boolean }).isNativeApp) {
       console.log('[Page Visibility] 네이티브 앱에서는 비활성화됨')
       return
     }
