@@ -22,7 +22,7 @@ export default function PartnerCancelledOrderRedirect() {
     const orderNumber = searchParams.get('orderNumber')
 
     // 앱 스킴 URL - 파트너 취소주문은 주문 목록으로
-    const appScheme = `danmo://partner/order/history`
+    const appScheme = `danmo:///partner/order/history`
 
     console.log('[Partner Cancelled Order Redirect] Redirecting to:', appScheme)
 

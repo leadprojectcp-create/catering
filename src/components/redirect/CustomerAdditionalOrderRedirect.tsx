@@ -22,7 +22,7 @@ export default function CustomerAdditionalOrderRedirect() {
     const orderNumber = searchParams.get('orderNumber')
 
     // 앱 스킴 URL - 고객 추가주문은 해당 주문 상세로
-    let appScheme = `danmo://orders`
+    let appScheme = `danmo:///orders`
     if (orderNumber) {
       appScheme += `?orderNumber=${orderNumber}`
     }

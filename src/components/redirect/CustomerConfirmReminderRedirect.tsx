@@ -22,7 +22,7 @@ export default function CustomerConfirmReminderRedirect() {
     const orderNumber = searchParams.get('orderNumber')
 
     // 앱 스킴 URL - 구매확정 알림은 주문 목록으로
-    const appScheme = `danmo://orders`
+    const appScheme = `danmo:///orders`
 
     console.log('[Customer Confirm Reminder Redirect] Redirecting to:', appScheme)
 

@@ -22,7 +22,7 @@ export default function PartnerNewOrderRedirect() {
     const orderNumber = searchParams.get('orderNumber')
 
     // 앱 스킴 URL - 파트너 신규주문은 주문 목록으로
-    const appScheme = `danmo://partner/order/history`
+    const appScheme = `danmo:///partner/order/history`
 
     console.log('[Partner New Order Redirect] Redirecting to:', appScheme)
 

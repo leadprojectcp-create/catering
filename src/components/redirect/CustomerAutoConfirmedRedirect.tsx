@@ -22,7 +22,7 @@ export default function CustomerAutoConfirmedRedirect() {
     const orderNumber = searchParams.get('orderNumber')
 
     // 앱 스킴 URL - 자동 구매확정 알림은 주문 목록으로
-    const appScheme = `danmo://orders`
+    const appScheme = `danmo:///orders`
 
     console.log('[Customer Auto Confirmed Redirect] Redirecting to:', appScheme)
 

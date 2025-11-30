@@ -23,8 +23,8 @@ export default function CustomerCancelledOrderRedirect() {
 
     // 앱 스킴 URL - 고객 취소주문은 해당 주문 상세 페이지로
     const appScheme = orderNumber
-      ? `danmo://orders?orderNumber=${orderNumber}`
-      : `danmo://orders`
+      ? `danmo:///orders?orderNumber=${orderNumber}`
+      : `danmo:///orders`
 
     console.log('[Customer Cancelled Order Redirect] Redirecting to:', appScheme)
 
