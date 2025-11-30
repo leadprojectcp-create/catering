@@ -220,8 +220,8 @@ env:
     availability:
       - RUNTIME
 
-  # Gemini AI Configuration
+  # Gemini AI Configuration (using Secret Manager)
   - variable: GEMINI_API_KEY
-    value: AIzaSyCBfHHoEvGzg67E4GE9QI8T3sXuZKi5GyE
+    secret: GEMINI_API_KEY
     availability:
       - RUNTIME
