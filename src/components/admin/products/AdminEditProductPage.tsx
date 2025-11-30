@@ -11,6 +11,7 @@ import EditImageUploadSection from '@/components/partner/product/sections/EditIm
 import ProductNameSection from '@/components/partner/product/sections/ProductNameSection'
 import ProductTypeSection from '@/components/partner/product/sections/ProductTypeSection'
 import CategorySection from '@/components/partner/product/sections/CategorySection'
+import EventSection from '@/components/partner/product/sections/EventSection'
 import PriceSection from '@/components/partner/product/sections/PriceSection'
 import QuantitySection from '@/components/partner/product/sections/QuantitySection'
 import OptionSection from '@/components/partner/product/sections/OptionSection'
@@ -59,6 +60,7 @@ export default function AdminEditProductPage({ productId }: { productId: string 
     price: 0,
     category: [],
     productTypes: [],
+    event: [],
     options: [{ groupName: '', values: [{ name: '', price: 0 }] }],
     additionalOptions: [{ groupName: '', values: [{ name: '', price: 0 }] }],
     description: '',
@@ -164,6 +166,7 @@ export default function AdminEditProductPage({ productId }: { productId: string 
             price: product.price || 0,
             category: Array.isArray(product.category) ? product.category : (product.category ? [product.category] : []),
             productTypes: Array.isArray(product.productTypes) ? product.productTypes : [],
+            event: Array.isArray(product.event) ? product.event : [],
             options: product.options || [{ groupName: '', values: [{ name: '', price: 0 }] }],
             additionalOptions: product.additionalOptions || [{ groupName: '', values: [{ name: '', price: 0 }] }],
             description: product.description || '',
@@ -548,6 +551,14 @@ export default function AdminEditProductPage({ productId }: { productId: string 
           <CategorySection
             categories={Array.isArray(formData.category) ? formData.category : [formData.category].filter(Boolean)}
             onChange={(category) => setFormData(prev => ({ ...prev, category }))}
+          />
+
+          {/* 이벤트 카테고리 */}
+          <EventSection
+            events={formData.event}
+            onEventChange={(event) => setFormData(prev => ({ ...prev, event }))}
+            thumbnailFile={newImages[0]}
+            thumbnailUrl={formData.images[0]}
           />
 
           {/* 상품 판매가 */}

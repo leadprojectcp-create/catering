@@ -40,6 +40,7 @@ export interface ProductFormData {
   price: number
   category: string[]
   productTypes: string[]
+  event: string[]  // 이벤트 카테고리 추가
   options: ProductOption[]
   additionalOptions: ProductOption[]
   description: string
@@ -60,6 +61,20 @@ export interface ProductFormData {
     isAlwaysActive: boolean
   }
 }
+
+// 이벤트 카테고리 목록
+export const EVENTS = [
+  '회의·업무 행사',
+  '교육·세미나·강연',
+  '발표·전시·데모',
+  '워크숍·프로젝트 일정',
+  '팀·조직 모임',
+  '학교·학술 행사',
+  '종교·단체 모임',
+  '커뮤니티·봉사 활동',
+  '파티·기념일 행사',
+  '오픈·축하·답례 상황',
+]
 
 export const categories: CategoryOption[] = [
   { id: 'dessert', name: '디저트', icon: '/icons/dessert_box.png' },

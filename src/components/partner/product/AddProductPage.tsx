@@ -13,6 +13,7 @@ import ImageUploadSection from './sections/ImageUploadSection'
 import ProductNameSection from './sections/ProductNameSection'
 import ProductTypeSection from './sections/ProductTypeSection'
 import CategorySection from './sections/CategorySection'
+import EventSection from './sections/EventSection'
 import PriceSection from './sections/PriceSection'
 import QuantitySection from './sections/QuantitySection'
 import OptionSection from './sections/OptionSection'
@@ -42,6 +43,7 @@ export default function AddProductPage() {
     price: 0,
     category: [],
     productTypes: [],
+    event: [],
     options: [{ groupName: '', values: [{ name: '', price: 0 }] }],
     additionalOptions: [{ groupName: '', values: [{ name: '', price: 0 }] }],
     description: '',
@@ -490,6 +492,13 @@ export default function AddProductPage() {
         <CategorySection
           categories={formData.category}
           onChange={(category) => setFormData(prev => ({ ...prev, category }))}
+        />
+
+        {/* 이벤트 카테고리 */}
+        <EventSection
+          events={formData.event}
+          onEventChange={(event) => setFormData(prev => ({ ...prev, event }))}
+          thumbnailFile={formData.images[0]}
         />
 
         {/* 상품 판매가 */}

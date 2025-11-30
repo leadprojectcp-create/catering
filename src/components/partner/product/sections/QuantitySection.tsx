@@ -75,7 +75,7 @@ export default function QuantitySection({
   return (
     <div className={styles.section}>
       <div className={styles.titleWithNumber}>
-        <span className={styles.numberCircle}>6</span>
+        <span className={styles.numberCircle}>7</span>
         <span className={styles.sectionTitle}>상품 수량별 주문 조건 설정</span>
       </div>
 

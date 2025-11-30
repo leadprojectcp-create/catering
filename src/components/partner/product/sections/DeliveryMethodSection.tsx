@@ -98,7 +98,7 @@ export default function DeliveryMethodSection({
   return (
     <div className={styles.section}>
       <div className={styles.titleWithNumber}>
-        <span className={styles.numberCircle}>11</span>
+        <span className={styles.numberCircle}>12</span>
         <span className={styles.sectionTitle}>상품 배송 설정</span>
       </div>
 

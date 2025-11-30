@@ -88,7 +88,7 @@ export default function AdditionalOptionSection({ options, onChange, onShowHelpM
   return (
     <div className={styles.section}>
       <div className={styles.titleWithNumber}>
-        <span className={styles.numberCircle}>8</span>
+        <span className={styles.numberCircle}>9</span>
         <span className={styles.sectionTitle}>추가상품 설정</span>
         <button
           type="button"

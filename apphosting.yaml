@@ -219,3 +219,9 @@ env:
     secret: OPENAI_API_KEY
     availability:
       - RUNTIME
+
+  # Gemini AI Configuration
+  - variable: GEMINI_API_KEY
+    value: AIzaSyCBfHHoEvGzg67E4GE9QI8T3sXuZKi5GyE
+    availability:
+      - RUNTIME

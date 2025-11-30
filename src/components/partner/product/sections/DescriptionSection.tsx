@@ -13,7 +13,7 @@ export default function DescriptionSection({ description, onChange, storeId, pro
   return (
     <div className={styles.section}>
       <div className={styles.titleWithNumber}>
-        <span className={styles.numberCircle}>9</span>
+        <span className={styles.numberCircle}>10</span>
         <span className={styles.sectionTitle}>상품설명 작성</span>
       </div>
       <CustomEditor

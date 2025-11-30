@@ -31,7 +31,7 @@ export default function OriginSection({ origin, onChange }: OriginSectionProps) 
   return (
     <div className={styles.section}>
       <div className={styles.titleWithNumber}>
-        <span className={styles.numberCircle}>10</span>
+        <span className={styles.numberCircle}>11</span>
         <span className={styles.sectionTitle}>원산지 표기</span>
       </div>
       <div className={styles.originContainer}>

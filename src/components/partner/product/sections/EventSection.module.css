@@ -1,0 +1,122 @@
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.titleWithNumber {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  line-height: 1;
+}
+
+.titleWithNumber .sectionTitle {
+  margin-bottom: 0;
+  line-height: 19px;
+}
+
+.sectionTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 8px;
+}
+
+.optionalLabel {
+  font-size: 12px;
+  font-weight: 400;
+  color: #999;
+  margin-left: 4px;
+}
+
+.numberCircle {
+  width: 19px;
+  height: 19px;
+  flex-shrink: 0;
+  background-color: #025BD9;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFF;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.eventHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.aiButton {
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #fff;
+  background: linear-gradient(135deg, #8b5cf6, #6366f1);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.aiButton:hover:not(:disabled) {
+  background: linear-gradient(135deg, #7c3aed, #4f46e5);
+  transform: translateY(-1px);
+}
+
+.aiButton:disabled {
+  background: #d1d5db;
+  cursor: not-allowed;
+}
+
+.aiReason {
+  margin-bottom: 16px;
+  padding: 12px;
+  background: #f3e8ff;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #6b21a8;
+}
+
+.aiReasonLabel {
+  font-weight: 600;
+}
+
+.eventList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.eventItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.eventCheckbox {
+  display: none;
+}
+
+.checkIcon {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.eventLabel {
+  font-size: 14px;
+  color: #374151;
+}
+
+.eventItem:hover .eventLabel {
+  color: #6366f1;
+}

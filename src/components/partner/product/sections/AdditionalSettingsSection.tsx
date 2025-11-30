@@ -18,7 +18,7 @@ export default function AdditionalSettingsSection({ additionalSettings, onChange
   return (
     <div className={styles.section}>
       <div className={styles.titleWithNumber}>
-        <span className={styles.numberCircle}>12</span>
+        <span className={styles.numberCircle}>13</span>
         <span className={styles.sectionTitle}>상품주문 추가설정</span>
         <span className={styles.optionalLabel}>(선택사항)</span>
       </div>

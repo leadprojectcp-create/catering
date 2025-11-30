@@ -8,6 +8,7 @@ export interface ProductData {
   price: number
   category?: string
   productTypes?: string[]
+  event?: string[]
   optionsEnabled: boolean
   options: {
     groupName: string

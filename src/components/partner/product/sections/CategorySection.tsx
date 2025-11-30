@@ -1,3 +1,5 @@
+'use client'
+
 import React from 'react'
 import Image from 'next/image'
 import { categories } from '../common/types/types'
@@ -8,7 +10,10 @@ interface CategorySectionProps {
   onChange: (categories: string[]) => void
 }
 
-export default function CategorySection({ categories: selectedCategories, onChange }: CategorySectionProps) {
+export default function CategorySection({
+  categories: selectedCategories,
+  onChange
+}: CategorySectionProps) {
   const handleCategoryClick = (categoryName: string) => {
     const isSelected = selectedCategories.includes(categoryName)
 
@@ -24,11 +29,6 @@ export default function CategorySection({ categories: selectedCategories, onChan
       // 추가 (최대 2개)
       onChange([...selectedCategories, categoryName])
     }
-  }
-
-  // "답례품" 체크박스 처리
-  const handleGiftCheckbox = (checked: boolean) => {
-    handleCategoryClick('답례품')
   }
 
   return (

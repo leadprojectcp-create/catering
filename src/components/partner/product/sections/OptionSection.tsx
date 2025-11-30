@@ -88,7 +88,7 @@ export default function OptionSection({ options, onChange, onShowHelpModal, enab
   return (
     <div className={styles.section}>
       <div className={styles.titleWithNumber}>
-        <span className={styles.numberCircle}>7</span>
+        <span className={styles.numberCircle}>8</span>
         <span className={styles.sectionTitle}>상품옵션 설정</span>
         <button
           type="button"
