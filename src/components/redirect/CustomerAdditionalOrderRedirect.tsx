@@ -18,14 +18,8 @@ export default function CustomerAdditionalOrderRedirect() {
       return
     }
 
-    // URL 파라미터에서 주문번호 가져오기
-    const orderNumber = searchParams.get('orderNumber')
-
-    // 앱 스킴 URL - 고객 추가주문은 해당 주문 상세로
-    let appScheme = `danmo:///orders`
-    if (orderNumber) {
-      appScheme += `?orderNumber=${orderNumber}`
-    }
+    // 앱 스킴 URL - 고객 추가주문은 주문 목록으로
+    const appScheme = `danmo:///orders`
 
     console.log('[Customer Additional Order Redirect] Redirecting to:', appScheme)
 
