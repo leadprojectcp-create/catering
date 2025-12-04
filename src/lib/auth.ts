@@ -50,17 +50,21 @@ interface SignupData {
   }
 }
 
-export async function checkExistingUser(email: string) {
+export async function checkExistingUser(email: string, provider?: string) {
   try {
     const usersRef = collection(db, 'users')
     const q = query(usersRef, where('email', '==', email))
     const querySnapshot = await getDocs(q)
 
     if (!querySnapshot.empty) {
-      const userData = querySnapshot.docs[0].data()
+      const docRef = querySnapshot.docs[0]
+      const userData = docRef.data()
       return {
         exists: true,
-        type: userData.type || 'user'
+        type: userData.type || 'user',
+        provider: userData.provider,
+        docId: docRef.id,
+        userData: userData
       }
     }
 
@@ -285,8 +289,47 @@ export async function handleSocialUser(
       }
 
       // 3. 이메일로 기존 사용자 중복 체크
-      const existingUser = await checkExistingUser(userEmail)
+      const existingUser = await checkExistingUser(userEmail, provider)
       if (existingUser.exists) {
+        // 같은 소셜 프로바이더로 로그인한 경우 (웹/앱 OIDC 프로바이더가 달라도 같은 소셜 서비스)
+        // kakao, google, apple 등 소셜 프로바이더가 같으면 계정 마이그레이션
+        if (existingUser.provider === provider && existingUser.userData && existingUser.docId) {
+          console.log('[handleSocialUser] Same provider detected, migrating account from', existingUser.docId, 'to', firebaseUser.uid)
+
+          // 기존 문서 데이터를 새 UID로 복사
+          const oldUserData = existingUser.userData
+          const newUserData: Record<string, unknown> = {
+            ...oldUserData,
+            lastLoginAt: serverTimestamp(),
+            updatedAt: serverTimestamp()
+          }
+
+          // FCM 토큰 업데이트
+          if (additionalInfo.fcmToken) {
+            newUserData.fcmToken = additionalInfo.fcmToken
+            console.log('[handleSocialUser] Updating FCM token during migration:', additionalInfo.fcmToken)
+          }
+
+          // 새 UID로 문서 생성
+          await setDoc(userRef, newUserData)
+
+          // 기존 문서 삭제 (다른 UID인 경우에만)
+          if (existingUser.docId !== firebaseUser.uid) {
+            const { deleteDoc } = await import('firebase/firestore')
+            const oldDocRef = doc(db, 'users', existingUser.docId)
+            await deleteDoc(oldDocRef)
+            console.log('[handleSocialUser] Deleted old user document:', existingUser.docId)
+          }
+
+          return {
+            success: true,
+            user: firebaseUser,
+            isExistingUser: true,
+            registrationComplete: oldUserData.registrationComplete || false
+          }
+        }
+
+        // 다른 프로바이더로 이미 가입된 경우 - 에러 반환
         // 중복된 이메일 발견 - Authentication 계정 삭제
         try {
           const currentUser = auth.currentUser
@@ -299,9 +342,12 @@ export async function handleSocialUser(
         }
 
         const userType = existingUser.type === 'partner' ? '파트너 회원' : '일반 회원'
+        const providerName = existingUser.provider === 'kakao' ? '카카오' :
+                            existingUser.provider === 'google' ? '구글' :
+                            existingUser.provider === 'apple' ? '애플' : '이메일'
         return {
           success: false,
-          error: `이미 ${userType}으로 가입된 이메일입니다. 이메일 로그인을 사용해주세요.`,
+          error: `이미 ${providerName} 로그인으로 ${userType}으로 가입된 이메일입니다.`,
           existingUserType: existingUser.type
         }
       }

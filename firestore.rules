@@ -477,5 +477,44 @@ service cloud.firestore {
         request.resource.data.diff(resource.data).affectedKeys()
           .hasOnly(['status', 'usedAt', 'orderId']);
     }
+
+    // PickToEat Companies collection - 업체 관리
+    match /picktoeat_companies/{companyId} {
+      // 관리자(level 10)만 읽기/쓰기 가능
+      allow read, write: if isAdmin();
+    }
+
+    // PickToEat Products collection - 상품 관리
+    match /picktoeat_products/{productId} {
+      // 모든 사용자 읽기 가능 (상품 목록은 공개)
+      allow read: if true;
+
+      // 관리자(level 10)만 생성/수정/삭제 가능
+      allow create, update, delete: if isAdmin();
+    }
+
+    // PickToEat Affiliates collection - 어필리에이트 회원 관리
+    match /picktoeat_affiliates/{affiliateId} {
+      // 관리자(level 10)만 읽기/쓰기 가능
+      allow read, write: if isAdmin();
+
+      // 어필리에이트 회원 생성은 인증 없이 가능 (회원가입)
+      allow create: if true;
+    }
+
+    // PickToEat Click Logs collection - 클릭 로그 관리
+    match /picktoeat_click_logs/{logId} {
+      // 관리자(level 10)만 읽기 가능
+      allow read: if isAdmin();
+
+      // 모든 사용자 읽기 가능 (파트너 대시보드에서 클릭 로그 조회 - API에서 companyId로 필터링)
+      allow read: if true;
+
+      // 클릭 로그 생성은 인증 없이 가능 (클릭 추적)
+      allow create: if true;
+
+      // 수정/삭제 불가
+      allow update, delete: if false;
+    }
   }
 }
