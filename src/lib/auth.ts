@@ -294,7 +294,30 @@ export async function handleSocialUser(
         // 같은 소셜 프로바이더로 로그인한 경우 (웹/앱 OIDC 프로바이더가 달라도 같은 소셜 서비스)
         // kakao, google, apple 등 소셜 프로바이더가 같으면 계정 마이그레이션
         if (existingUser.provider === provider && existingUser.userData && existingUser.docId) {
-          console.log('[handleSocialUser] Same provider detected, migrating account from', existingUser.docId, 'to', firebaseUser.uid)
+          const oldUid = existingUser.docId
+          const newUid = firebaseUser.uid
+
+          // UID가 같으면 마이그레이션 불필요
+          if (oldUid === newUid) {
+            console.log('[handleSocialUser] Same UID, no migration needed')
+            const updateData: Record<string, unknown> = {
+              lastLoginAt: serverTimestamp(),
+              updatedAt: serverTimestamp()
+            }
+            if (additionalInfo.fcmToken) {
+              updateData.fcmToken = additionalInfo.fcmToken
+            }
+            await setDoc(userRef, updateData, { merge: true })
+
+            return {
+              success: true,
+              user: firebaseUser,
+              isExistingUser: true,
+              registrationComplete: existingUser.userData.registrationComplete || false
+            }
+          }
+
+          console.log('[handleSocialUser] Same provider detected, migrating account from', oldUid, 'to', newUid)
 
           // 기존 문서 데이터를 새 UID로 복사
           const oldUserData = existingUser.userData
@@ -313,13 +336,64 @@ export async function handleSocialUser(
           // 새 UID로 문서 생성
           await setDoc(userRef, newUserData)
 
-          // 기존 문서 삭제 (다른 UID인 경우에만)
-          if (existingUser.docId !== firebaseUser.uid) {
-            const { deleteDoc } = await import('firebase/firestore')
-            const oldDocRef = doc(db, 'users', existingUser.docId)
-            await deleteDoc(oldDocRef)
-            console.log('[handleSocialUser] Deleted old user document:', existingUser.docId)
+          // 파트너인 경우 관련 데이터도 마이그레이션
+          if (oldUserData.type === 'partner') {
+            console.log('[handleSocialUser] Partner account - migrating related data...')
+            const { updateDoc, writeBatch } = await import('firebase/firestore')
+
+            // stores 컬렉션의 partnerId 업데이트
+            const storesQuery = query(collection(db, 'stores'), where('partnerId', '==', oldUid))
+            const storesSnapshot = await getDocs(storesQuery)
+            for (const storeDoc of storesSnapshot.docs) {
+              await updateDoc(doc(db, 'stores', storeDoc.id), { partnerId: newUid })
+              console.log('[handleSocialUser] Updated store:', storeDoc.id)
+            }
+
+            // products 컬렉션의 partnerId 업데이트
+            const productsQuery = query(collection(db, 'products'), where('partnerId', '==', oldUid))
+            const productsSnapshot = await getDocs(productsQuery)
+            for (const productDoc of productsSnapshot.docs) {
+              await updateDoc(doc(db, 'products', productDoc.id), { partnerId: newUid })
+              console.log('[handleSocialUser] Updated product:', productDoc.id)
+            }
+
+            // orders 컬렉션의 partnerId 업데이트
+            const ordersQuery = query(collection(db, 'orders'), where('partnerId', '==', oldUid))
+            const ordersSnapshot = await getDocs(ordersQuery)
+            for (const orderDoc of ordersSnapshot.docs) {
+              await updateDoc(doc(db, 'orders', orderDoc.id), { partnerId: newUid })
+              console.log('[handleSocialUser] Updated order:', orderDoc.id)
+            }
+
+            // reviews 컬렉션의 partnerId 업데이트
+            const reviewsQuery = query(collection(db, 'reviews'), where('partnerId', '==', oldUid))
+            const reviewsSnapshot = await getDocs(reviewsQuery)
+            for (const reviewDoc of reviewsSnapshot.docs) {
+              await updateDoc(doc(db, 'reviews', reviewDoc.id), { partnerId: newUid })
+              console.log('[handleSocialUser] Updated review:', reviewDoc.id)
+            }
+
+            console.log('[handleSocialUser] Partner data migration completed')
           }
+
+          // 일반 사용자인 경우 orders의 userId 업데이트
+          if (oldUserData.type === 'user') {
+            console.log('[handleSocialUser] User account - migrating orders...')
+            const { updateDoc } = await import('firebase/firestore')
+
+            const userOrdersQuery = query(collection(db, 'orders'), where('userId', '==', oldUid))
+            const userOrdersSnapshot = await getDocs(userOrdersQuery)
+            for (const orderDoc of userOrdersSnapshot.docs) {
+              await updateDoc(doc(db, 'orders', orderDoc.id), { userId: newUid })
+              console.log('[handleSocialUser] Updated user order:', orderDoc.id)
+            }
+          }
+
+          // 기존 문서 삭제
+          const { deleteDoc } = await import('firebase/firestore')
+          const oldDocRef = doc(db, 'users', oldUid)
+          await deleteDoc(oldDocRef)
+          console.log('[handleSocialUser] Deleted old user document:', oldUid)
 
           return {
             success: true,
