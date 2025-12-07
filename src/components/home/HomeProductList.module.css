@@ -1,0 +1,311 @@
+.container {
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.titleSection {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.title {
+  color: #333;
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.subtitle {
+  color: #999;
+  font-size: 14px;
+  font-weight: 500;
+  margin: 0;
+}
+
+.sortDropdown {
+  position: relative;
+}
+
+.sortButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: white;
+  border: 1px solid #DDD;
+  border-radius: 8px;
+  color: #333;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.sortButton:hover {
+  border-color: #025BD9;
+  background: #F8FAFB;
+}
+
+.sortButton svg {
+  transition: transform 0.2s;
+}
+
+.sortButton.open svg {
+  transform: rotate(180deg);
+}
+
+.sortMenu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 140px;
+  background: white;
+  border: 1px solid #DDD;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  z-index: 100;
+}
+
+.sortMenuItem {
+  display: block;
+  width: 100%;
+  padding: 12px 16px;
+  background: white;
+  border: none;
+  text-align: left;
+  color: #333;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.sortMenuItem:hover {
+  background: #F8FAFB;
+}
+
+.sortMenuItem.active {
+  color: #025BD9;
+  font-weight: 600;
+  background: #F0F6FF;
+}
+
+.emptyState {
+  text-align: center;
+  padding: 40px;
+  font-size: 16px;
+  color: #666;
+}
+
+.productGrid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 32px 24px;
+  justify-items: center;
+  align-items: start;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  width: 220px;
+  background: white;
+  cursor: pointer;
+  border: none;
+  padding: 0;
+}
+
+.imageWrapper {
+  position: relative;
+  width: 220px;
+  height: 220px;
+  background: #f5f5f5;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.image {
+  object-fit: cover;
+}
+
+.placeholderImage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  background: #f5f5f5;
+  color: #999;
+  font-size: 14px;
+}
+
+.info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.storeName {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #999;
+  font-size: 12px;
+  font-weight: 500;
+  margin: 0;
+}
+
+.storeName:hover {
+  color: #666;
+}
+
+.locationInfo {
+  color: #707070;
+  font-size: 13px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.productName {
+  color: #333;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 150%;
+  margin: 0;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  word-break: break-word;
+  min-width: 0;
+}
+
+.minOrderDays {
+  color: #999;
+  font-size: 12px;
+  font-weight: 500;
+  margin: 0;
+}
+
+.rating {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0;
+}
+
+.starIcon {
+  width: 16px;
+  height: 16px;
+}
+
+.ratingScore {
+  color: #333;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.reviewCount {
+  color: #999;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.priceSection {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+}
+
+.originalPrice {
+  color: #999;
+  font-size: 11px;
+  font-weight: 500;
+  text-decoration: line-through;
+}
+
+.discountedPrice {
+  color: #333;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.discountPercent {
+  color: #EA4335;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.regularPrice {
+  color: #333;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.orderQuantity {
+  color: #999;
+  font-size: 12px;
+  font-weight: 500;
+  margin: 0;
+}
+
+.badgeContainer {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin: 0;
+  padding-top: 5px;
+}
+
+.settingBadge {
+  display: inline-flex;
+  padding: 2px 5px;
+  justify-content: center;
+  align-items: center;
+  border-radius: 3px;
+  border: 1px solid #025BD9;
+  color: #025BD9;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: normal;
+}
+
+.loadMoreTrigger {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+}
+
+@media (max-width: 768px) {
+  .header {
+    margin-bottom: 16px;
+  }
+
+  .productGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .card {
+    width: 100%;
+  }
+
+  .imageWrapper {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1 / 1;
+  }
+}

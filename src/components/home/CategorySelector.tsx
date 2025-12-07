@@ -42,23 +42,15 @@ export default function CategorySelector({
       return
     }
 
-    // 디저트, 샌드위치, 샐러드/과일, 김밥, 도시락, 떡/전통한과, 케이터링, 답례품, 당일배송은 카테고리 페이지 이동
-    const navigableCategories = ['dessert', 'sandwich', 'salad', 'kimbap', 'lunchbox', 'traditional', 'catering', 'gift', 'delivery']
-
-    if (navigableCategories.includes(categoryId)) {
-      // URL에 한글 카테고리명을 직접 사용
-      router.push(`/category/${encodeURIComponent(categoryName)}`)
-    } else {
-      // 나머지는 기존 동작
-      onCategorySelect(categoryId)
-    }
+    // 나머지 카테고리는 메인에서 필터링
+    onCategorySelect(categoryName)
   }
 
   return (
     <div className={styles.container}>
       <div className={styles.categoryGrid}>
         {categories.map((category) => {
-          const isSelected = selectedCategories.includes(category.id)
+          const isSelected = selectedCategories.includes(category.name)
 
           return (
             <button

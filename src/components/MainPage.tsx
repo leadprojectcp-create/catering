@@ -4,9 +4,9 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import Banner from './home/Banner'
-import StoreList from './home/StoreList'
+import HomeProductList from './home/HomeProductList'
 import CategorySelector from './home/CategorySelector'
-import AIRecommendedSection from './home/AIRecommendedSection'
+// import AIRecommendedSection from './home/AIRecommendedSection'
 import PopupModal from './common/PopupModal'
 import LocationSettingModal from './home/LocationSettingModal'
 import Loading from './Loading'
@@ -81,11 +81,11 @@ export default function MainPage() {
           {/* 배너 */}
           <Banner />
 
-          {/* AI 추천 특별 기획전 섹션 */}
-          <AIRecommendedSection />
+          {/* AI 추천 특별 기획전 섹션 - 임시 숨김 */}
+          {/* <AIRecommendedSection /> */}
 
-          {/* 레스토랑 리스트 */}
-          <StoreList selectedCategory="전체" />
+          {/* 전체 상품 리스트 */}
+          <HomeProductList selectedCategories={selectedCategories} />
       </main>
     </div>
   )

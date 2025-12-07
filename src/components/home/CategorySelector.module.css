@@ -60,6 +60,14 @@
   position: relative;
   flex-shrink: 0;
   width: calc((100% - (6 * 24px)) / 7);
+  background: transparent;
+  border: none;
+  padding: 0;
+  transition: transform 0.2s;
+}
+
+.categoryCard:hover {
+  transform: scale(1.05);
 }
 
 @media (max-width: 768px) {
@@ -111,5 +119,16 @@
     white-space: normal;
     word-break: keep-all;
   }
+}
+
+/* 선택된 카테고리 스타일 */
+.categoryCard.selected .categoryIcon {
+  background: #E8F1FF;
+  border-radius: 16px;
+  border: 2px solid #025BD9;
+}
+
+.categoryCard.selected .categoryName {
+  color: #025BD9;
 }
 
