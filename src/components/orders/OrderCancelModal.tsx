@@ -5,8 +5,8 @@ import { doc, updateDoc, getDoc, Timestamp } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import Image from 'next/image'
 import styles from './OrderCancelModal.module.css'
-import checkEmpty from '@/../../public/icons/check_empty.png'
-import checkActive from '@/../../public/icons/check_active.png'
+const checkEmpty = '/icons/check_empty.png'
+const checkActive = '/icons/check_active.png'
 
 interface OrderCancelModalProps {
   orderId: string

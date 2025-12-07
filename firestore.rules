@@ -516,5 +516,20 @@ service cloud.firestore {
       // 수정/삭제 불가
       allow update, delete: if false;
     }
+
+    // PickToEat Visitor Logs collection - 방문자 로그 관리
+    match /picktoeat_visitor_logs/{logId} {
+      // 관리자(level 10)만 읽기 가능
+      allow read: if isAdmin();
+
+      // 방문자 로그 생성은 인증 없이 가능 (방문 추적)
+      allow create: if true;
+
+      // 방문자 로그 업데이트 가능 (체류시간, 검색필터 등)
+      allow update: if true;
+
+      // 삭제 불가
+      allow delete: if false;
+    }
   }
 }
