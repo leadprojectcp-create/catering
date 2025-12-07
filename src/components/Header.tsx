@@ -61,9 +61,9 @@ export default function Header({ chatRoomTitle, chatRoomPhone, chatRoomMenu }: H
   const { userData, logout, user, loading } = useAuth()
   const [cartCount, setCartCount] = useState(0)
   const [unreadCount, setUnreadCount] = useState(0)
-  const [isMobile, setIsMobile] = useState<boolean | undefined>(undefined)
+  const [isMobile, setIsMobile] = useState(false)
 
-  // 화면 크기 감지
+  // 화면 크기 감지 (클라이언트 사이드에서만)
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth <= 768)
@@ -86,8 +86,8 @@ export default function Header({ chatRoomTitle, chatRoomPhone, chatRoomMenu }: H
 
   const isExcludedPath = pathname.startsWith('/partner') || pathname.startsWith('/admin') || pathname.startsWith('/signup') || pathname === '/login'
   // PC에서는 채팅룸 선택 시에도 로고 표시, 모바일에서만 뒤로가기 + 이름 표시
-  // isMobile이 undefined면 chatRoomTitle 우선 고려 (깜빡임 방지)
-  const shouldShowLogo = (showLogoPages.includes(pathname) || (pathname.startsWith('/chat/') && !chatRoomTitle)) && !isExcludedPath && (isMobile === undefined ? !chatRoomTitle : (!chatRoomTitle || !isMobile))
+  // 모바일에서 chatRoomTitle이 있으면 뒤로가기 + 타이틀 표시
+  const shouldShowLogo = (showLogoPages.includes(pathname) || (pathname.startsWith('/chat/') && !chatRoomTitle)) && !isExcludedPath && (!chatRoomTitle || !isMobile)
   const pageTitle = chatRoomTitle?.trim() || getPageTitle(pathname)
 
   useEffect(() => {
@@ -155,8 +155,33 @@ export default function Header({ chatRoomTitle, chatRoomPhone, chatRoomMenu }: H
     }
   }
 
+  // 앱 열기 핸들러
+  const handleOpenApp = () => {
+    // iOS/Android 앱 스토어 또는 앱 스킴으로 이동
+    const userAgent = navigator.userAgent.toLowerCase()
+    const isIOS = /iphone|ipad|ipod/.test(userAgent)
+    const isAndroid = /android/.test(userAgent)
+
+    if (isIOS) {
+      window.location.href = 'https://apps.apple.com/kr/app/%EB%8B%A8%EB%AA%A8-%EB%8B%A8%EC%B2%B4%EC%9D%98%EB%AA%A8%EB%93%A0%EA%B2%83/id6755390713'
+    } else if (isAndroid) {
+      window.location.href = 'https://play.google.com/store/apps/details?id=com.leadproject.danmo&hl=ko'
+    } else {
+      // 기본: 앱 스킴 시도
+      window.location.href = 'danmo:///'
+    }
+  }
+
   return (
     <>
+      {/* 모바일 앱 다운로드 배너 - CSS로 모바일에서만 표시 */}
+      <div className={styles.appBanner}>
+        <span className={styles.appBannerText}>단체주문을 더 편리하게 이용하고 싶으신가요?</span>
+        <button className={styles.appBannerButton} onClick={handleOpenApp}>
+          앱 열기
+        </button>
+      </div>
+
       <header className={styles.header}>
         <div className={styles.container}>
           {/* 로고 또는 뒤로가기 버튼 + 타이틀 */}

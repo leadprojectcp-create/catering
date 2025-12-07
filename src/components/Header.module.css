@@ -1,3 +1,50 @@
+/* 모바일 앱 배너 */
+.appBanner {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .appBanner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 40px;
+    padding: 0 12px;
+    background: linear-gradient(90deg, #025BD9 0%, #0073E6 100%);
+    z-index: 101;
+  }
+
+  .appBannerText {
+    color: white;
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  .appBannerButton {
+    padding: 6px 14px;
+    background: white;
+    border: none;
+    border-radius: 20px;
+    color: #025BD9;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .appBannerButton:hover {
+    background: #F0F6FF;
+  }
+
+  .appBannerButton:active {
+    transform: scale(0.95);
+  }
+}
+
 /* 헤더 */
 .header {
   height: 60px;
@@ -8,6 +55,13 @@
   z-index: 100;
   border-bottom: 1px solid #e5e5e5;
   background-color: white;
+}
+
+/* 모바일에서 헤더 위치 조정 (배너 40px 아래로) */
+@media (max-width: 768px) {
+  .header {
+    top: 40px;
+  }
 }
 
 .container {

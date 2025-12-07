@@ -34,6 +34,13 @@ body {
 
 html {
   overflow-x: hidden;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
 }
 
 .page-wrapper {
@@ -42,7 +49,7 @@ html {
 
 @media (max-width: 768px) {
   .page-wrapper {
-    padding: 70px 12px 20px;
+    padding: 100px 12px 20px 12px; /* 60px 헤더 + 40px 앱 배너 */
   }
 }
 
