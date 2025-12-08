@@ -62,14 +62,28 @@ export default function Header({ chatRoomTitle, chatRoomPhone, chatRoomMenu }: H
   const [cartCount, setCartCount] = useState(0)
   const [unreadCount, setUnreadCount] = useState(0)
   const [isMobile, setIsMobile] = useState(false)
+  const [isNativeApp, setIsNativeApp] = useState(false)
 
-  // 화면 크기 감지 (클라이언트 사이드에서만)
+  // 화면 크기 감지 및 앱 환경 감지 (클라이언트 사이드에서만)
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth <= 768)
     }
 
+    // 앱 환경 감지
+    const checkNativeApp = () => {
+      const isApp = !!(window as typeof window & { ReactNativeWebView?: unknown }).ReactNativeWebView
+      setIsNativeApp(isApp)
+      // 앱일 때 body에 클래스 추가 (CSS에서 패딩 조절용)
+      if (isApp) {
+        document.body.classList.add('is-native-app')
+      } else {
+        document.body.classList.remove('is-native-app')
+      }
+    }
+
     checkMobile()
+    checkNativeApp()
     window.addEventListener('resize', checkMobile)
 
     return () => window.removeEventListener('resize', checkMobile)
@@ -174,15 +188,17 @@ export default function Header({ chatRoomTitle, chatRoomPhone, chatRoomMenu }: H
 
   return (
     <>
-      {/* 모바일 앱 다운로드 배너 - CSS로 모바일에서만 표시 */}
-      <div className={styles.appBanner}>
-        <span className={styles.appBannerText}>단체주문을 더 편리하게 이용하고 싶으신가요?</span>
-        <button className={styles.appBannerButton} onClick={handleOpenApp}>
-          앱 열기
-        </button>
-      </div>
+      {/* 모바일 앱 다운로드 배너 - CSS로 모바일에서만 표시, 앱에서는 숨김 */}
+      {!isNativeApp && (
+        <div className={styles.appBanner}>
+          <span className={styles.appBannerText}>단체주문을 더 편리하게 이용하고 싶으신가요?</span>
+          <button className={styles.appBannerButton} onClick={handleOpenApp}>
+            앱 열기
+          </button>
+        </div>
+      )}
 
-      <header className={styles.header}>
+      <header className={`${styles.header} ${isNativeApp ? '' : styles.headerWithBanner}`}>
         <div className={styles.container}>
           {/* 로고 또는 뒤로가기 버튼 + 타이틀 */}
           <div className={styles.leftSection}>

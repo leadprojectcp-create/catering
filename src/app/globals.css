@@ -51,6 +51,11 @@ html, body {
   .page-wrapper {
     padding: 100px 12px 20px 12px; /* 60px 헤더 + 40px 앱 배너 */
   }
+
+  /* 앱에서는 배너가 없으므로 헤더만큼만 패딩 */
+  body.is-native-app .page-wrapper {
+    padding-top: 60px;
+  }
 }
 
 * {

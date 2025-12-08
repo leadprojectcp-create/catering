@@ -1,9 +1,15 @@
 .container {
   width: 100%;
   max-width: 840px;
-  margin: 0 auto;
+  margin: 10px auto 0;
   display: flex;
   justify-content: center;
+}
+
+@media (max-width: 768px) {
+  .container {
+    margin-top: 5px;
+  }
 }
 
 .categoryTitle {

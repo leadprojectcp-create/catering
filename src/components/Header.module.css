@@ -57,9 +57,9 @@
   background-color: white;
 }
 
-/* 모바일에서 헤더 위치 조정 (배너 40px 아래로) */
+/* 모바일에서 배너가 있을 때 헤더 위치 조정 (배너 40px 아래로) */
 @media (max-width: 768px) {
-  .header {
+  .headerWithBanner {
     top: 40px;
   }
 }
